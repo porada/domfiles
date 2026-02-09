@@ -13,7 +13,7 @@
 	},
 	"packageManager": "pnpm@10.28.2",
 	"devDependencies": {
-		"@standard-config/prettier": "1.8.1",
+		"@standard-config/prettier": "1.9.0",
 		"husky": "9.1.7",
 		"lint-staged": "16.2.7",
 		"prettier": "3.8.1"
