@@ -3,6 +3,12 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
+# Update `gh` extensions
+if __is_callable gh && ! __is_ci; then
+  __print_heading 'Updating `gh` extensions'
+  gh extension upgrade --all
+fi
+
 # Update `npm` packages
 if __is_callable npm; then
   __print_heading 'Updating `npm` packages'

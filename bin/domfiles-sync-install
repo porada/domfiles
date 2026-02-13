@@ -46,7 +46,7 @@ done
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in fd jq ripgrep shellcheck yarn; do
+  for formula in fd gh jq ripgrep shellcheck yarn; do
     install "$formula"
   done
 fi
@@ -63,6 +63,16 @@ if __is_callable fish && ! __is_fisher_installed; then
     --location \
     'https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish' \
     | fish --command 'source /dev/stdin && fisher install jorgebucaran/fisher'
+fi
+
+# Install `gh aw`
+if __is_callable gh && ! __is_gh_aw_installed; then
+  __print_heading 'Installing `gh aw`'
+  curl \
+    --fail \
+    --location \
+    'https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh' \
+    | bash
 fi
 
 # Install `vim-plug`

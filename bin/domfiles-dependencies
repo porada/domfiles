@@ -19,9 +19,7 @@ check() {
   dependency_bin 'git'
   dependency_bin 'node'
   dependency_bin 'pnpm'
-
   dependency_bin 'vim'
-  dependency_exec 'vim-plug' '__is_vim_plug_installed'
 }
 
 dependency_bin() {

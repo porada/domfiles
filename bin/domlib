@@ -254,6 +254,10 @@ __is_fisher_installed() {
   fish --command 'fisher --version' > /dev/null 2>&1
 }
 
+__is_gh_aw_installed() {
+  gh aw version > /dev/null 2>&1
+}
+
 __is_macos() {
   [ "$(uname -s)" = 'Darwin' ]
 }
