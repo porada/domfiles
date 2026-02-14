@@ -1,3 +1,16 @@
+packages:
+  - packages/*
+
 autoInstallPeers: false
+
+catalog:
+  prettier: ^3.8.1
+
+onlyBuiltDependencies:
+  - esbuild
+
+peerDependencyRules:
+  allowedVersions:
+    eslint: '*'
 
 strictPeerDependencies: true

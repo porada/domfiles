@@ -13,17 +13,19 @@
 	},
 	"packageManager": "pnpm@10.29.2",
 	"devDependencies": {
+		"@domfiles/prettier-plugin-fish": "workspace:*",
 		"@standard-config/prettier": "^1.9.1",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7",
-		"prettier": "^3.8.1"
+		"prettier": "catalog:"
 	},
 	"scripts": {
-		"fix": "pnpm format . && pnpm run '/^lint:/'",
-		"format": "prettier --write --ignore-unknown --log-level=warn",
+		"fix": "pnpm format && pnpm lint:fish && pnpm lint:sh && pnpm lint:ts && pnpm format",
+		"format": "prettier --ignore-unknown --log-level=warn --write .",
 		"format:check": "prettier --check --ignore-unknown .",
 		"lint:fish": "bin/domfiles-dev-lint-fish",
 		"lint:sh": "bin/domfiles-dev-lint-sh",
+		"lint:ts": "pnpm --recursive lint",
 		"prepare": "husky"
 	}
 }

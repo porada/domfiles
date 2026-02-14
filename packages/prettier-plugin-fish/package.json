@@ -1,0 +1,30 @@
+{
+	"name": "@domfiles/prettier-plugin-fish",
+	"private": true,
+	"type": "module",
+	"sideEffects": false,
+	"exports": "./src/index.ts",
+	"peerDependencies": {
+		"prettier": "*"
+	},
+	"devDependencies": {
+		"@standard-config/eslint": "^1.4.1",
+		"@standard-config/oxlint": "^1.1.2",
+		"@standard-config/tsconfig": "^2.0.2",
+		"@types/node": "^24.10.13",
+		"eslint": "^10.0.0",
+		"jiti": "^2.6.1",
+		"nano-spawn": "^2.0.0",
+		"oxlint": "^1.47.0",
+		"oxlint-tsgolint": "^0.12.2",
+		"prettier": "catalog:",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"scripts": {
+		"lint": "oxlint --fix --report-unused-disable-directives --type-aware --type-check && eslint --fix .",
+		"lint:check": "oxlint --deny-warnings --report-unused-disable-directives --type-aware --type-check && eslint .",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	}
+}

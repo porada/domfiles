@@ -15,10 +15,9 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -eq 1 ]; then
-  __print_heading "Formatting and linting \`$1\`"
+  __print_heading "Linting \`$1\`"
 else
-  __print_heading 'Formatting and linting POSIX shell scripts'
+  __print_heading 'Linting POSIX shell scripts'
 fi
 
-__is_ci || __ pnpm --silent format "$@"
 __ shellcheck --external-sources "$@"
