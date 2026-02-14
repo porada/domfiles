@@ -10,3 +10,4 @@
 .husky/_
 .lastsync
 node_modules
+tsconfig.tsbuildinfo

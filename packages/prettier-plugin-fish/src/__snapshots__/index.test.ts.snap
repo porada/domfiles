@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formats Fish files 1`] = `
+"set name ""
+
+for param in $argv
+    set value (string replace --regex '^--name=' '' -- "$param")
+
+    if test "$value" != "$param"
+        set name "$value"
+    end
+end
+
+echo "$name" >/dev/null 2>&1
+"
+`;
