@@ -31,6 +31,10 @@ importers:
         version: 3.8.1
 
   packages/prettier-plugin-fish:
+    dependencies:
+      nano-spawn:
+        specifier: ^2.0.0
+        version: 2.0.0
     devDependencies:
       '@standard-config/eslint':
         specifier: ^1.4.1
@@ -50,9 +54,6 @@ importers:
       jiti:
         specifier: ^2.6.1
         version: 2.6.1
-      nano-spawn:
-        specifier: ^2.0.0
-        version: 2.0.0
       oxlint:
         specifier: ^1.47.0
         version: 1.47.0(oxlint-tsgolint@0.12.2)

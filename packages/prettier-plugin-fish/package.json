@@ -4,6 +4,9 @@
 	"type": "module",
 	"sideEffects": false,
 	"exports": "./src/index.ts",
+	"dependencies": {
+		"nano-spawn": "^2.0.0"
+	},
 	"peerDependencies": {
 		"prettier": "*"
 	},
@@ -14,7 +17,6 @@
 		"@types/node": "^24.10.13",
 		"eslint": "^10.0.0",
 		"jiti": "^2.6.1",
-		"nano-spawn": "^2.0.0",
 		"oxlint": "^1.47.0",
 		"oxlint-tsgolint": "^0.12.2",
 		"prettier": "catalog:",
