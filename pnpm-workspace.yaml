@@ -4,7 +4,21 @@ packages:
 autoInstallPeers: false
 
 catalog:
+  '@standard-config/eslint': ^1.5.0
+  '@standard-config/oxlint': ^1.1.3
+  '@standard-config/prettier': ^1.9.1
+  '@standard-config/tsconfig': ^2.0.2
+  '@types/node': ^24.10.13
+  eslint: ^10.0.0
+  husky: ^9.1.7
+  jiti: ^2.6.1
+  lint-staged: ^16.2.7
+  nano-spawn: ^2.0.0
+  oxlint: ^1.47.0
+  oxlint-tsgolint: ^0.14.0
   prettier: ^3.8.1
+  typescript: ^5.9.3
+  vitest: ^4.0.18
 
 onlyBuiltDependencies:
   - esbuild
@@ -14,3 +28,7 @@ peerDependencyRules:
     eslint: '*'
 
 strictPeerDependencies: true
+
+updateConfig:
+  ignoreDependencies:
+    - '@types/node'

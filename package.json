@@ -11,12 +11,12 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@10.29.2",
+	"packageManager": "pnpm@10.29.3",
 	"devDependencies": {
 		"@domfiles/prettier-plugin-fish": "workspace:*",
-		"@standard-config/prettier": "^1.9.1",
-		"husky": "^9.1.7",
-		"lint-staged": "^16.2.7",
+		"@standard-config/prettier": "catalog:",
+		"husky": "catalog:",
+		"lint-staged": "catalog:",
 		"prettier": "catalog:"
 	},
 	"scripts": {
