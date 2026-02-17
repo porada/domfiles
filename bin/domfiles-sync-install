@@ -65,16 +65,6 @@ if __is_callable fish && ! __is_fisher_installed; then
     | fish --command 'source /dev/stdin && fisher install jorgebucaran/fisher'
 fi
 
-# Install `gh aw`
-if __is_callable gh && ! __is_gh_aw_installed; then
-  __print_heading 'Installing `gh aw`'
-  curl \
-    --fail \
-    --location \
-    'https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh' \
-    | bash
-fi
-
 # Install `vim-plug`
 if __is_callable vim && ! __is_vim_plug_installed; then
   __print_heading 'Installing `vim-plug`'
