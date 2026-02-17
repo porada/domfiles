@@ -14,9 +14,8 @@
 - Do not read or analyze `.config/npm/user.npmrc` (it contains secrets).
 - Do not report empty config files.
 - Report any cases that would tie this repository to a fixed filesystem location.
-    - Do not report system paths and vendor paths.
+    - Do not report `$HOME/*` paths, system paths, or vendor paths.
     - Do not report symlinks created via `domfiles sync`.
-    - Do not report `$DOMFILES_PROJECTS_DIR`.
     - Do not report `.config/fish/fish_variables`.
     - Do not report documentation.
 

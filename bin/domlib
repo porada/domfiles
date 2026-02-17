@@ -64,12 +64,7 @@ __domfiles() {
   command="$1"
   shift
 
-  # Ensure compatibility during the transition period
-  if [ -x "$DOMFILES_BIN_DIR/domfiles-$command" ]; then
-    "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
-  else
-    "$DOMFILES_BIN_DIR/dotfiles-$command" "$@"
-  fi
+  "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
 }
 
 __domfiles_bin() {
@@ -106,17 +101,11 @@ __domfiles_exec() {
     __print_command domfiles "$command" "$@"
   fi
 
-  # Ensure compatibility during the transition period
-  if [ -x "$DOMFILES_BIN_DIR/domfiles-$command" ]; then
-    exec "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
-  fi
-
-  exec "$DOMFILES_BIN_DIR/dotfiles-$command" "$@"
+  exec "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
 }
 
 __domfiles_is_callable() {
-  # Ensure compatibility during the transition period
-  [ -x "$DOMFILES_BIN_DIR/domfiles-$1" ] || [ -x "$DOMFILES_BIN_DIR/dotfiles-$1" ]
+  [ -x "$DOMFILES_BIN_DIR/domfiles-$1" ]
 }
 
 __domfiles_is_clean() {
