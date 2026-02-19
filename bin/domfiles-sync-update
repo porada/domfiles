@@ -27,6 +27,9 @@ if __is_callable pnpm; then
   __print_heading 'Updating `pnpm` packages'
   __is_ci && __ pnpm --version
   __ pnpm --global --loglevel=error update
+
+  __print_heading 'Updating `skills`'
+  __ pnpm dlx skills update
 fi
 
 # Update Fish plugins
