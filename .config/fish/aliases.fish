@@ -13,6 +13,9 @@ abbr y yarn
 # Show hidden files by default when using `ls`
 alias ls 'ls -A'
 
+# Ensure `npx` goes through `pnpm`
+alias npx 'pnpm dlx'
+
 # Clone a repository and navigate into it
 function clone
     cd "$DOMFILES_PROJECTS_DIR"
