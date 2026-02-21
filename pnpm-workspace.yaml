@@ -9,7 +9,7 @@ catalog:
   '@standard-config/prettier': ^1.9.1
   '@standard-config/tsconfig': ^2.0.2
   '@types/node': ^24.10.13
-  eslint: ^10.0.0
+  eslint: ^10.0.1
   husky: ^9.1.7
   jiti: ^2.6.1
   lint-staged: ^16.2.7
