@@ -15,7 +15,7 @@ catalog:
   lint-staged: ^16.2.7
   nano-spawn: ^2.0.0
   oxlint: ^1.47.0
-  oxlint-tsgolint: ^0.14.0
+  oxlint-tsgolint: ^0.14.2
   prettier: ^3.8.1
   typescript: ^5.9.3
   vitest: ^4.0.18
