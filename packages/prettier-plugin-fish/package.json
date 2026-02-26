@@ -5,27 +5,27 @@
 	"sideEffects": false,
 	"exports": "./src/index.ts",
 	"dependencies": {
-		"nano-spawn": "catalog:"
+		"nano-spawn": "^2.0.0"
 	},
 	"peerDependencies": {
 		"prettier": "*"
 	},
 	"devDependencies": {
-		"@standard-config/eslint": "catalog:",
-		"@standard-config/oxlint": "catalog:",
-		"@standard-config/tsconfig": "catalog:",
-		"@types/node": "catalog:",
-		"eslint": "catalog:",
-		"jiti": "catalog:",
-		"oxlint": "catalog:",
-		"oxlint-tsgolint": "catalog:",
+		"@standard-config/eslint": "^1.6.1",
+		"@standard-config/oxlint": "^1.2.2",
+		"@standard-config/tsconfig": "^2.0.2",
+		"@types/node": "^24.10.15",
+		"@vitest/coverage-v8": "4.0.18",
+		"eslint": "^10.0.2",
+		"oxlint": "^1.50.0",
+		"oxlint-tsgolint": "^0.15.0",
 		"prettier": "catalog:",
-		"typescript": "catalog:",
-		"vitest": "catalog:"
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
 	},
 	"scripts": {
-		"lint": "oxlint --fix --report-unused-disable-directives --type-aware --type-check && eslint --fix .",
-		"lint:check": "oxlint --deny-warnings --report-unused-disable-directives --type-aware --type-check && eslint .",
+		"lint": "oxlint --fix --report-unused-disable-directives --type-aware",
+		"lint:check": "oxlint --deny-warnings --report-unused-disable-directives --type-aware --type-check",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	}

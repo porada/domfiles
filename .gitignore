@@ -9,5 +9,6 @@
 .DS_Store
 .husky/_
 .lastsync
+coverage
 node_modules
 tsconfig.tsbuildinfo

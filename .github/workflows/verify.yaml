@@ -51,4 +51,4 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: fish-actions/install-fish@v1
       - run: pnpm install
-      - run: pnpm --recursive lint:check
+      - run: pnpm lint:ts:check

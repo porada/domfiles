@@ -13,7 +13,9 @@ export const parsers: Plugin['parsers'] = {
 	fish: {
 		astFormat: 'fish-text',
 
+		/* v8 ignore next -- @preserve */
 		locStart: () => 0,
+		/* v8 ignore next -- @preserve */
 		locEnd: (text: string) => text.length,
 
 		parse: async (text: string): Promise<string> => {
