@@ -40,7 +40,7 @@ install() {
 }
 
 # Install primary dependencies
-for formula in fish git node@24 pnpm vim; do
+for formula in fish git mole node@24 pnpm vim; do
   install "$formula"
 done
 
