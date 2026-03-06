@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Lint and format POSIX shell scripts that come with domfiles
+# Lint POSIX shell scripts that come with domfiles
 # (lints all files when no paths are provided)
 __domfiles_cd_root
 

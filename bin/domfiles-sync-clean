@@ -7,7 +7,6 @@ __print_heading_dimmed 'Cleaning up'
 
 __ rm -f "$HOME/.bash_history"
 __ rm -f "$HOME/.lesshst"
-__ rm -rf "$HOME/.npm/_logs"
 __ rm -f "$HOME/.npmrc"
 __ rm -f "$HOME/.ssh/known_hosts.old"
 __ rm -f "$HOME/.vim/autoload/plug.vim.old"
