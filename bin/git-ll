@@ -4,4 +4,5 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Formatted `git log`
-eval "git log $(__git_default_log_params) $*"
+eval "set -- $(__git_default_log_params) $(__quote_params "$@")"
+git log "$@"
