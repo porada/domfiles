@@ -14,7 +14,7 @@
 	"packageManager": "pnpm@10.30.3",
 	"devDependencies": {
 		"@domfiles/prettier-plugin-fish": "workspace:*",
-		"@standard-config/prettier": "^1.10.0",
+		"@standard-config/prettier": "^1.11.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.3.2",
 		"prettier": "catalog:"
