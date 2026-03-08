@@ -22,25 +22,15 @@ install() {
     __ brew install --quiet "$1"
   fi
 
-  if [ "$1" = 'pnpm' ] || [ "$1" = 'yarn' ] || __is_brew_keg_only "$1"; then
+  if __is_brew_keg_only "$1"; then
     __print_heading_dimmed "Ensuring \`$1\` is linked"
     __ brew unlink --quiet "$1" || true
     __ brew link --quiet --overwrite --force "$1"
   fi
-
-  if [ "$1" = 'pnpm' ] && __is_callable pnpm; then
-    __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
-    pnpm completion fish > "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
-  fi
-
-  if [ "$1" = 'node@24' ] && __is_callable npm; then
-    __is_callable corepack && corepack cache clean
-    __ npm --global --loglevel=error uninstall corepack
-  fi
 }
 
 # Install primary dependencies
-for formula in fish git mole node@24 pnpm vim; do
+for formula in fish git mole vim; do
   install "$formula"
 done
 
@@ -58,22 +48,60 @@ __ rm -rf "$(brew --cache)"
 # Install `fisher`
 if __is_callable fish && ! __is_fisher_installed; then
   __print_heading 'Installing `fisher`'
-  curl \
-    --fail \
-    --location \
-    'https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish' \
+
+  url='https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish'
+  __print_url "$url"
+
+  curl --fail --location "$url" \
     | fish --command 'source /dev/stdin && fisher install jorgebucaran/fisher'
+fi
+
+# Install `pnpm`
+if __is_callable pnpm; then
+  __print_heading_dimmed 'Ensuring `pnpm` is up to date'
+  __ pnpm --silent self-update
+else
+  __print_heading 'Installing `pnpm`'
+
+  # Back up `config.fish` first as the installer may modify it
+  config="$(mktemp)"
+  __ cp "$DOMFILES_FISH_CONFIG_DIR/config.fish" "$config"
+
+  url='https://get.pnpm.io/install.sh'
+  __print_url "$url"
+
+  curl --fail --location "$url" | sh -
+
+  # Restore `config.fish`
+  if [ -f "$config" ]; then
+    __ cp "$config" "$DOMFILES_FISH_CONFIG_DIR/config.fish"
+    __ rm -f "$config"
+  fi
+fi
+
+# Install `pnpm` completions
+if __is_callable pnpm; then
+  __print_heading_dimmed 'Installing `pnpm` completions'
+  __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
+  pnpm completion fish > "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
+  __print_confirmation 'pnpm completion fish'
+fi
+
+# Install `node`
+if __is_callable pnpm; then
+  __print_heading_dimmed 'Installing `node`'
+  __ pnpm --silent env use --global lts
 fi
 
 # Install `vim-plug`
 if __is_callable vim && ! __is_vim_plug_installed; then
   __print_heading 'Installing `vim-plug`'
-  curl \
-    --fail \
-    --location \
-    --output "$DOMFILES_VIM_PLUG" \
-    --create-dirs \
-    'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+
+  url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  __print_url "$url"
+
+  curl --fail --location "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
+  __print_confirmation "$DOMFILES_VIM_PLUG"
 fi
 
 # Set `fish` as the default shell

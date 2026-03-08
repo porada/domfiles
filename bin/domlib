@@ -316,6 +316,10 @@ __print_success() {
   __printf '\033[0;32m✓ %s\033[0m\n' "$*"
 }
 
+__print_url() {
+  __print_info "↓ $*"
+}
+
 __print_warning() {
   __printf '\033[1m▴ %s\033[0m\n' "$*"
 }

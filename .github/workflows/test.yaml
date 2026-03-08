@@ -13,14 +13,7 @@ permissions:
 
 jobs:
   sync:
-    name: sync / macos@${{ matrix.macos-version }}
-    runs-on: macos-${{ matrix.macos-version }}
-    strategy:
-      fail-fast: false
-      matrix:
-        macos-version:
-          - 26
-          - latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v6
       - run: sw_vers
