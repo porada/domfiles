@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: 24
       - uses: pnpm/action-setup@v4
+        with:
+          cache: true
       - uses: fish-actions/install-fish@v1
       - run: pnpm install
       - run: pnpm format:check
@@ -49,6 +51,8 @@ jobs:
         with:
           node-version: 24
       - uses: pnpm/action-setup@v4
+        with:
+          cache: true
       - uses: fish-actions/install-fish@v1
       - run: pnpm install
       - run: pnpm lint:ts:check

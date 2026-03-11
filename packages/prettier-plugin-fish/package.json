@@ -12,20 +12,20 @@
 	},
 	"devDependencies": {
 		"@standard-config/eslint": "^1.6.1",
-		"@standard-config/oxlint": "^1.4.0",
+		"@standard-config/oxlint": "^1.5.1",
 		"@standard-config/tsconfig": "^2.0.2",
 		"@types/node": "^24.12.0",
 		"@vitest/coverage-v8": "4.0.18",
 		"eslint": "^10.0.3",
-		"oxlint": "^1.51.0",
+		"oxlint": "^1.53.0",
 		"oxlint-tsgolint": "^0.16.0",
 		"prettier": "catalog:",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18"
 	},
 	"scripts": {
-		"lint": "oxlint --fix --report-unused-disable-directives",
-		"lint:check": "oxlint --deny-warnings --report-unused-disable-directives --type-check",
+		"lint": "oxlint --fix",
+		"lint:check": "oxlint --deny-warnings --type-check",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	}
