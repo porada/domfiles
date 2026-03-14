@@ -15,7 +15,7 @@
 		"@standard-config/oxlint": "^1.5.1",
 		"@standard-config/tsconfig": "^2.0.2",
 		"@types/node": "^24.12.0",
-		"@vitest/coverage-v8": "4.0.18",
+		"@vitest/coverage-v8": "4.1.0",
 		"eslint": "^10.0.3",
 		"oxlint": "^1.55.0",
 		"oxlint-tsgolint": "^0.16.0",
