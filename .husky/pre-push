@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Enable strict mode
-set -eu
-
-# Check for updates
-pnpm outdated
