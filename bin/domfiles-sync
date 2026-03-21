@@ -49,7 +49,7 @@ if __is_callable git; then
       __print_error 'Failed to update the repository'
       __ git -C "$DOMFILES" rebase --abort || true
     else
-      __is_callable pnpm && __ pnpm --dir "$DOMFILES" --silent install
+      __is_callable node && __is_callable pnpm && __ pnpm --dir "$DOMFILES" --silent install
       __print_confirmation 'Repository updated'
     fi
   fi
@@ -62,7 +62,7 @@ if __is_callable git; then
 
       __print_heading_dimmed 'Restoring the original state'
       __ git -C "$DOMFILES" reset --hard "$current_revision"
-      __is_callable pnpm && __ pnpm --dir "$DOMFILES" --silent install
+      __is_callable node && __is_callable pnpm && __ pnpm --dir "$DOMFILES" --silent install
 
       if __ git -C "$DOMFILES" stash pop --quiet; then
         __print_confirmation 'Original state restored'
