@@ -6,6 +6,7 @@
 		".editorconfig": true,
 		"bin/git-diff-highlight": true
 	},
+	"js/ts.tsdk.path": "node_modules/typescript/lib",
 	"search.exclude": {
 		"pnpm-lock.yaml": true
 	}

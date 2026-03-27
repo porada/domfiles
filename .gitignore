@@ -7,8 +7,8 @@
 .config/fish/themes
 .config/npm/user.npmrc
 .DS_Store
-.husky/_
 .lastsync
+.vite-config/_
 coverage
 node_modules
 tsconfig.tsbuildinfo

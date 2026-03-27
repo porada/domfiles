@@ -26,7 +26,7 @@
 - Always ensure that any shell scripts not written in `fish` strictly conform to POSIX `sh`.
     - Apply strict mode when applicable.
 - Ensure all POSIX shell scripts source `domlib`.
-    - Exempt `.husky` scripts from this requirement.
+    - Exempt `.vite-hooks` scripts from this requirement.
     - Always keep all functions defined in `domlib` alphabetized in natural order.
     - Always keep the set of `$DOMFILES_*` variables defined in `domlib` and `.config/fish/config.fish` in sync.
         - Variable names must match exactly in both locations.

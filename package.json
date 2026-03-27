@@ -1,5 +1,6 @@
 {
 	"name": "domfiles",
+	"version": "0.0.0",
 	"private": true,
 	"license": "MIT",
 	"author": {
@@ -11,13 +12,19 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@10.32.1",
+	"packageManager": "pnpm@10.33.0",
 	"devDependencies": {
 		"@domfiles/prettier-plugin-fish": "workspace:*",
+		"@standard-config/eslint": "^2.0.1",
+		"@standard-config/oxlint": "^1.6.1",
 		"@standard-config/prettier": "^1.11.2",
-		"husky": "^9.1.7",
-		"lint-staged": "^16.4.0",
-		"prettier": "catalog:"
+		"@standard-config/tsconfig": "catalog:",
+		"@vitest/coverage-v8": "4.1.2",
+		"eslint": "^10.1.0",
+		"prettier": "catalog:",
+		"typescript": "catalog:",
+		"vite-plus": "^0.1.14",
+		"vitest": "catalog:"
 	},
 	"scripts": {
 		"fix": "pnpm format && pnpm lint:fish && pnpm lint:sh && pnpm lint:ts && pnpm format",
@@ -25,8 +32,10 @@
 		"format:check": "prettier --check --ignore-unknown .",
 		"lint:fish": "bin/domfiles-dev-lint-fish",
 		"lint:sh": "bin/domfiles-dev-lint-sh",
-		"lint:ts": "pnpm --recursive lint",
-		"lint:ts:check": "pnpm --recursive lint:check",
-		"prepare": "husky"
+		"lint:ts": "vp lint --fix",
+		"lint:ts:check": "vp lint --deny-warnings --type-check",
+		"prepare": "vp config",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
 	}
 }

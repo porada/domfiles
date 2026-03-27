@@ -1,5 +1,6 @@
 {
 	"name": "@domfiles/prettier-plugin-fish",
+	"version": "0.0.0",
 	"private": true,
 	"type": "module",
 	"sideEffects": false,
@@ -11,21 +12,13 @@
 		"prettier": "*"
 	},
 	"devDependencies": {
-		"@standard-config/eslint": "^1.6.1",
-		"@standard-config/oxlint": "^1.6.1",
-		"@standard-config/tsconfig": "^2.0.2",
+		"@standard-config/tsconfig": "catalog:",
 		"@types/node": "^24.12.0",
-		"@vitest/coverage-v8": "4.1.2",
-		"eslint": "^10.1.0",
-		"oxlint": "^1.57.0",
-		"oxlint-tsgolint": "^0.17.4",
 		"prettier": "catalog:",
-		"typescript": "^5.9.3",
-		"vitest": "^4.1.2"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	},
 	"scripts": {
-		"lint": "oxlint --fix",
-		"lint:check": "oxlint --deny-warnings --type-check",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	}
