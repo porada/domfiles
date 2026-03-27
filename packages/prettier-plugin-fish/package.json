@@ -18,7 +18,7 @@
 		"@vitest/coverage-v8": "4.1.0",
 		"eslint": "^10.1.0",
 		"oxlint": "^1.56.0",
-		"oxlint-tsgolint": "^0.17.1",
+		"oxlint-tsgolint": "^0.17.4",
 		"prettier": "catalog:",
 		"typescript": "^5.9.3",
 		"vitest": "^4.1.0"
