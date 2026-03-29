@@ -1,5 +1,5 @@
 import type { AstPath, Plugin } from 'prettier';
-import spawn from 'nano-spawn';
+import { exec } from 'tinyexec';
 
 export const languages: Plugin['languages'] = [
 	{
@@ -19,12 +19,10 @@ export const parsers: Plugin['parsers'] = {
 		locEnd: (text: string) => text.length,
 
 		parse: async (text: string): Promise<string> => {
-			const { stdout } = await spawn('fish_indent', {
-				stdin: {
-					string: text,
-				},
-			});
+			const command = exec('fish_indent', [], { throwOnError: true });
+			command.process?.stdin?.end(text);
 
+			const { stdout } = await command;
 			return `${stdout.trim()}\n`;
 		},
 	},

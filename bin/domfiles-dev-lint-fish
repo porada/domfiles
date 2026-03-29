@@ -20,6 +20,4 @@ else
   __print_heading 'Linting Fish scripts'
 fi
 
-for file in "$@"; do
-  __ fish --no-execute -- "$file"
-done
+__ fish --no-execute -- "$@"

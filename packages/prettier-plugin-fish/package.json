@@ -6,7 +6,7 @@
 	"sideEffects": false,
 	"exports": "./src/index.ts",
 	"dependencies": {
-		"nano-spawn": "^2.0.0"
+		"tinyexec": "^1.0.4"
 	},
 	"peerDependencies": {
 		"prettier": "*"

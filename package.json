@@ -27,7 +27,7 @@
 		"vitest": "catalog:"
 	},
 	"scripts": {
-		"fix": "pnpm format && pnpm lint:fish && pnpm lint:sh && pnpm lint:ts && pnpm format",
+		"fix": "pnpm format && pnpm run '/^lint:(fish|sh|ts)$/' && pnpm format",
 		"format": "prettier --ignore-unknown --log-level=warn --write .",
 		"format:check": "prettier --check --ignore-unknown .",
 		"lint:fish": "bin/domfiles-dev-lint-fish",
