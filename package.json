@@ -23,7 +23,7 @@
 		"eslint": "^10.1.0",
 		"prettier": "catalog:",
 		"typescript": "catalog:",
-		"vite-plus": "^0.1.14",
+		"vite-plus": "^0.1.15",
 		"vitest": "catalog:"
 	},
 	"scripts": {
