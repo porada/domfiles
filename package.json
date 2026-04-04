@@ -16,7 +16,7 @@
 	"devDependencies": {
 		"@domfiles/prettier-plugin-fish": "workspace:*",
 		"@standard-config/eslint": "^2.0.2",
-		"@standard-config/oxlint": "^1.6.1",
+		"@standard-config/oxlint": "^1.6.2",
 		"@standard-config/prettier": "^1.11.2",
 		"@standard-config/tsconfig": "catalog:",
 		"@vitest/coverage-v8": "4.1.2",
