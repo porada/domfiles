@@ -19,8 +19,10 @@ export const parsers: Plugin['parsers'] = {
 		locEnd: (text: string) => text.length,
 
 		parse: async (text: string): Promise<string> => {
-			const command = exec('fish_indent', [], { throwOnError: true });
-			command.process?.stdin?.end(text);
+			const command = exec('fish_indent', [], {
+				stdin: text,
+				throwOnError: true,
+			});
 
 			const { stdout } = await command;
 			return `${stdout.trim()}\n`;

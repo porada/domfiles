@@ -6,7 +6,7 @@
 	"sideEffects": false,
 	"exports": "./src/index.ts",
 	"dependencies": {
-		"tinyexec": "^1.0.4"
+		"tinyexec": "^1.1.1"
 	},
 	"peerDependencies": {
 		"prettier": "*"
