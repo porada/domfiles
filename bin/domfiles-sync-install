@@ -36,7 +36,7 @@ done
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in fd gh jq ripgrep shellcheck yarn; do
+  for formula in fd jq ripgrep shellcheck yarn; do
     install "$formula"
   done
 fi

@@ -16,3 +16,9 @@ for formula in node node@22 node@24 pnpm; do
     __ brew uninstall "$formula"
   fi
 done
+
+# Remove `gh`
+if __is_brew_installed gh; then
+  __print_heading_dimmed "Removing \`gh\`"
+  __ brew uninstall gh
+fi

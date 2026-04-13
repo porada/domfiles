@@ -3,17 +3,6 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Update `gh aw`
-if __is_callable gh; then
-  __print_heading 'Updating `gh aw`'
-  __is_ci && gh --version
-  curl \
-    --fail \
-    --location \
-    'https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh' \
-    | bash
-fi
-
 # Update `npm` packages
 if __is_callable npm; then
   __print_heading 'Updating `npm` packages'
