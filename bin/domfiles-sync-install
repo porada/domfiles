@@ -57,10 +57,7 @@ if __is_callable fish && ! __is_fisher_installed; then
 fi
 
 # Install `pnpm`
-if __is_callable pnpm; then
-  __print_heading_dimmed 'Ensuring `pnpm` is up to date'
-  __ pnpm --silent self-update
-else
+if ! __is_callable pnpm; then
   __print_heading 'Installing `pnpm`'
 
   # Back up `config.fish` first as the installer may modify it
@@ -70,7 +67,7 @@ else
   url='https://get.pnpm.io/install.sh'
   __print_url "$url"
 
-  curl --fail --location "$url" | sh -
+  curl --fail --location "$url" | env PNPM_VERSION='11.0.0' sh -
 
   # Restore `config.fish`
   if [ -f "$config" ]; then
@@ -78,6 +75,10 @@ else
     __ rm -f "$config"
   fi
 fi
+
+# Update `pnpm`
+__print_heading_dimmed 'Ensuring `pnpm` is up to date'
+__ pnpm --dir "$HOME" --silent self-update latest-11
 
 # Install `pnpm` completions
 if __is_callable pnpm; then
@@ -91,6 +92,12 @@ fi
 if __is_callable pnpm; then
   __print_heading_dimmed 'Installing `node`'
   __ pnpm --silent env use --global lts
+fi
+
+# Install `skills`
+if __is_callable pnpm; then
+  __print_heading_dimmed 'Installing `skills`'
+  __ pnpm --silent install --global skills
 fi
 
 # Install `vim-plug`

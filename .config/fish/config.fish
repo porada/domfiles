@@ -27,11 +27,12 @@ set -x NODE_REPL_HISTORY "$HOME/.node_history"
 set -x NODE_REPL_MODE sloppy
 
 # Set `npm` config paths
-set -x NPM_CONFIG_GLOBALCONFIG "$DOMFILES_NPM_CONFIG_DIR/global.npmrc"
-set -x NPM_CONFIG_USERCONFIG "$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
+set -x npm_config_globalconfig "$DOMFILES_NPM_CONFIG_DIR/global.npmrc"
+set -x npm_config_userconfig "$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
 
 # Set `pnpm` config paths
 set -x PNPM_HOME "$HOME/Library/pnpm"
+set -x pnpm_config_npmrc_auth_file "$npm_config_userconfig"
 
 # Opt out of telemetry
 set -x DO_NOT_TRACK 1
@@ -45,6 +46,7 @@ set -x HOMEBREW_NO_ENV_HINTS 1
 fish_add_path --path --move /opt/homebrew/sbin
 fish_add_path --path --move /opt/homebrew/bin
 fish_add_path --path --move "$PNPM_HOME"
+fish_add_path --path --move "$PNPM_HOME/bin"
 fish_add_path --path --move "$DOMFILES_BIN_DIR"
 
 # Load domfiles

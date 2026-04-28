@@ -19,6 +19,7 @@ DOMFILES_PROJECTS_DIR="$HOME/Projects"
 DOMFILES_CONFIG_DIR="$DOMFILES/.config"
 # shellcheck disable=SC2034
 DOMFILES_FISH_CONFIG_DIR="$DOMFILES_CONFIG_DIR/fish"
+# shellcheck disable=SC2034
 DOMFILES_NPM_CONFIG_DIR="$DOMFILES_CONFIG_DIR/npm"
 
 # Define helper variables and functions
@@ -37,11 +38,7 @@ __() {
     brew "$@"
   elif [ "$1" = 'npm' ] || [ "$1" = 'pnpm' ]; then
     __print_command "$@"
-    (
-      export NPM_CONFIG_GLOBALCONFIG="$DOMFILES_NPM_CONFIG_DIR/global.npmrc"
-      export NPM_CONFIG_USERCONFIG="$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
-      command "$@"
-    )
+    fish --command 'command $argv' -- "$@"
   else
     __print_command "$@"
     command "$@"

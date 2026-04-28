@@ -1,7 +1,4 @@
 {
-	"files.associations": {
-		"*.pnpmrc": "properties"
-	},
 	"files.exclude": {
 		".editorconfig": true,
 		"bin/git-diff-highlight": true

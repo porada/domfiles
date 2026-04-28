@@ -9,8 +9,8 @@ for source in .config/fish .curlrc .gitconfig .vimrc; do
   __symlink "$DOMFILES/$source" "$HOME/$source"
 done
 
-if __is_macos && __is_callable pnpm; then
-  __symlink "$DOMFILES_NPM_CONFIG_DIR/global.pnpmrc" "$HOME/Library/Preferences/pnpm/rc"
+if __is_macos; then
+  __symlink "$DOMFILES_NPM_CONFIG_DIR/global.pnpm.yaml" "$HOME/Library/Preferences/pnpm/config.yaml"
 fi
 
 __print_heading_dimmed 'Provisioning additional files'

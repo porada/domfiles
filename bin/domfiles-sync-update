@@ -3,22 +3,16 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Update `npm` packages
-if __is_callable npm; then
-  __print_heading 'Updating `npm` packages'
-  __is_ci && __ npm --version
-  __ npm --global --loglevel=error install npm
-  __ npm --global --loglevel=error update
+# Update `pnpm` packages
+if __is_callable pnpm && ! __is_ci; then
+  __print_heading 'Updating `pnpm` packages'
+  __ pnpm --global --loglevel=error update
 fi
 
-# Update `pnpm` packages
-if __is_callable pnpm; then
-  __print_heading 'Updating `pnpm` packages'
-  __is_ci && __ pnpm --version
-  __ pnpm --global --loglevel=error update
-
+# Update `skills`
+if __is_callable skills && ! __is_ci; then
   __print_heading 'Updating `skills`'
-  __ pnpm dlx skills update --global
+  __ skills update --global
 fi
 
 # Update Fish plugins
