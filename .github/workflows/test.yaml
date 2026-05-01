@@ -22,7 +22,7 @@ jobs:
       - run: fish --command 'domfiles sync'
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -31,6 +31,6 @@ jobs:
       - uses: pnpm/action-setup@v6
         with:
           cache: true
-      - uses: fish-actions/install-fish@v1
+      - run: brew install fish
       - run: pnpm install
       - run: pnpm test

@@ -36,9 +36,10 @@ __() {
     __print_command "$@"
     shift
     brew "$@"
-  elif [ "$1" = 'npm' ] || [ "$1" = 'pnpm' ]; then
+  elif [ "$1" = 'pnpm' ]; then
     __print_command "$@"
-    fish --command 'command $argv' -- "$@"
+    shift
+    pnpm "$@"
   else
     __print_command "$@"
     command "$@"
@@ -276,7 +277,7 @@ __pager() {
 }
 
 __print_command() {
-  __print_info "\$ $(__quote_params "$@")"
+  __print_info "\$ $(__quote_params "$@")" >&2
 }
 
 __print_confirmation() {
@@ -404,5 +405,13 @@ brew() {
     [ -x "$command" ] || __print_error_and_exit '`brew` is missing'
 
     command "$command" "$@"
+  fi
+}
+
+pnpm() {
+  if __is_callable pnpm; then
+    PATH="$HOME/Library/pnpm/bin:$PATH" command pnpm "$@"
+  else
+    __print_error_and_exit '`pnpm` is missing'
   fi
 }

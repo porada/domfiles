@@ -1,5 +1,5 @@
 {
-	"agent_buffer_font_size": 14,
+	"agent_buffer_font_size": 13,
 	"agent_servers": {
 		"codex-acp": {
 			"type": "registry"
@@ -97,6 +97,9 @@
 							"pattern": "^https?://github\\.com"
 						},
 						{
+							"pattern": "^https?://raw\\.githubusercontent\\.com"
+						},
+						{
 							"pattern": "^https?://zed\\.dev"
 						}
 					]
@@ -108,10 +111,13 @@
 					"default": "confirm",
 					"always_allow": [
 						{
+							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn)\\b"
+						},
+						{
 							"pattern": "^bin/"
 						},
 						{
-							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn)\\b"
+							"pattern": "^fish --no-execute\\b"
 						}
 					]
 				}

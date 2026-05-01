@@ -4,14 +4,16 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Update `pnpm` packages
-if __is_callable pnpm && ! __is_ci; then
+if __is_callable pnpm; then
   __print_heading 'Updating `pnpm` packages'
-  __ pnpm --global --loglevel=error update
+  __is_ci && __ pnpm --version
+  __ pnpm --dir "$HOME" update --global --loglevel=error
 fi
 
 # Update `skills`
-if __is_callable skills && ! __is_ci; then
+if __is_callable skills; then
   __print_heading 'Updating `skills`'
+  __is_ci && __ skills --version
   __ skills update --global
 fi
 

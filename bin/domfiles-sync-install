@@ -30,7 +30,7 @@ install() {
 }
 
 # Install primary dependencies
-for formula in fish git mole vim; do
+for formula in fish git mole node@24 pnpm vim; do
   install "$formula"
 done
 
@@ -56,48 +56,17 @@ if __is_callable fish && ! __is_fisher_installed; then
     | fish --command 'source /dev/stdin && fisher install jorgebucaran/fisher'
 fi
 
-# Install `pnpm`
-if ! __is_callable pnpm; then
-  __print_heading 'Installing `pnpm`'
-
-  # Back up `config.fish` first as the installer may modify it
-  config="$(mktemp)"
-  __ cp "$DOMFILES_FISH_CONFIG_DIR/config.fish" "$config"
-
-  url='https://get.pnpm.io/install.sh'
-  __print_url "$url"
-
-  curl --fail --location "$url" | env PNPM_VERSION='11.0.0' sh -
-
-  # Restore `config.fish`
-  if [ -f "$config" ]; then
-    __ cp "$config" "$DOMFILES_FISH_CONFIG_DIR/config.fish"
-    __ rm -f "$config"
-  fi
-fi
-
-# Update `pnpm`
-__print_heading_dimmed 'Ensuring `pnpm` is up to date'
-__ pnpm --dir "$HOME" --silent self-update latest-11
-
 # Install `pnpm` completions
 if __is_callable pnpm; then
   __print_heading_dimmed 'Installing `pnpm` completions'
   __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
-  pnpm completion fish > "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
-  __print_confirmation 'pnpm completion fish'
-fi
-
-# Install `node`
-if __is_callable pnpm; then
-  __print_heading_dimmed 'Installing `node`'
-  __ pnpm --silent env use --global lts
+  __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
 fi
 
 # Install `skills`
 if __is_callable pnpm; then
   __print_heading_dimmed 'Installing `skills`'
-  __ pnpm --silent install --global skills
+  __ pnpm --dir "$HOME" --silent install --global skills
 fi
 
 # Install `vim-plug`
