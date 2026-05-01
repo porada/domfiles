@@ -2,7 +2,6 @@
 abbr --erase (abbr --list) >/dev/null 2>&1
 
 # Shorten frequently used commands
-abbr c code
 abbr g git
 abbr o open
 abbr k killall

@@ -1,0 +1,14 @@
+[
+	{
+		"context": "Editor",
+		"bindings": {
+			"cmd-shift-d": "editor::DuplicateLineDown"
+		}
+	},
+	{
+		"context": "Workspace",
+		"bindings": {
+			"cmd-shift-d": null
+		}
+	}
+]

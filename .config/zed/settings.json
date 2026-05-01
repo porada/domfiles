@@ -1,0 +1,121 @@
+{
+	"agent_buffer_font_size": 14,
+	"agent_servers": {
+		"codex-acp": {
+			"type": "registry"
+		}
+	},
+	"autosave": "on_focus_change",
+	"buffer_font_features": {
+		"calt": false
+	},
+	"buffer_font_size": 14,
+	"cli_default_open_behavior": "new_window",
+	"collaboration_panel": {
+		"button": false
+	},
+	"debugger": {
+		"button": false
+	},
+	"format_on_save": "off",
+	"git": {
+		"inline_blame": {
+			"enabled": false
+		}
+	},
+	"git_panel": {
+		"dock": "left"
+	},
+	"gutter": {
+		"runnables": false
+	},
+	"hard_tabs": true,
+	"outline_panel": {
+		"dock": "left"
+	},
+	"project_panel": {
+		"dock": "left",
+		"hide_root": true
+	},
+	"scrollbar": {
+		"cursors": false
+	},
+	"search": {
+		"button": false
+	},
+	"show_whitespaces": "boundary",
+	"soft_wrap": "editor_width",
+	"tab_size": 4,
+	"telemetry": {
+		"diagnostics": false,
+		"metrics": false
+	},
+	"terminal": {
+		"button": false,
+		"line_height": {
+			"custom": 1.35
+		}
+	},
+	"theme": "One Dark",
+	"title_bar": {
+		"show_user_picture": false
+	},
+	"toolbar": {
+		"quick_actions": false
+	},
+	"ui_font_family": ".SystemUIFont",
+	"ui_font_size": 15,
+	"whitespace_map": {
+		"tab": " "
+	},
+	"wrap_guides": [
+		80,
+		100
+	],
+	"agent": {
+		"default_model": {
+			"effort": "xhigh",
+			"enable_thinking": true,
+			"model": "gpt-5.5",
+			"provider": "zed.dev"
+		},
+		"default_width": 480,
+		"dock": "right",
+		"enable_feedback": false,
+		"expand_terminal_card": false,
+		"sidebar_side": "right",
+		"tool_permissions": {
+			"default": "allow",
+			"tools": {
+				"delete_path": {
+					"default": "confirm"
+				},
+				"fetch": {
+					"default": "confirm",
+					"always_allow": [
+						{
+							"pattern": "^https?://github\\.com"
+						},
+						{
+							"pattern": "^https?://zed\\.dev"
+						}
+					]
+				},
+				"move_path": {
+					"default": "confirm"
+				},
+				"terminal": {
+					"default": "confirm",
+					"always_allow": [
+						{
+							"pattern": "^bin/"
+						},
+						{
+							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn)\\b"
+						}
+					]
+				}
+			}
+		}
+	}
+}

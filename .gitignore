@@ -6,6 +6,8 @@
 .config/fish/local.fish
 .config/fish/themes
 .config/npm/user.npmrc
+.config/zed/prompts
+.config/zed/themes
 .DS_Store
 .lastsync
 .vite-hooks/_

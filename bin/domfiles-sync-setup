@@ -5,7 +5,7 @@
 
 __print_heading 'Linking domfiles'
 
-for source in .config/fish .curlrc .gitconfig .vimrc; do
+for source in .config/fish .config/zed .curlrc .gitconfig .vimrc; do
   __symlink "$DOMFILES/$source" "$HOME/$source"
 done
 

@@ -1,0 +1,9 @@
+{
+	"file_scan_exclusions": [
+		".config/zed/prompts",
+		".DS_Store",
+		".editorconfig",
+		".git",
+		"bin/git-diff-highlight"
+	]
+}
