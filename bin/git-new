@@ -4,5 +4,9 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Create a new branch, overwriting it if necessary
+if [ $# -ne 1 ]; then
+  __print_error_and_exit '`git new` requires one argument'
+fi
+
 git branch -D "$1" 2> /dev/null || true
 git checkout -b "$1"

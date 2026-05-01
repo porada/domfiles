@@ -4,8 +4,13 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Rebase a given number of last commits
-count="${1:-$(__git_default_commit_count --no-initial)}"
 available=0
+
+if __is_uint "${1-}"; then
+  count="$1"
+else
+  count="$(__git_default_commit_count --no-initial)"
+fi
 
 # Ensure the repository has a `HEAD` first
 if git rev-parse --verify HEAD > /dev/null 2>&1; then
