@@ -17,7 +17,7 @@ export default defineConfig({
 		'*': 'pnpm format',
 		'*.fish': 'pnpm lint:fish',
 		'*.sh': 'pnpm lint:sh',
-		'*.ts': () => 'pnpm lint:ts:check && pnpm lint:ts',
+		'*.ts': () => 'pnpm lint:ts:check',
 		'bin/!(git-diff-highlight)': [chmod(), 'pnpm lint:sh'],
 	},
 });

@@ -12,10 +12,10 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@11.0.0",
+	"packageManager": "pnpm@11.0.2",
 	"devDependencies": {
 		"@domfiles/prettier-plugin-fish": "workspace:*",
-		"@standard-config/eslint": "^2.1.0",
+		"@standard-config/eslint": "^2.2.0",
 		"@standard-config/oxlint": "^1.9.0",
 		"@standard-config/prettier": "^1.12.1",
 		"@standard-config/tsconfig": "catalog:",
@@ -23,7 +23,7 @@
 		"eslint": "^10.2.1",
 		"prettier": "catalog:",
 		"typescript": "catalog:",
-		"vite-plus": "^0.1.19",
+		"vite-plus": "^0.1.20",
 		"vitest": "catalog:"
 	},
 	"scripts": {

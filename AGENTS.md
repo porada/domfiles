@@ -22,7 +22,6 @@
 ### Shell Scripting
 
 - Always assume that `fish` is the default shell.
-    - Run all shell terminal commands using `fish` syntax when `fish` is available.
 - Always ensure that any shell scripts not written in `fish` strictly conform to POSIX `sh`.
     - Apply strict mode when applicable.
 - Ensure all POSIX shell scripts source `domlib`.

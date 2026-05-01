@@ -8,7 +8,7 @@
 .config/npm/user.npmrc
 .DS_Store
 .lastsync
-.vite-config/_
+.vite-hooks/_
 coverage
 node_modules
 tsconfig.tsbuildinfo
