@@ -41,10 +41,6 @@ if ! __is_ci; then
   done
 fi
 
-# Clean up `brew` cache
-__ brew cleanup --scrub --quiet
-__ rm -rf "$(brew --cache)"
-
 # Install `fisher`
 if __is_callable fish && ! __is_fisher_installed; then
   __print_heading 'Installing `fisher`'

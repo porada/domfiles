@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# shellcheck source=bin/domlib
-. "$(dirname "$(realpath "$0")")/domlib"
-
-if __is_callable pnpm && ! __is_brew_installed pnpm; then
-  __print_heading_dimmed 'Removing the standalone `pnpm` install'
-  __ rm -rf "$HOME/Library/pnpm"
-fi
