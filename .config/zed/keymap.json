@@ -6,6 +6,12 @@
 		}
 	},
 	{
+		"context": "Editor",
+		"bindings": {
+			"cmd-shift-o": "editor::SortLinesCaseInsensitive"
+		}
+	},
+	{
 		"context": "Workspace",
 		"bindings": {
 			"cmd-shift-d": null
