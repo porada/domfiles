@@ -83,6 +83,7 @@
 		"dock": "right",
 		"enable_feedback": false,
 		"expand_terminal_card": false,
+		"show_merge_conflict_indicator": false,
 		"sidebar_side": "right",
 		"tool_permissions": {
 			"default": "allow",

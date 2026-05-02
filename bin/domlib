@@ -409,20 +409,20 @@ __touch() {
 }
 
 brew() {
-  if __is_callable brew; then
-    command brew "$@"
-  else
+  command='brew'
+
+  if ! __is_callable "$command"; then
     command='/opt/homebrew/bin/brew'
     [ -x "$command" ] || __print_error_and_exit '`brew` is missing'
-
-    command "$command" "$@"
   fi
+
+  HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
 }
 
 pnpm() {
-  if __is_callable pnpm; then
-    PATH="$HOME/Library/pnpm/bin:$PATH" command pnpm "$@"
-  else
+  if ! __is_callable pnpm; then
     __print_error_and_exit '`pnpm` is missing'
   fi
+
+  PATH="$HOME/Library/pnpm/bin:$PATH" command pnpm "$@"
 }
