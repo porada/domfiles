@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# shellcheck source=bin/domlib
+. "$(dirname "$(realpath "$0")")/domlib"
+
+# Recursively remove files or directories that match the given pattern
+if [ $# -ne 1 ]; then
+  __print_error_and_exit '`rr` requires one argument'
+fi
+
+# Reject destructive patterns
+case "$1" in
+  '*' | '.' | '.*' | '..' | '/')
+    __print_error_and_exit "\`rr\` can’t remove \`$1\`"
+    ;;
+esac
+
+__ find . -mindepth 1 -name "$1" -prune -exec rm -rf '{}' ';' -print

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# shellcheck source=bin/domlib
-. "$(dirname "$(realpath "$0")")/domlib"
-
-# Recursively remove all TypeScript build cache files
-__ find . -type f -name '*.tsbuildinfo' -delete -print

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# shellcheck source=bin/domlib
-. "$(dirname "$(realpath "$0")")/domlib"
-
-# Recursively remove all `.DS_Store` files
-__ find . -type f -name '*.DS_Store' -delete -print
