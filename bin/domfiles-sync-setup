@@ -5,7 +5,7 @@
 
 __print_heading 'Linking domfiles'
 
-for source in .config/fish .config/zed .curlrc .gitconfig .vimrc; do
+for source in .config/fish .config/git .config/zed .curlrc .gitconfig .vimrc; do
   __symlink "$DOMFILES/$source" "$HOME/$source"
 done
 
@@ -15,11 +15,11 @@ fi
 
 __print_heading_dimmed 'Provisioning additional files'
 
+__mkdir "$DOMFILES_PROJECTS_DIR"
 __touch "$DOMFILES_FISH_CONFIG_DIR/local.fish"
+__touch "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
 __touch "$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
 __touch "$HOME/.hushlogin"
-__touch "$HOME/.ssh/.aiexclude"
-__mkdir "$DOMFILES_PROJECTS_DIR"
 
 __print_heading_dimmed 'Ensuring proper permissions'
 
@@ -28,8 +28,13 @@ __chmod "$HOME/.ssh"
 
 __print_heading_dimmed 'Verifying SSH setup'
 
-if __is_ssh_configured; then
-  __print_confirmation "$DOMFILES_SSH_KEY"
-else
+if ! __is_ssh_configured; then
   __print_error 'No SSH key found'
+else
+  __print_confirmation "$DOMFILES_SSH_KEY"
+
+  __print_heading_dimmed 'Setting up allowed signers'
+  read -r type key signer < "$DOMFILES_SSH_KEY.pub"
+  printf '%s %s %s\n' "$signer" "$type" "$key" > "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
+  __print_confirmation "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
 fi

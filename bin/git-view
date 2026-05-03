@@ -37,13 +37,13 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
 
     # shellcheck disable=SC2086
     if git diff-tree --quiet "$1" -- . $exclude_params > /dev/null; then
-      git show "$1" -- $excluded_paths
+      git show --show-signature "$1" -- $excluded_paths
       exit $?
     fi
 
     # shellcheck disable=SC2086
     {
-      git show --stat --color=always "$1" -- $excluded_paths
+      git show --show-signature --stat --color=always "$1" -- $excluded_paths
       echo
       git show --pretty=format: --color=always "$1" -- . $exclude_params
     } | __pager
@@ -52,4 +52,4 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
   fi
 fi
 
-git show "$@"
+git show --show-signature "$@"

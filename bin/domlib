@@ -20,6 +20,8 @@ DOMFILES_CONFIG_DIR="$DOMFILES/.config"
 # shellcheck disable=SC2034
 DOMFILES_FISH_CONFIG_DIR="$DOMFILES_CONFIG_DIR/fish"
 # shellcheck disable=SC2034
+DOMFILES_GIT_CONFIG_DIR="$DOMFILES_CONFIG_DIR/git"
+# shellcheck disable=SC2034
 DOMFILES_NPM_CONFIG_DIR="$DOMFILES_CONFIG_DIR/npm"
 
 # Define helper variables and functions

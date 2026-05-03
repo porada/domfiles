@@ -1,6 +1,7 @@
 # Resolve config paths
 set -g DOMFILES_FISH_CONFIG_DIR (path dirname (path resolve (status filename)))
 set -g DOMFILES_CONFIG_DIR (path dirname "$DOMFILES_FISH_CONFIG_DIR")
+set -g DOMFILES_GIT_CONFIG_DIR "$DOMFILES_CONFIG_DIR/git"
 set -g DOMFILES_NPM_CONFIG_DIR "$DOMFILES_CONFIG_DIR/npm"
 
 # Resolve common paths
