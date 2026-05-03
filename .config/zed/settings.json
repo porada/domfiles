@@ -30,6 +30,7 @@
 		"runnables": false
 	},
 	"hard_tabs": true,
+	"inline_code_actions": false,
 	"outline_panel": {
 		"dock": "left"
 	},

@@ -1,13 +1,13 @@
 [
 	{
-		"context": "Editor",
 		"bindings": {
-			"cmd-shift-d": "editor::DuplicateLineDown"
+			"cmd-shift-i": "agent::Toggle"
 		}
 	},
 	{
 		"context": "Editor",
 		"bindings": {
+			"cmd-shift-d": "editor::DuplicateLineDown",
 			"cmd-shift-o": "editor::SortLinesCaseInsensitive"
 		}
 	},
