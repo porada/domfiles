@@ -8,11 +8,7 @@ if [ $# -ne 1 ]; then
   __print_error_and_exit '`rr` requires one argument'
 fi
 
-# Reject destructive patterns
-case "$1" in
-  '*' | '.' | '.*' | '..' | '/')
-    __print_error_and_exit "\`rr\` can’t remove \`$1\`"
-    ;;
-esac
+__print_warning "Remove all instances of \`$1\`?"
+read -r _
 
-__ find . -mindepth 1 -name "$1" -prune -exec rm -rf '{}' ';' -print
+__ find . -mindepth 1 -name "$1" -prune -exec rm -rf '{}' '+' -print
