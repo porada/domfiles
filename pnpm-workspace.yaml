@@ -10,6 +10,8 @@ catalog:
   typescript: ^6.0.3
   vitest: ^4.1.5
 
+color: always
+
 minimumReleaseAgeExclude:
   - '@standard-config/*'
 
