@@ -12,7 +12,7 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@11.0.9",
+	"packageManager": "pnpm@11.1.1",
 	"devDependencies": {
 		"@domfiles/prettier-plugin-fish": "workspace:*",
 		"@standard-config/eslint": "^2.2.0",
