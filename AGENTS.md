@@ -92,26 +92,26 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 ## Shorthand Commands
 
 - Shorthand commands are high-level task macros that define complete, self-contained procedures.
-- Always execute the task exactly as defined below whenever I say its name.
+- Always execute shorthand commands exactly as defined below.
 
 ### Audit
 
 - Review the entire repository for redundancies, inconsistencies, typos, and potential structural or type issues.
-    - Perform the review without making edits.
 - Ensure there is no dead or unused code.
 - Treat the audit as one continuous task.
     - Do not wait for my confirmation between steps.
     - Report all findings at the end.
     - Report only issues that may require fixing.
+- Perform this task without making edits.
 
 ### Review
 
 - Review the commit matching the provided hash.
     - If no hash is given, review the most recent commit on the current branch.
-    - Perform the review without making edits.
 - Report any regressions the changes may introduce.
 - Report any cases where new code reimplements behavior already available in the language, standard library, or existing shared utilities in this repository.
-- Ensure all changes comply with the latest version of `AGENTS.md`.
+- Ensure all changes align with the latest version of `AGENTS.md`.
+- Perform this task without making edits.
 
 ### Verify
 
