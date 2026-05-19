@@ -1,4 +1,4 @@
-[![](https://img.shields.io/badge/shell-fish-informational)](https://fishshell.com) [![](https://img.shields.io/github/actions/workflow/status/porada/domfiles/test.yaml)](https://github.com/porada/domfiles/actions/workflows/test.yaml)
+[![](https://img.shields.io/badge/shell-fish-informational?style=flat-square)](https://fishshell.com) [![](https://img.shields.io/github/actions/workflow/status/porada/domfiles/test.yaml?style=flat-square)](https://github.com/porada/domfiles/actions/workflows/test.yaml)
 
 # domfiles
 
