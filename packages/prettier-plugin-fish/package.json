@@ -1,5 +1,5 @@
 {
-	"name": "@domfiles/prettier-plugin-fish",
+	"name": "prettier-plugin-fish",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",

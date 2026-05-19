@@ -1,5 +1,5 @@
 import { defineConfig } from '@standard-config/prettier';
 
 export default defineConfig({
-	plugins: ['@domfiles/prettier-plugin-fish'],
+	plugins: ['prettier-plugin-fish'],
 });

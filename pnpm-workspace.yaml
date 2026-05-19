@@ -12,9 +12,6 @@ catalog:
 
 color: always
 
-minimumReleaseAgeExclude:
-  - '@standard-config/*'
-
 overrides:
   vite-plus>oxfmt: '-'
 
