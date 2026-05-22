@@ -23,7 +23,7 @@
 		"prettier": "catalog:",
 		"prettier-plugin-fish": "workspace:*",
 		"typescript": "catalog:",
-		"vite-plus": "^0.1.21",
+		"vite-plus": "^0.1.22",
 		"vitest": "catalog:"
 	},
 	"scripts": {
