@@ -35,6 +35,9 @@ set -x npm_config_userconfig "$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
 set -x PNPM_HOME "$HOME/Library/pnpm"
 set -x pnpm_config_npmrc_auth_file "$npm_config_userconfig"
 
+# Set `zizmor` config path
+set -x ZIZMOR_CONFIG "$DOMFILES_CONFIG_DIR/zizmor.yaml"
+
 # Opt out of telemetry
 set -x DO_NOT_TRACK 1
 set -x HOMEBREW_NO_ANALYTICS 1
