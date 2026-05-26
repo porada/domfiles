@@ -24,6 +24,7 @@
 	# Quick commits
 	boom = commit -am '💥' --allow-empty --no-verify
 	deps = commit -am 'Update dependencies'
+	rd = commit -am 'Update `README`'
 
 [commit]
 	gpgSign = true
