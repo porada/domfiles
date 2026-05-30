@@ -66,8 +66,8 @@ importers:
   packages/prettier-plugin-fish:
     dependencies:
       tinyexec:
-        specifier: ^1.2.2
-        version: 1.2.2
+        specifier: ^1.2.3
+        version: 1.2.3
     devDependencies:
       '@standard-config/tsconfig':
         specifier: 'catalog:'
