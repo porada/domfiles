@@ -10,8 +10,8 @@ catalogs:
       specifier: ^3.2.0
       version: 3.2.0
     '@vitest/coverage-v8':
-      specifier: ^4.1.7
-      version: 4.1.7
+      specifier: ^4.1.8
+      version: 4.1.8
     prettier:
       specifier: ^3.8.3
       version: 3.8.3
@@ -31,10 +31,10 @@ importers:
     devDependencies:
       '@standard-config/eslint':
         specifier: ^2.2.0
-        version: 2.2.0(@standard-config/oxlint@1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))))(eslint@10.4.1)(typescript@6.0.3)
+        version: 2.2.0(@standard-config/oxlint@1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))))(eslint@10.4.1)(typescript@6.0.3)
       '@standard-config/oxlint':
         specifier: ^1.9.0
-        version: 1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)))
+        version: 1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)))
       '@standard-config/prettier':
         specifier: ^1.13.3
         version: 1.13.3(prettier@3.8.3)
@@ -43,7 +43,7 @@ importers:
         version: 3.2.0(typescript@6.0.3)
       '@vitest/coverage-v8':
         specifier: 'catalog:'
-        version: 4.1.7(vitest@4.1.8)
+        version: 4.1.8(vitest@4.1.8)
       eslint:
         specifier: ^10.4.1
         version: 10.4.1
@@ -58,10 +58,10 @@ importers:
         version: 6.0.3
       vite-plus:
         specifier: ^0.1.23
-        version: 0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)
+        version: 0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(yaml@2.9.0)
+        version: 4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(yaml@2.9.0)
 
   packages/prettier-plugin-fish:
     dependencies:
@@ -77,7 +77,7 @@ importers:
         version: 24.12.4
       '@vitest/coverage-v8':
         specifier: 'catalog:'
-        version: 4.1.7(vitest@4.1.8)
+        version: 4.1.8(vitest@4.1.8)
       prettier:
         specifier: 'catalog:'
         version: 3.8.3
@@ -86,7 +86,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 'catalog:'
-        version: 4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(yaml@2.9.0)
+        version: 4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(yaml@2.9.0)
 
 packages:
 
@@ -760,11 +760,11 @@ packages:
     resolution: {integrity: sha512-U3gxVaDVnuZKhSspW/MzMxE1kq7zOdc072FcSNoqA1I9p8HyKbBFfEHoWckBAMgNMph4MamwS5iTVzFmrnt8TQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@vitest/coverage-v8@4.1.7':
-    resolution: {integrity: sha512-qsYPeXc5Q9dFLd1i8Ap+Bx8sQgcp+rFVQo4R0dDsWNBzl26ldVF1qOO+RL24K7FDrR6pA+50XedRLSoSG24bVQ==}
+  '@vitest/coverage-v8@4.1.8':
+    resolution: {integrity: sha512-lt3kovsyHwYe00wq4D1ti0Z974fWj4NLp6siqiyEufUpyFwK9Yhi7rBhac9JL5aA0zoMrJqc4vYPZRUnI7l7nw==}
     peerDependencies:
-      '@vitest/browser': 4.1.7
-      vitest: 4.1.7
+      '@vitest/browser': 4.1.8
+      vitest: 4.1.8
     peerDependenciesMeta:
       '@vitest/browser':
         optional: true
@@ -783,9 +783,6 @@ packages:
       vite:
         optional: true
 
-  '@vitest/pretty-format@4.1.7':
-    resolution: {integrity: sha512-umgCarTOYQWIaDMvGDRZij+6b9oVeLIyJzfN+AS88e0ZOU3QTgNNSTtjQOpcvWr3np1N0j4WgZj+sb3oYBDscw==}
-
   '@vitest/pretty-format@4.1.8':
     resolution: {integrity: sha512-9GasEBxpZ1VYIpqHf/0+YGg121uSNwCKOJqIrTwWP/TB7DmFCiaBpNl3aPZzoLWfWkuqhbH8vJIVobZkvdo2cA==}
 
@@ -797,9 +794,6 @@ packages:
 
   '@vitest/spy@4.1.8':
     resolution: {integrity: sha512-6EevtBp6OZOPF7bmz36HrGMeP3txgVSrgebWxHOafDXGkhIzfXK14f8KF6MuFfgXXUeHxmpD3BQxkV00/3s5mA==}
-
-  '@vitest/utils@4.1.7':
-    resolution: {integrity: sha512-T532WBu791cBxJlCl6SO+J14l81DQx6uQHm1bQbmCDY7nqlEIgkza/UFnSBNaUtSf41unldDFjdOBYEQC4b5Hw==}
 
   '@vitest/utils@4.1.8':
     resolution: {integrity: sha512-uOJamYALNhfJ6iolExyQM40yIQwDqYnkKtQ5VCiSe17E33H0aQ/u+1GlRuz4LZBk6Mm3sg90G9hEbmEt37C1Zg==}
@@ -2077,21 +2071,21 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@standard-config/eslint@2.2.0(@standard-config/oxlint@1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))))(eslint@10.4.1)(typescript@6.0.3)':
+  '@standard-config/eslint@2.2.0(@standard-config/oxlint@1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))))(eslint@10.4.1)(typescript@6.0.3)':
     dependencies:
       '@eslint-react/eslint-plugin': 5.8.5(eslint@10.4.1)(typescript@6.0.3)
       '@stylistic/eslint-plugin': 5.10.0(eslint@10.4.1)
       eslint-plugin-perfectionist: 5.9.0(eslint@10.4.1)(typescript@6.0.3)
     optionalDependencies:
-      '@standard-config/oxlint': 1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)))
+      '@standard-config/oxlint': 1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)))
       eslint: 10.4.1
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@standard-config/oxlint@1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)))':
+  '@standard-config/oxlint@1.9.0(oxlint@1.67.0(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)))':
     dependencies:
-      oxlint: 1.67.0(oxlint-tsgolint@0.23.0)(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))
+      oxlint: 1.67.0(oxlint-tsgolint@0.23.0)(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))
 
   '@standard-config/prettier@1.13.3(prettier@3.8.3)':
     dependencies:
@@ -2205,10 +2199,10 @@ snapshots:
       '@typescript-eslint/types': 8.59.4
       eslint-visitor-keys: 5.0.1
 
-  '@vitest/coverage-v8@4.1.7(vitest@4.1.8)':
+  '@vitest/coverage-v8@4.1.8(vitest@4.1.8)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
-      '@vitest/utils': 4.1.7
+      '@vitest/utils': 4.1.8
       ast-v8-to-istanbul: 1.0.2
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-report: 3.0.1
@@ -2217,7 +2211,7 @@ snapshots:
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(yaml@2.9.0)
+      vitest: 4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(yaml@2.9.0)
 
   '@vitest/expect@4.1.8':
     dependencies:
@@ -2236,10 +2230,6 @@ snapshots:
     optionalDependencies:
       vite: 8.0.14(@types/node@24.12.4)(yaml@2.9.0)
 
-  '@vitest/pretty-format@4.1.7':
-    dependencies:
-      tinyrainbow: 3.1.0
-
   '@vitest/pretty-format@4.1.8':
     dependencies:
       tinyrainbow: 3.1.0
@@ -2257,12 +2247,6 @@ snapshots:
       pathe: 2.0.3
 
   '@vitest/spy@4.1.8': {}
-
-  '@vitest/utils@4.1.7':
-    dependencies:
-      '@vitest/pretty-format': 4.1.7
-      convert-source-map: 2.0.0
-      tinyrainbow: 3.1.0
 
   '@vitest/utils@4.1.8':
     dependencies:
@@ -2300,7 +2284,7 @@ snapshots:
   '@voidzero-dev/vite-plus-linux-x64-musl@0.1.23':
     optional: true
 
-  '@voidzero-dev/vite-plus-test@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)':
+  '@voidzero-dev/vite-plus-test@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)':
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@types/chai': 5.2.3
@@ -2318,7 +2302,7 @@ snapshots:
       ws: 8.21.0
     optionalDependencies:
       '@types/node': 24.12.4
-      '@vitest/coverage-v8': 4.1.7(vitest@4.1.8)
+      '@vitest/coverage-v8': 4.1.8(vitest@4.1.8)
     transitivePeerDependencies:
       - '@arethetypeswrong/core'
       - '@tsdown/css'
@@ -2788,7 +2772,7 @@ snapshots:
       '@oxlint-tsgolint/win32-arm64': 0.23.0
       '@oxlint-tsgolint/win32-x64': 0.23.0
 
-  oxlint@1.67.0(oxlint-tsgolint@0.23.0)(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)):
+  oxlint@1.67.0(oxlint-tsgolint@0.23.0)(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.67.0
       '@oxlint/binding-android-arm64': 1.67.0
@@ -2810,7 +2794,7 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.67.0
       '@oxlint/binding-win32-x64-msvc': 1.67.0
       oxlint-tsgolint: 0.23.0
-      vite-plus: 0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)
+      vite-plus: 0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)
 
   p-limit@3.1.0:
     dependencies:
@@ -2961,13 +2945,13 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0):
+  vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0):
     dependencies:
       '@oxc-project/types': 0.133.0
       '@oxlint/plugins': 1.61.0
       '@voidzero-dev/vite-plus-core': 0.1.23(@types/node@24.12.4)(typescript@6.0.3)(yaml@2.9.0)
-      '@voidzero-dev/vite-plus-test': 0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)
-      oxlint: 1.67.0(oxlint-tsgolint@0.23.0)(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))
+      '@voidzero-dev/vite-plus-test': 0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0)
+      oxlint: 1.67.0(oxlint-tsgolint@0.23.0)(vite-plus@0.1.23(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(typescript@6.0.3)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))(yaml@2.9.0))
       oxlint-tsgolint: 0.23.0
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 0.1.23
@@ -3021,7 +3005,7 @@ snapshots:
       fsevents: 2.3.3
       yaml: 2.9.0
 
-  vitest@4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(yaml@2.9.0):
+  vitest@4.1.8(@types/node@24.12.4)(@vitest/coverage-v8@4.1.8)(yaml@2.9.0):
     dependencies:
       '@vitest/expect': 4.1.8
       '@vitest/mocker': 4.1.8(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
@@ -3045,7 +3029,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.12.4
-      '@vitest/coverage-v8': 4.1.7(vitest@4.1.8)
+      '@vitest/coverage-v8': 4.1.8(vitest@4.1.8)
     transitivePeerDependencies:
       - '@vitejs/devtools'
       - esbuild
