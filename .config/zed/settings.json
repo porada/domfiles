@@ -2,6 +2,9 @@
 	"agent_buffer_font_size": 13,
 	"agent_servers": {
 		"codex-acp": {
+			"default_config_options": {
+				"mode": "auto"
+			},
 			"type": "registry"
 		}
 	},
@@ -78,7 +81,7 @@
 			"effort": "xhigh",
 			"enable_thinking": true,
 			"model": "gpt-5.5",
-			"provider": "zed.dev"
+			"provider": "openai-subscribed"
 		},
 		"default_width": 480,
 		"dock": "right",
