@@ -418,7 +418,7 @@ brew() {
     [ -x "$command" ] || __print_error_and_exit '`brew` is missing'
   fi
 
-  HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
+  HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
 }
 
 pnpm() {

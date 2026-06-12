@@ -8,7 +8,7 @@ __is_ci && __ brew --version
 __ brew analytics off
 
 __print_heading_dimmed 'Ensuring `brew` is up to date'
-__ brew update --quiet
+__ brew update-if-needed
 
 if __is_ci; then
   __ brew --version
