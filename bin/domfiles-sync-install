@@ -30,7 +30,7 @@ install() {
 }
 
 # Install primary dependencies
-for formula in fish git mole node@24 pnpm vim; do
+for formula in fish fisher git mole node@24 pnpm vim; do
   install "$formula"
 done
 
@@ -39,17 +39,6 @@ if ! __is_ci; then
   for formula in fd jq ripgrep shellcheck yarn zizmor; do
     install "$formula"
   done
-fi
-
-# Install `fisher`
-if __is_callable fish && ! __is_fisher_installed; then
-  __print_heading 'Installing `fisher`'
-
-  url='https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish'
-  __print_url "$url"
-
-  curl --fail --location "$url" \
-    | fish --command 'source /dev/stdin && fisher install jorgebucaran/fisher'
 fi
 
 # Install `pnpm` completions
