@@ -106,6 +106,9 @@
 						},
 						{
 							"pattern": "^https?://zed\\.dev"
+						},
+						{
+							"pattern": "^https?://(?:docs\\.|formulae\\.)?brew\\.sh"
 						}
 					]
 				},
@@ -116,7 +119,7 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn)\\b"
+							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|fish_indent|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn|zed)\\b"
 						},
 						{
 							"pattern": "^bin/"
