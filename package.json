@@ -14,7 +14,7 @@
 	},
 	"packageManager": "pnpm@11.6.0",
 	"devDependencies": {
-		"@standard-config/oxlint": "^2.0.2",
+		"@standard-config/oxlint": "^2.1.0",
 		"@standard-config/oxlint-stylistic": "^2.0.2",
 		"@standard-config/prettier": "^1.13.3",
 		"@standard-config/tsconfig": "catalog:",
