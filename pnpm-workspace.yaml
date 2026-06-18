@@ -6,21 +6,20 @@ autoInstallPeers: false
 catalog:
   '@standard-config/tsconfig': ^3.2.0
   '@vitest/coverage-v8': ^4.1.9
-  oxlint: ^1.70.0
   prettier: ^3.8.4
   typescript: ^6.0.3
-  vitest: ^4.1.9
+  vite-plus: ^0.2.0
 
 color: always
 
+minimumReleaseAge: 720
+
 overrides:
   vite-plus>oxfmt: '-'
-  vite-plus>oxlint: 'catalog:'
 
 peerDependencyRules:
   allowAny:
     - '@vitest/coverage-v8'
-    - vitest
 
 strictPeerDependencies: true
 

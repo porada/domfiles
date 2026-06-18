@@ -12,10 +12,10 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@11.6.0",
+	"packageManager": "pnpm@11.8.0",
 	"devDependencies": {
-		"@standard-config/oxlint": "^2.1.0",
-		"@standard-config/oxlint-stylistic": "^2.1.0",
+		"@standard-config/oxlint": "^2.2.1",
+		"@standard-config/oxlint-stylistic": "^2.2.1",
 		"@standard-config/prettier": "^1.13.3",
 		"@standard-config/tsconfig": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
@@ -23,8 +23,7 @@
 		"prettier": "catalog:",
 		"prettier-plugin-fish": "workspace:*",
 		"typescript": "catalog:",
-		"vite-plus": "^0.1.24",
-		"vitest": "catalog:"
+		"vite-plus": "catalog:"
 	},
 	"scripts": {
 		"fix": "pnpm format && pnpm run '/^lint:(fish|sh|ts)$/' && pnpm format",
@@ -35,7 +34,7 @@
 		"lint:ts": "vp lint --fix",
 		"lint:ts:check": "vp lint --deny-warnings --type-check",
 		"prepare": "vp config",
-		"test": "vitest run",
+		"test": "vp test",
 		"typecheck": "tsc --noEmit"
 	}
 }

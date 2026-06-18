@@ -1,6 +1,6 @@
 import type { Plugin } from 'prettier';
 import { format } from 'prettier';
-import { expect, expectTypeOf, test } from 'vitest';
+import { expect, expectTypeOf, test } from 'vite-plus/test';
 import * as pluginFish from './index.ts';
 
 test('exposes correct public API', () => {

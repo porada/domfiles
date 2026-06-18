@@ -17,10 +17,10 @@
 		"@vitest/coverage-v8": "catalog:",
 		"prettier": "catalog:",
 		"typescript": "catalog:",
-		"vitest": "catalog:"
+		"vite-plus": "catalog:"
 	},
 	"scripts": {
-		"test": "vitest run",
+		"test": "vp test",
 		"typecheck": "tsc --noEmit"
 	}
 }
