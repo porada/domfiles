@@ -78,7 +78,6 @@ if __is_callable git; then
   fi
 fi
 
-__domfiles sync-migrate
 __domfiles sync-setup
 __domfiles sync-install
 __domfiles sync-macos
