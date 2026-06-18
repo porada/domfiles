@@ -227,6 +227,10 @@ __is_brew_keg_only() {
   brew info "$1" --json=v2 2> /dev/null | grep -q '"keg_only": true'
 }
 
+__is_brew_linked() {
+  brew info "$1" --json=v2 2> /dev/null | grep -q '"linked_keg": "[^"]'
+}
+
 __is_callable() {
   sh -c "command -v \"$1\"" > /dev/null 2>&1
 }

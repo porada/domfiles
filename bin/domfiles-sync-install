@@ -22,9 +22,8 @@ install() {
     __ brew install --quiet "$1"
   fi
 
-  if __is_brew_keg_only "$1"; then
-    __print_heading_dimmed "Ensuring \`$1\` is linked"
-    __ brew unlink --quiet "$1" || true
+  if __is_brew_keg_only "$1" && ! __is_brew_linked "$1"; then
+    __print_heading_dimmed "Linking \`$1\`"
     __ brew link --quiet --overwrite --force "$1"
   fi
 }
