@@ -3,7 +3,8 @@
 	"agent_servers": {
 		"codex-acp": {
 			"default_config_options": {
-				"mode": "auto"
+				"mode": "auto",
+				"model": "gpt-5.5"
 			},
 			"type": "registry"
 		}
