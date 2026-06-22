@@ -12,8 +12,6 @@ catalog:
 
 color: always
 
-minimumReleaseAge: 720
-
 overrides:
   vite-plus>oxfmt: '-'
 
