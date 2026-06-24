@@ -123,9 +123,6 @@
 							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|fish_indent|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn|zed)\\b"
 						},
 						{
-							"pattern": "^bin/"
-						},
-						{
 							"pattern": "^fish --no-execute\\b"
 						}
 					]
