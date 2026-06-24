@@ -367,7 +367,7 @@ __ssh_add() {
 }
 
 __string_contains() {
-  if printf '%s' "$2" | grep -F -q -- "$1"; then
+  if printf '%s' "$1" | grep -F -q -- "$2"; then
     return 0
   else
     return 1
@@ -383,7 +383,7 @@ __string_replace() {
     __print_error_and_exit '`__string_replace` pattern can’t be empty'
   fi
 
-  if ! __string_contains "$1" "$3"; then
+  if ! __string_contains "$3" "$1"; then
     echo "$3"
     return 0
   fi
