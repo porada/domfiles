@@ -5,6 +5,10 @@
 
 __print_heading_dimmed 'Cleaning up'
 
+if __is_callable fish; then
+  __ fish --command '__domfiles_clean_fish_variables'
+fi
+
 __ rm -f "$HOME/.bash_history"
 __ rm -f "$HOME/.lesshst"
 __ rm -f "$HOME/.npmrc"
