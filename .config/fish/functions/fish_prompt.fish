@@ -1,18 +1,21 @@
 function fish_prompt
     set -l exit_code $status
 
+    set_color $fish_color_normal
     set_color $fish_color_user
     __fish_prompt_newline
     __fish_prompt_host
 
+    set_color $fish_color_normal
     set_color $fish_color_cwd
     __fish_prompt_pwd
 
+    set_color $fish_color_normal
     set_color $fish_color_operator
-    __fish_prompt_git_branch
-    __fish_prompt_git_dirty
+    __fish_prompt_git
     __fish_prompt_newline
 
+    set_color $fish_color_normal
     set_color $fish_color_comment
     __fish_prompt_caret $exit_code
 
@@ -33,14 +36,13 @@ function __fish_prompt_pwd
     printf '%s ' (prompt_pwd)
 end
 
-function __fish_prompt_git_branch
-    set -l git_branch (command git symbolic-ref HEAD 2> /dev/null | sed -e "s|^refs/heads/||")
-    test -n "$git_branch"; and printf '%s' "$git_branch"
-end
+function __fish_prompt_git
+    set -g __fish_git_prompt_showdirtystate 1
+    set -g __fish_git_prompt_char_dirtystate '·'
+    set -g __fish_git_prompt_char_stagedstate '·'
+    set -g __fish_git_prompt_char_stateseparator ''
 
-function __fish_prompt_git_dirty
-    set -l git_status (command git status --porcelain --untracked-files=no 2> /dev/null)
-    test -n "$git_status"; and printf '·'
+    fish_git_prompt '%s'
 end
 
 function __fish_prompt_caret
