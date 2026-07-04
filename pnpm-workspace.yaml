@@ -8,9 +8,12 @@ catalog:
   '@vitest/coverage-v8': ^4.1.9
   prettier: ^3.9.4
   typescript: ^6.0.3
-  vite-plus: ^0.2.1
+  vite-plus: ^0.2.2
 
 color: always
+
+minimumReleaseAgeExclude:
+  - '@standard-config/*'
 
 overrides:
   vite-plus>oxfmt: '-'
