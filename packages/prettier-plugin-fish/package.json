@@ -13,7 +13,7 @@
 	},
 	"devDependencies": {
 		"@standard-config/tsconfig": "catalog:",
-		"@types/node": "^24.13.2",
+		"@types/node": "^24.13.3",
 		"@vitest/coverage-v8": "catalog:",
 		"prettier": "catalog:",
 		"typescript": "catalog:",
