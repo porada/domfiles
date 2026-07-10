@@ -4,7 +4,7 @@
 		"codex-acp": {
 			"default_config_options": {
 				"mode": "auto",
-				"model": "gpt-5.5"
+				"model": "gpt-5.6-terra"
 			},
 			"type": "registry"
 		}

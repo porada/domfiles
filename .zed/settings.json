@@ -4,5 +4,18 @@
 		".DS_Store",
 		".git",
 		"bin/git-diff-highlight"
+	],
+	"format_on_save": "on",
+	"formatter": [
+		{
+			"external": {
+				"command": "node_modules/.bin/prettier",
+				"arguments": [
+					"--ignore-unknown",
+					"--stdin-filepath",
+					"{buffer_path}"
+				]
+			}
+		}
 	]
 }
