@@ -16,7 +16,7 @@
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.3.1",
 		"@standard-config/oxlint-stylistic": "^2.3.1",
-		"@standard-config/prettier": "^1.15.0",
+		"@standard-config/prettier": "^1.16.0",
 		"@standard-config/tsconfig": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
 		"eslint": "^10.7.0",
