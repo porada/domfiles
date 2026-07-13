@@ -109,7 +109,7 @@ __domfiles_is_callable() {
 }
 
 __domfiles_is_clean() {
-  __ git -C "$DOMFILES" diff --quiet && __ git -C "$DOMFILES" diff --cached --quiet
+  git -C "$DOMFILES" diff-index --quiet HEAD
 }
 
 __domfiles_ls_bin() {

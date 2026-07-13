@@ -40,11 +40,16 @@ if ! __is_ci; then
   done
 fi
 
-# Install `pnpm` completions
-if __is_callable pnpm; then
-  __print_heading_dimmed 'Installing `pnpm` completions'
-  __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
-  __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
+# Install project dependencies
+if __is_callable node && __is_callable pnpm; then
+  __print_heading_dimmed 'Installing `pnpm` dependencies'
+  __domfiles_is_clean && __ pnpm --dir "$DOMFILES" --silent install --frozen-lockfile
+
+  # Installing `pnpm` completions
+  if __is_callable fish; then
+    __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
+    __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
+  fi
 fi
 
 # Install `skills`

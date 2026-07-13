@@ -38,7 +38,7 @@ dependency_exec() {
 }
 
 dependency_path() {
-  if echo ":$PATH:" | grep -q ":$2:"; then
+  if echo ":$PATH:" | grep -F -q ":$2:"; then
     __print_success "$1"
   else
     __print_error "$1"
