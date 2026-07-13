@@ -4,7 +4,8 @@
 		"codex-acp": {
 			"default_config_options": {
 				"mode": "auto",
-				"model": "gpt-5.6-terra"
+				"model": "gpt-5.6-terra",
+				"reasoning_effort": "max"
 			},
 			"type": "registry"
 		}
@@ -79,9 +80,9 @@
 	],
 	"agent": {
 		"default_model": {
-			"effort": "xhigh",
+			"effort": "max",
 			"enable_thinking": true,
-			"model": "gpt-5.5",
+			"model": "gpt-5.6-terra",
 			"provider": "openai-subscribed"
 		},
 		"default_width": 480,
@@ -121,6 +122,9 @@
 					"always_allow": [
 						{
 							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|fish_indent|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn|zed)\\b"
+						},
+						{
+							"pattern": "^command -v\\b"
 						},
 						{
 							"pattern": "^fish --no-execute\\b"
