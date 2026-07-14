@@ -4,7 +4,7 @@
 		"codex-acp": {
 			"default_config_options": {
 				"mode": "auto",
-				"model": "gpt-5.6-terra",
+				"model": "gpt-5.6-sol",
 				"reasoning_effort": "max"
 			},
 			"type": "registry"
@@ -82,13 +82,21 @@
 		"default_model": {
 			"effort": "max",
 			"enable_thinking": true,
-			"model": "gpt-5.6-terra",
+			"model": "gpt-5.6-sol",
 			"provider": "openai-subscribed"
 		},
 		"default_width": 480,
 		"dock": "right",
 		"enable_feedback": false,
 		"expand_terminal_card": false,
+		"sandbox_permissions": {
+			"network_hosts": [
+				"brew.sh",
+				"github.com",
+				"githubusercontent.com",
+				"zed.dev"
+			]
+		},
 		"show_merge_conflict_indicator": false,
 		"sidebar_side": "right",
 		"tool_permissions": {
