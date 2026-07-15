@@ -43,7 +43,12 @@ fi
 # Install project dependencies
 if __is_callable node && __is_callable pnpm; then
   __print_heading_dimmed 'Installing `pnpm` dependencies'
-  __domfiles_is_clean && __ pnpm --dir "$DOMFILES" --silent install --frozen-lockfile
+
+  if __domfiles_is_clean; then
+    __ pnpm --dir "$DOMFILES" --silent install --frozen-lockfile
+  else
+    __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
+  fi
 
   # Installing `pnpm` completions
   if __is_callable fish; then

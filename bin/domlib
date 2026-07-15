@@ -179,7 +179,7 @@ __git_diff_excluded_files() {
 }
 
 __git_is_commit_reference() {
-  if git rev-parse --verify "$1" > /dev/null 2>&1; then
+  if git rev-parse --verify "$1^{commit}" > /dev/null 2>&1; then
     return 0
   else
     return 1
@@ -256,7 +256,7 @@ __is_shell() {
 }
 
 __is_ssh_configured() {
-  [ -f "$DOMFILES_SSH_KEY" ]
+  [ -f "$DOMFILES_SSH_KEY" ] && [ -f "$DOMFILES_SSH_KEY.pub" ]
 }
 
 __is_tty() {
@@ -287,7 +287,7 @@ __pager() {
   if [ -n "${PAGER-}" ]; then
     sh -c "$PAGER"
   elif __is_callable less; then
-    less "${LESS-}"
+    less
   else
     cat
   fi
@@ -389,9 +389,9 @@ __string_replace() {
   fi
 
   python3 -c '
-import re, sys
+import sys
 pattern, replacement, subject = sys.argv[1:4]
-sys.stdout.write(re.sub(pattern, replacement, subject))' "$@"
+sys.stdout.write(subject.replace(pattern, replacement))' "$@"
 }
 
 __symlink() {
