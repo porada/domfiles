@@ -97,6 +97,7 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 ### Audit
 
 - Review the entire repository for redundancies, inconsistencies, typos, and potential structural or type issues.
+    - Do not run linters or formatters as part of the analysis.
 - Ensure there is no dead or unused code.
 - Treat the audit as one continuous task.
     - Do not wait for my confirmation between steps.
