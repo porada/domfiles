@@ -8,7 +8,8 @@ if [ $# -ne 1 ]; then
   __print_error_and_exit '`rr` requires one argument'
 fi
 
-__print_warning "Remove all instances of \`$1\`?"
-read -r _
+if ! __confirm "Remove all instances of \`$1\`?"; then
+  exit 0
+fi
 
 __ find . -mindepth 1 -name "$1" -prune -exec rm -rf '{}' '+' -print

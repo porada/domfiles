@@ -6,6 +6,7 @@
 # Rebase a given number of last commits
 available=0
 
+# Invalid arguments are intentionally ignored for simplicity
 if __is_uint "${1-}"; then
   count="$1"
 else

@@ -4,6 +4,17 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Go to the main branch, whichever it is
-git checkout main 2> /dev/null \
-  || git checkout trunk 2> /dev/null \
-  || git checkout master
+branch=''
+
+for param in main trunk master; do
+  if git show-ref --verify --quiet "refs/heads/$param"; then
+    branch="$param"
+    break
+  fi
+done
+
+if [ -z "$branch" ]; then
+  __print_error_and_exit 'Could not find the main branch'
+fi
+
+git checkout "$branch"

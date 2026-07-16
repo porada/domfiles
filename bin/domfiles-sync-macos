@@ -17,7 +17,7 @@ __ defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
 __ defaults write com.apple.finder DisableAllAnimations -bool true
 
 # Show Library in Finder
-__ chflags nohidden ~/Library
+__ chflags nohidden "$HOME/Library"
 
 # Disable font smoothing
 __ defaults -currentHost write -g AppleFontSmoothing -int 0

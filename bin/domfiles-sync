@@ -87,5 +87,5 @@ __print_heading 'Sync complete'
 __domfiles dependencies || true
 __is_fish || echo
 
-# Record the last successful sync
+# Record the last complete sync
 date +%s > "$DOMFILES/.lastsync"

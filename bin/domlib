@@ -56,6 +56,29 @@ __chmod() {
   fi
 }
 
+__confirm() {
+  if [ $# -ne 1 ]; then
+    __print_error_and_exit '`__confirm` requires one argument'
+  fi
+
+  while true; do
+    printf '%s %s\n' "$(__print_warning "$1")" "$(__print_info 'y/n')"
+
+    if ! read -r response; then
+      return 1
+    fi
+
+    case "$response" in
+      y | Y)
+        return 0
+        ;;
+      n | N)
+        return 1
+        ;;
+    esac
+  done
+}
+
 __domfiles() {
   if [ $# -eq 0 ]; then
     __print_error_and_exit '`__domfiles` requires at least one argument'
@@ -191,7 +214,7 @@ __git_is_file_in_commit() {
     __print_error_and_exit '`__git_is_file_in_commit` requires two arguments'
   fi
 
-  if git diff-tree --no-commit-id --name-only -r "$1" | grep -q "$2"; then
+  if git diff-tree --no-commit-id --name-only -r "$1" | grep -Fqx -- "$2"; then
     return 0
   else
     return 1
