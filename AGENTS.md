@@ -4,7 +4,7 @@
 
 - This repository is the home of all my dotfiles actively used across multiple Apple Silicon–based Macs (also referred to as `domfiles`).
 
-### Code
+## Code
 
 - Always consider `.config/fish/local.fish` an active part of domfiles if it exists.
     - Always include `local.fish` in any analysis or execution.
@@ -19,7 +19,7 @@
     - Do not report `.config/fish/fish_variables`.
     - Do not report documentation.
 
-### Shell Scripting
+### Shell Scripts
 
 - Always assume that `fish` is the default shell.
 - Always ensure that any shell scripts not written in `fish` strictly conform to POSIX `sh`.
@@ -39,6 +39,7 @@
     - Never quote `$#` when used in a condition.
     - Never quote `$?` when passed to `exit`.
 - Always set `IFS` locally when iterating over filenames or command output.
+    - Exempt loops that iterate over a fixed list of literal filenames.
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.
     - Exempt `printf` output piped into `while` from this requirement.
     - Exempt any `domlib` command output piped into `while` from this requirement.
@@ -56,15 +57,9 @@
 
 ## General
 
-- Never read, analyze, or report files that do not belong to this repository.
-    - Exempt skill files from this rule.
-- Always stay alert to any issues outlined in this document, even when performing unrelated tasks.
-    - Report all discovered issues, but do not fix them without my confirmation.
-- Never edit this file.
+- Always reference the relevant `AGENTS.md` line number when reporting a violation.
+- Never edit this file unless explicitly asked.
 - Never override or alter my input unless explicitly asked.
-- If you cannot verify something directly, admit that you cannot verify it, that you do not have access to the information, or that your knowledge base does not contain it.
-- Enforce strict consistency across all modules, configuration files, and naming conventions.
-- Do not report inconsistencies automatically handled by the formatter or linter.
 
 ## Style
 
@@ -93,6 +88,10 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 
 - Shorthand commands are high-level task macros that define complete, self-contained procedures.
 - Always execute shorthand commands exactly as defined below.
+- Report findings only when supported by concrete repository evidence.
+    - Do not report speculative findings or preference-only alternatives.
+    - Assign a unique number to each finding when it is first reported.
+    - Preserve finding numbers in all subsequent reports.
 
 ### Audit
 
@@ -118,5 +117,7 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 
 - Re-read `AGENTS.md` and all reported files to confirm whether reported issues remain relevant.
     - Ensure that all findings align with the latest version of `AGENTS.md`.
-- Mark resolved issues as addressed and exclude them from future reports.
-- Highlight any issues that persist after the latest edits.
+- Classify each previously reported finding as resolved, intentional, or unresolved.
+    - Exclude resolved findings from future reports.
+    - Exclude intentional findings from future reports unless the relevant code or `AGENTS.md` changes.
+- Report only unresolved findings that still apply.

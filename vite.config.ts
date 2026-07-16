@@ -1,23 +1,21 @@
 import { defineOxlintConfig } from '@standard-config/oxlint';
 import { defineConfig } from 'vite-plus';
 
-function chmod() {
-	return (files: ReadonlyArray<string>) =>
-		files
-			.filter((file) => file !== 'bin/domlib')
-			.map((file) => `chmod +x '${file}'`);
-}
-
 export default defineConfig({
 	test: {
 		projects: ['packages/*'],
 	},
 	lint: defineOxlintConfig(),
 	staged: {
-		'*': 'pnpm format',
+		'*': () => 'pnpm format',
 		'*.fish': 'pnpm lint:fish',
 		'*.sh': 'pnpm lint:sh',
 		'*.ts': () => 'pnpm lint:ts:check',
-		'bin/!(git-diff-highlight)': [chmod(), 'pnpm lint:sh'],
+		'bin/!(domlib|git-diff-highlight)': [
+			/* prettier-ignore */
+			'chmod +x',
+			'pnpm lint:sh',
+		],
+		'bin/domlib': 'pnpm lint:sh',
 	},
 });
