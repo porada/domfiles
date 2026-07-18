@@ -93,9 +93,13 @@
 		"limit_content_width": false,
 		"sandbox_permissions": {
 			"network_hosts": [
-				"brew.sh",
+				"api.github.com",
+				"developers.home-assistant.io",
+				"docs.brew.sh",
+				"formulae.brew.sh",
 				"github.com",
-				"githubusercontent.com",
+				"pnpm.io",
+				"raw.githubusercontent.com",
 				"zed.dev"
 			]
 		},
@@ -111,16 +115,22 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^https?://github\\.com"
+							"pattern": "^https?://(?:api\\.)?\\.github\\.com"
+						},
+						{
+							"pattern": "^https?://developers\\.home-assistant\\.io"
+						},
+						{
+							"pattern": "^https?://(?:docs\\.|formulae\\.)?brew\\.sh"
+						},
+						{
+							"pattern": "^https?://pnpm\\.io"
 						},
 						{
 							"pattern": "^https?://raw\\.githubusercontent\\.com"
 						},
 						{
 							"pattern": "^https?://zed\\.dev"
-						},
-						{
-							"pattern": "^https?://(?:docs\\.|formulae\\.)?brew\\.sh"
 						}
 					]
 				},
