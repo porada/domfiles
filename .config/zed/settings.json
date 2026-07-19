@@ -4,7 +4,6 @@
 		"codex-acp": {
 			"default_config_options": {
 				"fast-mode": false,
-				"mode": "auto",
 				"model": "gpt-5.6-sol",
 				"reasoning_effort": "max"
 			},
@@ -23,7 +22,6 @@
 	"debugger": {
 		"button": false
 	},
-	"format_on_save": "off",
 	"git": {
 		"inline_blame": {
 			"enabled": false
@@ -51,8 +49,6 @@
 		"button": false
 	},
 	"show_whitespaces": "boundary",
-	"soft_wrap": "editor_width",
-	"tab_size": 4,
 	"telemetry": {
 		"diagnostics": false,
 		"metrics": false
@@ -93,13 +89,17 @@
 		"limit_content_width": false,
 		"sandbox_permissions": {
 			"network_hosts": [
-				"api.github.com",
+				"*.brew.sh",
+				"*.github.com",
+				"*.githubusercontent.com",
+				"*.npmjs.org",
+				"brew.sh",
 				"developers.home-assistant.io",
-				"docs.brew.sh",
-				"formulae.brew.sh",
+				"ffmpeg.org",
 				"github.com",
+				"githubusercontent.com",
+				"npmjs.org",
 				"pnpm.io",
-				"raw.githubusercontent.com",
 				"zed.dev"
 			]
 		},
@@ -115,22 +115,28 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^https?://(?:api\\.)?\\.github\\.com"
+							"pattern": "^https://(?:[^./?#:@]+\\.)*brew\\.sh(?:[/?#]|$)"
 						},
 						{
-							"pattern": "^https?://developers\\.home-assistant\\.io"
+							"pattern": "^https://developers\\.home-assistant\\.io(?:[/?#]|$)"
 						},
 						{
-							"pattern": "^https?://(?:docs\\.|formulae\\.)?brew\\.sh"
+							"pattern": "^https://ffmpeg\\.org(?:[/?#]|$)"
 						},
 						{
-							"pattern": "^https?://pnpm\\.io"
+							"pattern": "^https://(?:[^./?#:@]+\\.)*github\\.com(?:[/?#]|$)"
 						},
 						{
-							"pattern": "^https?://raw\\.githubusercontent\\.com"
+							"pattern": "^https://(?:[^./?#:@]+\\.)*githubusercontent\\.com(?:[/?#]|$)"
 						},
 						{
-							"pattern": "^https?://zed\\.dev"
+							"pattern": "^https://(?:[^./?#:@]+\\.)*npmjs\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://pnpm\\.io(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://zed\\.dev(?:[/?#]|$)"
 						}
 					]
 				},
@@ -141,13 +147,102 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^(?:basename|cat|dirname|domfiles|du|echo|fd|file|fish_indent|git|grep|head|jq|ls|nl|npm|pnpm|printf|ps|pwd|readlink|realpath|rg|shellcheck|sort|stat|tail|tr|type|uname|uniq|wc|which|yarn|zed)\\b"
+							"pattern": "^(?:basename|cat|cmp|diff|dirname|docker|du|echo|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sort|stat|sw_vers|tail|test|tr|type|uname|uniq|wc|which|yarn|zed)\\b"
+						},
+						{
+							"pattern": "^brew (?:--(?:prefix|version)|bundle check|config|deps|info|leaves|list|outdated|search|services list|uses)\\b"
 						},
 						{
 							"pattern": "^command -v\\b"
 						},
 						{
-							"pattern": "^fish --no-execute\\b"
+							"pattern": "^defaults read\\b"
+						},
+						{
+							"pattern": "^domfiles(?:$| (?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh)\\b)"
+						},
+						{
+							"pattern": "^fish (?:-n|--no-execute)\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*(?:blame|cat-file|check-attr|check-ignore|describe|diff|diff-files|diff-index|diff-tree|for-each-ref|grep|log|ls-files|ls-remote|merge-base|name-rev|range-diff|rev-list|rev-parse|shortlog|show|show-ref|status|version)\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*branch (?:--(?:list|show-current)\\b|[^-][^ ]*(?: [^-][^ ]*)?$)"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*checkout -b [^-][^ ]*(?: [^-][^ ]*)?$"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*clean (?:(?:.* )?(?:--dry-run|-[A-Za-z]*n[A-Za-z]*)\\b|-h$)"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*config --(?:get|get-all|get-regexp|list)\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*mv\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*reflog show\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*remote(?:$| -v$| (?:get-url|show)\\b)"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*stash (?:list|show)\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*switch (?:-c|--create) [^-][^ ]*(?: [^-][^ ]*)?$"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*tag (?:-l|--list)\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*worktree (?:add|list)\\b"
+						},
+						{
+							"pattern": "^kill (?:-l|(?:-(?:0|9|15|KILL|TERM) )?[1-9][0-9]*(?: [1-9][0-9]*)*)$"
+						},
+						{
+							"pattern": "^launchctl (?:list|print|print-disabled)\\b"
+						},
+						{
+							"pattern": "^plutil -(?:lint|p)\\b"
+						},
+						{
+							"pattern": "^sed -n '[0-9]+(?:,[0-9]+)?p'(?: [^-][^ ]*)*$"
+						},
+						{
+							"pattern": "^sh -n(?: --)? [^-][^ ]*$"
+						}
+					],
+					"always_confirm": [
+						{
+							"pattern": "^fd (?:.* )?(?:--exec(?:-batch)?|-[^- ]*[xX][^- ]*)\\b"
+						},
+						{
+							"pattern": "^find .*-(?:delete|exec(?:dir)?|ok(?:dir)?)\\b"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*mv (?:--?[^- ][^ ]* )*(?:--force|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
+						},
+						{
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*worktree add (?:.* )?(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*B[^ ]*|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
+						},
+						{
+							"pattern": "^(?:npm (?:.* )?(?:create|exec|init|innit|x)|npx)\\b"
+						},
+						{
+							"pattern": "^(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
+						},
+						{
+							"pattern": "^rg (?:.* )?--(?:hostname-bin|pre)(?:[ =]|$)"
+						},
+						{
+							"pattern": "^yarn (?:.* )?(?:create|dlx|init)\\b"
+						},
+						{
+							"pattern": "^zed .*--uninstall\\b"
 						}
 					]
 				}

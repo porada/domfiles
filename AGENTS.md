@@ -55,6 +55,24 @@
 - Always assume this repository is updated via `domfiles sync`.
     - Do not report `domfiles sync` overwriting initial state.
 
+### Zed Config
+
+- Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
+    - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
+- Keep order-independent arrays in Zed configuration alphabetized by value or, for object entries, by the value of their identifying field.
+- Treat Zed agent permissions as layered security boundaries.
+    - Preserve `agent.tool_permissions.default` as `allow`. The configured agent cannot install additional tools itself.
+    - Treat broad Docker access and ordinary package-manager workflows as intentional allowances. Docker is the agent’s container execution environment. Continue to require confirmation for package runners that can download and execute arbitrary code.
+    - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`.
+    - Treat `*.domain.name` and `domain.name` as distinct `network_hosts` entries. Preserve both when access to the apex domain and its subdomains is intended.
+    - Restrict automatically allowed fetch URL patterns to `https://` and anchor each pattern at the hostname boundary.
+- Keep terminal permission patterns concise and consistent.
+    - Consolidate variants within the same command family. Keep unrelated command families separate.
+    - Prefer literal spaces over whitespace character classes.
+    - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
+    - Use `terminal.always_confirm` to override broader `terminal.always_allow` entries for hazardous argument forms, including code-execution hooks, package runners, destructive operations, force flags, and commands that uninstall the invoked tool itself. Account for global options, combined short flags, and accepted long-option abbreviations.
+    - Do not report overlaps between `terminal.always_allow` and `terminal.always_confirm` when `terminal.always_confirm` acts as a safety override.
+
 ## General
 
 - Always reference the relevant `AGENTS.md` line number when reporting a violation.
