@@ -225,13 +225,16 @@
 							"pattern": "^(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
 						},
 						{
-							"pattern": "^(?:bash|fish|git|mo|mole|node|vim) --(?:help|version)$"
+							"pattern": "^(?:git|mo|mole|vim) --(?:help|version)$"
+						},
+						{
+							"pattern": "^\\[ .*\\]$"
 						},
 						{
 							"pattern": "^apk (?:--(?:help|version)$|(?:audit|dot|info|list|manifest|policy|search|stats|verify|version)\\b)"
 						},
 						{
-							"pattern": "^(?:bash|sh) -n(?: --)? [^-][^ ]*$"
+							"pattern": "^(?:bash|sh) (?:-n(?: --)? [^-][^ ]*|--(?:help|version))$"
 						},
 						{
 							"pattern": "^brew (?:--(?:prefix|version)|bundle check|config|deps|info|leaves|list|outdated|search|services list|uses)\\b"
@@ -249,7 +252,7 @@
 							"pattern": "^(?:bin/)?domfiles(?:$|(?: |-)(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh)\\b)"
 						},
 						{
-							"pattern": "^fish (?:-n|--no-execute)\\b"
+							"pattern": "^fish (?:(?:-n|--no-execute)\\b|--(?:help|version)$)"
 						},
 						{
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*(?:blame|cat-file|check-attr|check-ignore|describe|diff|diff-files|diff-index|diff-tree|for-each-ref|grep|log|ls-files|ls-remote|merge-base|name-rev|range-diff|rev-list|rev-parse|shortlog|show|show-ref|status|version)\\b"
@@ -297,7 +300,7 @@
 							"pattern": "^ln -s(?: --)? [^-][^ ]* [^-][^ ]*$"
 						},
 						{
-							"pattern": "^node (?:-c|--check)(?: --)? [^-][^ ]*$"
+							"pattern": "^node (?:(?:-c|--check)(?: --)? [^-][^ ]*|--(?:help|version))$"
 						},
 						{
 							"pattern": "^CI=1 (?:npm|pnpm|yarn)\\b"
@@ -310,6 +313,9 @@
 						},
 						{
 							"pattern": "^sed -n '(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p'(?: [^-][^ ]*)*$"
+						},
+						{
+							"pattern": "^sips (?:(?:-[Hhv]|--(?:formats|help|helpProperties|version))|--verify(?: [^-][^ ]*)+|(?:(?:(?:-1|--oneLine)|(?:-g|--getProperty) [^-][^ ]*) )+[^-][^ ]*(?: [^-][^ ]*)*)$"
 						},
 						{
 							"pattern": "^sleep (?:[0-9]|1[0-9])$"
