@@ -58,6 +58,7 @@
 ### Zed Config
 
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
+    - Exempt `"tab_size": 4` from this requirement.
     - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
 - Keep order-independent arrays in Zed configuration alphabetized by value or, for object entries, by the value of their identifying field.
 - Treat Zed agent permissions as layered security boundaries.
@@ -65,8 +66,10 @@
     - Treat broad Docker access and ordinary package-manager workflows as intentional allowances. Docker is the agent’s container execution environment. Continue to require confirmation for package runners that can download and execute arbitrary code.
     - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`.
     - Treat `*.domain.name` and `domain.name` as distinct `network_hosts` entries. Preserve both when access to the apex domain and its subdomains is intended.
+    - Prefer wildcard domain allowances when subdomains are involved. Include the apex domain only when it is actually used.
     - Restrict automatically allowed fetch URL patterns to `https://` and anchor each pattern at the hostname boundary.
 - Keep terminal permission patterns concise and consistent.
+    - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `--(?:help|version)` pattern. Alphabetize the remaining patterns by command family.
     - Consolidate variants within the same command family. Keep unrelated command families separate.
     - Prefer literal spaces over whitespace character classes.
     - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
