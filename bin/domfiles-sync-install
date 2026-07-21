@@ -70,7 +70,7 @@ if __is_callable vim && ! __is_vim_plug_installed; then
   url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
   __print_url "$url"
 
-  curl --fail --location "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
+  curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
   __print_confirmation "$DOMFILES_VIM_PLUG"
 fi
 

@@ -31,9 +31,8 @@ function __fish_prompt_host
 end
 
 function __fish_prompt_pwd
-    set -l fish_prompt_pwd_dir_length 0
     test (id -u) -eq 0; and set_color $fish_color_cwd_root
-    printf '%s ' (prompt_pwd)
+    printf '%s ' (prompt_pwd --dir-length 0)
 end
 
 function __fish_prompt_git

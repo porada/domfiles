@@ -3,6 +3,10 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Show my local and public IPs
-ifconfig -a inet | awk '/inet/ {print $2}' | grep -v 127.0.0.1 || true
+# Show my local IPs
+interfaces="$(ifconfig -a inet)"
+addresses="$(printf '%s\n' "$interfaces" | awk '/inet/ {print $2}')"
+printf '%s\n' "$addresses" | __grep -Fvx -- '127.0.0.1'
+
+# Show my public IP
 dig +short myip.opendns.com @resolver1.opendns.com

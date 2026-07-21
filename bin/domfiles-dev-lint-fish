@@ -8,9 +8,10 @@
 __domfiles_cd_root
 
 if [ $# -eq 0 ]; then
+  files="$("$DOMFILES_BIN_DIR/domfiles-dev-list-fish")"
   __ifs_set
-  # shellcheck disable=SC2046
-  set -- $("$DOMFILES_BIN_DIR/domfiles-dev-list-fish")
+  # shellcheck disable=SC2086
+  set -- $files
   __ifs_restore
 fi
 

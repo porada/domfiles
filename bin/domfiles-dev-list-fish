@@ -6,9 +6,10 @@
 # List all Fish shell scripts that come with domfiles
 __domfiles_cd_root
 
+files="$(git ls-files --cached --others --exclude-standard)"
 files="$({
-  git ls-files --cached --others --exclude-standard
-  echo '.config/fish/local.fish'
+  printf '%s\n' "$files"
+  printf '%s\n' '.config/fish/local.fish'
 } | sort)"
 
 printf '%s\n' "$files" \

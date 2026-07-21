@@ -180,7 +180,7 @@ __git_default_commit_count() {
     count=$((count - 1))
   fi
 
-  echo $((count < default ? count : default))
+  echo "$((count < default ? count : default))"
 }
 
 __git_default_log_params() {
@@ -219,6 +219,17 @@ __git_is_file_in_commit() {
   else
     return 1
   fi
+}
+
+__grep() {
+  if grep "$@"; then
+    return 0
+  else
+    status=$?
+  fi
+
+  [ "$status" -eq 1 ] && return 0
+  return "$status"
 }
 
 __ifs_restore() {
@@ -421,6 +432,16 @@ __symlink() {
   parent="$(dirname "$2")"
 
   if [ -d "$parent" ]; then
+    source_path="$(realpath "$(dirname "$1")")/$(basename "$1")"
+    destination_path="$(realpath "$parent")/$(basename "$2")"
+
+    case "$source_path" in
+      "$destination_path" | "$destination_path"/*)
+        __print_error_and_exit \
+          "Cannot replace \`$destination_path\` because it contains \`$source_path\`"
+        ;;
+    esac
+
     rm -rf "$2"
   else
     __mkdir "$parent"
