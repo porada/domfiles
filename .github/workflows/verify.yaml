@@ -15,7 +15,7 @@ jobs:
   format:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@v7.0.0
@@ -32,7 +32,7 @@ jobs:
     name: lint / fish
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - run: brew install fish
@@ -42,7 +42,7 @@ jobs:
     name: lint / sh
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - run: brew install shellcheck
@@ -52,7 +52,7 @@ jobs:
     name: lint / ts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@v7.0.0
@@ -67,7 +67,7 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-node@v7.0.0
