@@ -112,6 +112,7 @@
 				"*.yarnpkg.com",
 				"*.zizmor.sh",
 				"brew.sh",
+				"eslint-react.xyz",
 				"ffmpeg.org",
 				"fishshell.com",
 				"git-scm.com",
@@ -129,8 +130,11 @@
 				"prettier.io",
 				"pypi.org",
 				"shellcheck.net",
+				"svgo.dev",
 				"vercel.com",
 				"vim.org",
+				"vite.dev",
+				"viteplus.dev",
 				"yarnpkg.com",
 				"zed.dev",
 				"zizmor.sh"
@@ -149,6 +153,9 @@
 					"always_allow": [
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*brew\\.sh(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://eslint-react\\.xyz(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://ffmpeg\\.org(?:[/?#]|$)"
@@ -199,10 +206,19 @@
 							"pattern": "^https://(?:[^./?#:@]+\\.)*shellcheck\\.net(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://svgo\\.dev(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://vercel\\.com(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*vim\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://vite\\.dev(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://viteplus\\.dev(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*yarnpkg\\.com(?:[/?#]|$)"
@@ -241,6 +257,9 @@
 						},
 						{
 							"pattern": "^command -v\\b"
+						},
+						{
+							"pattern": "^cp -n(?: [^-][^ ]*){2,}$"
 						},
 						{
 							"pattern": "^curl --(?:help(?: [^ ]+)?|version)$"
@@ -309,7 +328,7 @@
 							"pattern": "^plutil -(?:lint|p)\\b"
 						},
 						{
-							"pattern": "^rm -rf \\.pnpm-store$"
+							"pattern": "^rm (?:-r?f /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*)(?: /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*))*|-rf \\.pnpm-store)$"
 						},
 						{
 							"pattern": "^sed -n '(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p'(?: [^-][^ ]*)*$"
@@ -322,6 +341,9 @@
 						},
 						{
 							"pattern": "^LC_ALL=C sort\\b"
+						},
+						{
+							"pattern": "^tar (?:(?:--help|--version)|-(?:t(?:v)?|xk(?:v)?|xvk)f [^-][^ ]*(?: -C [^-][^ ]*)?(?: [^-][^ ]*)*)$"
 						},
 						{
 							"pattern": "^umask(?: (?:-[Sph]+|--(?:as-command|help|symbolic)))*$"
