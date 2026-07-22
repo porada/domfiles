@@ -101,40 +101,66 @@
 		"sandbox_permissions": {
 			"network_hosts": [
 				"*.brew.sh",
+				"*.docker.com",
 				"*.github.com",
 				"*.githubusercontent.com",
+				"*.go.dev",
 				"*.grep.app",
 				"*.home-assistant.io",
+				"*.mozilla.org",
 				"*.npmjs.com",
 				"*.npmjs.org",
+				"*.php.net",
+				"*.playwright.dev",
+				"*.rust-lang.org",
+				"*.schemastore.org",
 				"*.shellcheck.net",
+				"*.typescriptlang.org",
 				"*.vim.org",
+				"*.whatwg.org",
+				"*.wordpress.org",
 				"*.yarnpkg.com",
 				"*.zizmor.sh",
 				"brew.sh",
+				"crates.io",
+				"editorconfig.org",
 				"eslint-react.xyz",
+				"eslint.style",
 				"ffmpeg.org",
 				"fishshell.com",
 				"git-scm.com",
 				"github.com",
 				"githubusercontent.com",
+				"go.dev",
 				"grep.app",
 				"jqlang.org",
 				"mole.fit",
+				"nextjs.org",
 				"nodejs.org",
 				"npmjs.com",
 				"npmjs.org",
+				"npmx.dev",
 				"openai.com",
 				"oxc.rs",
+				"perfectionist.dev",
+				"playwright.dev",
 				"pnpm.io",
 				"prettier.io",
+				"publint.dev",
 				"pypi.org",
+				"react.dev",
+				"rust-lang.org",
+				"sass-lang.com",
+				"schemas.wp.org",
 				"shellcheck.net",
+				"stylelint.io",
 				"svgo.dev",
+				"unpkg.com",
 				"vercel.com",
 				"vim.org",
 				"vite.dev",
 				"viteplus.dev",
+				"vitest.dev",
 				"yarnpkg.com",
 				"zed.dev",
 				"zizmor.sh"
@@ -155,7 +181,19 @@
 							"pattern": "^https://(?:[^./?#:@]+\\.)*brew\\.sh(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://crates\\.io(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+docker\\.com(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://editorconfig\\.org(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://eslint-react\\.xyz(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://eslint\\.style(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://ffmpeg\\.org(?:[/?#]|$)"
@@ -170,6 +208,9 @@
 							"pattern": "^https://(?:[^./?#:@]+\\.)*github(?:usercontent)?\\.com(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)*go\\.dev(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*grep\\.app(?:[/?#]|$)"
 						},
 						{
@@ -182,10 +223,19 @@
 							"pattern": "^https://mole\\.fit(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+mozilla\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://nextjs\\.org(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://nodejs\\.org(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*npmjs\\.(?:com|org)(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://npmx\\.dev(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://openai\\.com(?:[/?#]|$)"
@@ -194,19 +244,55 @@
 							"pattern": "^https://oxc\\.rs(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://perfectionist\\.dev(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+php\\.net(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)*playwright\\.dev(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://pnpm\\.io(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://prettier\\.io(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://publint\\.dev(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://pypi\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://react\\.dev(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)*rust-lang\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://sass-lang\\.com(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://schemas\\.wp\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+schemastore\\.org(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*shellcheck\\.net(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://stylelint\\.io(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://svgo\\.dev(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+typescriptlang\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://unpkg\\.com(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://vercel\\.com(?:[/?#]|$)"
@@ -219,6 +305,15 @@
 						},
 						{
 							"pattern": "^https://viteplus\\.dev(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://vitest\\.dev(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+whatwg\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)+wordpress\\.org(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*yarnpkg\\.com(?:[/?#]|$)"
@@ -277,7 +372,7 @@
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*(?:blame|cat-file|check-attr|check-ignore|describe|diff|diff-files|diff-index|diff-tree|for-each-ref|grep|log|ls-files|ls-remote|merge-base|name-rev|range-diff|rev-list|rev-parse|shortlog|show|show-ref|status|version)\\b"
 						},
 						{
-							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*branch (?:--(?:list|show-current)\\b|[^-][^ ]*(?: [^-][^ ]*)?$)"
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*branch (?:(?:-a|--all)(?: --contains [^-][^ ]*)?$|--(?:list|show-current)\\b|[^-][^ ]*(?: [^-][^ ]*)?$)"
 						},
 						{
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*checkout -b [^-][^ ]*(?: [^-][^ ]*)?$"
@@ -331,7 +426,7 @@
 							"pattern": "^rm (?:-r?f /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*)(?: /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*))*|-rf \\.pnpm-store)$"
 						},
 						{
-							"pattern": "^sed -n '(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p'(?: [^-][^ ]*)*$"
+							"pattern": "^sed -n '?(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p'?(?: [^-][^ ]*)*$"
 						},
 						{
 							"pattern": "^sips (?:(?:-[Hhv]|--(?:formats|help|helpProperties|version))|--verify(?: [^-][^ ]*)+|(?:(?:(?:-1|--oneLine)|(?:-g|--getProperty) [^-][^ ]*) )+[^-][^ ]*(?: [^-][^ ]*)*)$"
