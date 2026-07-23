@@ -123,6 +123,7 @@
 				"*.zizmor.sh",
 				"brew.sh",
 				"crates.io",
+				"curl.se",
 				"editorconfig.org",
 				"eslint-react.xyz",
 				"eslint.style",
@@ -182,6 +183,9 @@
 						},
 						{
 							"pattern": "^https://crates\\.io(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://curl\\.se(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)+docker\\.com(?:[/?#]|$)"
@@ -333,22 +337,22 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
 						},
 						{
-							"pattern": "^(?:git|mo|mole|vim) --(?:help|version)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|curl|date|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
 						},
 						{
 							"pattern": "^\\[ .*\\]$"
 						},
 						{
-							"pattern": "^apk (?:--(?:help|version)$|(?:audit|dot|info|list|manifest|policy|search|stats|verify|version)\\b)"
+							"pattern": "^apk (?:audit|dot|info|list|manifest|policy|search|stats|verify|version)\\b"
 						},
 						{
-							"pattern": "^(?:bash|sh) (?:-n(?: --)? [^-][^ ]*|--(?:help|version))$"
+							"pattern": "^(?:bash|sh) -n(?: --)? [^-][^ ]*$"
 						},
 						{
-							"pattern": "^brew (?:--(?:prefix|version)|bundle check|config|deps|info|leaves|list|outdated|search|services list|uses)\\b"
+							"pattern": "^brew (?:--prefix|bundle check|config|deps|info|leaves|list|outdated|search|services list|uses)\\b"
 						},
 						{
 							"pattern": "^command -v\\b"
@@ -357,7 +361,10 @@
 							"pattern": "^cp -n(?: [^-][^ ]*){2,}$"
 						},
 						{
-							"pattern": "^curl --(?:help(?: [^ ]+)?|version)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*curl (?:--help [^ ]+|--disable --config [^-][^ ]* --version)$"
+						},
+						{
+							"pattern": "^date(?: -u)?$"
 						},
 						{
 							"pattern": "^defaults read\\b"
@@ -366,7 +373,7 @@
 							"pattern": "^(?:bin/)?domfiles(?:$|(?: |-)(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh)\\b)"
 						},
 						{
-							"pattern": "^fish (?:(?:-n|--no-execute)\\b|--(?:help|version)$)"
+							"pattern": "^fish (?:-n|--no-execute)\\b"
 						},
 						{
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*(?:blame|cat-file|check-attr|check-ignore|describe|diff|diff-files|diff-index|diff-tree|for-each-ref|grep|log|ls-files|ls-remote|merge-base|name-rev|range-diff|rev-list|rev-parse|shortlog|show|show-ref|status|version)\\b"
@@ -393,7 +400,7 @@
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*remote(?:$| -v$| (?:get-url|show)\\b)"
 						},
 						{
-							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*stash (?:list|show)\\b"
+							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*stash (?:list\\b|pop -h$|show\\b)"
 						},
 						{
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*switch (?:-c|--create) [^-][^ ]*(?: [^-][^ ]*)?$"
@@ -414,7 +421,7 @@
 							"pattern": "^ln -s(?: --)? [^-][^ ]* [^-][^ ]*$"
 						},
 						{
-							"pattern": "^node (?:(?:-c|--check)(?: --)? [^-][^ ]*|--(?:help|version))$"
+							"pattern": "^node (?:-c|--check)(?: --)? [^-][^ ]*$"
 						},
 						{
 							"pattern": "^CI=1 (?:npm|pnpm|yarn)\\b"
@@ -429,7 +436,7 @@
 							"pattern": "^sed -n '?(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p'?(?: [^-][^ ]*)*$"
 						},
 						{
-							"pattern": "^sips (?:(?:-[Hhv]|--(?:formats|help|helpProperties|version))|--verify(?: [^-][^ ]*)+|(?:(?:(?:-1|--oneLine)|(?:-g|--getProperty) [^-][^ ]*) )+[^-][^ ]*(?: [^-][^ ]*)*)$"
+							"pattern": "^sips (?:(?:-[Hhv]|--(?:formats|helpProperties))|--verify(?: [^-][^ ]*)+|(?:(?:(?:-1|--oneLine)|(?:-g|--getProperty) [^-][^ ]*) )+[^-][^ ]*(?: [^-][^ ]*)*)$"
 						},
 						{
 							"pattern": "^sleep (?:[0-9]|1[0-9])$"
@@ -438,7 +445,7 @@
 							"pattern": "^LC_ALL=C sort\\b"
 						},
 						{
-							"pattern": "^tar (?:(?:--help|--version)|-(?:t(?:v)?|xk(?:v)?|xvk)f [^-][^ ]*(?: -C [^-][^ ]*)?(?: [^-][^ ]*)*)$"
+							"pattern": "^tar -(?:t(?:v)?|xk(?:v)?|xvk)f [^-][^ ]*(?: -C [^-][^ ]*)?(?: [^-][^ ]*)*$"
 						},
 						{
 							"pattern": "^umask(?: (?:-[Sph]+|--(?:as-command|help|symbolic)))*$"
@@ -446,34 +453,34 @@
 					],
 					"always_confirm": [
 						{
-							"pattern": "^fd (?:.* )?(?:--exec(?:-batch)?|-[^- ]*[xX][^- ]*)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fd (?:.* )?(?:--exec(?:-batch)?|-[^- ]*[xX][^- ]*)\\b"
 						},
 						{
-							"pattern": "^find .*-(?:delete|exec(?:dir)?|ok(?:dir)?)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*find .*-(?:delete|exec(?:dir)?|ok(?:dir)?)\\b"
 						},
 						{
-							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*mv (?:--?[^- ][^ ]* )*(?:--force|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*git (?:(?:--no-optional-locks|--no-pager) )*mv (?:--?[^- ][^ ]* )*(?:--force|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
 						},
 						{
-							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*worktree add (?:.* )?(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*B[^ ]*|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*git (?:(?:--no-optional-locks|--no-pager) )*worktree add (?:.* )?(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*B[^ ]*|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
 						},
 						{
-							"pattern": "^(?:CI=1 )?(?:npm (?:.* )?(?:(?:create|init|innit|x)\\b|exec(?:$| +(?:[^- ]|-$|-[^- ]|--$|--[^ ]|-- +(?:[^ ]{1,7}|[^ ]{9,}|[^p][^ ]{7}|p[^r][^ ]{6}|pr[^e][^ ]{5}|pre[^t][^ ]{4}|pret[^t][^ ]{3}|prett[^i][^ ]{2}|pretti[^e][^ ]|prettie[^r])(?: +|$))))|npx\\b)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:npm (?:.* )?(?:(?:create|init|innit|x)\\b|exec(?:$| +(?:[^- ]|-$|-[^- ]|--$|--[^ ]|-- +(?:[^ ]{1,7}|[^ ]{9,}|[^p][^ ]{7}|p[^r][^ ]{6}|pr[^e][^ ]{5}|pre[^t][^ ]{4}|pret[^t][^ ]{3}|prett[^i][^ ]{2}|pretti[^e][^ ]|prettie[^r])(?: +|$))))|npx\\b)"
 						},
 						{
-							"pattern": "^(?:CI=1 )?(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
 						},
 						{
-							"pattern": "^rg (?:.* )?--(?:hostname-bin|pre)(?:[ =]|$)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*rg (?:.* )?--(?:hostname-bin|pre)(?:[ =]|$)"
 						},
 						{
-							"pattern": "^(?:CI=1 )?yarn (?:.* )?(?:create|dlx|init)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?yarn (?:.* )?(?:create|dlx|init)\\b"
 						},
 						{
-							"pattern": "^zed .*--uninstall\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed .*--uninstall\\b"
 						},
 						{
-							"pattern": "^zizmor (?:.* )?--gh-hostname(?:[ =]|$)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zizmor (?:.* )?--gh-hostname(?:[ =]|$)"
 						}
 					]
 				}
