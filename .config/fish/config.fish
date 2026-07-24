@@ -41,6 +41,7 @@ set -x ZIZMOR_CONFIG "$DOMFILES_CONFIG_DIR/zizmor.yaml"
 # Opt out of telemetry
 set -x DO_NOT_TRACK 1
 set -x HOMEBREW_NO_ANALYTICS 1
+set -x VERCEL_PLUGIN_TELEMETRY off
 
 # Disable automatic `brew` updates
 set -x HOMEBREW_NO_AUTO_UPDATE 1

@@ -10,6 +10,13 @@ if __is_callable pnpm; then
   __ pnpm --dir "$HOME" update --global --loglevel=error
 fi
 
+# Update `plugins`
+if __is_callable plugins; then
+  __print_heading 'Updating `plugins`'
+  __is_ci && __is_callable pnpm && __ pnpm --dir "$HOME" list --global plugins
+  __ plugins update
+fi
+
 # Update `skills`
 if __is_callable skills; then
   __print_heading 'Updating `skills`'
