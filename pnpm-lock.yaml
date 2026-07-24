@@ -130,9 +130,9 @@ packages:
   '@emnapi/wasi-threads@1.2.2':
     resolution: {integrity: sha512-c95qOXkHdydNKhscBTebqEC1CVAZpyqOfVfBzQ1qgzyl3gfeldUjIggDbIZgDKsHLgnsM+igH7TJ/eAasaVuMA==}
 
-  '@eslint-community/eslint-utils@4.10.0':
-    resolution: {integrity: sha512-rd6n9Sefya1R1Vd594TRwzeHq2VnmICbvh3jebyt1Hs/6OoCSYNVpjGRRsKSTwAq3SKl09w0AfRCU57hoDLmxg==}
-    engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+  '@eslint-community/eslint-utils@4.10.1':
+    resolution: {integrity: sha512-cuadcxVFE8sDK6iWJbs8Sn0av2Nrh2QSGQhVlBW9AaAHqHwjWsZHT8LJ4hFGPh7ASBV2deFdM7H/DPjulmh8rg==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
 
@@ -1053,9 +1053,9 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
-  brace-expansion@5.0.7:
-    resolution: {integrity: sha512-7oFy703dxfY3/NLxC1fh2SUCQ0H9rmAY+5EpDVfXjUTTs+HEwR2nYaqLv+GWcTsumwxPfiz6CzCNkwXwBUwqCA==}
-    engines: {node: 18 || 20 || >=22}
+  brace-expansion@5.0.8:
+    resolution: {integrity: sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==}
+    engines: {node: 20 || >=22}
 
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
@@ -1107,6 +1107,10 @@ packages:
   eslint-scope@9.1.2:
     resolution: {integrity: sha512-xS90H51cKw0jltxmvmHy2Iai1LIqrfbw57b79w/J7MfvDfkIkFZ+kj6zC3BjtUwh150HsSSdxXZcsuv72miDFQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  eslint-visitor-keys@3.4.3:
+    resolution: {integrity: sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   eslint-visitor-keys@4.2.1:
     resolution: {integrity: sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ==}
@@ -1187,8 +1191,8 @@ packages:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
     engines: {node: '>=16'}
 
-  flatted@3.4.2:
-    resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
+  flatted@3.4.3:
+    resolution: {integrity: sha512-/zipXxyO6rGvuNGDiULY9MvEGSkb2gaG4GGH4ygMi0ZZzyMHdUZBmntJmx5x1G2VuPytCwGN4xsJP6cw+sK+vQ==}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -1759,10 +1763,10 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@eslint-community/eslint-utils@4.10.0(eslint@10.7.0(supports-color@7.2.0))':
+  '@eslint-community/eslint-utils@4.10.1(eslint@10.7.0(supports-color@7.2.0))':
     dependencies:
       eslint: 10.7.0(supports-color@7.2.0)
-      eslint-visitor-keys: 5.0.1
+      eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
 
@@ -2081,7 +2085,7 @@ snapshots:
 
   '@stylistic/eslint-plugin@5.10.0(eslint@10.7.0(supports-color@7.2.0))':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.0(eslint@10.7.0(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.7.0(supports-color@7.2.0))
       '@typescript-eslint/types': 8.65.0
       eslint: 10.7.0(supports-color@7.2.0)
       eslint-visitor-keys: 4.2.1
@@ -2165,7 +2169,7 @@ snapshots:
 
   '@typescript-eslint/utils@8.65.0(eslint@10.7.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.0(eslint@10.7.0(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.7.0(supports-color@7.2.0))
       '@typescript-eslint/scope-manager': 8.65.0
       '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/typescript-estree': 8.65.0(supports-color@7.2.0)(typescript@6.0.3)
@@ -2402,7 +2406,7 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  brace-expansion@5.0.7:
+  brace-expansion@5.0.8:
     dependencies:
       balanced-match: 4.0.4
 
@@ -2450,13 +2454,15 @@ snapshots:
       esrecurse: 4.3.0
       estraverse: 5.3.0
 
+  eslint-visitor-keys@3.4.3: {}
+
   eslint-visitor-keys@4.2.1: {}
 
   eslint-visitor-keys@5.0.1: {}
 
   eslint@10.7.0(supports-color@7.2.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.0(eslint@10.7.0(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.7.0(supports-color@7.2.0))
       '@eslint-community/regexpp': 4.12.2
       '@eslint/config-array': 0.23.5(supports-color@7.2.0)
       '@eslint/config-helpers': 0.6.0
@@ -2540,10 +2546,10 @@ snapshots:
 
   flat-cache@4.0.1:
     dependencies:
-      flatted: 3.4.2
+      flatted: 3.4.3
       keyv: 4.5.4
 
-  flatted@3.4.2: {}
+  flatted@3.4.3: {}
 
   fsevents@2.3.3:
     optional: true
@@ -2671,7 +2677,7 @@ snapshots:
 
   minimatch@10.2.5:
     dependencies:
-      brace-expansion: 5.0.7
+      brace-expansion: 5.0.8
 
   mrmime@2.0.1: {}
 
