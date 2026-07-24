@@ -340,7 +340,7 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|curl|date|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
 						},
 						{
 							"pattern": "^\\[ .*\\]$"
@@ -356,6 +356,9 @@
 						},
 						{
 							"pattern": "^command -v\\b"
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?corepack (?:npm|pnpm|yarn)(?: |$)"
 						},
 						{
 							"pattern": "^cp -n(?: [^-][^ ]*){2,}$"
@@ -465,16 +468,16 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*git (?:(?:--no-optional-locks|--no-pager) )*worktree add (?:.* )?(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*B[^ ]*|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:npm (?:.* )?(?:(?:create|init|innit|x)\\b|exec(?:$| +(?:[^- ]|-$|-[^- ]|--$|--[^ ]|-- +(?:[^ ]{1,7}|[^ ]{9,}|[^p][^ ]{7}|p[^r][^ ]{6}|pr[^e][^ ]{5}|pre[^t][^ ]{4}|pret[^t][^ ]{3}|prett[^i][^ ]{2}|pretti[^e][^ ]|prettie[^r])(?: +|$))))|npx\\b)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:corepack )?(?:npm (?:.* )?(?:(?:create|init|innit|x)\\b|exec(?:$| +(?:[^- ]|-$|-[^- ]|--$|--[^ ]|-- +(?:[^ ]{1,7}|[^ ]{9,}|[^p][^ ]{7}|p[^r][^ ]{6}|pr[^e][^ ]{5}|pre[^t][^ ]{4}|pret[^t][^ ]{3}|prett[^i][^ ]{2}|pretti[^e][^ ]|prettie[^r])(?: +|$))))|npx\\b)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:corepack )?(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*rg (?:.* )?--(?:hostname-bin|pre)(?:[ =]|$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?yarn (?:.* )?(?:create|dlx|init)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:corepack )?yarn (?:.* )?(?:create|dlx|init)\\b"
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed .*--uninstall\\b"
