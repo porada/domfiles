@@ -45,6 +45,11 @@
 		"!tailwindcss-language-server",
 		"..."
 	],
+	"languages": {
+		"Plain Text": {
+			"show_edit_predictions": false
+		}
+	},
 	"outline_panel": {
 		"dock": "left"
 	},
@@ -68,6 +73,9 @@
 		"button": false,
 		"line_height": {
 			"custom": 1.35
+		},
+		"scrollbar": {
+			"show": "never"
 		}
 	},
 	"theme": "One Dark",
@@ -337,7 +345,7 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sleep|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
@@ -440,9 +448,6 @@
 						},
 						{
 							"pattern": "^sips (?:(?:-[Hhv]|--(?:formats|helpProperties))|--verify(?: [^-][^ ]*)+|(?:(?:(?:-1|--oneLine)|(?:-g|--getProperty) [^-][^ ]*) )+[^-][^ ]*(?: [^-][^ ]*)*)$"
-						},
-						{
-							"pattern": "^sleep (?:[0-9]|1[0-9])$"
 						},
 						{
 							"pattern": "^LC_ALL=C sort\\b"
