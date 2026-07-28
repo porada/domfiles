@@ -351,6 +351,9 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
 						},
 						{
+							"pattern": "^(?:(?:[0-9]+)?(?:>>?|>\\|)|&>>?) /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*)$"
+						},
+						{
 							"pattern": "^\\[ .*\\]$"
 						},
 						{
