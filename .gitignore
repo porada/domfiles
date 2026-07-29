@@ -11,6 +11,7 @@
 .config/zed/themes
 .DS_Store
 .lastsync
+.pnpm-store
 .vite-hooks/_
 coverage
 node_modules
