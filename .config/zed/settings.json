@@ -132,6 +132,7 @@
 				"brew.sh",
 				"crates.io",
 				"curl.se",
+				"e18e.dev",
 				"editorconfig.org",
 				"eslint-react.xyz",
 				"eslint.style",
@@ -197,6 +198,9 @@
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)+docker\\.com(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://e18e\\.dev(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://editorconfig\\.org(?:[/?#]|$)"
@@ -345,10 +349,10 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|docker|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sleep|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|wc|which|yarn|zed|zizmor)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|md5|md5sum|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sleep|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|uptime|wc|which|whoami|xattr|yarn|zed|zizmor)\\b"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|(?:nohup )?docker|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
 						},
 						{
 							"pattern": "^(?:(?:[0-9]+)?(?:>>?|>\\|)|&>>?) /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*)$"
@@ -369,7 +373,7 @@
 							"pattern": "^command -v\\b"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?corepack (?:npm|pnpm|yarn)(?: |$)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?corepack (?:npm|pnpm|yarn)(?: |$)"
 						},
 						{
 							"pattern": "^cp -n(?: [^-][^ ]*){2,}$"
@@ -382,6 +386,9 @@
 						},
 						{
 							"pattern": "^defaults read\\b"
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:(?:(?:--(?:config|context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[Hcl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)(?:diff|events|history|images|info|inspect|logs|port|ps|search|stats|top|version|wait|compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:config|events|images|logs|ls|port|ps|stats|top|version|volumes|wait)|container (?:diff|inspect|logs|ls|port|stats|top|wait)|context (?:inspect|ls|show)|image (?:history|inspect|ls)|network (?:inspect|ls)|system (?:df|events|info)|volume (?:inspect|ls))\\b"
 						},
 						{
 							"pattern": "^(?:bin/)?domfiles(?:$|(?: |-)(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh)\\b)"
@@ -426,6 +433,9 @@
 							"pattern": "^git (?:(?:--no-optional-locks|--no-pager) )*worktree (?:add|list)\\b"
 						},
 						{
+							"pattern": "^hostname(?: -(?:d|f|s))?$"
+						},
+						{
 							"pattern": "^kill (?:-l|(?:-(?:0|9|15|KILL|TERM) )?[1-9][0-9]*(?: [1-9][0-9]*)*)$"
 						},
 						{
@@ -435,10 +445,16 @@
 							"pattern": "^ln -s(?: --)? [^-][^ ]* [^-][^ ]*$"
 						},
 						{
+							"pattern": "^(?:(?:(?:MANPAGER|PAGER)=cat )+man(?: |$)|man -h$)"
+						},
+						{
 							"pattern": "^node (?:-c|--check)(?: --)? [^-][^ ]*$"
 						},
 						{
-							"pattern": "^CI=1 (?:npm|pnpm|yarn)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 (?:nohup )?|nohup )(?:npm|pnpm|yarn)\\b"
+						},
+						{
+							"pattern": "^pkgutil (?:(?:--(?:only-dirs|only-files|regexp|verbose)|-v|--volume [^-][^ ]*) )*(?:--help|--(?:groups(?:-plist)?|packages|pkgs(?:-plist)?)|--pkgs=[^ ]+|--(?:check-signature|export-plist|file-info(?:-plist)?|files|group-pkgs|lsbom|payload-files|pkg-groups|pkg-info(?:-plist)?) [^-][^ ]*)$"
 						},
 						{
 							"pattern": "^plutil -(?:lint|p)\\b"
@@ -464,6 +480,9 @@
 					],
 					"always_confirm": [
 						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:(?:(?:--(?:config|context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[Hcl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:config (?:.* )?(?:--lock-image-digests(?:[ =]|$)|--output(?:[ =]|$)|-[A-Za-z]*o[^ ]*(?: |$))|wait (?:.* )?--down-project(?:[ =]|$))"
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fd (?:.* )?(?:--exec(?:-batch)?|-[^- ]*[xX][^- ]*)\\b"
 						},
 						{
@@ -476,16 +495,23 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*git (?:(?:--no-optional-locks|--no-pager) )*worktree add (?:.* )?(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*B[^ ]*|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:corepack )?(?:npm (?:.* )?(?:(?:create|init|innit|x)\\b|exec(?:$| +(?:[^- ]|-$|-[^- ]|--$|--[^ ]|-- +(?:[^ ]{1,7}|[^ ]{9,}|[^p][^ ]{7}|p[^r][^ ]{6}|pr[^e][^ ]{5}|pre[^t][^ ]{4}|pret[^t][^ ]{3}|prett[^i][^ ]{2}|pretti[^e][^ ]|prettie[^r])(?: +|$))))|npx\\b)"
+							"case_sensitive": true,
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*man (?:.* )?-[^- ]*P[^ ]*(?: |$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:corepack )?(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:corepack )?(?:npm (?:.* )?(?:(?:create|init|innit|x)\\b|exec(?:$| +(?:[^- ]|-$|-[^- ]|--$|--[^ ]|-- +(?:[^ ]{1,7}|[^ ]{9,}|[^p][^ ]{7}|p[^r][^ ]{6}|pr[^e][^ ]{5}|pre[^t][^ ]{4}|pret[^t][^ ]{3}|prett[^i][^ ]{2}|pretti[^e][^ ]|prettie[^r])(?: +|$))))|npx\\b)"
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:corepack )?(?:pnpm (?:.* )?(?:create|dlx|init)|pnpx|pnx)\\b"
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*rg (?:.* )?--(?:hostname-bin|pre)(?:[ =]|$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:corepack )?yarn (?:.* )?(?:create|dlx|init)\\b"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*xattr (?:.* )?-[^- ]*[cdw][^- ]*(?: |$)"
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:corepack )?yarn (?:.* )?(?:create|dlx|init)\\b"
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed .*--uninstall\\b"

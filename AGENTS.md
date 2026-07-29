@@ -13,6 +13,7 @@
 - Do not analyze the contents of `bin/git-diff-highlight` (it’s a symlink).
 - Do not read or analyze `.config/npm/user.npmrc` (it contains secrets).
 - Do not report empty config files.
+- Always use `git mv` when renaming files already committed to this repository.
 - Report any cases that would tie this repository to a fixed filesystem location.
     - Do not report `$HOME/*` paths, system paths, or vendor paths.
     - Do not report symlinks created via `domfiles sync`.
@@ -20,6 +21,12 @@
     - Do not report documentation.
 - Run project-local commands through `pnpm exec` or an existing `pnpm` script instead of invoking executables from `node_modules/.bin` directly.
     - Exempt the external formatter command in `.zed/settings.json` from this requirement.
+
+### Skills
+
+- Treat every skill maintained in this repository as a living document.
+    - After executing a task using a skill, suggest a concrete edit when the execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.
+    - Do not edit the skill unless explicitly asked.
 
 ### Shell Scripts
 
@@ -65,7 +72,8 @@
 - Keep order-independent arrays in Zed configuration alphabetized by value or, for object entries, by the value of their identifying field.
 - Treat Zed agent permissions as layered security boundaries.
     - Preserve `agent.tool_permissions.default` as `allow`. The configured agent cannot install additional tools itself.
-    - Treat broad Docker access and ordinary package-manager workflows as intentional allowances. Docker is the agent’s container execution environment. Continue to require confirmation for package runners that can download and execute arbitrary code.
+    - Treat ordinary package-manager workflows as intentional allowances. Continue to require confirmation for package runners that can download and execute arbitrary code.
+    - Allow Docker inspection operations without confirmation. Require confirmation for operations that execute workloads or create, modify, or remove Docker state.
     - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`.
     - Treat `*.domain.name` and `domain.name` as distinct `network_hosts` entries. Preserve both when access to the apex domain and its subdomains is intended.
     - Prefer wildcard domain allowances when subdomains are involved. Include the apex domain only when it is actually used.
@@ -73,8 +81,11 @@
 - Keep terminal permission patterns concise and consistent.
     - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `--(?:help|version)` pattern. Alphabetize the remaining patterns by command family.
     - Consolidate variants within the same command family. Keep unrelated command families separate.
+    - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
+    - Keep command wrappers out of the consolidated general pattern. Define wrapper-specific allowances separately. Account for approved prefixes and wrappers in applicable confirmation overrides.
     - Prefer literal spaces over whitespace character classes.
     - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
+    - For mixed-purpose utilities and interpreters, prefer positive allowlists of non-mutating forms. Use a broad allowance with `terminal.always_confirm` only when every hazardous form can be matched reliably. Otherwise, preserve default confirmation.
     - Use `terminal.always_confirm` to override broader `terminal.always_allow` entries for hazardous argument forms, including code-execution hooks, package runners, destructive operations, force flags, and commands that uninstall the invoked tool itself. Account for global options, combined short flags, and accepted long-option abbreviations.
     - Do not report overlaps between `terminal.always_allow` and `terminal.always_confirm` when `terminal.always_confirm` acts as a safety override.
 
