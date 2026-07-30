@@ -165,6 +165,7 @@
 				"shellcheck.net",
 				"stylelint.io",
 				"svgo.dev",
+				"tsdown.dev",
 				"unpkg.com",
 				"vercel.com",
 				"vim.org",
@@ -305,6 +306,9 @@
 							"pattern": "^https://svgo\\.dev(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://tsdown\\.dev(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)+typescriptlang\\.org(?:[/?#]|$)"
 						},
 						{
@@ -352,7 +356,7 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:basename|cat|cmp|diff|dirname|du|echo|false|fd|ffprobe|file|find|fish_indent|grep|ha|head|jq|ls|lsof|md5|md5sum|mkdir|mktemp|nl|npm|pgrep|pnpm|printf|ps|pwd|readlink|realpath|rg|shasum|shellcheck|sleep|sort|stat|sw_vers|tail|test|tr|true|type|uname|uniq|uptime|wc|which|whoami|xattr|yarn|zed|zizmor)\\b"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|(?:nohup )?docker|fish|git|mo|mole|node|sh|sips|tar|vim) --(?:help|version)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:apk|bash|brew|corepack|curl|date|(?:nohup )?docker|fish|git|mo|mole|node|sh|sips|skills|tar|vim) --(?:help|version)$"
 						},
 						{
 							"pattern": "^(?:(?:[0-9]+)?(?:>>?|>\\|)|&>>?) /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*)$"
@@ -457,6 +461,9 @@
 							"pattern": "^pkgutil (?:(?:--(?:only-dirs|only-files|regexp|verbose)|-v|--volume [^-][^ ]*) )*(?:--help|--(?:groups(?:-plist)?|packages|pkgs(?:-plist)?)|--pkgs=[^ ]+|--(?:check-signature|export-plist|file-info(?:-plist)?|files|group-pkgs|lsbom|payload-files|pkg-groups|pkg-info(?:-plist)?) [^-][^ ]*)$"
 						},
 						{
+							"pattern": "^plugins(?:$| (?:-h|--help)$| (?:discover|targets)\\b)"
+						},
+						{
 							"pattern": "^plutil -(?:lint|p)\\b"
 						},
 						{
@@ -467,6 +474,9 @@
 						},
 						{
 							"pattern": "^sips (?:(?:-[Hhv]|--(?:formats|helpProperties))|--verify(?: [^-][^ ]*)+|(?:(?:(?:-1|--oneLine)|(?:-g|--getProperty) [^-][^ ]*) )+[^-][^ ]*(?: [^-][^ ]*)*)$"
+						},
+						{
+							"pattern": "^skills(?:$| -(?:h|v)$| (?:find|list|ls)\\b)"
 						},
 						{
 							"pattern": "^LC_ALL=C sort\\b"
