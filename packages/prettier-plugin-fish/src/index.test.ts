@@ -1,5 +1,5 @@
 import type { Plugin } from 'prettier';
-import { format } from 'prettier';
+import { format, formatWithCursor } from 'prettier';
 import { expect, expectTypeOf, test } from 'vite-plus/test';
 import * as pluginFish from './index.ts';
 
@@ -30,6 +30,15 @@ test('formats Fish files', async () => {
 	expect(output).toMatchSnapshot();
 });
 
+test('formats `.fish` files without an explicit parser', async () => {
+	const output = await format(TEST_FISH, {
+		filepath: 'test.fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toMatchSnapshot();
+});
+
 test('handles empty files', async () => {
 	const TEST_FISH = '\n';
 
@@ -39,4 +48,18 @@ test('handles empty files', async () => {
 	});
 
 	expect(output).toBe('');
+});
+
+test('preserves a cursor at the end of the source', async () => {
+	const source = 'echo    test\n';
+	const result = await formatWithCursor(source, {
+		cursorOffset: source.length,
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+
+	expect(result).toMatchObject({
+		cursorOffset: 10,
+		formatted: 'echo test\n',
+	});
 });

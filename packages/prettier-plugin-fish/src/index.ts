@@ -1,6 +1,11 @@
 import type { AstPath, Plugin } from 'prettier';
 import { exec } from 'tinyexec';
 
+type FishAst = {
+	formattedText: string;
+	sourceLength: number;
+};
+
 export const languages: Plugin['languages'] = [
 	{
 		extensions: ['.fish'],
@@ -16,22 +21,24 @@ export const parsers: Plugin['parsers'] = {
 		/* v8 ignore next -- @preserve */
 		locStart: () => 0,
 		/* v8 ignore next -- @preserve */
-		locEnd: (text: string) => text.length,
+		locEnd: (node: FishAst) => node.sourceLength,
 
-		parse: async (text: string): Promise<string> => {
-			const command = exec('fish_indent', [], {
+		parse: async (text: string): Promise<FishAst> => {
+			const { stdout } = await exec('fish_indent', [], {
 				stdin: text,
 				throwOnError: true,
 			});
 
-			const { stdout } = await command;
-			return `${stdout.trim()}\n`;
+			return {
+				formattedText: `${stdout.trim()}\n`,
+				sourceLength: text.length,
+			};
 		},
 	},
 };
 
 export const printers: Plugin['printers'] = {
 	'fish-text': {
-		print: (path: AstPath<string>): string => path.node,
+		print: (path: AstPath<FishAst>): string => path.node.formattedText,
 	},
 };
