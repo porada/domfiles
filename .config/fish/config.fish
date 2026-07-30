@@ -14,8 +14,6 @@ set -x EDITOR 'vim -c startinsert'
 
 # Don’t clear the screen after a `less` session
 set -x LESS -FRX
-set -x PAGER "less $LESS"
-set -x MANPAGER "less $LESS"
 
 # Don’t keep history between `less` sessions
 set -x LESSHISTFILE -
@@ -41,9 +39,9 @@ set -x ZIZMOR_CONFIG "$DOMFILES_CONFIG_DIR/zizmor.yaml"
 # Opt out of telemetry
 set -x DO_NOT_TRACK 1
 set -x HOMEBREW_NO_ANALYTICS 1
-set -x VERCEL_PLUGIN_TELEMETRY off
+set -x VERCEL_TELEMETRY_DISABLED 1
 
-# Disable automatic `brew` updates
+# Configure `brew`
 set -x HOMEBREW_NO_AUTO_UPDATE 1
 set -x HOMEBREW_NO_ENV_HINTS 1
 

@@ -34,6 +34,10 @@ Keep `codex` installed through Homebrew rather than declaring `@openai/codex` as
 
 The npm package adds a large platform-specific native package to every environment that installs the root pnpm dependencies. Lockfile ownership does not outweigh that installation and CI overhead for this machine-level command.
 
+### Fish abbreviation ownership
+
+The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations; abbreviations defined outside domfiles are not preserved across shell startup.
+
 ### Repository-scoped commands
 
 Keep `plugins` and `skills` in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
