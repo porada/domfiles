@@ -24,7 +24,7 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 Treat Zed’s agent sandbox, tool defaults, command allowances, and confirmation overrides as separate security boundaries.
 
-The terminal tool intentionally uses an allow-by-default baseline because the configured agent cannot install additional tools for itself. Narrow confirmation overrides protect hazardous forms such as arbitrary package runners, destructive operations, code-execution hooks, and commands that create or mutate Docker state.
+Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
 
 ## Tooling
 
@@ -57,3 +57,9 @@ Repository fetch, rebase, stashing, and stash-restoration failures are recoverab
 The final dependency status is advisory. Its failures remain visible but do not invalidate that the broader workflow reached completion.
 
 `.lastsync` records that the broader workflow reached completion. It is intentionally write-only for now and reserved for a possible future feature.
+
+### Zed personal instructions
+
+The tracked `.config/zed/AGENTS.md` maps to Zed’s global personal instruction file at `~/.config/zed/AGENTS.md`. Zed’s native Agent loads it for every project; it is not a project-scoped instruction file, and external agents and terminal threads do not generally consume it.
+
+Keep repository-specific guidance in the root `AGENTS.md` or applicable project skills instead.

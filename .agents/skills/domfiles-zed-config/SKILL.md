@@ -7,15 +7,22 @@ description: Edit and review Zed settings in this repository, especially agent t
 
 Use the applicable `AGENTS.md` files as the sole source of policy. This skill supplies only investigation, implementation, and validation mechanics. Do not restate those policies or copy the current command, domain, or settings inventory into this skill.
 
-## Investigate the change
+## Choose the workflow
+
+- For a change, investigate the current behavior, plan the implementation, make the smallest applicable edit, and use the change-validation workflow below.
+- For an audit or review, keep the task read-only. Skip change planning, implementation, formatting, and change validation; use the read-only validation workflow below.
+
+## Investigate the task
 
 1. Read `AGENTS.md`, inspect the relevant settings object, and review the existing diff.
 2. For terminal permissions, inspect the locally installed executable’s help or manual. Record the exact forms the user needs and the forms that execute code, write data, alter state, or remove resources.
+    - Run each local help or manual inspection with a short, bounded timeout. Prefer `MANPAGER=cat PAGER=cat man <command> | col -b` when a manual is available.
+    - If the executable is unavailable or local help remains interactive, consult current official documentation or source.
 3. For a blocked shell line, determine the permission input that Zed evaluated. Shell operators, redirections, assignments, and wrappers can produce several independently checked segments.
 4. Consult current official Zed documentation or source when parsing, regex support, schema, defaults, migration, or permission precedence is unclear.
 5. Ignore repository entrypoints, custom Git aliases, and repository-specific helpers unless the user explicitly includes them in scope.
 
-## Plan the implementation
+## Plan a change
 
 1. Apply the permission treatment and structural rules from `AGENTS.md` to the observed behavior.
 2. Identify the smallest existing object or command family that owns the change.
@@ -24,8 +31,9 @@ Use the applicable `AGENTS.md` files as the sole source of policy. This skill su
 
 ## Translate terminal behavior into regex
 
-- Anchor a pattern with `^`. Add `$` when trailing arguments would change the safety classification; use `\b` only when accepting further arguments is intentional.
+- Anchor a pattern with `^`. Add `$` when trailing arguments would change the safety classification. In an allowance pattern that accepts trailing arguments, end each executable, subcommand, or option token with `(?: |$)`. The weaker `\b` is a lexical boundary, not a shell token boundary; use it only when lexical matching is intentional, such as in a conservative confirmation override.
 - Use syntax supported by Zed’s Rust-compatible regex engine. It does not support lookarounds or backreferences.
+- Zed matches permission patterns case-insensitively by default. Set `case_sensitive` to `true` when shell semantics depend on case.
 - Build positive branches for accepted grammar instead of trying to subtract cases with unsupported regex features.
 - Test against Zed’s normalized permission input, not merely the original shell line.
 - Add an executable to the shared `--(?:help|version)` rule only when the locally installed command treats those exact forms as informational.
@@ -48,7 +56,9 @@ After applying the domain-scope policy in `AGENTS.md`, encode the corresponding 
 - Treat an editor deprecation banner as a lead, not proof that a specific property is deprecated.
 - When Zed produces a migrated backup, compare the parsed values and relevant migration code before removing a setting.
 
-## Validate the result
+## Validate a change
+
+After editing:
 
 1. Parse changed JSON with `jq -e`.
 2. Check formatting through the repository’s existing `pnpm` formatter workflow.
@@ -64,6 +74,18 @@ After applying the domain-scope policy in `AGENTS.md`, encode the corresponding 
 
 Do not run the entire repository formatter when a targeted formatting check is sufficient.
 
-## Report the outcome
+## Validate a read-only audit or review
 
-Lead with what changed. State which forms are now allowed, which hazardous forms still require confirmation, and which requested forms were intentionally left confirmable. Summarize the validation performed and identify any behavior that could not be verified.
+Without editing or formatting files:
+
+1. Parse relevant JSON with `jq -e`.
+2. Compile relevant existing permission patterns with a Rust-compatible regex tool such as `rg`.
+3. Test representative intended inputs, hazardous forms, and near misses against the existing patterns.
+4. Verify the applicable `AGENTS.md` invariants against the audited contents.
+5. Inspect the relevant diff and status only to identify pre-existing or concurrent changes.
+
+## Report the result
+
+- For a change, lead with what changed. State which forms are now allowed, which hazardous forms still require confirmation, and which requested forms were intentionally left confirmable.
+- For an audit or review, report evidence-backed findings rather than changes and follow the applicable reporting procedure in `AGENTS.md`.
+- Summarize the validation performed and identify any behavior that could not be verified.

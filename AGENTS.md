@@ -80,9 +80,14 @@
     - Restrict automatically allowed fetch URL patterns to `https://` and anchor each pattern at the hostname boundary.
 - Keep terminal permission patterns concise and consistent.
     - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `--(?:help|version)` pattern. Alphabetize the remaining patterns by command family.
+    - Alphabetize executable, command, and subcommand alternatives within consolidated patterns when their grammar permits.
     - Consolidate variants within the same command family. Keep unrelated command families separate.
+        - Keep informational forms in an existing command-family pattern instead of duplicating the executable in the shared `--(?:help|version)` pattern.
     - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
-    - Keep command wrappers out of the consolidated general pattern. Define wrapper-specific allowances separately. Account for approved prefixes and wrappers in applicable confirmation overrides.
+    - Keep command-specific prefixes and wrappers out of the consolidated general and shared `--(?:help|version)` patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
+        - Account for the optional `-C <path>`, `--no-optional-locks`, and `--no-pager` global options before every Git subcommand.
+        - Apply the optional `GIT_EDITOR=true`, `GIT_PAGER=cat`, `MANPAGER=cat`, and `PAGER=cat` prefixes to every Git terminal pattern.
+        - Apply optional `HOMEBREW_NO_*` prefixes with the fixed value `1` to every Homebrew terminal pattern.
     - Prefer literal spaces over whitespace character classes.
     - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
     - For mixed-purpose utilities and interpreters, prefer positive allowlists of non-mutating forms. Use a broad allowance with `terminal.always_confirm` only when every hazardous form can be matched reliably. Otherwise, preserve default confirmation.
