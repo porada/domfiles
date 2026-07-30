@@ -41,7 +41,7 @@ if [ "$preset" = 'instagram' ]; then
       __print_heading "Generating \`$video\` for Instagram"
 
       # Instagram clips can be up to 60 seconds long
-      duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$audio")
+      duration="$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$audio")"
 
       if awk -v duration="$duration" 'BEGIN { exit duration < 60.0 }'; then
         set -- -t 60

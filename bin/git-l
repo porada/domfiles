@@ -5,8 +5,8 @@
 
 # Print the most recent commits or filter all commits by a search term
 if [ $# -gt 0 ]; then
-  log="$(eval "git --no-pager log $(__git_default_log_params --no-refs) --color=always")"
-  printf '%s\n' "$log" | __grep -i -- "$*"
+  log="$(eval "git --no-pager log $(__git_default_log_params --no-refs) --color=never")"
+  printf '%s\n' "$log" | __grep --color=always -i -- "$*"
 else
   eval "git --no-pager log $(__git_default_log_params) -n $(__git_default_commit_count)"
 fi

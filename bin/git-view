@@ -9,11 +9,15 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
+  __git_cd_root
   excluded_paths="$({
     __git_diff_excluded_files \
       | while IFS= read -r file; do
         if __git_is_file_in_commit "$1" "$file"; then
           echo "$file"
+        else
+          status="$?"
+          [ "$status" -eq 1 ] || exit "$status"
         fi
       done
   })"
@@ -31,21 +35,33 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
         | while IFS= read -r file; do
           if __git_is_file_in_commit "$1" "$file"; then
             echo "$file"
+          else
+            status="$?"
+            [ "$status" -eq 1 ] || exit "$status"
           fi
         done
     })"
 
     # shellcheck disable=SC2086
-    if git diff-tree --quiet "$1" -- . $exclude_params > /dev/null; then
+    if git diff-tree --quiet --root "$1" -- . $exclude_params > /dev/null; then
       git show --show-signature "$1" -- $excluded_paths
       exit $?
+    else
+      status="$?"
+      [ "$status" -eq 1 ] || exit "$status"
     fi
 
     # shellcheck disable=SC2086
+    stat_output="$(git show --show-signature --stat --color=always "$1" -- $excluded_paths)" \
+      || exit $?
+    # shellcheck disable=SC2086
+    patch_output="$(git show --pretty=format: --color=always "$1" -- . $exclude_params)" \
+      || exit $?
+
     {
-      git show --show-signature --stat --color=always "$1" -- $excluded_paths
+      printf '%s\n' "$stat_output"
       echo
-      git show --pretty=format: --color=always "$1" -- . $exclude_params
+      printf '%s\n' "$patch_output"
     } | __pager
 
     exit $?

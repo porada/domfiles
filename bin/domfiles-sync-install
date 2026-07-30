@@ -73,8 +73,12 @@ fish="$(brew --prefix)/bin/fish"
 __is_shell "$fish" && exit 0
 
 # Skip in non-interactive shells
-if __is_ci || ! __is_tty; then
+if __is_ci; then
   exit 0
+fi
+
+if ! __is_tty; then
+  __print_error_and_exit 'Setting `fish` as the default shell requires an interactive terminal'
 fi
 
 if ! grep -qFx -- "$fish" /etc/shells; then
@@ -82,10 +86,10 @@ if ! grep -qFx -- "$fish" /etc/shells; then
   __ sudo sh -c "echo \"$fish\" >> /etc/shells" || true
 fi
 
-__print_heading_dimmed 'Setting up `fish` as the default shell'
+__print_heading_dimmed 'Setting `fish` as the default shell'
 
 if __ chsh -s "$fish"; then
   __print_confirmation "$fish"
 else
-  __print_error "Failed to set \`$fish\` as the default shell"
+  __print_error_and_exit "Failed to set \`$fish\` as the default shell"
 fi

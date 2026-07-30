@@ -16,15 +16,17 @@ if __is_callable git; then
     updated="$(__string_replace 'https://github.com/' 'git@github.com:' "$current")"
     updated="$(__string_replace 'porada/dotfiles' 'porada/domfiles' "$updated")"
 
-    if [ "$current" = "$updated" ]; then
-      __print_confirmation "$current"
-    else
-      __ git -C "$DOMFILES" remote set-url origin "$updated"
-    fi
-
     if __is_macos; then
       __print_heading_dimmed 'Ensuring the SSH key is linked to Apple Keychain'
       __ssh_add --apple-use-keychain "$DOMFILES_SSH_KEY"
+    fi
+
+    if [ "$current" = "$updated" ]; then
+      __print_confirmation "$current"
+    elif __ git -C "$DOMFILES" ls-remote "$updated" HEAD > /dev/null; then
+      __ git -C "$DOMFILES" remote set-url origin "$updated"
+    else
+      __print_error "Failed to verify SSH access to \`$updated\`; retaining \`origin\` as \`$current\`"
     fi
   fi
 
@@ -40,21 +42,28 @@ if __is_callable git; then
 
     if ! __domfiles_is_clean; then
       __print_warning 'The repository contains uncommitted changes'
-      __ git -C "$DOMFILES" stash
-      stashed_changes=true
+
+      if __ git -C "$DOMFILES" stash; then
+        stashed_changes=true
+      else
+        __print_error 'Failed to stash uncommitted changes'
+        stash_failed=true
+      fi
     fi
 
-    if ! __ git -C "$DOMFILES" rebase; then
-      echo
-      __print_error 'Failed to update the repository'
-      __ git -C "$DOMFILES" rebase --abort || true
-    else
-      __print_confirmation 'Repository updated'
+    if [ -z "${stash_failed-}" ]; then
+      if ! __ git -C "$DOMFILES" rebase; then
+        echo
+        __print_error 'Failed to update the repository'
+        __ git -C "$DOMFILES" rebase --abort || true
+      else
+        __print_confirmation 'Repository updated'
+      fi
     fi
   fi
 
   if [ -n "${stashed_changes-}" ]; then
-    if __ git -C "$DOMFILES" stash pop --quiet; then
+    if __ git -C "$DOMFILES" stash pop --index --quiet; then
       __print_confirmation 'Changes restored'
     else
       __print_error 'Failed to restore uncommitted changes'
@@ -62,7 +71,7 @@ if __is_callable git; then
       __print_heading_dimmed 'Restoring the original state'
       __ git -C "$DOMFILES" reset --hard "$current_revision"
 
-      if __ git -C "$DOMFILES" stash pop --quiet; then
+      if __ git -C "$DOMFILES" stash pop --index --quiet; then
         __print_confirmation 'Original state restored'
       else
         __print_error 'Failed to restore the original state'

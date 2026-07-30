@@ -3,17 +3,21 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Update `pnpm` packages
+# Update `plugins` and `skills`
 if __is_callable pnpm; then
-  __print_heading 'Updating `pnpm` packages'
   __is_ci && __ pnpm --version
-  __ pnpm --dir "$HOME" update --global --loglevel=error
+  set --
+
+  # Ensure `pnpm` doesn't install dependencies on a dirty state
+  if ! __domfiles_is_clean; then
+    set -- '--config.verify-deps-before-run=error'
+  fi
 
   __print_heading 'Updating `plugins`'
-  __ pnpm --dir "$DOMFILES" exec plugins update
+  __ pnpm "$@" --dir "$DOMFILES" exec plugins update
 
   __print_heading 'Updating `skills`'
-  __ pnpm --dir "$DOMFILES" exec skills update --global
+  __ pnpm "$@" --dir "$DOMFILES" exec skills update --global
 fi
 
 # Update Fish plugins

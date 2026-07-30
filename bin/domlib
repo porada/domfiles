@@ -168,16 +168,25 @@ __find() {
   fi
 }
 
+__git_cd_root() {
+  root="$(git rev-parse --show-toplevel)" || return $?
+
+  cd "$root" \
+    || __print_error_and_exit "Could not change directory to \`$root\`"
+
+  unset root
+}
+
 __git_default_commit_count() {
   default=10
   count=0
 
   if git rev-parse --verify HEAD > /dev/null 2>&1; then
-    count=$(git rev-list --count HEAD)
+    count="$(git rev-list --count HEAD)"
   fi
 
   if [ "${1-}" = '--no-initial' ] && [ "$count" -gt 0 ]; then
-    count=$((count - 1))
+    count="$((count - 1))"
   fi
 
   echo "$((count < default ? count : default))"
@@ -214,18 +223,17 @@ __git_is_file_in_commit() {
     __print_error_and_exit '`__git_is_file_in_commit` requires two arguments'
   fi
 
-  if git diff-tree --no-commit-id --name-only -r "$1" | grep -Fqx -- "$2"; then
-    return 0
-  else
-    return 1
-  fi
+  changed_files="$(git diff-tree --no-commit-id --name-only --root -r "$1" -- "$2")" \
+    || return $?
+
+  [ -n "$changed_files" ]
 }
 
 __grep() {
   if grep "$@"; then
     return 0
   else
-    status=$?
+    status="$?"
   fi
 
   [ "$status" -eq 1 ] && return 0

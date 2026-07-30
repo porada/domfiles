@@ -6,6 +6,8 @@
 # Rebase a given number of last commits
 available=0
 
+__git_cd_root
+
 # Invalid arguments are intentionally ignored for simplicity
 if __is_uint "${1-}"; then
   count="$1"
@@ -15,12 +17,12 @@ fi
 
 # Ensure the repository has a `HEAD` first
 if git rev-parse --verify HEAD > /dev/null 2>&1; then
-  available=$(git rev-list --count HEAD)
+  available="$(git rev-list --first-parent --count HEAD)"
 fi
 
 # Account for the initial commit
 if [ "$available" -gt 0 ]; then
-  available=$((available - 1))
+  available="$((available - 1))"
 fi
 
 if [ "$available" -le 0 ] || [ "$count" -le 0 ]; then

@@ -7,7 +7,7 @@ export default defineConfig({
 	},
 	lint: defineOxlintConfig(),
 	staged: {
-		'*': () => 'pnpm format',
+		'*': 'pnpm prettier --ignore-unknown --write',
 		'*.fish': 'pnpm lint:fish',
 		'*.sh': 'pnpm lint:sh',
 		'*.ts': () => 'pnpm lint:ts:check',

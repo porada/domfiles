@@ -4,4 +4,5 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Remove the index lock file
-__ rm -f "$(git rev-parse --git-dir)/index.lock"
+index_lock="$(git rev-parse --git-path index.lock)" || exit $?
+__ rm -f "$index_lock"

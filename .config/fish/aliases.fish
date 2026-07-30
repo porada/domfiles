@@ -17,7 +17,7 @@ alias npx 'pnpm dlx'
 
 # Clone a repository and navigate into it
 function clone
-    cd -P "$DOMFILES_PROJECTS_DIR"
+    cd -P "$DOMFILES_PROJECTS_DIR" or return
 
     if test (count $argv) -eq 1
         git clone $argv && cd (basename $argv .git)

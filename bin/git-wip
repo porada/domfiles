@@ -4,4 +4,12 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Create a new branch based on the name of the current one
-git checkout -b "wip/$(git rev-parse --abbrev-ref HEAD)"
+__git_cd_root
+
+if branch="$(git symbolic-ref --quiet --short HEAD)"; then
+  git checkout -b "wip/$branch"
+else
+  status="$?"
+  [ "$status" -eq 1 ] || exit "$status"
+  __print_error_and_exit 'Cannot create a `wip` branch from a detached `HEAD`'
+fi
