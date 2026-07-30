@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# shellcheck source=bin/domlib
+. "$(dirname "$(realpath "$0")")/domlib"
+
+if __is_callable pnpm; then
+  command_list="$(pnpm --dir "$HOME" --silent list --global --depth=0 --json)"
+
+  for command in plugins skills; do
+    if printf '%s\n' "$command_list" | grep -Fq -- "\"$command\":"; then
+      __print_heading_dimmed "Removing \`$command\` installed through \`pnpm\`"
+      __ pnpm --dir "$HOME" --silent remove --global "$command"
+    fi
+  done
+fi

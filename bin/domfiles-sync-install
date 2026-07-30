@@ -57,12 +57,6 @@ if __is_callable node && __is_callable pnpm; then
   fi
 fi
 
-# Install `plugins` and `skills`
-if __is_callable pnpm; then
-  __print_heading_dimmed 'Installing `plugins` and `skills`'
-  __ pnpm --dir "$HOME" --silent install --global plugins skills
-fi
-
 # Install `vim-plug`
 if __is_callable vim && ! __is_vim_plug_installed; then
   __print_heading 'Installing `vim-plug`'

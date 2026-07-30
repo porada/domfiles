@@ -8,20 +8,12 @@ if __is_callable pnpm; then
   __print_heading 'Updating `pnpm` packages'
   __is_ci && __ pnpm --version
   __ pnpm --dir "$HOME" update --global --loglevel=error
-fi
 
-# Update `plugins`
-if __is_callable plugins; then
   __print_heading 'Updating `plugins`'
-  __is_ci && __is_callable pnpm && __ pnpm --dir "$HOME" list --global plugins
-  __ plugins update
-fi
+  __ pnpm --dir "$DOMFILES" exec plugins update
 
-# Update `skills`
-if __is_callable skills; then
   __print_heading 'Updating `skills`'
-  __is_ci && __ skills --version
-  __ skills update --global
+  __ pnpm --dir "$DOMFILES" exec skills update --global
 fi
 
 # Update Fish plugins

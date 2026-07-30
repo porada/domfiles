@@ -59,7 +59,7 @@
 
 ### `domfiles` Scripts
 
-- Always assume the setup instructions in the `README` run on a fresh macOS install (version 26 or newer) with Command Line Tools and Homebrew installed.
+- Evaluate the setup instructions in the `README` and all `domfiles` scripts against the supported environment documented in `.agents/PROJECT.md`.
     - Always report any commands that may cause issues in that environment.
 - Always assume this repository is updated via `domfiles sync`.
     - Do not report `domfiles sync` overwriting initial state.
@@ -71,7 +71,7 @@
     - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
 - Keep order-independent arrays in Zed configuration alphabetized by value or, for object entries, by the value of their identifying field.
 - Treat Zed agent permissions as layered security boundaries.
-    - Preserve `agent.tool_permissions.default` as `allow`. The configured agent cannot install additional tools itself.
+    - Preserve `agent.tool_permissions.default` as `allow`.
     - Treat ordinary package-manager workflows as intentional allowances. Continue to require confirmation for package runners that can download and execute arbitrary code.
     - Allow Docker inspection operations without confirmation. Require confirmation for operations that execute workloads or create, modify, or remove Docker state.
     - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`.
@@ -94,6 +94,9 @@
 - Always reference the relevant `AGENTS.md` line number when reporting a violation.
 - Never edit this file unless explicitly asked.
 - Never override or alter my input unless explicitly asked.
+- Consult `.agents/PROJECT.md` for non-obvious project rationale, compatibility constraints, and maintenance decisions.
+    - Document newly discovered durable project knowledge there.
+    - Keep entries alphabetized when their order is irrelevant.
 
 ## Style
 
