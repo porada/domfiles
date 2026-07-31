@@ -48,6 +48,10 @@ Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. `fi
 
 Declare every peer dependency in workspace packages with the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. Do not flag `"*"` peer ranges as missing compatibility constraints or narrow them solely to mirror the currently resolved version.
 
+### `pnpm` executable invocation
+
+`pnpm <executable> ...` is an accepted form for project-local binaries that do not have a package script. `pnpm` intentionally falls back to the workspace binary when no built-in command or script has that name, keeping invocations concise while resolving through workspace dependencies. Forms such as `pnpm vp ...` and `pnpm prettier ...` are intentional and must not be flagged as direct `node_modules/.bin` execution; `pnpm exec <executable> ...` is also valid but is not required.
+
 ### Repository-scoped commands
 
 Keep `plugins` and `skills` in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.

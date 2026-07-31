@@ -19,7 +19,7 @@
     - Do not report symlinks created via `domfiles sync`.
     - Do not report `.config/fish/fish_variables`.
     - Do not report documentation.
-- Run project-local commands through `pnpm exec` or an existing `pnpm` script instead of invoking executables from `node_modules/.bin` directly.
+- Run project-local commands through `pnpm exec`, `pnpm`’s implicit executable form (`pnpm <executable> ...`), or an existing `pnpm` script instead of invoking executables from `node_modules/.bin` directly.
     - Exempt the external formatter command in `.zed/settings.json` from this requirement.
 
 ### Skills
@@ -137,9 +137,9 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 
 ### Audit
 
-- Review the entire repository for redundancies, inconsistencies, typos, and potential structural or type issues.
+- Unless the user explicitly modifies the scope, review the entire repository for redundancies, inconsistencies, typos, and potential structural or type issues.
     - After reading all applicable `AGENTS.md` files, determine the complete audit scope before reviewing any other repository contents.
-    - Start with `git`-tracked paths, then apply any inclusions, exclusions, and exemptions defined by `AGENTS.md`.
+    - Start with `git`-tracked paths, then apply explicit user scope modifiers and any inclusions, exclusions, and exemptions defined by `AGENTS.md`.
     - Exclude symbolic links without reading or resolving their targets.
     - Do not report findings outside the resulting audit scope.
     - Do not run linters or formatters as part of the analysis.
@@ -149,6 +149,7 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
     - Continue until the entire audit scope has been reviewed.
     - Report all findings only after completing the audit.
 - Do not modify any files.
+    - Defer any required `.agents/PROJECT.md` updates and report them as follow-up work.
 - Base all findings solely on the current repository contents.
     - Never speculate about intent or hypothetical implementations.
 - Number every finding and keep the numbering stable across follow-up requests.

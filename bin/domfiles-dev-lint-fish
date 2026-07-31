@@ -21,4 +21,10 @@ else
   __print_heading 'Linting Fish scripts'
 fi
 
-__ fish --no-execute -- "$@"
+__ifs_set
+
+for file in "$@"; do
+  __ fish --no-execute -- "$file"
+done
+
+__ifs_restore

@@ -7,4 +7,4 @@ set -eu
 pnpm --silent install --ignore-scripts --frozen-lockfile
 
 # Lint staged files
-pnpm vp staged --relative
+pnpm vp staged --concurrent=false --relative

@@ -31,8 +31,16 @@ if ! __is_ssh_configured; then
 else
   __print_confirmation "$DOMFILES_SSH_KEY"
 
-  # Setting up allowed signers for `git`
-  read -r type key signer < "$DOMFILES_SSH_KEY.pub"
-  printf '%s %s %s\n' "$signer" "$type" "$key" > "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
+  # Set up allowed signers for `git`
+  signer="$(git config --global --get user.email 2> /dev/null || true)"
+
+  if [ -z "$signer" ]; then
+    __print_error_and_exit 'Could not resolve `user.email` from `.gitconfig`'
+  fi
+
+  read -r type key _ < "$DOMFILES_SSH_KEY.pub"
+  printf '%s namespaces="git" %s %s\n' "$signer" "$type" "$key" \
+    > "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
+
   __print_confirmation "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
 fi

@@ -12,6 +12,9 @@ if git show-ref --verify --quiet "refs/heads/$1"; then
   if ! __confirm "Overwrite branch \`$1\`?"; then
     exit 0
   fi
+else
+  status="$?"
+  [ "$status" -eq 1 ] || exit "$status"
 fi
 
 git checkout -B "$1"

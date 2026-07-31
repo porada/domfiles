@@ -72,7 +72,6 @@ fi
 fish="$(brew --prefix)/bin/fish"
 __is_shell "$fish" && exit 0
 
-# Skip in non-interactive shells
 if __is_ci; then
   exit 0
 fi

@@ -5,4 +5,11 @@
 
 # Show the current `git status` including skipped files
 git status --short "$@" || exit $?
-__domfiles_bin git-skipped
+
+# Forward explicitly separated pathspecs to `git-skipped`
+while [ $# -gt 0 ] && [ "$1" != '--' ]; do
+  shift
+done
+
+[ $# -eq 0 ] || shift
+__domfiles_bin git-skipped "$@"

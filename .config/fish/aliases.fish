@@ -15,7 +15,7 @@ alias ls 'ls -A'
 # Ensure `npx` goes through `pnpm`
 alias npx 'pnpm dlx'
 
-# Clone a repository and navigate into it
+# Clone a repository into `~/Projects` and navigate into it
 function clone
     cd -P "$DOMFILES_PROJECTS_DIR" or return
 
