@@ -5,3 +5,4 @@
 - Always treat subagents’ short context windows as a critical constraint.
     - Keep each assignment limited to the minimum necessary scope.
     - Use additional subagents when needed to keep each assignment small.
+- When listing non-consecutively numbered items, include each number in the item text instead of using ordered-list markers.

@@ -26,6 +26,12 @@ Treat Zed’s agent sandbox, tool defaults, command allowances, and confirmation
 
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
 
+### Zed terminal permission limitations
+
+Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Package-runner execution intentionally remains confirmable, including a local formatter invoked through a runner, when exempting a safe subset would require a brittle complement expression; exact informational forms can be allowed separately.
+
+Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Package-manager confirmation intentionally remains case-insensitive because executable casing variants resolve on the supported Macs. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
+
 ## Tooling
 
 ### Codex distribution

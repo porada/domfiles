@@ -66,6 +66,7 @@
 
 ### Zed Config
 
+- Always split Zed configuration audits into multiple smaller steps because a single pass can easily exceed the available context window.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
     - Exempt `"tab_size": 4` from this requirement.
     - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.

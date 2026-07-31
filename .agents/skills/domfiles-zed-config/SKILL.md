@@ -56,6 +56,13 @@ After applying the domain-scope policy in `AGENTS.md`, encode the corresponding 
 - Treat an editor deprecation banner as a lead, not proof that a specific property is deprecated.
 - When Zed produces a migrated backup, compare the parsed values and relevant migration code before removing a setting.
 
+## Evaluate permission behavior
+
+1. Build an in-memory matrix that records matches from `always_allow` and `always_confirm` separately, then derive the effective result using Zed’s precedence: confirmation overrides allowance, followed by the configured default.
+2. Match each pattern with `rg --no-config --case-sensitive` when its object sets `case_sensitive` to `true`; otherwise use `rg --no-config --ignore-case` to simulate Zed’s default. Treat exit status `0` as a match, `1` as no match, and any other status as a validation failure.
+3. When consolidating patterns, compare the union of the old family’s matches with the union of the new family’s matches over representative inputs. Do not compare objects one-for-one when ownership moved between patterns.
+4. When confirmation precedence and Rust-compatible regex limits make a narrow allowance require a fragile complement expression, leave the form confirmable and record the durable rationale in `.agents/PROJECT.md`.
+
 ## Validate a change
 
 After editing:
@@ -63,8 +70,8 @@ After editing:
 1. Parse changed JSON with `jq -e`.
 2. Check formatting through the repository’s existing `pnpm` formatter workflow.
 3. Run `git diff --check`.
-4. Compile new permission patterns with a Rust-compatible regex tool such as `rg`.
-5. Test each new pattern against representative inputs:
+4. Compile changed permission patterns with a Rust-compatible regex tool such as `rg`.
+5. Use the permission-behavior workflow above to test representative inputs:
     - Intended commands or URLs that should match.
     - Hazardous forms that must match an override or remain unmatched by the allowance.
     - Near misses that must not match.
@@ -80,7 +87,7 @@ Without editing or formatting files:
 
 1. Parse relevant JSON with `jq -e`.
 2. Compile relevant existing permission patterns with a Rust-compatible regex tool such as `rg`.
-3. Test representative intended inputs, hazardous forms, and near misses against the existing patterns.
+3. Use the permission-behavior workflow above to test representative intended inputs, hazardous forms, and near misses against the existing patterns.
 4. Verify the applicable `AGENTS.md` invariants against the audited contents.
 5. Inspect the relevant diff and status only to identify pre-existing or concurrent changes.
 
