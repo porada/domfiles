@@ -381,7 +381,7 @@
 						},
 						{
 							"case_sensitive": true,
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?corepack (?:--(?:help|version)$|(?:npm|pnpm|yarn)(?: |$))"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?corepack (?:--(?:help|version)$|(?:npm|pnpm|yarn)(?: |$))"
 						},
 						{
 							"case_sensitive": true,
@@ -496,11 +496,11 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*node (?:(?:-c|--check)(?: --)? [^-][^ ]*|--(?:help|version))$"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 (?:nohup )?|nohup )(?:npm|pnpm|yarn)(?: |$)"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) (?:nohup )?|nohup )(?:npm|pnpm|yarn)(?: |$)"
 						},
 						{
 							"case_sensitive": true,
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?npx --(?:help|version)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?npx --(?:help|version)$"
 						},
 						{
 							"case_sensitive": true,
@@ -517,7 +517,7 @@
 						},
 						{
 							"case_sensitive": true,
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:pnpx|pnx) (?:-h|--help)$"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:pnpx|pnx) (?:-h|--help)$"
 						},
 						{
 							"pattern": "^rm (?:-r?f /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*)(?: /tmp/(?:[.]{3,}|[.]*[^./ ][^/ ]*))*|-rf \\.pnpm-store)$"
@@ -574,10 +574,10 @@
 							"pattern": "^(?:(?:GIT_EDITOR=true|GIT_PAGER=cat|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*worktree add (?:.* )?(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*B[^ ]*|-[A-Za-z]*f[A-Za-z]*)(?: |$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:corepack )?npm (?:(?:--|--?[^ ]+)(?: .*)? (?:create|exec|init|innit|x)(?: |$)|(?:create|exec|init|innit|x)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$)))|(?:.* )?(?:--allow-scripts|--danger[^ ]*|--f|--forc(?:e)?|--no-ignore-scripts|--no-strict-allow-scripts|--script-shell|-[^- ]*f[^- ]*)(?:[ =]|$)|(?:.* )?--(?:ignore-scripts|strict-allow-scripts)=(?:0|false)(?: |$)|(?:.* )?cache (?:clean|npx rm)(?: |$)|(?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?(?:r|remove|rm|un|uninstall|unlink) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|remove|rm|un|uninstall|unlink) (?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|remove|rm|un|uninstall|unlink) (?:.* )?npm(?:@[^ ]+)? (?:.* )?(?:--global|-[^- ]*g[^- ]*)(?: |$))"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm (?:(?:--|--?[^ ]+)(?: .*)? (?:create|exec|init|innit|x)(?: |$)|(?:create|exec|init|innit|x)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$)))|(?:.* )?(?:--allow-scripts|--danger[^ ]*|--f|--forc(?:e)?|--no-ignore-scripts|--no-strict-allow-scripts|--script-shell|-[^- ]*f[^- ]*)(?:[ =]|$)|(?:.* )?--(?:ignore-scripts|strict-allow-scripts)=(?:0|false)(?: |$)|(?:.* )?cache (?:clean|npx rm)(?: |$)|(?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?(?:r|remove|rm|un|uninstall|unlink) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|remove|rm|un|uninstall|unlink) (?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|remove|rm|un|uninstall|unlink) (?:.* )?npm(?:@[^ ]+)? (?:.* )?(?:--global|-[^- ]*g[^- ]*)(?: |$))"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:corepack )?(?:pnpm (?:(?:-[^ ]+(?: [^ ]+)* )?(?:create|dlx|exec|init)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$)))|(?:.* )?(?:--allow-build|--dangerously-allow-all-builds|--force|--script-shell)(?:[ =]|$)|(?:.* )?--(?:config[.]ignore-scripts|ignore-scripts)=false(?: |$)|(?:.* )?(?:cache delete|store prune)(?: |$)|(?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?(?:remove|rm|un|uninstall) (?:.* )?pnpm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:remove|rm|un|uninstall) (?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?pnpm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:remove|rm|un|uninstall) (?:.* )?pnpm(?:@[^ ]+)? (?:.* )?(?:--global|-[^- ]*g[^- ]*)(?: |$))|(?:pnpx|pnx)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$))))"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?(?:pnpm (?:(?:-[^ ]+(?: [^ ]+)* )?(?:create|dlx|exec|init)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$)))|(?:.* )?(?:--allow-build|--dangerously-allow-all-builds|--force|--script-shell)(?:[ =]|$)|(?:.* )?--(?:config[.]ignore-scripts|ignore-scripts)=false(?: |$)|(?:.* )?(?:cache delete|store prune)(?: |$)|(?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?(?:remove|rm|un|uninstall) (?:.* )?pnpm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:remove|rm|un|uninstall) (?:.* )?(?:--global|-[^- ]*g[^- ]*) (?:.* )?pnpm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:remove|rm|un|uninstall) (?:.* )?pnpm(?:@[^ ]+)? (?:.* )?(?:--global|-[^- ]*g[^- ]*)(?: |$))|(?:pnpx|pnx)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$))))"
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*rg (?:(?:--[^ ]+|-(?:[^- ][^ ]*)?|[^- ][^ ]*) )*--(?:hostname-bin|pre)(?:[ =]|$)"
@@ -586,7 +586,7 @@
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*xattr (?:(?:--[^ ]+|-(?:[^- ][^ ]*)?|[^- ][^ ]*) )*-[^- ]*[cdw][^- ]*(?: |$)"
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=1 )?(?:nohup )?(?:corepack )?yarn (?:(?:(?:--(?:cache-folder|cwd|global-folder|https-proxy|link-folder|modules-folder|mutex|network-concurrency|network-timeout|otp|preferred-cache-folder|proxy|registry|use-yarnrc) [^-][^ ]*|--(?:emoji|prod|production|scripts-prepend-node-path)(?: [^-][^ ]*)?|--[^ ]+|-[^- ][^ ]*) )*(?:create|dlx|exec|init)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$)))|(?:.* )?--force(?:[ =]|$)|(?:.* )?cache clean(?: |$)|(?:.* )?global remove (?:.* )?yarn(?:@[^ ]+)?(?: |$))"
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?yarn (?:(?:(?:--(?:cache-folder|cwd|global-folder|https-proxy|link-folder|modules-folder|mutex|network-concurrency|network-timeout|otp|preferred-cache-folder|proxy|registry|use-yarnrc) [^-][^ ]*|--(?:emoji|prod|production|scripts-prepend-node-path)(?: [^-][^ ]*)?|--[^ ]+|-[^- ][^ ]*) )*(?:create|dlx|exec|init)(?:$| +(?:[^- ]|-$|-[^-h ]|-h(?:[^ ]| +)|--$|-- +|--help +|--(?:[^ ]{1,3}|[^ ]{5,}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p])(?: +|$)))|(?:.* )?--force(?:[ =]|$)|(?:.* )?cache clean(?: |$)|(?:.* )?global remove (?:.* )?yarn(?:@[^ ]+)?(?: |$))"
 						},
 						{
 							"case_sensitive": true,

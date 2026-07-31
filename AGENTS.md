@@ -13,14 +13,11 @@
 - Do not analyze the contents of `bin/git-diff-highlight` (it’s a symlink).
 - Do not read or analyze `.config/npm/user.npmrc` (it contains secrets).
 - Do not report empty config files.
-- Always use `git mv` when renaming files already committed to this repository.
 - Report any cases that would tie this repository to a fixed filesystem location.
     - Do not report `$HOME/*` paths, system paths, or vendor paths.
     - Do not report symlinks created via `domfiles sync`.
     - Do not report `.config/fish/fish_variables`.
     - Do not report documentation.
-- Run project-local commands through `pnpm exec`, `pnpm`’s implicit executable form (`pnpm <executable> ...`), or an existing `pnpm` script instead of invoking executables from `node_modules/.bin` directly.
-    - Exempt the external formatter command in `.zed/settings.json` from this requirement.
 
 ### Skills
 
@@ -97,9 +94,7 @@
 
 ## General
 
-- Always reference the relevant `AGENTS.md` line number when reporting a violation.
 - Never edit this file unless explicitly asked.
-- Never override or alter my input unless explicitly asked.
 - Consult `.agents/PROJECT.md` for non-obvious project rationale, compatibility constraints, and maintenance decisions.
     - Document newly discovered durable project knowledge there.
     - Keep entries alphabetized when their order is irrelevant.
@@ -107,7 +102,6 @@
 ## Style
 
 - Always report when `AGENTS.md` contains typos or any inconsistencies with the rules defined in this section.
-- Enclose all tokens and code fragments in `backticks` when quoting them in strings or comments.
 - Follow the format below:
 
 ```ts
