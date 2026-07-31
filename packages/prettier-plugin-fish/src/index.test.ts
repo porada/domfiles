@@ -39,6 +39,28 @@ test('formats `.fish` files without an explicit parser', async () => {
 	expect(output).toMatchSnapshot();
 });
 
+test('preserves escaped trailing whitespace from `fish_indent`', async () => {
+	const source = "printf '<%s>\\n' test\\ \n";
+	const output = await format(source, {
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toBe(source);
+});
+
+test('leaves partial ranges unchanged', async () => {
+	const source = 'echo    test\necho    test';
+	const output = await format(source, {
+		parser: 'fish',
+		plugins: [pluginFish],
+		rangeEnd: 13,
+		rangeStart: 0,
+	});
+
+	expect(output).toBe(source);
+});
+
 test('handles empty files', async () => {
 	const TEST_FISH = '\n';
 

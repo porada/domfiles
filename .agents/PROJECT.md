@@ -38,6 +38,16 @@ The npm package adds a large platform-specific native package to every environme
 
 The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations; abbreviations defined outside domfiles are not preserved across shell startup.
 
+### Fish formatter plugin
+
+Keep `prettier-plugin-fish` a thin whole-file wrapper around `fish_indent`. Preserve `fish_indent` output verbatim and let it own Fish formatting semantics; Prettier options such as `tabWidth` and `useTabs` intentionally do not affect Fish output.
+
+Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. `fish_indent` has no range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged.
+
+### Peer dependency versions
+
+Declare every peer dependency in workspace packages with the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. Do not flag `"*"` peer ranges as missing compatibility constraints or narrow them solely to mirror the currently resolved version.
+
 ### Repository-scoped commands
 
 Keep `plugins` and `skills` in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.

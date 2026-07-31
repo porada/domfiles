@@ -30,7 +30,7 @@ export const parsers: Plugin['parsers'] = {
 			});
 
 			return {
-				formattedText: `${stdout.trim()}\n`,
+				formattedText: stdout,
 				sourceLength: text.length,
 			};
 		},
