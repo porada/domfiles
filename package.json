@@ -15,7 +15,7 @@
 	"packageManager": "pnpm@11.18.0",
 	"dependencies": {
 		"plugins": "^1.3.4",
-		"skills": "^1.5.20"
+		"skills": "^1.5.21"
 	},
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.6.0",
