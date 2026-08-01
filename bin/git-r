@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Rebase a given number of last commits
+# Rebase the requested number of most recent commits
 available=0
 
 __git_cd_root

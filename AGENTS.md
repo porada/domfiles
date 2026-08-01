@@ -27,6 +27,12 @@
 
 ### Shell Scripts
 
+- Keep script comments and user-facing strings passed to `__print*` concise, neutral, and consistent.
+    - Use sentence-case imperative voice for action and section comments.
+    - In explanatory comments, describe intent or policy rather than restating control flow or implementation details.
+    - Phrase diagnostics as direct descriptions of the outcome or constraint, using consistent terminology for the same condition.
+    - Avoid first-person and subjective wording.
+    - Omit final punctuation from prose; preserve concise headings and status labels as labels.
 - Always assume that `fish` is the default shell.
 - Always ensure that any shell scripts not written in `fish` strictly conform to POSIX `sh`.
     - Apply strict mode when applicable.

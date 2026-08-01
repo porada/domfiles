@@ -32,7 +32,7 @@ __ defaults write com.apple.Terminal ShowLineMarks -int 0
 __ defaults write com.apple.dock tilesize -int 48
 __ defaults write com.apple.dock showhidden -bool true
 
-# Set the consistent clock style on the login screen
+# Set a consistent clock style on the login screen
 __ defaults write com.apple.loginwindow ClockFontIdentifier -string rounded
 __ defaults write com.apple.loginwindow ClockFontWeight -int 500
 

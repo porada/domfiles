@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Go to the main branch, whichever it is
+# Switch to the repository’s primary branch
 branch=''
 
 for param in main trunk master; do

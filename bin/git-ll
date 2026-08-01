@@ -3,6 +3,6 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Formatted `git log`
+# Show formatted `git log` output
 eval "set -- $(__git_default_log_params) $(__quote_params "$@")"
 git log "$@"

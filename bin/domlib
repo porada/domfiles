@@ -231,6 +231,19 @@ __git_is_file_in_commit() {
   [ -n "$changed_files" ]
 }
 
+__git_skipped_files() {
+  if [ $# -eq 0 ]; then
+    __print_error_and_exit '`__git_skipped_files` requires at least one argument'
+  fi
+
+  repository="$1"
+  shift
+
+  root="$(git -C "$repository" rev-parse --show-toplevel)" || return $?
+  files="$(git -C "$root" ls-files -v -- "$@")" || return $?
+  printf '%s\n' "$files" | __grep '^h'
+}
+
 __grep() {
   if grep "$@"; then
     return 0
@@ -407,7 +420,7 @@ sys.stdout.write(" ".join(params))' "$@"
 
 __ssh_add() {
   __print_command 'ssh-add' "$@"
-  ssh-add "$@" > /dev/null 2>&1 || __print_error '`ssh-add` failed'
+  ssh-add "$@" > /dev/null 2>&1 || __print_error 'Failed to add the SSH key'
 }
 
 __string_contains() {

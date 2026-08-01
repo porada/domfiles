@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Nicer `git diff`
+# Show formatted `git diff` output
 if [ $# -eq 0 ]; then
   __git_cd_root
   excluded_paths="$({

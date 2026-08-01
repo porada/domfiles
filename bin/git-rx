@@ -3,12 +3,11 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Abort when files have been `git skipped`,
-# otherwise they’ll be affected by the reset
-skipped="$(__domfiles_bin git-skipped)"
+# Abort when skipped files would be affected by the reset
+skipped="$(__git_skipped_files .)"
 
 if [ -n "$skipped" ]; then
-  __print_error_and_exit 'The repository contains skipped files'
+  __print_error_and_exit 'Cannot reset the repository while it contains skipped files'
 fi
 
 git reset --hard "$@"

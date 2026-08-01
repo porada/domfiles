@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Nicer `git show`
+# Show formatted `git show` output
 if [ $# -eq 0 ]; then
   set -- HEAD
 fi

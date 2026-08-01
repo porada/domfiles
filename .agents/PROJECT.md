@@ -40,6 +40,10 @@ Keep `codex` installed through Homebrew rather than declaring `@openai/codex` as
 
 The npm package adds a large platform-specific native package to every environment that installs the root pnpm dependencies. Lockfile ownership does not outweigh that installation and CI overhead for this machine-level command.
 
+### Dependency status labels
+
+`domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available; keep the concise `ssh` label for consistency with the adjacent dependency rows.
+
 ### Fish abbreviation ownership
 
 The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations; abbreviations defined outside domfiles are not preserved across shell startup.
@@ -77,6 +81,8 @@ Projects that require a project-specific command version are expected to declare
 Synchronization scripts otherwise fail fast. An unhandled error or a nonzero exit from a sync stage stops the broader workflow; the best-effort policy does not suppress script failures.
 
 Repository fetch, rebase, stashing, and stash-restoration failures are recoverable. They are reported without aborting the broader synchronization workflow, which continues against the available checkout so the remaining setup, installation, update, and cleanup stages can still run.
+
+Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. Synchronization must not rebase or perform a hard reset while those entries are present because Git may overwrite their working tree contents.
 
 The final dependency status is advisory. Its failures remain visible but do not invalidate that the broader workflow reached completion.
 

@@ -8,7 +8,7 @@ if __is_callable pnpm; then
   __is_ci && __ pnpm --version
   set --
 
-  # Ensure `pnpm` doesn't install dependencies on a dirty state
+  # Avoid mixing dependency installation with uncommitted changes
   if ! __domfiles_is_clean; then
     set -- '--config.verify-deps-before-run=error'
   fi
@@ -30,7 +30,7 @@ if __is_callable fish && __is_fisher_installed; then
   fi
 
   if ! __ fish --command 'fisher update'; then
-    __print_error 'Update failed'
+    __print_error 'Failed to update `fisher` plugins'
   fi
 fi
 
@@ -40,6 +40,6 @@ if __is_callable vim && __is_vim_plug_installed; then
   __is_ci && __ vim --version | head -n 2
 
   if ! __ vim -c 'PlugUpgrade | PlugUpdate | PlugClean! | quitall'; then
-    __print_error 'Update failed'
+    __print_error 'Failed to update Vim plugins'
   fi
 fi

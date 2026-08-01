@@ -50,7 +50,7 @@ if __is_callable node && __is_callable pnpm; then
     __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
   fi
 
-  # Installing `pnpm` completions
+  # Install `pnpm` completions
   if __is_callable fish; then
     __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
     __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
