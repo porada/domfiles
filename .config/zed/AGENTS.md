@@ -60,6 +60,9 @@
 - Always run project-local commands through `pnpm`’s implicit executable form (`pnpm <executable> ...`), an existing `pnpm` script, or `pnpm exec` instead of invoking executables from `node_modules/.bin` directly.
     - Prefer the implicit form over `pnpm exec` when both work; for example, use `pnpm prettier` instead of `pnpm exec prettier`.
     - Exempt the external formatter command in `.zed/settings.json` from this requirement.
+- Prefer the agent’s native fetch tooling when the task only requires retrieving or reading web content.
+    - Use `curl` when command line HTTP behavior is relevant, native fetch tooling lacks a required capability, exact response bytes or files are needed, or the request must run in a shell, container, or remote environment.
+    - Preserve explicit user requests, project workflows, and repository code that use `curl`.
 
 ## Writing
 

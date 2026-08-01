@@ -135,6 +135,7 @@
 				"e18e.dev",
 				"editorconfig.org",
 				"eslint-react.xyz",
+				"eslint.org",
 				"eslint.style",
 				"ffmpeg.org",
 				"fishshell.com",
@@ -144,6 +145,7 @@
 				"go.dev",
 				"grep.app",
 				"jqlang.org",
+				"knip.dev",
 				"man.openbsd.org",
 				"mole.fit",
 				"nextjs.org",
@@ -262,6 +264,9 @@
 							"pattern": "^https://eslint-react\\.xyz(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://eslint\\.org(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://eslint\\.style(?:[/?#]|$)"
 						},
 						{
@@ -275,6 +280,9 @@
 						},
 						{
 							"pattern": "^https://jqlang\\.org(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://knip\\.dev(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://man\\.openbsd\\.org(?:[/?#]|$)"
