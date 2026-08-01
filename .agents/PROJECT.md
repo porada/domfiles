@@ -82,8 +82,10 @@ The final dependency status is advisory. Its failures remain visible but do not 
 
 `.lastsync` records that the broader workflow reached completion. It is intentionally write-only for now and reserved for a possible future feature.
 
-### Zed personal instructions
+### Zed and Codex global instructions
 
-The tracked `.config/zed/AGENTS.md` maps to Zed’s global personal instruction file at `~/.config/zed/AGENTS.md`. Zed’s native Agent loads it for every project; it is not a project-scoped instruction file, and external agents and terminal threads do not generally consume it.
+The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared by Zed and Codex. `domfiles sync` links that source to `~/.config/zed/AGENTS.md` for Zed and `~/.codex/AGENTS.md` for Codex. Both agents therefore load one instruction source across every project; it is not project scoped.
 
-Keep repository-specific guidance in the root `AGENTS.md` or applicable project skills instead.
+Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
+
+Keep repository specific guidance in the root `AGENTS.md` or applicable project skills instead.

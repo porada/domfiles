@@ -21,7 +21,7 @@
 
 ### Skills
 
-- Treat every skill maintained in this repository as a living document.
+- Treat every `domfiles-*` skill maintained in this repository as a living document.
     - After executing a task using a skill, suggest a concrete edit when the execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.
     - Do not edit the skill unless explicitly asked.
 
@@ -61,13 +61,13 @@
 - Always assume this repository is updated via `domfiles sync`.
     - Do not report `domfiles sync` overwriting initial state.
 
-### Zed Config
+### Zed Settings
 
-- Always split Zed configuration audits into multiple smaller steps because a single pass can easily exceed the available context window.
+- Always split Zed settings audits into multiple smaller steps because a single pass can easily exceed the available context window.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
     - Exempt `"tab_size": 4` from this requirement.
     - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
-- Keep order-independent arrays in Zed configuration alphabetized by value or, for object entries, by the value of their identifying field.
+- Keep order-independent arrays in Zed settings files alphabetized by value or, for object entries, by the value of their identifying field.
 - Treat Zed agent permissions as layered security boundaries.
     - Preserve `agent.tool_permissions.default` as `allow`.
     - Treat ordinary package-manager workflows as intentional allowances. Continue to require confirmation for package runners that can download and execute arbitrary code.
@@ -99,36 +99,10 @@
     - Document newly discovered durable project knowledge there.
     - Keep entries alphabetized when their order is irrelevant.
 
-## Style
-
-- Always report when `AGENTS.md` contains typos or any inconsistencies with the rules defined in this section.
-- Follow the format below:
-
-```ts
-/**
- * Tests for the `Icon` component
- */
-describe('`Icon` component with a custom `ASSET_PATH`', () => {
-    process.env.ASSET_PATH = '/assets';
-
-    test('accepts `true` as the `name` prop', () => {
-        // …
-    });
-
-    test('returns `undefined` if the `name` prop isn’t provided', () => {
-        // …
-    });
-});
-```
-
 ## Shorthand Commands
 
-- Shorthand commands are high-level task macros that define complete, self-contained procedures.
-- Always execute shorthand commands exactly as defined below.
-- Report findings only when supported by concrete repository evidence.
-    - Do not report speculative findings or preference-only alternatives.
-    - Assign a unique number to each finding when it is first reported.
-    - Preserve finding numbers in all subsequent reports.
+- Shorthand commands are high level task macros that define complete, self contained procedures.
+- Always execute shorthand commands exactly as defined.
 
 ### Audit
 
@@ -159,12 +133,3 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 - Report any cases where new code reimplements behavior already available in the language, standard library, or existing shared utilities in this repository.
 - Ensure all changes align with the latest version of `AGENTS.md`.
 - Perform this task without making edits.
-
-### Verify
-
-- Re-read `AGENTS.md` and all reported files to confirm whether reported issues remain relevant.
-    - Ensure that all findings align with the latest version of `AGENTS.md`.
-- Classify each previously reported finding as resolved, intentional, or unresolved.
-    - Exclude resolved findings from future reports.
-    - Exclude intentional findings from future reports unless the relevant code or `AGENTS.md` changes.
-- Report only unresolved findings that still apply.

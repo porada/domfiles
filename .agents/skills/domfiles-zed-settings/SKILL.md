@@ -1,9 +1,11 @@
 ---
-name: domfiles-zed-config
-description: Edit and review Zed settings in this repository, especially agent terminal, tool, sandbox, network, fetch, MCP, skill, and language configuration. Use whenever changing or diagnosing `.config/zed/settings.json`, `.zed/settings.json`, Zed agent permissions, command allow/confirm patterns, or domain allowances.
+name: domfiles-zed-settings
+description: Edit, review, audit, and diagnose only `.config/zed/settings.json` and `.zed/settings.json`. Use this skill whenever a task changes or evaluates either settings file, including its agent permissions, terminal rules, network and fetch allowances, MCP servers, or language settings; do not use it for other Zed files.
 ---
 
-# Zed configuration workflow
+# Zed settings workflow
+
+Use this skill only for tasks that directly edit, review, audit, or diagnose `.config/zed/settings.json` or `.zed/settings.json`. Do not use it for `.config/zed/AGENTS.md`, Zed documentation, or other files merely because they relate to Zed.
 
 Use the applicable `AGENTS.md` files as the sole source of policy. This skill supplies only investigation, implementation, and validation mechanics. Do not restate those policies or copy the current command, domain, or settings inventory into this skill.
 
