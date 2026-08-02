@@ -1,4 +1,4 @@
-# Agent Instructions
+# Agent instructions
 
 ## Conduct
 
@@ -88,9 +88,9 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 });
 ```
 
-## Shorthand Commands
+## Shorthand commands
 
-- Shorthand commands are high level task macros that define complete, self contained procedures.
+- Shorthand commands are task macros that define complete, standalone procedures.
 - Always execute shorthand commands exactly as defined.
 
 ### Verify

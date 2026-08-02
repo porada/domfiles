@@ -1,18 +1,52 @@
 ---
 name: domfiles-zed-settings
-description: Edit, review, audit, and diagnose only `.config/zed/settings.json` and `.zed/settings.json`. Use this skill whenever a task changes or evaluates either settings file, including its agent permissions, terminal rules, network and fetch allowances, MCP servers, or language settings; do not use it for other Zed files.
+description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json`. Use this skill whenever the resolved task scope includes changing or evaluating either settings file—even when the user did not name it—including its agent permissions, terminal rules, network and fetch allowances, MCP servers, or language settings; do not use it for other Zed files.
 ---
 
-# Zed settings workflow
+# Zed settings
 
-Use this skill only for tasks that directly edit, review, audit, or diagnose `.config/zed/settings.json` or `.zed/settings.json`. Do not use it for `.config/zed/AGENTS.md`, Zed documentation, or other files merely because they relate to Zed.
+Use this skill whenever the resolved task scope includes editing, reviewing, auditing, or diagnosing `.config/zed/settings.json` or `.zed/settings.json`, even when the user did not name them explicitly. Do not use it for `.config/zed/AGENTS.md`, Zed documentation, or other files merely because they relate to Zed.
 
-Use the applicable `AGENTS.md` files as the sole source of policy. This skill supplies only investigation, implementation, and validation mechanics. Do not restate those policies or copy the current command, domain, or settings inventory into this skill.
+Use this skill as the canonical source for Zed settings policy and workflow. Continue to follow applicable `AGENTS.md` files for repository-wide instructions. Do not copy the current command, domain, or settings inventory into this skill.
+
+## Apply the policy
+
+- Always split Zed settings audits into multiple smaller steps because a single pass can easily exceed the available context window.
+- Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
+    - Exempt `"tab_size": 4` from this requirement.
+    - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
+- Keep order-independent arrays in Zed settings files alphabetized by value or, for object entries, by the value of their identifying field.
+- Treat Zed agent permissions as layered security boundaries.
+    - Preserve `agent.tool_permissions.default` as `allow`.
+    - Treat ordinary package-manager workflows as intentional allowances. Continue to require confirmation for package runners that can download and execute arbitrary code.
+    - Allow Docker inspection operations without confirmation. Require confirmation for operations that execute workloads or create, modify, or remove Docker state.
+    - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`.
+    - Treat `*.domain.name` and `domain.name` as distinct `network_hosts` entries. Preserve both when access to the apex domain and its subdomains is intended.
+    - Prefer wildcard domain allowances when subdomains are involved. Include the apex domain only when it is actually used.
+    - Restrict automatically allowed fetch URL patterns to `https://` and anchor each pattern at the hostname boundary.
+- Keep terminal permission patterns concise and consistent.
+    - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `--(?:help|version)` pattern. Alphabetize the remaining patterns by command family.
+    - Alphabetize executable, command, and subcommand alternatives within consolidated patterns when their grammar permits.
+    - Consolidate variants within the same command family. Keep unrelated command families separate.
+        - Keep informational forms in an existing command-family pattern instead of duplicating the executable in the shared `--(?:help|version)` pattern.
+    - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
+    - Keep command-specific prefixes and wrappers out of the consolidated general and shared `--(?:help|version)` patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
+        - Account for the optional `-C <path>`, `--no-optional-locks`, and `--no-pager` global options before every Git subcommand.
+        - Apply the optional `GIT_EDITOR=true`, `GIT_PAGER=cat`, `MANPAGER=cat`, and `PAGER=cat` prefixes to every Git terminal pattern.
+        - Apply optional `HOMEBREW_NO_*` prefixes with the fixed value `1` to every Homebrew terminal pattern.
+    - Prefer literal spaces over whitespace character classes.
+    - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
+    - For mixed-purpose utilities and interpreters, prefer positive allowlists of non-mutating forms. Use a broad allowance with `terminal.always_confirm` only when every hazardous form can be matched reliably. Otherwise, preserve default confirmation.
+    - Use `terminal.always_confirm` to override broader `terminal.always_allow` entries for hazardous argument forms, including code-execution hooks, package runners, destructive operations, force flags, and commands that uninstall the invoked tool itself. Account for global options, combined short flags, and accepted long-option abbreviations.
+    - Do not report overlaps between `terminal.always_allow` and `terminal.always_confirm` when `terminal.always_confirm` acts as a safety override.
 
 ## Choose the workflow
 
 - For a change, investigate the current behavior, plan the implementation, make the smallest applicable edit, and use the change-validation workflow below.
-- For an audit or review, keep the task read-only. Skip change planning, implementation, formatting, and change validation; use the read-only validation workflow below.
+- For an audit or review, keep the task read-only and never execute arbitrary commands.
+    - Treat terminal command candidates as inert strings and evaluate them only through permission-pattern matching.
+    - Limit shell execution to the bounded, non-mutating inspection and validation utilities required by the read-only workflow below.
+    - Skip change planning, implementation, formatting, and change validation; use the read-only validation workflow below.
 
 ## Investigate the task
 
@@ -26,7 +60,7 @@ Use the applicable `AGENTS.md` files as the sole source of policy. This skill su
 
 ## Plan a change
 
-1. Apply the permission treatment and structural rules from `AGENTS.md` to the observed behavior.
+1. Apply the permission treatment and structural policy above to the observed behavior.
 2. Identify the smallest existing object or command family that owns the change.
 3. Enumerate the required syntactic variants before writing the regex.
 4. Prefer a minimal edit over reorganizing unrelated patterns.
@@ -43,7 +77,7 @@ Use the applicable `AGENTS.md` files as the sole source of policy. This skill su
 
 ## Translate approved domains
 
-After applying the domain-scope policy in `AGENTS.md`, encode the corresponding fetch hostname with one of these shapes:
+After applying the domain-scope policy above, encode the corresponding fetch hostname with one of these shapes:
 
 1. Use one of these fetch hostname shapes:
     - Apex only: `^https://domain\.example(?:[/?#]|$)`
@@ -77,8 +111,8 @@ After editing:
     - Intended commands or URLs that should match.
     - Hazardous forms that must match an override or remain unmatched by the allowance.
     - Near misses that must not match.
-    - Every syntactic variant required by `AGENTS.md`.
-6. Verify every applicable `AGENTS.md` invariant against the final values.
+    - Every syntactic variant required by the policy above.
+6. Verify every applicable Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
 7. Inspect the final diff and status. Remove only artifacts created by validation.
 
 Do not run the entire repository formatter when a targeted formatting check is sufficient.
@@ -90,7 +124,7 @@ Without editing or formatting files:
 1. Parse relevant JSON with `jq -e`.
 2. Compile relevant existing permission patterns with a Rust-compatible regex tool such as `rg`.
 3. Use the permission-behavior workflow above to test representative intended inputs, hazardous forms, and near misses against the existing patterns.
-4. Verify the applicable `AGENTS.md` invariants against the audited contents.
+4. Verify the applicable Zed settings policy invariants and repository-wide `AGENTS.md` instructions against the audited contents.
 5. Inspect the relevant diff and status only to identify pre-existing or concurrent changes.
 
 ## Report the result

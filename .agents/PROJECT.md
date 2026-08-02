@@ -66,7 +66,7 @@ Declare every peer dependency in workspace packages with the version `"*"`. The 
 
 Keep `plugins` and `skills` in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
 
-`domfiles-sync-update` intentionally invokes `plugins update`. The `plugins` help does not advertise `update` as a named subcommand, but the invocation succeeds in the supported environment; do not infer failure from the help output alone.
+Do not invoke `plugins update` from `domfiles-sync-update`: the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. Re-evaluate this only if upstream adds a supported update workflow.
 
 The corresponding scripts in `bin/` are the stable command interfaces. Their implementations are resolved from the domfiles pnpm workspace so `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Do not install parallel copies through global pnpm state.
 
@@ -94,4 +94,4 @@ The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared b
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
 
-Keep repository specific guidance in the root `AGENTS.md` or applicable project skills instead.
+Keep guidance specific to this repository in the root `AGENTS.md` or applicable project skills instead.
