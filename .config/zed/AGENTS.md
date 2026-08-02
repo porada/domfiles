@@ -8,7 +8,7 @@
 ## Collaboration
 
 - Always assume that others may be working concurrently in the same project.
-- Always treat subagents’ short context windows as a critical constraint.
+- Always treat subagents’ extremely short context windows as a critical constraint.
     - Keep each assignment limited to the minimum necessary scope.
     - Use additional subagents when needed to keep each assignment small.
 
@@ -57,10 +57,15 @@
 ## Tooling
 
 - Always use `git mv` when renaming tracked files.
-- Always run project-local commands through `pnpm`’s implicit executable form (`pnpm <executable> ...`), an existing `pnpm` script, or `pnpm exec` instead of invoking executables from `node_modules/.bin` directly.
-    - Prefer the implicit form over `pnpm exec` when both work; for example, use `pnpm prettier` instead of `pnpm exec prettier`.
+- Disable commit signing with `git -c commit.gpgsign=false commit ...` when creating commits in disposable Git repositories for tests so global signing configuration does not make the test interactive.
+- Invoke commands by name through `PATH` instead of using absolute executable paths.
+    - Use an absolute path only when selecting a specific installation is required, `PATH` resolution is being diagnosed, or another concrete constraint makes the location material; make the justification evident.
+- Always invoke package scripts through `pnpm`’s explicit `run` subcommand, such as `pnpm run <script> ...` or `pnpm --filter <selector> run <script> ...`.
+- Always invoke project-local executables without a package script through `pnpm`’s explicit `exec` subcommand (`pnpm exec <executable> ...`) instead of invoking them implicitly (`pnpm <executable> ...`) or directly from `node_modules/.bin`.
     - Exempt the external formatter command in `.zed/settings.json` from this requirement.
-- Prefer the agent’s native fetch tooling when the task only requires retrieving or reading web content.
+- Prefer the agent’s native fetch tooling when the task only requires retrieving or reading content from a known URL.
+    - This preference does not apply to web searches.
+    - When another dedicated native tool exists for the task, use it instead.
     - Use `curl` when command line HTTP behavior is relevant, native fetch tooling lacks a required capability, exact response bytes or files are needed, or the request must run in a shell, container, or remote environment.
     - Preserve explicit user requests, project workflows, and repository code that use `curl`.
 

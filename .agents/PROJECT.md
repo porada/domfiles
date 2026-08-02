@@ -58,10 +58,6 @@ Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. `fi
 
 Declare every peer dependency in workspace packages with the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. Do not flag `"*"` peer ranges as missing compatibility constraints or narrow them solely to mirror the currently resolved version.
 
-### `pnpm` executable invocation
-
-`pnpm <executable> ...` is an accepted form for project-local binaries that do not have a package script. `pnpm` intentionally falls back to the workspace binary when no built-in command or script has that name, keeping invocations concise while resolving through workspace dependencies. Forms such as `pnpm vp ...` and `pnpm prettier ...` are intentional and must not be flagged as direct `node_modules/.bin` execution; `pnpm exec <executable> ...` is also valid but is not required.
-
 ### Repository-scoped commands
 
 Keep `plugins` and `skills` in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
@@ -95,3 +91,7 @@ The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared b
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
 
 Keep guidance specific to this repository in the root `AGENTS.md` or applicable project skills instead.
+
+### Zed project scan exclusions
+
+The repository-level `.zed/settings.json` restates the installed Zed version’s complete default `file_scan_exclusions` together with the project-specific exclusions. Zed replaces the default array whenever this property is configured, so refresh the restated defaults against the installed version when changing this setting.

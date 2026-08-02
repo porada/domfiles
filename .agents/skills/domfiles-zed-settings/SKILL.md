@@ -72,7 +72,8 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
 - Zed matches permission patterns case-insensitively by default. Set `case_sensitive` to `true` when shell semantics depend on case.
 - Build positive branches for accepted grammar instead of trying to subtract cases with unsupported regex features.
 - Test against Zed’s normalized permission input, not merely the original shell line.
-- Add an executable to the shared `--(?:help|version)` rule only when the locally installed command treats those exact forms as informational.
+- Permit exact `COMMAND --help` and `COMMAND --version` discovery forms for every allowed command family, even when the installed executable does not support one or both flags, so unsupported discovery attempts fail without prompting. Keep these forms in an existing family-specific pattern when one exists, and use the shared pattern only for families that need no command-specific prefix or wrapper.
+- Apply optional repeated `MANPAGER=cat` and `PAGER=cat` prefixes to the general and shared patterns. Apply them to a family-specific pattern only when it permits help or manual inspection; other family-specific patterns do not need pager prefixes.
 - Do not execute a destructive command merely to test a permission pattern.
 
 ## Translate approved domains
