@@ -4,7 +4,7 @@
 set -eu
 
 # Ensure all dependencies are up to date
-pnpm --silent install --ignore-scripts --frozen-lockfile
+pnpm --loglevel=error install --ignore-scripts --frozen-lockfile
 
 # Lint staged files
 pnpm vp staged --concurrent=false --relative

@@ -10,6 +10,9 @@ for param in main trunk master; do
   if git show-ref --verify --quiet "refs/heads/$param"; then
     branch="$param"
     break
+  else
+    status="$?"
+    [ "$status" -eq 1 ] || exit "$status"
   fi
 done
 

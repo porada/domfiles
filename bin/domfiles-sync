@@ -80,9 +80,9 @@ if __is_callable git; then
       if [ -n "$skipped" ]; then
         __print_error 'Cannot restore the original state while the repository contains skipped files'
       else
-        __ git -C "$DOMFILES" reset --hard "$current_revision"
-
-        if __ git -C "$DOMFILES" stash pop --index --quiet; then
+        if ! __ git -C "$DOMFILES" reset --hard "$current_revision"; then
+          __print_error 'Failed to restore the original state'
+        elif __ git -C "$DOMFILES" stash pop --index --quiet; then
           __print_confirmation 'Original state restored'
         else
           __print_error 'Failed to restore the original state'

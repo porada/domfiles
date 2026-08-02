@@ -276,7 +276,7 @@ __is_brew_installed() {
   if [ $# -eq 0 ]; then
     brew --version > /dev/null 2>&1
   else
-    brew list | grep -q "^$1\$" > /dev/null 2>&1
+    brew list | grep -q "^$1\$" 2> /dev/null
   fi
 }
 
