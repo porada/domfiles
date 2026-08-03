@@ -30,7 +30,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 - Keep script comments and user-facing strings passed to `__print*` concise, neutral, and consistent.
     - Use sentence-case imperative voice for action and section comments.
-    - In explanatory comments, describe intent or policy rather than restating control flow or implementation details.
+    - In explanatory comments, describe stable intent or policy rather than restating control flow; do not require comments to enumerate conditional behavior that is clear from adjacent code.
     - Phrase diagnostics as direct descriptions of the outcome or constraint, using consistent terminology for the same condition.
     - Avoid first-person and subjective wording.
     - Omit final punctuation from prose.

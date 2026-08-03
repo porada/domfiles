@@ -27,11 +27,11 @@ function __fish_prompt_newline
 end
 
 function __fish_prompt_host
-    test -n "$SSH_CONNECTION"; and printf '%s@%s ' $USER (hostname -s)
+    test -n "$SSH_CONNECTION"; and printf '%s@%s ' $USER (prompt_hostname)
 end
 
 function __fish_prompt_pwd
-    test (id -u) -eq 0; and set_color $fish_color_cwd_root
+    fish_is_root_user; and set_color $fish_color_cwd_root
     printf '%s ' (prompt_pwd --dir-length 0)
 end
 

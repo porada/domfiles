@@ -21,10 +21,7 @@ set -x LESSHISTFILE -
 
 # Configure `node`
 set -x NODE_OPTIONS '--trace-uncaught --unhandled-rejections=strict'
-
-# Enable persistent REPL history for `node`
 set -x NODE_REPL_HISTORY "$HOME/.node_history"
-set -x NODE_REPL_MODE sloppy
 
 # Set `npm` config paths
 set -x npm_config_globalconfig "$DOMFILES_NPM_CONFIG_DIR/global.npmrc"

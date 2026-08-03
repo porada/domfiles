@@ -1,4 +1,4 @@
-# Clean up legacy abbreviations
+# Reset all abbreviations
 abbr --erase (abbr --list) >/dev/null 2>&1
 
 # Shorten frequently used commands
@@ -15,7 +15,7 @@ alias ls 'ls -A'
 # Ensure `npx` goes through `pnpm`
 alias npx 'pnpm dlx'
 
-# Clone a repository into `~/Projects` and navigate into it
+# Clone a repository into `~/Projects`
 function clone
     cd -P "$DOMFILES_PROJECTS_DIR"; or return
 
