@@ -3,11 +3,11 @@
 ## Overview
 
 - This repository is the home of all my dotfiles actively used across multiple Apple Silicon–based Macs (also referred to as `domfiles`).
+- This project is public and open source.
 
 ## General
 
 - Always assume that `fish` is the default shell.
-- Never edit this file unless explicitly asked.
 - Consult `.agents/PROJECT.md` for non-obvious project rationale, compatibility constraints, and maintenance decisions.
     - Document newly discovered durable project knowledge there.
     - Keep entries alphabetized when their order is irrelevant.
@@ -34,8 +34,7 @@
 
 - Load every applicable `domfiles-*` skill whose declared file scope intersects the resolved task scope, even when those files were not named explicitly by the user.
 - Treat every `domfiles-*` skill maintained in this repository as a living document.
-    - After executing a task using a skill, suggest a concrete edit when the execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.
-    - Do not edit the skill unless explicitly asked.
+    - After executing a task using a skill, suggest a concrete edit only when the execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.
 
 ## Bootstrap and synchronization
 
