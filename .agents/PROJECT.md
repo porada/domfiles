@@ -28,9 +28,9 @@ Agent tool permissions intentionally use an allow-by-default baseline. The termi
 
 ### Zed terminal permission limitations
 
-Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Package-runner execution intentionally remains confirmable, including a local formatter invoked through a runner, when exempting a safe subset would require a brittle complement expression; exact informational forms can be allowed separately.
+Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Keep trusted local package-manager `exec` binaries inside each manager’s positive command-family allowance, using an `exec`-specific option grammar, and keep ordinary npm, pnpm, and Yarn workflows in positive command alternatives. Unlisted executable names then fall through the terminal’s confirm-by-default boundary; broad `exec` confirmation overrides would make the allowlist require brittle complement expressions. Exact informational forms can be allowed separately.
 
-Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Package-manager confirmation intentionally remains case-insensitive because executable casing variants resolve on the supported Macs. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
+Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
 
 ## Tooling
 

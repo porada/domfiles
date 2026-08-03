@@ -25,12 +25,13 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
     - Prefer wildcard domain allowances when subdomains are involved. Include the apex domain only when it is actually used.
     - Restrict automatically allowed fetch URL patterns to `https://` and anchor each pattern at the hostname boundary.
 - Keep terminal permission patterns concise and consistent.
-    - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `--(?:help|version)` pattern. Alphabetize the remaining patterns by command family.
+    - Set `"case_sensitive": true` on every terminal command pattern unless a verified command-specific requirement justifies case-insensitive matching. Prefer a scoped inline case-insensitive group for an exceptional token instead of making the entire pattern case-insensitive.
+    - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `(?:-[hv]|--(?:help|version))` pattern and then the shared `--(?:help|version)` pattern for commands whose short forms are not safely informational. List every executable absent from the general allowance in exactly one shared discovery pattern, even when the executable does not support one or more permitted flags. Alphabetize the remaining patterns by command family.
     - Alphabetize executable, command, and subcommand alternatives within consolidated patterns when their grammar permits.
     - Consolidate variants within the same command family. Keep unrelated command families separate.
-        - Keep informational forms in an existing command-family pattern instead of duplicating the executable in the shared `--(?:help|version)` pattern.
+        - Keep informational forms in a command-family pattern only when they use different syntax, such as short flags, help subcommands, command-specific prefixes or wrappers, global options, or subcommand help.
     - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
-    - Keep command-specific prefixes and wrappers out of the consolidated general and shared `--(?:help|version)` patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
+    - Keep command-specific prefixes and wrappers out of the consolidated general and shared discovery patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
         - Account for the optional `-C <path>`, `--no-optional-locks`, and `--no-pager` global options before every Git subcommand.
         - Apply the optional `GIT_EDITOR=true`, `GIT_PAGER=cat`, `MANPAGER=cat`, and `PAGER=cat` prefixes to every Git terminal pattern.
         - Apply optional `HOMEBREW_NO_*` prefixes with the fixed value `1` to every Homebrew terminal pattern.
@@ -69,11 +70,11 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
 
 - Anchor a pattern with `^`. Add `$` when trailing arguments would change the safety classification. In an allowance pattern that accepts trailing arguments, end each executable, subcommand, or option token with `(?: |$)`. The weaker `\b` is a lexical boundary, not a shell token boundary; use it only when lexical matching is intentional, such as in a conservative confirmation override.
 - Use syntax supported by Zed’s Rust-compatible regex engine. It does not support lookarounds or backreferences.
-- Zed matches permission patterns case-insensitively by default. Set `case_sensitive` to `true` when shell semantics depend on case.
+- Zed matches permission patterns case-insensitively by default. Follow the explicit case-sensitivity policy above for terminal commands, including patterns whose current tokens happen to be unambiguous.
 - Build positive branches for accepted grammar instead of trying to subtract cases with unsupported regex features.
 - Test against Zed’s normalized permission input, not merely the original shell line.
-- Permit exact `COMMAND --help` and `COMMAND --version` discovery forms for every allowed command family, even when the installed executable does not support one or both flags, so unsupported discovery attempts fail without prompting. Keep these forms in an existing family-specific pattern when one exists, and use the shared pattern only for families that need no command-specific prefix or wrapper.
-- Apply optional repeated `MANPAGER=cat` and `PAGER=cat` prefixes to the general and shared patterns. Apply them to a family-specific pattern only when it permits help or manual inspection; other family-specific patterns do not need pager prefixes.
+- Permit exact `COMMAND --help` and `COMMAND --version` discovery forms for every allowed command family, even when the installed executable does not support one or both flags, so unsupported discovery attempts fail without prompting. Permit `COMMAND -h` and `COMMAND -v` only when both short forms have been verified to exit without executing input, reading commands from standard input, mutating state, or starting an interactive or workload mode. Keep every executable absent from the general allowance in the applicable shared discovery pattern, and keep all discovery forms end-anchored so flags cannot acquire operands.
+- Apply optional repeated `MANPAGER=cat` and `PAGER=cat` prefixes to the general and both shared discovery patterns. Treat family-specific pager coverage independently from discovery-form ownership: preserve existing prefixes when they cover other approved forms, and do not remove them merely because exact discovery forms moved into a shared pattern.
 - Do not execute a destructive command merely to test a permission pattern.
 
 ## Translate approved domains
