@@ -41,12 +41,16 @@
 	"hard_tabs": true,
 	"inline_code_actions": false,
 	"language_servers": [
+		"typescript-ls",
 		"!eslint",
 		"!tailwindcss-language-server",
+		"!typescript-language-server",
+		"!vtsls",
 		"..."
 	],
 	"languages": {
 		"Plain Text": {
+			"format_on_save": "off",
 			"show_edit_predictions": false
 		}
 	},
