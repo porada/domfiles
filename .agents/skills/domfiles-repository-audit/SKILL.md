@@ -13,8 +13,7 @@ Audit the resolved repository scope without modifying it. Treat an explicit user
 2. Start with Git-tracked paths, then apply the user’s scope modifiers and every inclusion, exclusion, and exemption from the applicable `AGENTS.md` files.
 3. Exclude `.config/zed/settings.json` and `.zed/settings.json` unless the user explicitly includes either file or Zed settings in the requested scope. A repository-wide scope alone does not count as explicit inclusion.
 4. Exclude symbolic links without reading or resolving their targets.
-5. Load every applicable `domfiles-*` domain skill whose declared file scope intersects the resolved audit scope, even when the user did not name those files explicitly.
-6. For a large scope, use complete, non-overlapping passes. Treat those passes as one continuous audit and preserve the resolved scope until every pass is complete.
+5. For a large scope, use complete, non-overlapping passes. Treat those passes as one continuous audit and preserve the resolved scope until every pass is complete.
 
 ## Audit the contents
 
@@ -38,7 +37,7 @@ For every in-scope path:
 
 ## Report the result
 
-1. Number every finding and keep its number stable across follow-up requests.
-2. Support each finding with concrete evidence from the current repository and the applicable instruction or policy.
-3. Lead with the findings. If there are none, state that the audit found no reportable issues.
-4. State the resolved scope and identify anything within it that could not be verified.
+Follow the [global issue-reporting requirements](../../../.config/zed/AGENTS.md#documentation), then:
+
+1. Lead with the findings. If there are none, state that the audit found no reportable issues.
+2. State the resolved scope and identify anything within it that could not be verified.

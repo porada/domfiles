@@ -2,13 +2,12 @@
 
 ## Overview
 
-- This repository is the home of all my dotfiles actively used across multiple Apple Silicon–based Macs (also referred to as `domfiles`).
+- This repository is the home of all my actively used dotfiles (also referred to as `domfiles`).
 - This project is public and open source.
 
 ## General
 
-- Always assume that `fish` is the default shell.
-- Consult `.agents/PROJECT.md` for non-obvious project rationale, compatibility constraints, and maintenance decisions.
+- Follow the [supported environment](.agents/PROJECT.md#supported-environment)—including its default-shell requirement—and consult `.agents/PROJECT.md` for non-obvious project rationale and maintenance decisions.
     - Document newly discovered durable project knowledge there.
     - Keep entries alphabetized when their order is irrelevant.
 

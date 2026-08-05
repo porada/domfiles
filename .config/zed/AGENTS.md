@@ -63,11 +63,12 @@
 - Invoke commands by name through `PATH` instead of using absolute executable paths.
     - Use an absolute path only when selecting a specific installation is required, `PATH` resolution is being diagnosed, or another concrete constraint makes the location material; make the justification evident.
 - Use the system-installed `zizmor` when reviewing GitHub Actions workflows.
-- Always invoke package scripts through `pnpm`’s explicit `run` subcommand, such as `pnpm run <script> …` or `pnpm --filter <selector> run <script> …`.
-- Always invoke project-local executables without a package script through `pnpm`’s explicit `exec` subcommand (`pnpm exec <executable> …`) instead of invoking them implicitly (`pnpm <executable> …`) or directly from `node_modules/.bin`.
-    - Exempt the external formatter command in `.zed/settings.json` from this requirement.
-- Invoke one-off package executables that are not declared by the current project through `pnpm dlx <package> …` instead of `npx`.
-    - When instructions use `npx skills …`, `pnpm dlx skills …`, `npx plugins …`, or `pnpm dlx plugins …`, invoke the corresponding system-provided `skills …` or `plugins …` command directly.
+- Apply the following pnpm rules to commands executed by agents, including command examples that instruct agents; do not treat them as repository code-style requirements for scripts, workflows, or configuration:
+    - Invoke package scripts through `pnpm`’s explicit `run` subcommand, such as `pnpm run <script> …` or `pnpm --filter <selector> run <script> …`.
+    - Invoke project-local executables without a package script through `pnpm`’s explicit `exec` subcommand (`pnpm exec <executable> …`) instead of invoking them implicitly (`pnpm <executable> …`) or directly from `node_modules/.bin`.
+        - Exempt the external formatter command in `.zed/settings.json` from this requirement.
+    - Invoke one-off package executables that are not declared by the current project through `pnpm dlx <package> …` instead of `npx`.
+        - When instructions use `npx skills …`, `pnpm dlx skills …`, `npx plugins …`, or `pnpm dlx plugins …`, invoke the corresponding system-provided `skills …` or `plugins …` command directly.
 - Prefer the agent’s native fetch tooling when the task only requires retrieving or reading content from a known URL.
     - This preference does not apply to web searches.
     - When another dedicated native tool exists for the task, use it instead.

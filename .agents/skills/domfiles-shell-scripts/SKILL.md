@@ -71,8 +71,8 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 After editing:
 
 1. Syntax-check each changed Fish file with `fish --no-execute <file>` and each changed POSIX shell file with `sh -n <file>`.
-2. Run the applicable existing `pnpm lint:fish` or `pnpm lint:sh` workflow; inspect its script first if mutating behavior is unclear.
-3. Check changed-file formatting with `pnpm prettier --check <changed-files>`.
+2. Run the applicable existing `pnpm run lint:fish` or `pnpm run lint:sh` workflow; inspect its script first if mutating behavior is unclear.
+3. Check changed-file formatting with `pnpm exec prettier --check <changed-files>`.
 4. Verify every applicable policy invariant above, including `domlib` ordering, usage, and `$DOMFILES_*` parity when relevant.
 5. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned unstaged and staged diffs, inspect task-owned untracked files directly without staging them, and review the final status without altering concurrent changes.
 

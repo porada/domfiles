@@ -52,6 +52,14 @@ The npm package adds a large platform-specific native package to every environme
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available; keep the concise `ssh` label for consistency with the adjacent dependency rows.
 
+### FFmpeg media preset compatibility
+
+When auditing `bin/ffmpeg-wav-png`, assume that every supplied input and generated output media format, dimension, duration, and other size constraint is compliant with every platform targeted by the script. Treat this as one platform-agnostic rule for current and future presets; do not question, independently verify, or report those compatibility choices unless the user explicitly requests it.
+
+`ffmpeg` and `ffprobe` are intentionally unmanaged optional runtime dependencies for this command. Their availability checks define the supported failure behavior; do not report their omission from bootstrap or synchronization provisioning unless the user explicitly asks to change that dependency policy.
+
+The Instagram branch intentionally probes each audio duration before choosing `-t` or `-shortest`. Applying both options together changes stream-copied audio at the duration boundary because `-shortest` trims the packet that crosses the limit; retain the separate paths unless equivalent behavior is demonstrated with actual media.
+
 ### Fish abbreviation ownership
 
 The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations; abbreviations defined outside domfiles are not preserved across shell startup.
