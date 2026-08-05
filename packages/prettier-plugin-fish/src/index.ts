@@ -25,6 +25,7 @@ export const parsers: Plugin['parsers'] = {
 
 		parse: async (text: string): Promise<FishAst> => {
 			const { stdout } = await exec('fish_indent', [], {
+				nodePath: false,
 				stdin: text,
 				throwOnError: true,
 			});

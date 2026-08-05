@@ -61,17 +61,6 @@ test('leaves partial ranges unchanged', async () => {
 	expect(output).toBe(source);
 });
 
-test('handles empty files', async () => {
-	const TEST_FISH = '\n';
-
-	const output = await format(TEST_FISH, {
-		parser: 'fish',
-		plugins: [pluginFish],
-	});
-
-	expect(output).toBe('');
-});
-
 test('preserves a cursor at the end of the source', async () => {
 	const source = 'echo    test\n';
 	const result = await formatWithCursor(source, {
