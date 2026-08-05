@@ -56,9 +56,9 @@ The npm package adds a large platform-specific native package to every environme
 
 When auditing `bin/ffmpeg-wav-png`, assume that every supplied input and generated output media format, dimension, duration, and other size constraint is compliant with every platform targeted by the script. Treat this as one platform-agnostic rule for current and future presets; do not question, independently verify, or report those compatibility choices unless the user explicitly requests it.
 
-`ffmpeg` and `ffprobe` are intentionally unmanaged optional runtime dependencies for this command. Their availability checks define the supported failure behavior; do not report their omission from bootstrap or synchronization provisioning unless the user explicitly asks to change that dependency policy.
+`ffmpeg` is an intentionally unmanaged optional runtime dependency for this command. Its availability check defines the supported failure behavior; do not report its omission from bootstrap or synchronization provisioning unless the user explicitly asks to change that dependency policy.
 
-The Instagram branch intentionally probes each audio duration before choosing `-t` or `-shortest`. Applying both options together changes stream-copied audio at the duration boundary because `-shortest` trims the packet that crosses the limit; retain the separate paths unless equivalent behavior is demonstrated with actual media.
+The Instagram branch intentionally combines `-t 60` and `-shortest` so output ends at 60 seconds or when shorter audio ends. The hard cap takes precedence over preserving a stream-copied audio packet that crosses the limit.
 
 ### Fish abbreviation ownership
 
@@ -76,6 +76,10 @@ The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves
 
 Sourcing `.config/fish/local.fish` intentionally suppresses both stdout and stderr. Do not report this redirection as hidden diagnostics; inspect or validate `local.fish` directly when its behavior is in scope.
 
+### Git short status command
+
+`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`; use `git status` directly for status options or alternate output formats.
+
 ### Peer dependency versions
 
 Declare every peer dependency in workspace packages with the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. Do not flag `"*"` peer ranges as missing compatibility constraints or narrow them solely to mirror the currently resolved version.
@@ -91,6 +95,16 @@ The corresponding scripts in `bin/` are the stable command interfaces. Their imp
 The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization when Git-visible tracked files differ from `HEAD`, `domfiles-sync-update` overrides this behavior with `error` so commands can run only when dependencies are already current. Revalidate these assumptions when changing the pinned pnpm major version or overriding `verifyDepsBeforeRun`.
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
+
+### Shell wrapper duplication
+
+Keep the Fish and POSIX discovery and lint wrappers separate even though their orchestration overlaps. They are short, language-specific entrypoints, and direct repetition is preferable to a parameterized abstraction that exists only to remove those similarities. Do not report their shared traversal, argument handling, or heading setup as duplication.
+
+Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned, as with the lockfile-aware presentation in `git-d` and `git-view`.
+
+### String helper reuse
+
+Do not report the `__string_*` helpers themselves or equivalent inline string operations anywhere in this repository as reimplementations. Treat these helpers as optional conveniences rather than mandatory shared abstractions.
 
 ### Synchronization checkout state
 

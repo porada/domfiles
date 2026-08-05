@@ -5,7 +5,15 @@
 
 # Don’t let the system go to sleep
 if pgrep -q -f '(^|/)caffeinate -im( |$)'; then
-  __print_info_and_exit 'The system is already caffeinated'
+  if [ $# -eq 0 ]; then
+    __print_info_and_exit 'The system is already caffeinated'
+  fi
+
+  __ "$@"
+  exit $?
+else
+  status="$?"
+  [ "$status" -eq 1 ] || exit "$status"
 fi
 
 __ caffeinate -im "$@"

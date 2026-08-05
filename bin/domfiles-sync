@@ -38,31 +38,37 @@ if __is_callable git; then
   elif __ git -C "$DOMFILES" merge-base --is-ancestor '@{u}' HEAD; then
     __print_confirmation 'Up to date'
   else
-    skipped="$(__git_skipped_files "$DOMFILES")"
+    merge_base_status=$?
 
-    if [ -n "$skipped" ]; then
-      __print_error 'Cannot update the repository while it contains skipped files'
+    if [ "$merge_base_status" -ne 1 ]; then
+      __print_error 'Failed to compare the local and upstream revisions'
     else
-      __print_heading 'Updating the repository'
+      skipped_files="$(__git_skipped_files "$DOMFILES")"
 
-      if ! __domfiles_is_clean; then
-        __print_warning 'The repository contains uncommitted changes'
+      if [ -n "$skipped_files" ]; then
+        __print_error 'Cannot update the repository while it contains skipped files'
+      else
+        __print_heading 'Updating the repository'
 
-        if __ git -C "$DOMFILES" stash; then
-          stashed_changes=true
-        else
-          __print_error 'Failed to stash uncommitted changes'
-          stash_failed=true
+        if ! __domfiles_is_clean; then
+          __print_warning 'The repository contains uncommitted changes'
+
+          if __ git -C "$DOMFILES" stash; then
+            stashed_changes=true
+          else
+            __print_error 'Failed to stash uncommitted changes'
+            stash_failed=true
+          fi
         fi
-      fi
 
-      if [ -z "${stash_failed-}" ]; then
-        if ! __ git -C "$DOMFILES" rebase; then
-          echo
-          __print_error 'Failed to update the repository'
-          __ git -C "$DOMFILES" rebase --abort || true
-        else
-          __print_confirmation 'Repository updated'
+        if [ -z "${stash_failed-}" ]; then
+          if ! __ git -C "$DOMFILES" rebase; then
+            echo
+            __print_error 'Failed to update the repository'
+            __ git -C "$DOMFILES" rebase --abort || true
+          else
+            __print_confirmation 'Repository updated'
+          fi
         fi
       fi
     fi
@@ -75,9 +81,9 @@ if __is_callable git; then
       __print_error 'Failed to restore uncommitted changes'
 
       __print_heading_dimmed 'Restoring the original state'
-      skipped="$(__git_skipped_files "$DOMFILES")"
+      skipped_files="$(__git_skipped_files "$DOMFILES")"
 
-      if [ -n "$skipped" ]; then
+      if [ -n "$skipped_files" ]; then
         __print_error 'Cannot restore the original state while the repository contains skipped files'
       else
         if ! __ git -C "$DOMFILES" reset --hard "$current_revision"; then

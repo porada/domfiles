@@ -43,6 +43,7 @@ fi
 # Install project dependencies
 if __is_callable node && __is_callable pnpm; then
   __print_heading_dimmed 'Installing `pnpm` dependencies'
+  __mkdir "$HOME/Library/pnpm/bin"
 
   if __domfiles_is_clean; then
     __ pnpm --dir "$DOMFILES" --loglevel=error install --frozen-lockfile
@@ -65,6 +66,11 @@ if __is_callable vim && ! __is_vim_plug_installed; then
   __print_url "$url"
 
   curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
+
+  if ! __is_vim_plug_installed; then
+    __print_error_and_exit 'Failed to install `vim-plug`'
+  fi
+
   __print_confirmation "$DOMFILES_VIM_PLUG"
 fi
 

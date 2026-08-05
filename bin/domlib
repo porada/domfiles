@@ -153,7 +153,7 @@ __domfiles_ls_bin() {
 }
 
 __domfiles_revision() {
-  git -C "$DOMFILES" rev-parse --short HEAD
+  git -C "$DOMFILES" rev-parse HEAD
 }
 
 __find() {
@@ -212,6 +212,79 @@ __git_diff_excluded_files() {
   echo 'yarn.lock'
 }
 
+__git_diff_excluded_paths() {
+  if [ $# -eq 0 ]; then
+    __print_error_and_exit '`__git_diff_excluded_paths` requires at least one argument'
+  fi
+
+  mode="$1"
+  shift
+
+  if [ "$mode" = '--commit' ]; then
+    if [ $# -eq 0 ]; then
+      __print_error_and_exit '`__git_diff_excluded_paths --commit` requires a reference'
+    fi
+
+    reference="$1"
+    shift
+  elif [ "$mode" != '--worktree' ]; then
+    __print_error_and_exit '`__git_diff_excluded_paths` received an invalid mode'
+  fi
+
+  __git_diff_excluded_files "$@" \
+    | while IFS= read -r file; do
+      if [ "$mode" = '--commit' ]; then
+        if __git_is_file_in_commit "$reference" "$file"; then
+          echo "$file"
+        else
+          status="$?"
+          [ "$status" -eq 1 ] || exit "$status"
+        fi
+      elif git diff-files --quiet -- "$file"; then
+        continue
+      else
+        status="$?"
+
+        if [ "$status" -eq 1 ]; then
+          echo "$file"
+        else
+          exit "$status"
+        fi
+      fi
+    done
+}
+
+__git_diff_exclude_params() {
+  if [ $# -ne 1 ]; then
+    __print_error_and_exit '`__git_diff_exclude_params` requires one argument'
+  fi
+
+  printf '%s\n' "$1" \
+    | while IFS= read -r path; do
+      echo ":(exclude)$path"
+    done
+}
+
+__git_diff_page() {
+  if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    __print_error_and_exit '`__git_diff_page` requires two arguments and an optional `--leading-newline`'
+  fi
+
+  if [ $# -eq 3 ] && [ "$3" != '--leading-newline' ]; then
+    __print_error_and_exit '`__git_diff_page` received an invalid option'
+  fi
+
+  {
+    if [ "${3-}" = '--leading-newline' ]; then
+      echo
+    fi
+
+    printf '%s\n' "$1"
+    echo
+    printf '%s\n' "$2"
+  } | __pager
+}
+
 __git_is_commit_reference() {
   if git rev-parse --verify "$1^{commit}" > /dev/null 2>&1; then
     return 0
@@ -241,7 +314,7 @@ __git_skipped_files() {
 
   root="$(git -C "$repository" rev-parse --show-toplevel)" || return $?
   files="$(git -C "$root" ls-files -v -- "$@")" || return $?
-  printf '%s\n' "$files" | __grep '^h'
+  printf '%s\n' "$files" | __grep '^[a-z]'
 }
 
 __grep() {

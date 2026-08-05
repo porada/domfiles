@@ -3,6 +3,6 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Remove the index lock file
-index_lock="$(git rev-parse --git-path index.lock)" || exit $?
-__ rm -f "$index_lock"
+# Remove the current index lock file
+index="$(git rev-parse --git-path index)" || exit $?
+__ rm -f "$index.lock"

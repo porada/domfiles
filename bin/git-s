@@ -3,13 +3,8 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Show the current `git status` including skipped files
-git status --short "$@" || exit $?
+# Show short `git status` output including skipped files
+[ "${1-}" = '--' ] && shift
 
-# Forward explicitly separated pathspecs to `git-skipped`
-while [ $# -gt 0 ] && [ "$1" != '--' ]; do
-  shift
-done
-
-[ $# -eq 0 ] || shift
+git -c status.relativePaths=false status --short -- "$@" || exit $?
 __domfiles_bin git-skipped "$@"

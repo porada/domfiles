@@ -62,6 +62,15 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.
     - Exempt `printf` output piped into `while`.
     - Exempt `domlib` command output piped into `while`.
+- In POSIX `sh` strict mode, when an optional command emits either a usable nonempty value or no output on failure, scope `|| true` inside the command substitution before testing the quoted result. This keeps the expected failure from triggering `set -e` while limiting suppression to that command:
+
+    ```sh
+    value="$(optional-command || true)"
+    [ -z "$value" ] && value="$(fallback-command)"
+    ```
+
+    - Use exit-status control flow instead when successful empty output or partial output on failure must remain distinguishable.
+
 - Prefer the variable name `param` over `arg`; exempt Fish’s built-in `$argv` variable.
 - Do not report `eval` unless it poses a security risk.
 - Report `find` commands that place `-maxdepth` anywhere other than immediately after the search path.

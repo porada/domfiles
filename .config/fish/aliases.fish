@@ -17,10 +17,21 @@ alias npx 'pnpm dlx'
 
 # Clone a repository into `~/Projects`
 function clone
+    if test (count $argv) -eq 1; and test -e "$argv[1]"
+        set argv[1] (path resolve "$argv[1]")
+    end
+
     cd -P "$DOMFILES_PROJECTS_DIR"; or return
 
     if test (count $argv) -eq 1
-        git clone $argv && cd (basename $argv .git)
+        set -l repository (basename "$argv[1]")
+
+        if string match --quiet '*.git' "$repository"
+            set repository (string replace -r '^.*:' '' -- "$repository")
+            set repository (basename "$repository" .git)
+        end
+
+        git clone "$argv[1]" && cd "$repository"
     else
         git clone $argv
     end

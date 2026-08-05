@@ -8,10 +8,6 @@ if ! __is_callable ffmpeg; then
   __print_error_and_exit '`ffmpeg` is missing'
 fi
 
-if ! __is_callable ffprobe; then
-  __print_error_and_exit '`ffprobe` is missing'
-fi
-
 # Parse `--preset` from arguments
 preset=""
 
@@ -40,19 +36,11 @@ if [ "$preset" = 'instagram' ]; then
 
       __print_heading "Generating \`$video\` for Instagram"
 
-      # Instagram clips can be up to 60 seconds long
-      duration="$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$audio")"
-
-      if awk -v duration="$duration" 'BEGIN { exit duration < 60.0 }'; then
-        set -- -t 60
-      else
-        set -- -shortest
-      fi
-
+      # Limit Instagram clips to 60 seconds
       __ ffmpeg -nostdin -y -framerate 1 -loop 1 -i "$image" -i "$audio" -r 1 \
         -vf "format=rgb24,scale=in_range=full:out_range=tv" \
         -c:v prores_ks -profile:v 3 -pix_fmt yuv444p10le -color_range 1 \
-        -c:a copy "$@" "$video"
+        -c:a copy -t 60 -shortest "$video"
     done
 
   exit 0

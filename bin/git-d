@@ -6,47 +6,11 @@
 # Show formatted `git diff` output
 if [ $# -eq 0 ]; then
   __git_cd_root
-  excluded_paths="$({
-    __git_diff_excluded_files \
-      | while IFS= read -r file; do
-        if git diff-files --quiet -- "$file"; then
-          continue
-        else
-          status="$?"
-
-          if [ "$status" -eq 1 ]; then
-            echo "$file"
-          else
-            exit "$status"
-          fi
-        fi
-      done
-  })"
+  excluded_paths="$(__git_diff_excluded_paths --worktree)"
 
   if [ -n "$excluded_paths" ]; then
-    exclude_params="$({
-      printf '%s\n' "$excluded_paths" \
-        | while IFS= read -r path; do
-          echo ":(exclude)$path"
-        done
-    })"
-
-    excluded_paths="$({
-      __git_diff_excluded_files --related \
-        | while IFS= read -r file; do
-          if git diff-files --quiet -- "$file"; then
-            continue
-          else
-            status="$?"
-
-            if [ "$status" -eq 1 ]; then
-              echo "$file"
-            else
-              exit "$status"
-            fi
-          fi
-        done
-    })"
+    exclude_params="$(__git_diff_exclude_params "$excluded_paths")"
+    excluded_paths="$(__git_diff_excluded_paths --worktree --related)"
 
     # shellcheck disable=SC2086
     if git diff --quiet -- . $exclude_params; then
@@ -62,13 +26,7 @@ if [ $# -eq 0 ]; then
     # shellcheck disable=SC2086
     patch_output="$(git diff --patch --color=always -- . $exclude_params)" || exit $?
 
-    {
-      echo
-      printf '%s\n' "$stat_output"
-      echo
-      printf '%s\n' "$patch_output"
-    } | __pager
-
+    __git_diff_page "$stat_output" "$patch_output" --leading-newline
     exit $?
   fi
 fi

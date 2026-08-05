@@ -12,7 +12,8 @@ __git_cd_root
 if __is_uint "${1-}"; then
   count="$1"
 else
-  count="$(__git_default_commit_count --no-initial)"
+  count="$(git rev-list --first-parent --count '@{u}..HEAD' 2> /dev/null || true)"
+  [ -z "$count" ] && count="$(__git_default_commit_count --no-initial)"
 fi
 
 # Ensure the repository has a `HEAD` first
