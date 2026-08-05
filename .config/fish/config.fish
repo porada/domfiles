@@ -11,7 +11,7 @@ set -g DOMFILES_BIN_DIR "$DOMFILES/bin"
 set -g DOMFILES_PROJECTS_DIR "$HOME/Projects"
 
 # Set the default editor
-set -x EDITOR 'vim -c startinsert'
+set -x EDITOR vim -c startinsert
 
 # Don’t clear the screen after a `less` session
 set -x LESS -FRX

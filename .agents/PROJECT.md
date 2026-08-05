@@ -72,6 +72,10 @@ Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. `fi
 
 The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist; behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports. Do not report the assertion as vacuous solely because the current `Plugin` properties are optional.
 
+### Fish local configuration
+
+Sourcing `.config/fish/local.fish` intentionally suppresses both stdout and stderr. Do not report this redirection as hidden diagnostics; inspect or validate `local.fish` directly when its behavior is in scope.
+
 ### Peer dependency versions
 
 Declare every peer dependency in workspace packages with the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. Do not flag `"*"` peer ranges as missing compatibility constraints or narrow them solely to mirror the currently resolved version.
