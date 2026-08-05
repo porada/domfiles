@@ -14,7 +14,8 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
 - Always split Zed settings audits into multiple smaller steps because a single pass can easily exceed the available context window.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
     - Exempt `"tab_size": 4` from this requirement.
-    - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
+- Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
+    - Exempt `file_scan_exclusions`; preserve the complete installed Zed default array together with project-specific exclusions, as documented in [Zed project scan exclusions](../../PROJECT.md#zed-project-scan-exclusions).
 - Keep order-independent arrays in Zed settings files alphabetized by value or, for object entries, by the value of their identifying field.
 - Treat Zed agent permissions as layered security boundaries.
     - Preserve `agent.tool_permissions.default` as `allow`.
@@ -27,13 +28,15 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
 - Keep terminal permission patterns concise and consistent.
     - Set `"case_sensitive": true` on every terminal command pattern unless a verified command-specific requirement justifies case-insensitive matching. Prefer a scoped inline case-insensitive group for an exceptional token instead of making the entire pattern case-insensitive.
     - Keep the consolidated general `terminal.always_allow` pattern first, followed by the shared `(?:-[hv]|--(?:help|version))` pattern and then the shared `--(?:help|version)` pattern for commands whose short forms are not safely informational. List every executable absent from the general allowance in exactly one shared discovery pattern, even when the executable does not support one or more permitted flags. Alphabetize the remaining patterns by command family.
+    - Keep the child-executable alternatives in the dedicated `xargs` allowance identical to the consolidated general terminal allowance and update both in the same change. Apply the safety treatment documented in [Zed xargs permission mirroring](../../PROJECT.md#zed-xargs-permission-mirroring).
     - Alphabetize executable, command, and subcommand alternatives within consolidated patterns when their grammar permits.
     - Consolidate variants within the same command family. Keep unrelated command families separate.
         - Keep informational forms in a command-family pattern only when they use different syntax, such as short flags, help subcommands, command-specific prefixes or wrappers, global options, or subcommand help.
     - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
     - Keep command-specific prefixes and wrappers out of the consolidated general and shared discovery patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
         - Account for the optional `-C <path>`, `--no-optional-locks`, and `--no-pager` global options before every Git subcommand.
-        - Apply the optional `GIT_EDITOR=true`, `GIT_PAGER=cat`, `MANPAGER=cat`, and `PAGER=cat` prefixes to every Git terminal pattern.
+        - Apply optional repeated `GIT_[A-Z0-9_]+=...`, `MANPAGER=cat`, and `PAGER=cat` prefixes to inspection-oriented Git terminal patterns. Retain the narrower documented prefix set for state-changing Git allowances, and mirror each family’s prefix grammar in its confirmation overrides.
+        - Treat `GIT_*` values as behavior-bearing inputs when deciding whether a Git form is inspection-only; document intentional broad exceptions in `.agents/PROJECT.md`.
         - Apply optional `HOMEBREW_NO_*` prefixes with the fixed value `1` to every Homebrew terminal pattern.
     - Prefer literal spaces over whitespace character classes.
     - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
@@ -79,9 +82,9 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
 
 ## Translate approved domains
 
-After applying the domain-scope policy above, encode the corresponding fetch hostname with one of these shapes:
+After applying the domain-scope policy above:
 
-1. Use one of these fetch hostname shapes:
+1. Select the matching fetch hostname shape:
     - Apex only: `^https://domain\.example(?:[/?#]|$)`
     - Subdomains only: `^https://(?:[^./?#:@]+\.)+domain\.example(?:[/?#]|$)`
     - Apex and subdomains: `^https://(?:[^./?#:@]+\.)*domain\.example(?:[/?#]|$)`
@@ -96,10 +99,15 @@ After applying the domain-scope policy above, encode the corresponding fetch hos
 
 ## Evaluate permission behavior
 
-1. Build an in-memory matrix that records matches from `always_allow` and `always_confirm` separately, then derive the effective result using Zed’s precedence: confirmation overrides allowance, followed by the configured default.
-2. Match each pattern with `rg --no-config --case-sensitive` when its object sets `case_sensitive` to `true`; otherwise use `rg --no-config --ignore-case` to simulate Zed’s default. Treat exit status `0` as a match, `1` as no match, and any other status as a validation failure.
-3. When consolidating patterns, compare the union of the old family’s matches with the union of the new family’s matches over representative inputs. Do not compare objects one-for-one when ownership moved between patterns.
-4. When confirmation precedence and Rust-compatible regex limits make a narrow allowance require a fragile complement expression, leave the form confirmable and record the durable rationale in `.agents/PROJECT.md`.
+1. Verify the current permission precedence against official Zed documentation or source, then build an in-memory matrix that records each applicable layer separately:
+    - Built-in security rules.
+    - Matches from `always_deny`, `always_confirm`, and `always_allow`.
+    - The tool-specific `default`, when configured.
+    - The global `agent.tool_permissions.default` fallback.
+2. Derive the effective result from the first applicable layer in Zed’s precedence order: built-in security rules, `always_deny`, `always_confirm`, `always_allow`, the tool-specific `default`, then the global default. Do not consult the global default when a tool-specific default is configured.
+3. Match each pattern with `rg --no-config --case-sensitive` when its object sets `case_sensitive` to `true`; otherwise use `rg --no-config --ignore-case` to simulate Zed’s default. Treat exit status `0` as a match, `1` as no match, and any other status as a validation failure.
+4. When consolidating patterns, compare the union of the old family’s matches with the union of the new family’s matches over representative inputs. Do not compare objects one-for-one when ownership moved between patterns.
+5. When confirmation precedence and Rust-compatible regex limits make a narrow allowance require a fragile complement expression, leave the form confirmable and record the durable rationale in `.agents/PROJECT.md`.
 
 ## Validate a change
 
@@ -107,7 +115,7 @@ After editing:
 
 1. Parse changed JSON with `jq -e`.
 2. Check formatting through the repository’s existing `pnpm` formatter workflow.
-3. Run `git diff --check`.
+3. Run `git --no-pager diff --check`.
 4. Compile changed permission patterns with a Rust-compatible regex tool such as `rg`.
 5. Use the permission-behavior workflow above to test representative inputs:
     - Intended commands or URLs that should match.

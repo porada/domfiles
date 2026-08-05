@@ -1,19 +1,20 @@
 ---
 name: domfiles-repository-audit
-description: Perform a read-only audit of the entire domfiles repository or an explicitly scoped subset. Use this skill whenever the user requests an audit—including the bare `Audit` command—for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it for commit reviews, ordinary code review, debugging, or implementation tasks.
+description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill whenever the user requests an audit—including the bare `Audit` command—for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it for commit reviews, ordinary code review, debugging, or implementation tasks.
 ---
 
 # Domfiles repository audit
 
-Audit the resolved repository scope without modifying it. Treat an explicit user scope as authoritative; otherwise audit the entire repository.
+Audit the resolved repository scope without modifying it. Treat an explicit user scope as authoritative; otherwise audit the default repository scope.
 
 ## Resolve the scope
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content.
 2. Start with Git-tracked paths, then apply the user’s scope modifiers and every inclusion, exclusion, and exemption from the applicable `AGENTS.md` files.
-3. Exclude symbolic links without reading or resolving their targets.
-4. Load every applicable `domfiles-*` domain skill whose declared file scope intersects the resolved audit scope, even when the user did not name those files explicitly.
-5. For a large scope, use complete, non-overlapping passes. Treat those passes as one continuous audit and preserve the resolved scope until every pass is complete.
+3. Exclude `.config/zed/settings.json` and `.zed/settings.json` unless the user explicitly includes either file or Zed settings in the requested scope. A repository-wide scope alone does not count as explicit inclusion.
+4. Exclude symbolic links without reading or resolving their targets.
+5. Load every applicable `domfiles-*` domain skill whose declared file scope intersects the resolved audit scope, even when the user did not name those files explicitly.
+6. For a large scope, use complete, non-overlapping passes. Treat those passes as one continuous audit and preserve the resolved scope until every pass is complete.
 
 ## Audit the contents
 

@@ -32,6 +32,14 @@ Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its 
 
 Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
 
+Git inspection allowances intentionally accept arbitrary uppercase `GIT_*` assignments before `git`, while state-changing Git allowances retain their narrower prefix set. This avoids maintaining a variable inventory, but Git environment variables can redirect repositories and indexes, select helpers or pagers, and write trace output. Treat the broad inspection prefix as an intentional convenience boundary, and reassess environment-selected behavior when extending a Git command family.
+
+### Zed xargs permission mirroring
+
+The `xargs` terminal allowance intentionally mirrors the executable alternatives in the consolidated general terminal allowance so agents can batch the same baseline commands. Update both lists together and keep `xargs`’s own options limited to bounded, noninteractive argument splitting and batching controls.
+
+Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Require confirmation for the complete nested command family whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form.
+
 ## Tooling
 
 ### Codex distribution
