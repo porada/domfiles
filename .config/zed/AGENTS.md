@@ -8,7 +8,7 @@
 ## Collaboration
 
 - Always assume that others may be working concurrently in the same project.
-- Ignore untracked files named `TODO` or `TODO.md` unless the user explicitly includes them in the task.
+- Ignore untracked files named `TODO` or `TODO.*` unless the user explicitly includes them in the task.
 - Always treat subagents’ extremely short context windows as a critical constraint.
     - Keep each assignment limited to the minimum necessary scope.
     - Use additional subagents when needed to keep each assignment small.
@@ -34,6 +34,7 @@
 - Before moving or removing a worktree, or force-renaming or deleting its branch, inspect the affected worktree status and verify that its changes are integrated or explicitly abandoned.
     - Remove worktrees with `git worktree remove`; use one or two exact `-f` or `--force` options only after the preceding verification when an unclean or locked worktree requires them. Afterward, verify that the corresponding `.agent-<name>` directory no longer exists. If it remains, inspect it rather than deleting it recursively.
     - After removing the worktree, first delete its branch with `git branch -d agent/<name>`. If Git refuses because the branch is unmerged, use `git branch -D agent/<name>` only when the preceding verification established that its changes are integrated or explicitly abandoned.
+- For historical analysis and reviews, inspect revisions through Git without materializing them. Materialize a revision only when a filesystem-based tool must operate on it; when isolation is required, follow the worktree policy above.
 
 ## Communication
 
@@ -57,16 +58,6 @@
     - Keep lists to five items or fewer. Split longer lists into immediate and later or optional groups.
     - Avoid generic preambles, redundant recaps, closing pleasantries, figurative language, and hedging that adds no information.
     - Give full explanations when requested. Safety, real ambiguity, task requirements, and higher priority instructions override brevity.
-
-## Thread titles
-
-- If a thread-title capability is available, set a concise title once the active objective is clear and revise it when that objective materially changes.
-- Describe the current deliverable in 3–7 words using title case.
-- Preserve the established casing of code identifiers, product names, and acronyms.
-- Omit progress states, generic wording, and punctuation unless needed for clarity.
-- Re-title whenever a different title would more clearly identify the current thread.
-- Never overwrite a title explicitly set by the user.
-- If no title capability is available, do not claim or announce that the title changed.
 
 ## Dependencies
 
@@ -106,9 +97,27 @@
         - When instructions use `npx skills …`, `pnpm dlx skills …`, `npx plugins …`, or `pnpm dlx plugins …`, invoke the corresponding system-provided `skills …` or `plugins …` command directly.
 - Prefer the agent’s native fetch tooling when the task only requires retrieving or reading content from a known URL.
     - This preference does not apply to web searches.
-    - When another dedicated native tool exists for the task, use it instead.
     - Use `curl` when command line HTTP behavior is relevant, native fetch tooling lacks a required capability, exact response bytes or files are needed, or the request must run in a shell, container, or remote environment.
     - Preserve explicit user requests, project workflows, and repository code that use `curl`.
+
+### Low-friction tool use
+
+- Prefer the most specific native tool that directly represents the operation.
+    - Use native file, search, diagnostics, fetch, and browser tools instead of shell commands when they can complete the task.
+    - Use the terminal for repository workflows and capabilities unavailable through a dedicated tool.
+- Prefer repository-owned workflows over ad hoc execution.
+    - Use existing package scripts, repository entrypoints, and configured tooling instead of direct interpreter invocations, reconstructed command pipelines, or one-off package runners.
+- Keep terminal commands direct and canonical.
+    - Run one logical operation per tool call and set its working directory through the tool when supported.
+    - Use canonical casing and documented option forms, and prefer literal project-relative operands.
+    - Avoid shell or interpreter wrappers, ad hoc environment assignments, command substitution, expansion, redirection, and pipelines unless they are necessary to the operation.
+- Prefer inspection before materialization or mutation.
+    - During investigation, use list, inspect, check, dry-run, and no-execute modes where they answer the question.
+    - Do not attach execution, deletion, force, or output-writing behavior to an inspection utility unless the task requires that behavior.
+- Treat permission prompts as security boundaries rather than command-syntax problems.
+    - Do not inspect or reverse-engineer editor permission settings merely to choose command syntax unless the task explicitly concerns those settings.
+    - If an inspection-only operation prompts unexpectedly, try the applicable native tool or canonical repository workflow once.
+    - If a necessary operation still requires confirmation, request it once with a concise reason; do not obscure or repeatedly reformulate it solely to avoid confirmation.
 
 ## Writing
 

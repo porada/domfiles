@@ -12,6 +12,15 @@
 		}
 	},
 	{
+		"context": "!AcpThread > (Editor && mode == full)",
+		"bindings": {
+			"ctrl-enter": [
+				"workspace::SendKeystrokes",
+				"cmd-? cmd-n cmd->"
+			]
+		}
+	},
+	{
 		"context": "Workspace",
 		"bindings": {
 			"cmd-shift-d": null

@@ -32,9 +32,13 @@ URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a
 
 ### Zed generated-output deletion
 
-Directories named `build`, `coverage`, `dist`, or `node_modules` are treated as disposable generated output at any path depth. Native `delete_path` may remove either a directory root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
+Directories named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` are treated as disposable generated output at any path depth. Native `delete_path` may remove either a directory root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
 
 Brace expansion, broader `rm` options, command substitution, parent-removing `rmdir -p`, path traversal, paths outside those named trees, similarly named directories, and variable expansion remain confirmable. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
+
+### Zed npm `--all` option
+
+Treat npm’s exact `--all` as an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. Keep the ambiguous `--a` and `--al` forms and exact `--allow-scripts` behind confirmation; `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
 
 ### Zed temporary archive staging
 
@@ -171,3 +175,7 @@ Keep guidance specific to this repository in the root `AGENTS.md` or applicable 
 ### Zed project scan exclusions
 
 The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. Do not restate or refresh the installed defaults. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
+
+### Zed selection-to-new-thread key binding
+
+The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. Preserve the `cmd-? cmd-n cmd->` sequence: focusing the agent panel first makes `cmd-n` resolve to `agent::NewThread` instead of the editor’s `workspace::NewFile`, and the final keystroke invokes `agent::AddSelectionToThread` for the active editor selection.
