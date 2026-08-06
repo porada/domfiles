@@ -30,7 +30,7 @@
 	gpgSign = true
 
 [core]
-	excludesFile = ~/.config/git/global_ignores
+	excludesFile = ~/.config/git/ignore
 
 [diff]
 	algorithm = patience

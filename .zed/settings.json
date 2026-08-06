@@ -7,7 +7,7 @@
 	],
 	"file_types": {
 		"Git Ignore": [
-			".config/git/global_ignores"
+			".config/git/ignore"
 		]
 	},
 	"format_on_save": "on",
