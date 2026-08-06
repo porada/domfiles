@@ -15,13 +15,13 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
     - Exempt `"tab_size": 4` from this requirement.
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
-    - Exempt `file_scan_exclusions`; preserve the complete installed Zed default array together with project-specific exclusions, as documented in [Zed project scan exclusions](../../PROJECT.md#zed-project-scan-exclusions).
-- Keep order-independent arrays in Zed settings files alphabetized by value or, for object entries, by the value of their identifying field.
+    - Exempt `file_scan_exclusions`; preserve the intentionally narrow override documented in [Zed project scan exclusions](../../PROJECT.md#zed-project-scan-exclusions) instead of restating installed Zed defaults.
+- Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
 - Treat Zed agent permissions as layered security boundaries.
     - Preserve `agent.tool_permissions.default` as `allow`.
     - Treat ordinary package-manager workflows as intentional allowances. Continue to require confirmation for package runners that can download and execute arbitrary code.
     - Allow Docker inspection operations without confirmation. Require confirmation for operations that execute workloads or create, modify, or remove Docker state.
-    - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`.
+    - Keep `agent.sandbox_permissions.network_hosts` aligned with `agent.tool_permissions.tools.fetch.always_allow`, except for fetch URL patterns that require a path after the hostname, as documented in [Zed fetch and sandbox host scope](../../PROJECT.md#zed-fetch-and-sandbox-host-scope). Their narrower trust cannot be represented by a host-wide sandbox entry.
     - Treat `*.domain.name` and `domain.name` as distinct `network_hosts` entries. Preserve both when access to the apex domain and its subdomains is intended.
     - Prefer wildcard domain allowances when subdomains are involved. Include the apex domain only when it is actually used.
     - Restrict automatically allowed fetch URL patterns to `https://` and anchor each pattern at the hostname boundary.
@@ -35,8 +35,9 @@ Use this skill as the canonical source for Zed settings policy and workflow. Con
     - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
     - Keep command-specific prefixes and wrappers out of the consolidated general and shared discovery patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
         - Account for the optional `-C <path>`, `--no-optional-locks`, and `--no-pager` global options before every Git subcommand.
-        - Apply optional repeated `GIT_[A-Z0-9_]+=...`, `MANPAGER=cat`, and `PAGER=cat` prefixes to inspection-oriented Git terminal patterns. Retain the narrower documented prefix set for state-changing Git allowances, and mirror each family’s prefix grammar in its confirmation overrides.
-        - Treat `GIT_*` values as behavior-bearing inputs when deciding whether a Git form is inspection-only; document intentional broad exceptions in `.agents/PROJECT.md`.
+        - Apply the same optional repeated fixed-value `GIT_*`, `MANPAGER=cat`, and `PAGER=cat` prefix grammar from `.config/zed/settings.json` to every Git terminal allowance and matching confirmation override. Treat the settings grammar as canonical, keep its variable and value alternatives alphabetized, and keep every copy byte-identical.
+        - Never allow wildcard or unknown `GIT_*` assignments. Treat each variable and value as behavior-bearing, audit it against the hazard classes documented in [Zed terminal permission limitations](../../PROJECT.md#zed-terminal-permission-limitations), and update that rationale when the safety boundary changes.
+        - Keep the fixed-value Git assignment list minimal and evidence-driven. Include a name and value only after recurring approved use demonstrates that automatic permission is useful; documented safety alone is insufficient. Prefer disabling or noninteractive values over default-restoring or enabling values, and re-audit retained semantics whenever Git changes.
         - Apply optional `HOMEBREW_NO_*` prefixes with the fixed value `1` to every Homebrew terminal pattern.
     - Prefer literal spaces over whitespace character classes.
     - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.

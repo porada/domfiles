@@ -13,6 +13,28 @@
     - Keep each assignment limited to the minimum necessary scope.
     - Use additional subagents when needed to keep each assignment small.
 
+## Temporary files
+
+- Place every temporary file created for a task under one task-specific `.agent-<name>` directory at the relevant project root instead of scattering temporary files across the project.
+    - Use a unique, filesystem-safe `<name>` that identifies the task; add a short suffix when needed to avoid collisions.
+- Treat `.agent-<name>` as the shared naming convention for temporary task directories and Git worktrees, not as a worktree-only path.
+    - Before reusing, moving, or deleting an existing `.agent-<name>` directory, inspect it and determine whether it is a registered worktree.
+- Remove only temporary directories created for the current task when they are no longer needed.
+
+## Git worktrees
+
+- Work in the current checkout by default. Before editing, inspect the status and diff of files in scope, preserve existing changes, and avoid overlapping another agent’s known write scope.
+- Create a dedicated Git worktree only when at least one of these conditions applies:
+    - The user explicitly requests an isolated worktree.
+    - Another active agent has an overlapping write scope.
+    - The task requires isolated branch, dependency, build, or test state.
+    - The change is broad or high-risk enough to benefit materially from independent rollback, and there is a clear integration plan.
+- Do not create a worktree solely because the repository is dirty, concurrent activity is possible, or the task modifies repository files. Keep follow-up edits to the same uncommitted task in its existing checkout.
+- When a worktree is required, use a unique, filesystem-safe `<name>` containing a task slug and short unique suffix. Do not include path separators. Create the pair with `git worktree add -b agent/<name> .agent-<name> <start-point>`. Do not use `--detach`; every agent worktree must retain its paired branch. When changing `<name>`, move the worktree and rename its branch together so the pair remains `.agent-<name>` and `agent/<name>`.
+- Before moving or removing a worktree, or force-renaming or deleting its branch, inspect the affected worktree status and verify that its changes are integrated or explicitly abandoned.
+    - Remove worktrees with `git worktree remove`; use one or two exact `-f` or `--force` options only after the preceding verification when an unclean or locked worktree requires them. Afterward, verify that the corresponding `.agent-<name>` directory no longer exists. If it remains, inspect it rather than deleting it recursively.
+    - After removing the worktree, first delete its branch with `git branch -d agent/<name>`. If Git refuses because the branch is unmerged, use `git branch -D agent/<name>` only when the preceding verification established that its changes are integrated or explicitly abandoned.
+
 ## Communication
 
 - Make every response immediately actionable.
@@ -36,8 +58,20 @@
     - Avoid generic preambles, redundant recaps, closing pleasantries, figurative language, and hedging that adds no information.
     - Give full explanations when requested. Safety, real ambiguity, task requirements, and higher priority instructions override brevity.
 
+## Thread titles
+
+- If a thread-title capability is available, set a concise title once the active objective is clear and revise it when that objective materially changes.
+- Describe the current deliverable in 3–7 words using title case.
+- Preserve the established casing of code identifiers, product names, and acronyms.
+- Omit progress states, generic wording, and punctuation unless needed for clarity.
+- Re-title whenever a different title would more clearly identify the current thread.
+- Never overwrite a title explicitly set by the user.
+- If no title capability is available, do not claim or announce that the title changed.
+
 ## Dependencies
 
+- Add `--ignore-scripts` to `npm install`, `pnpm install`, and `yarn install` by default so package lifecycle scripts do not run.
+    - Run an install without `--ignore-scripts` only when package lifecycle scripts are necessary for the current task, and state the reason before running it.
 - When adding or updating a dependency, select the newest stable release permitted by all applicable project and package manager policies, runtime and platform requirements, and dependency compatibility constraints.
     - Do not select an older release without a documented reason.
 - Follow the project’s established versioning convention.
@@ -46,6 +80,7 @@
 
 ## Documentation
 
+- Never edit a consumer-facing `README` file without the user’s explicit permission.
 - Give each durable detail one canonical home and link to it instead of paraphrasing it elsewhere.
 - When these global instructions conflict with applicable project documentation—including a project’s `AGENTS.md`—follow the project documentation.
 - Always reference the applicable `AGENTS.md` line number when reporting a violation.

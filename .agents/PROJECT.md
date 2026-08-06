@@ -26,13 +26,49 @@ Treat Zed’s agent sandbox, tool defaults, command allowances, and confirmation
 
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
 
+### Zed fetch and sandbox host scope
+
+URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname may intentionally omit that hostname from `agent.sandbox_permissions.network_hosts`. A `network_hosts` entry would persistently grant the entire host, broadening trust beyond the path-qualified fetch allowance. Preserve the extra sandbox boundary; do not report this documented divergence as accidental.
+
+### Zed generated-output deletion
+
+Directories named `build`, `coverage`, `dist`, or `node_modules` are treated as disposable generated output at any path depth. Native `delete_path` may remove either a directory root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
+
+Brace expansion, broader `rm` options, command substitution, parent-removing `rmdir -p`, path traversal, paths outside those named trees, similarly named directories, and variable expansion remain confirmable. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
+
+### Zed temporary archive staging
+
+Publication audits may automatically stage the tracked `HEAD` tree only by writing Git’s built-in `tar` format to a descendant of a Zed agent terminal temporary directory, then extracting it beneath such a directory. The exact allowances are `git archive --format=tar --output=<temporary-path> HEAD` and `tar -xf <temporary-archive> -C <temporary-directory>`. The exact help (`-h` and `--help`) and list (`-l` and `--list`) forms are also allowed.
+
+Both `/private/var/folders/.../T/zed-agent-terminal-*` and `/var/folders/.../T/zed-agent-terminal-*` roots are accepted. Every path must contain at least one safe descendant segment, and path traversal remains excluded. The Rust-compatible permission engine cannot require the archive and destination to share one generated terminal-directory identifier, so each path is constrained independently to the same temporary namespace.
+
+Additional archive operands, alternate formats, broader extraction flags, extra operands, non-`HEAD` refs, non-temporary paths, and other archive options remain confirmable.
+
 ### Zed terminal permission limitations
 
 Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Keep trusted local package-manager `exec` binaries inside each manager’s positive command-family allowance, using an `exec`-specific option grammar, and keep ordinary npm, pnpm, and Yarn workflows in positive command alternatives. Unlisted executable names then fall through the terminal’s confirm-by-default boundary; broad `exec` confirmation overrides would make the allowlist require brittle complement expressions. Exact informational forms can be allowed separately.
 
 Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
 
-Git inspection allowances intentionally accept arbitrary uppercase `GIT_*` assignments before `git`, while state-changing Git allowances retain their narrower prefix set. This avoids maintaining a variable inventory, but Git environment variables can redirect repositories and indexes, select helpers or pagers, and write trace output. Treat the broad inspection prefix as an intentional convenience boundary, and reassess environment-selected behavior when extending a Git command family.
+Every Git allowance and matching confirmation override uses the same optional, repeated, fixed-value environment-assignment grammar; the exact positive list in [Zed settings](../.config/zed/settings.json) is canonical. It deliberately contains only values used by recurring approved workflows to disable optional writes, neutralize runtime config, or suppress interaction or output. `MANPAGER=cat` and `PAGER=cat` remain part of the shared prefix.
+
+A Git variable is not eligible merely because a documented value appears safe. Add a name and value only after recurring approved use demonstrates that automatic permission is useful, prefer disabling or noninteractive values over default-restoring or enabling values, and keep every prefix copy byte-identical. Re-audit the retained semantics whenever Git changes.
+
+Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations; alternate config paths or config injection; arbitrary diff, editor, helper, pager, proxy, or SSH executables; author, committer, and reflog metadata; CA, certificate, credential, key, and proxy-path selection; every value of `GIT_SSL_NO_VERIFY`, including `0`; generated, internal, test-only, or unknown variables; and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls.
+
+### Zed worktree permission coupling
+
+The global [agent instructions](../.config/zed/AGENTS.md#git-worktrees) pair the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. The corresponding allowances in [Zed settings](../.config/zed/settings.json) deliberately couple creation, cleanup, and maintenance permission to those namespaces for scoped `git worktree add` forms—including force, `-B`, `--lock`, `--no-checkout`, and `--orphan`; native `delete_path` for `.agent-*` roots and descendants; native `move_path` between strict descendants of `.agent-*` worktrees; destructive `git -C .agent-<name>` checkout, switch, reset, and clean forms; `git worktree lock`, `unlock`, dry-run `prune`, repair, and `move` or `remove` with up to two force options; `rm`; `rmdir`; and non-forced or forced `git branch` copy, deletion, reset, or rename.
+
+The tracked [global excludes file](../.config/git/global_ignores) owns the `.agent-*` ignore so this namespace stays out of status output in every repository. [Git configuration](../.config/.gitconfig) selects it through `core.excludesFile`.
+
+Keep the naming convention and permission patterns synchronized. After the required status and integration-or-abandonment verification, `.agent-<name>` directories and `agent/<name>` branches are disposable. Forced worktree move or removal is permitted only for exact paths in the worktree namespace, while forced branch deletion or rename is permitted only for branches in the agent namespace. Non-forced branch deletion retains Git’s fully-merged check; forced deletion bypasses that check but remains namespace-constrained.
+
+Worktree lock, unlock, and repair forms accept only exact `.agent-<name>` targets, and worktree moves require both source and destination to use that namespace. Unlock remains automatic because the disposable namespace already permits forced move and removal. Worktree creation and branch copy or rename patterns enforce both namespaces but cannot compare their `<name>` suffixes, so the global instructions require preserving each worktree-branch pair. `--detach` remains confirmable because it breaks that pairing.
+
+Zed’s native `move_path` evaluates its source and destination together and uses the most restrictive permission result. Its automatic allowance therefore matches only strict descendants of `.agent-*`: both endpoints must remain inside an agent worktree, while moving a top-level `.agent-*` directory still confirms. Use `git worktree move` for top-level worktree moves so Git’s administrative metadata stays synchronized. Zed’s sensitive-settings and symlink-escape checks remain additional confirmation gates.
+
+Prune is automatically allowed only with `-n` or `--dry-run`; those forms may add `-v`, `--verbose`, or a simple `--expire` value. Worktree list may use the same simple expiration value. Complex lock reasons or expiration values, actual pruning, out-of-namespace paths or branches, remote operations, shell globs, path traversal, parent-removing `rmdir -p`, and other broader deletion mechanisms intentionally remain subject to confirmation.
 
 ### Zed xargs permission mirroring
 
@@ -134,4 +170,4 @@ Keep guidance specific to this repository in the root `AGENTS.md` or applicable 
 
 ### Zed project scan exclusions
 
-The repository-level `.zed/settings.json` restates the installed Zed version’s complete default `file_scan_exclusions` together with the project-specific exclusions. Zed replaces the default array whenever this property is configured, so refresh the restated defaults against the installed version when changing this setting.
+The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. Do not restate or refresh the installed defaults. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
