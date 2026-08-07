@@ -447,11 +447,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:\\[|apk|brew|caffeinate|codex|command|corepack|cp|curl|date|defaults|dig|docker|(?:bin/)?domfiles(?:-(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh))?|fish|fish_indent|git|ha|hostname|ifconfig|kill|launchctl|ln|man|mo|mole|node|npm|npx|perl|pkgutil|plugins|plutil|pnpm|pnpx|pnx|printenv|rm|ruby|sed|sips|skills|sort|tar|tee|umask|yarn|zed|zizmor) (?:-[hv]|--(?:help|version))$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:\\[|apk|brew|caffeinate|codex|command|corepack|cp|curl|date|defaults|dig|docker|(?:bin/)?domfiles(?:-(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh))?|dscacheutil|fish|fish_indent|git|ha|hostname|ifconfig|kill|launchctl|ln|man|mo|mole|node|npm|npx|perl|pkgutil|plugins|plutil|pnpm|pnpx|pnx|printenv|rm|ruby|sed|sips|skills|sort|tar|tee|umask|yarn|zed|zizmor) (?:-[hv]|--(?:help|version))$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:arch|awk|base64|bash|codesign|csrutil|diskutil|dscacheutil|ffmpeg|iostat|log|mdfind|mdutil|mount|pmset|python3|rmdir|scutil|sh|spctl|ssh-add|sysctl|system_profiler|unzip|vim|vm_stat|xargs|xcrun) --(?:help|version)$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:arch|awk|base64|bash|codesign|csrutil|diskutil|ffmpeg|getent|iostat|log|mdfind|mdutil|mount|pmset|python3|rmdir|scutil|sh|spctl|ssh-add|sysctl|system_profiler|unzip|vim|vm_stat|xargs|xcrun) --(?:help|version)$",
 							"case_sensitive": true
 						},
 						{
@@ -467,7 +467,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^base64(?: (?:-[Dd]|-b [0-9]+|-i [^-][^ ]*|--break=[0-9]+|--decode|--input=[^ ]+))*(?:(?: --)? [^-][^ ]*)?$",
+							"pattern": "^base64(?: (?:-b [0-9]+|-[Dd]|-i [^-][^ ]*|--break=[0-9]+|--decode|--input=[^ ]+))*(?:(?: --)? [^-][^ ]*)?$",
 							"case_sensitive": true
 						},
 						{
@@ -491,7 +491,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*command -v(?: |$)",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*command -[vV](?: |$)",
 							"case_sensitive": true
 						},
 						{
@@ -523,7 +523,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:--(?:help|version)$|(?:(?:(?:--(?:context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[Hcl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)(?:buildx ls|compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:--help$|config|events|images|logs|ls|port|ps|stats|top|version|volumes|wait)|container (?:diff|inspect|logs|ls|port|stats|top|wait)|context (?:inspect|ls|show)|diff|events|history|image (?:history|inspect|ls)|images|info|inspect|logs|manifest inspect|network (?:inspect|ls)|port|ps|search|stats|system (?:df|events|info)|top|trust inspect|version|volume (?:inspect|ls)|wait)(?: |$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:--(?:help|version)$|(?:(?:(?:--(?:context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[cHl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)(?:buildx ls|compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:--help$|config|events|images|logs|ls|port|ps|stats|top|version|volumes|wait)|container (?:diff|inspect|logs|ls|port|stats|top|wait)|context (?:inspect|ls|show)|diff|events|history|image (?:history|inspect|ls)|images|info|inspect|logs|manifest inspect|network (?:inspect|ls)|port|ps|search|stats|system (?:df|events|info)|top|trust inspect|version|volume (?:inspect|ls)|wait)(?: |$))",
 							"case_sensitive": true
 						},
 						{
@@ -543,15 +543,27 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fish_indent(?: (?:-[cihv]+|--(?:ansi|check|dump-parse-tree|html|no-indent|only-indent|only-unindent)))*(?:(?: [^-][^ ]*)*| --(?: [^ ]+)*)$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fish_indent(?: (?:-[chiv]+|--(?:ansi|check|dump-parse-tree|html|no-indent|only-indent|only-unindent)))*(?:(?: [^-][^ ]*)*| --(?: [^ ]+)*)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*--(?:help|version)$",
+							"pattern": "^getent (?:(?:ahosts|ahostsv4|ahostsv6|hosts)(?: [^-][^ ]*)+|passwd [^-][^ ]*)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*--(?:help|list-cmds=(?:builtins|parseopt)|version)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*(?:(?:add|am|annotate|apply|archive|backfill|bisect|blame|branch|bugreport|bundle|cat-file|check-attr|check-ignore|check-mailmap|checkout|checkout--worker|checkout-index|cherry|cherry-pick|clean|clone|column|commit|commit-graph|commit-tree|config|count-objects|credential-cache|credential-cache--daemon|credential-store|describe|diagnose|difftool|fast-export|fetch|fmt-merge-msg|for-each-ref|for-each-repo|format-patch|format-rev|fsck|fsck-objects|fsmonitor--daemon|gc|grep|hash-object|help|history|hook|init|init-db|interpret-trailers|last-modified|log|ls-files|ls-remote|ls-tree|mailinfo|maintenance|merge|merge-base|merge-file|merge-tree|mktag|mktree|multi-pack-index|mv|name-rev|notes|pack-objects|pack-refs|pickaxe|prune|prune-packed|pull|push|range-diff|read-tree|rebase|receive-pack|reflog|refs|remote|repack|replace|replay|repo|rerere|reset|restore|revert|rm|send-pack|shortlog|show|show-branch|show-index|show-ref|sparse-checkout|stage|stash|status|stripspace|submodule--helper|switch|symbolic-ref|tag|update-index|update-ref|update-server-info|upload-pack|url-parse|verify-commit|verify-pack|verify-tag|version|whatchanged|worktree|write-tree) -h|(?:add|am|annotate|apply|archive|backfill|bisect|blame|branch|bugreport|bundle|cat-file|check-attr|check-ignore|check-mailmap|check-ref-format|checkout|checkout--worker|checkout-index|cherry|cherry-pick|clean|clone|column|commit|commit-graph|commit-tree|config|count-objects|credential|credential-cache|credential-cache--daemon|credential-store|describe|diagnose|diff|diff-files|diff-index|diff-pairs|diff-tree|difftool|fast-export|fast-import|fetch|fetch-pack|fmt-merge-msg|for-each-ref|for-each-repo|format-patch|format-rev|fsck|fsck-objects|fsmonitor--daemon|gc|get-tar-commit-id|grep|hash-object|help|history|hook|index-pack|init|init-db|interpret-trailers|last-modified|log|ls-files|ls-remote|ls-tree|mailinfo|mailsplit|maintenance|merge|merge-base|merge-file|merge-index|merge-ours|merge-recursive|merge-recursive-ours|merge-recursive-theirs|merge-subtree|merge-tree|mktag|mktree|multi-pack-index|mv|name-rev|notes|pack-objects|pack-redundant|pack-refs|patch-id|pickaxe|prune|prune-packed|pull|push|range-diff|read-tree|rebase|receive-pack|reflog|refs|remote|remote-ext|remote-fd|repack|replace|replay|repo|rerere|reset|restore|rev-list|rev-parse|revert|rm|send-pack|shortlog|show|show-branch|show-index|show-ref|sparse-checkout|stage|stash|status|stripspace|submodule--helper|switch|symbolic-ref|tag|unpack-file|unpack-objects|update-index|update-ref|update-server-info|upload-archive|upload-archive--writer|upload-pack|url-parse|var|verify-commit|verify-pack|verify-tag|version|whatchanged|worktree|write-tree) --help)$",
 							"case_sensitive": true
 						},
 						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*(?:archive (?:--format=tar --output=/(?:private/)?var/folders/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})/T/zed-agent-terminal-[A-Za-z0-9]+/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,}))* HEAD|-h|--help|-l|--list)$|(?:blame|cat-file|check-attr|check-ignore|describe|diff|diff-files|diff-index|diff-tree|for-each-ref|grep|log|ls-files|ls-remote|ls-tree|merge-base|name-rev|patch-id|range-diff|rev-list|rev-parse|shortlog|show|show-ref|status|var|version)(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*add(?: --)? (?:[.]/)?(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*(?: (?:[.]/)?(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)*$",
 							"case_sensitive": true
 						},
 						{
@@ -579,6 +591,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*commit -m (?:\"[ A-Za-z0-9.,:_+/-]+\"|'[ A-Za-z0-9.,:_+/-]+'|[A-Za-z0-9][A-Za-z0-9.,:_+/-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/-]*)*)$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|-c color[.]status=(?:always|auto|never)|--no-optional-locks|--no-pager) )*config (?:(?:-h|--help)$|(?:get|list)(?: |$)|(?:(?:(?:-f|--(?:blob|file)) [^-][^ ]*|-z|--(?:global|local|name-only|null|path|show-names|show-origin|show-scope|system|worktree)) )*(?:--get-colorbool [^-][^ ]*(?: (?:false|true))?|(?:--list|--(?:get|get-all|get-regexp) [^-][^ ]*(?: [^-][^ ]*)?)(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*)$)",
 							"case_sensitive": true
 						},
@@ -587,7 +603,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*help(?:$| (?:-h|--config|--help|[^-][^ ]*))$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*help(?:$| --all --no-aliases --no-external-commands| --config| [^-][^ ]*)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*merge --ff-only agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*$",
 							"case_sensitive": true
 						},
 						{
@@ -619,7 +639,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*symbolic-ref (?:(?:-q|--quiet|--short|--(?:no-)?recurse) )*[^-][^ ]*$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*symbolic-ref (?:(?:-q|--quiet|--(?:no-)?recurse|--short) )*[^-][^ ]*$",
 							"case_sensitive": true
 						},
 						{
@@ -627,11 +647,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*worktree (?:list(?: -v| --porcelain(?: -z)?| --verbose| --expire(?:=| )[A-Za-z0-9_.-]+)?|prune (?:(?:-n|--dry-run)(?: (?:-v|--verbose))?(?: --expire(?:=| )[A-Za-z0-9_.-]+)?|(?:-v|--verbose) (?:-n|--dry-run)(?: --expire(?:=| )[A-Za-z0-9_.-]+)?|-(?:nv|vn)))|(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*worktree (?:add (?:(?:(?:(?:-f|--force) ){1,2}|-ff )?(?:(?:--lock|--no-checkout|--orphan) )?(?:-b|-B) agent/[A-Za-z0-9_-][A-Za-z0-9_.-]* (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?(?: (?:-|[^-][^ ]*))?|(?:(?:(?:-f|--force) ){1,2}|-ff )?(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*)|list(?: .*)?|lock(?: --reason(?:=| )[A-Za-z0-9_.-]+)?(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?|move(?:(?: (?:-f|--force)){1,2}| -ff)?(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?|remove(?:(?: (?:-f|--force)){1,2}| -ff)?(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?|repair(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?(?: (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?)*|unlock(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?))$",
+							"pattern": "^(?:(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*worktree (?:list(?: -v| --verbose| --expire(?:=| )[A-Za-z0-9_.-]+| --porcelain(?: -z)?)?|prune (?:(?:-n|--dry-run)(?: (?:-v|--verbose))?(?: --expire(?:=| )[A-Za-z0-9_.-]+)?|(?:-v|--verbose) (?:-n|--dry-run)(?: --expire(?:=| )[A-Za-z0-9_.-]+)?|-(?:nv|vn)))|(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*worktree (?:add (?:(?:(?:(?:-f|--force) ){1,2}|-ff )?(?:(?:--lock|--no-checkout|--orphan) )?(?:-b|-B) agent/[A-Za-z0-9_-][A-Za-z0-9_.-]* (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?(?: (?:-|[^-][^ ]*))?|(?:(?:(?:-f|--force) ){1,2}|-ff )?(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*)|list(?: .*)?|lock(?: --reason(?:=| )[A-Za-z0-9_.-]+)?(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?|move(?:(?: (?:-f|--force)){1,2}| -ff)?(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?|remove(?:(?: (?:-f|--force)){1,2}| -ff)?(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?|repair(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?(?: (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?)*|unlock(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/?))$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ha(?:$| (?:-h$|apps (?:changelog|info|logs|stats)(?: |$)|audio (?:info|logs|stats)(?: |$)|auth list(?: |$)|available-updates(?: |$)|available_updates(?: |$)|backups info(?: |$)|cli (?:info|stats)(?: |$)|core (?:info|logs|stats)(?: |$)|dns (?:info|logs|stats)(?: |$)|docker info(?: |$)|hardware (?:audio|info)(?: |$)|help(?: |$)|host (?:disks usage|info|logs)(?: |$)|info(?: |$)|jobs info(?: |$)|mounts info(?: |$)|multicast (?:info|logs)(?: |$)|updates(?: |$)))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ha(?:$| (?:-h$|apps (?:changelog|info|logs|stats)(?: |$)|audio (?:info|logs|stats)(?: |$)|auth list(?: |$)|available-updates(?: |$)|available_updates(?: |$)|backups info(?: |$)|banner$|cli (?:info|stats)(?: |$)|core (?:check$|(?:info|logs|stats)(?: |$))|dns (?:info|logs|stats)(?: |$)|docker info(?: |$)|hardware(?:$| (?:audio|info)(?: |$))|help(?: |$)|host (?:--help$|(?:disks usage|info|logs)(?: |$))|info(?: |$)|jobs info(?: |$)|mounts info(?: |$)|multicast (?:info|logs)(?: |$)|os (?:--help|info)$|resolution (?:--help|info)$|supervisor (?:--help|available-updates|info|logs(?: (?:-b [^-][^ ]*|-h|-n [0-9]+|-v|--boot [^-][^ ]*|--help|--lines [0-9]+|--verbose))*|options --help|stats)$|updates(?: |$)))",
 							"case_sensitive": true
 						},
 						{
@@ -663,7 +683,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*man(?:$| -h$| (?:(?:-[adfhoktw]+|-(?:M|S) [^-][^ ]*|-P cat|-Pcat) )*[^-][^ ]*(?: [^-][^ ]*)*$)",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*man(?:$| -h$| (?:(?:-[adfhkotw]+|-(?:M|S) [^-][^ ]*|-P cat|-Pcat) )*[^-][^ ]*(?: [^-][^ ]*)*$)",
 							"case_sensitive": true
 						},
 						{
@@ -691,7 +711,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*perl -[Vhv]$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*perl -[hVv]$",
 							"case_sensitive": true
 						},
 						{
@@ -743,7 +763,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:LC_ALL=C )?sort(?: (?:-[bcCdfghiMmnrRsuVz]+|-(?:S|k|t)(?: ?)[^- ][^ ]*|--check(?:=(?:quiet|silent))?|--(?:batch-size|buffer-size|field-separator|files0-from|key|parallel|random-source|sort)(?:=[^ ]+| [^-][^ ]*)|--(?:debug|dictionary-order|general-numeric-sort|heapsort|human-numeric-sort|ignore-case|ignore-leading-blanks|ignore-nonprinting|merge|mergesort|month-sort|numeric-sort|qsort|radixsort|random-sort|reverse|stable|unique|version-sort|zero-terminated)))*(?:(?: [^-][^ ]*)*| --(?: [^ ]+)*)$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:LC_ALL=C )?sort(?: (?:-[bcCdfghiMmnrRsuVz]+|-(?:k|S|t)(?: ?)[^- ][^ ]*|--check(?:=(?:quiet|silent))?|--(?:batch-size|buffer-size|field-separator|files0-from|key|parallel|random-source|sort)(?:=[^ ]+| [^-][^ ]*)|--(?:debug|dictionary-order|general-numeric-sort|heapsort|human-numeric-sort|ignore-case|ignore-leading-blanks|ignore-nonprinting|merge|mergesort|month-sort|numeric-sort|qsort|radixsort|random-sort|reverse|stable|unique|version-sort|zero-terminated)))*(?:(?: [^-][^ ]*)*| --(?: [^ ]+)*)$",
 							"case_sensitive": true
 						},
 						{
@@ -771,7 +791,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*umask(?: (?:-[Sph]+|--(?:as-command|symbolic)))*$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*umask(?: (?:-[hpS]+|--(?:as-command|symbolic)))*$",
 							"case_sensitive": true
 						},
 						{
@@ -809,7 +829,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:(?:.* )?--config(?:[ =]|$)|(?:(?:(?:--(?:config|context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[Hcl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:config (?:.* )?(?:--lock-image-digests(?:[ =]|$)|--output(?:[ =]|$)|-[A-Za-z]*o[^ ]*(?: |$))|wait (?:.* )?--down-project(?:[ =]|$)))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:(?:.* )?--config(?:[ =]|$)|(?:(?:(?:--(?:config|context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[cHl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:config (?:.* )?(?:--lock-image-digests(?:[ =]|$)|--output(?:[ =]|$)|-[A-Za-z]*o[^ ]*(?: |$))|wait (?:.* )?--down-project(?:[ =]|$)))",
 							"case_sensitive": true
 						},
 						{
