@@ -27,6 +27,7 @@
 	"debugger": {
 		"button": false
 	},
+	"diff_view_style": "unified",
 	"git": {
 		"inline_blame": {
 			"enabled": false
@@ -130,6 +131,7 @@
 				"*.agentclientprotocol.com",
 				"*.apple.com",
 				"*.brew.sh",
+				"*.chatgpt.com",
 				"*.docker.com",
 				"*.github.com",
 				"*.githubusercontent.com",
@@ -139,6 +141,7 @@
 				"*.mozilla.org",
 				"*.npmjs.com",
 				"*.npmjs.org",
+				"*.openai.com",
 				"*.php.net",
 				"*.playwright.dev",
 				"*.rust-lang.org",
@@ -156,8 +159,10 @@
 				"apple.com",
 				"brew.sh",
 				"cdn.jsdelivr.net",
+				"chatgpt.com",
 				"crates.io",
 				"curl.se",
+				"docs.rs",
 				"dom.engineering",
 				"e18e.dev",
 				"editorconfig.org",
@@ -175,7 +180,9 @@
 				"jqlang.org",
 				"knip.dev",
 				"man.openbsd.org",
+				"man7.org",
 				"manp.gs",
+				"manpages.debian.org",
 				"mole.fit",
 				"nextjs.org",
 				"nodejs.org",
@@ -240,6 +247,9 @@
 							"pattern": "^https://(?:[^./?#:@]+\\.)*brew\\.sh(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)*chatgpt\\.com(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*github(?:usercontent)?\\.com(?:[/?#]|$)"
 						},
 						{
@@ -250,6 +260,9 @@
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*npmjs\\.(?:com|org)(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)*openai\\.com(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*playwright\\.dev(?:[/?#]|$)"
@@ -309,6 +322,9 @@
 							"pattern": "^https://curl\\.se(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://docs\\.rs(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://dom\\.engineering(?:[/?#]|$)"
 						},
 						{
@@ -351,7 +367,13 @@
 							"pattern": "^https://man\\.openbsd\\.org(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://man7\\.org(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://manp\\.gs(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://manpages\\.debian\\.org(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://mole\\.fit(?:[/?#]|$)"
@@ -364,9 +386,6 @@
 						},
 						{
 							"pattern": "^https://npmx\\.dev(?:[/?#]|$)"
-						},
-						{
-							"pattern": "^https://openai\\.com(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://opensource\\.org(?:[/?#]|$)"
@@ -447,7 +466,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:\\[|actionlint|apk|brew|caffeinate|codex|command|corepack|cp|curl|date|defaults|dig|docker|(?:bin/)?domfiles(?:-(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh))?|dscacheutil|fish|fish_indent|git|ha|hostname|ifconfig|kill|launchctl|ln|man|mo|mole|node|npm|npx|perl|pkgutil|plugins|plutil|pnpm|pnpx|pnx|printenv|rm|ruby|sed|sips|skills|sort|tar|tee|umask|yarn|zed|zizmor) (?:-[hv]|--(?:help|version))$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:\\[|actionlint|apk|brew|caffeinate|codex|command|corepack|cp|curl|date|defaults|dig|docker|(?:bin/)?domfiles(?:-(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh))?|dscacheutil|fish|fish_indent|git|ha|hostname|ifconfig|kill|launchctl|ln|man|mo|mole|node|npm|npx|perl|pkgutil|plugins|plutil|pnpm|pnpx|pnx|printenv|rm|ruby|sed|sips|skills|sort|tar|tee|umask|xcode-select|yarn|zed|zizmor) (?:-[hv]|--(?:help|version))$",
 							"case_sensitive": true
 						},
 						{
@@ -707,7 +726,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm(?:$| (?:-[hv]|--(?:help|version))$| (?:(?:--(?:prefix|workspace)(?:=| )[^ ]+|--(?:include-workspace-root|workspaces)(?:=[^ ]+)?|-w(?:[^ ]+| [^-][^ ]*)) )*exec(?: --)? (?:(?:knip|next|oxfmt|oxlint|playwright|plugins|prettier|publint|sass|skills|stylelint|svgo|tsc|vite|vitest|vp)(?: |$)|which(?: [A-Za-z0-9_.+][A-Za-z0-9_.+-]*)+$)| (?:(?:--(?:location|prefix|workspace)(?:=| )[^ ]+|--[^ =]+=[^ ]+|--(?:force|global|include-workspace-root|workspaces)|-[fg]+|-[Lw](?:[^ ]+| [^-][^ ]*)) )*(?:(?:access|add|add-user|addUser|adduser|audit|author|bugs|c|cache|ci|cit|clean-install|clean-install-test|cleanInstall|cleanInstallTest|completion|config|ddp|dedupe|deny-scripts|denyScripts|deprecate|diff|dist-tag|dist-tags|distTag|distTags|docs|doctor|explain|find|find-dupes|findDupes|fund|get|help|help-search|helpSearch|hlep|home|i|ic|in|info|ins|inst|insta|instal|install|install-ci-test|install-clean|install-test|installCiTest|installClean|installTest|isnt|isnta|isntal|isntall|isntall-clean|isntallClean|issues|it|la|link|list|ll|ln|login|logout|ls|ogr|org|outdated|owner|pack|ping|pkg|prefix|profile|prune|publish|query|r|rb|rebuild|remove|repo|restart|rm|root|rum|run|run-script|runScript|s|sbom|se|search|set|show|shrinkwrap|sit|star|stars|start|stop|t|team|test|token|tst|u|udpate|un|undeprecate|uninstall|unlink|unstar|up|update|upgrade|urn|v|verison|version|view|whoami|why)(?: |$)|(?:cr(?:e(?:a(?:t(?:e)?)?)?)?|exe(?:c)?|explo(?:r(?:e)?)?|ini(?:t)?|inn(?:i(?:t)?)?|x) (?:-h|--help)$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm(?:$| (?:-[hv]|--(?:help|version))$| (?:(?:--(?:prefix|workspace)(?:=| )[^ ]+|--(?:include-workspace-root|workspaces)(?:=[^ ]+)?|-w(?:[^ ]+| [^-][^ ]*)) )*exec(?: --)? (?:(?:knip|next|oxfmt|oxlint|playwright|plugins|prettier|publint|sass|skills|stylelint|svgo|tsc|vite|vitest|vp)(?: |$)|which(?: [A-Za-z0-9_.+][A-Za-z0-9_.+-]*)+$)| (?:(?:--(?:location|prefix|workspace)(?:=| )[^ ]+|--[^ =]+=[^ ]+|--(?:force|global|include-workspace-root|workspaces)|-[fg]+|-[Lw](?:[^ ]+| [^-][^ ]*)) )*(?:(?:access|add|add-user|addUser|adduser|audit|author|bugs|c|cache|ci|cit|clean-install|clean-install-test|cleanInstall|cleanInstallTest|completion|config|ddp|dedupe|deny-scripts|denyScripts|deprecate|diff|dist-tag|dist-tags|distTag|distTags|docs|doctor|explain|find|find-dupes|findDupes|fund|get|help|help-search|helpSearch|hlep|home|i|ic|in|info|ins|inst|insta|instal|install|install-ci-test|install-clean|install-test|installCiTest|installClean|installTest|isnt|isnta|isntal|isntall|isntall-clean|isntallClean|issues|it|la|link|list|ll|ln|login|logout|ls|ogr|org|outdated|owner|pack|ping|pkg|prefix|profile|prune|publish|query|r|rb|rebuild|remove|repo|restart|rm|root|rum|run|run-script|runScript|s|sbom|se|search|set|show|shrinkwrap|sit|star|stars|start|stop|t|team|test|token|tst|u|udpate|un|undeprecate|uninstall|unlink|unstar|up|update|upgrade|urn|v|verison|version|view|whoami|why)(?: |$)|(?:approve-scripts|cr(?:e(?:a(?:t(?:e)?)?)?)?|edit|exe(?:c)?|explo(?:r(?:e)?)?|ini(?:t)?|inn(?:i(?:t)?)?|trust(?: (?:circleci|github|gitlab|list|revoke))?|unpublish|x) (?:-h|--help)$))",
 							"case_sensitive": true
 						},
 						{
@@ -735,11 +754,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm(?:$| (?:-[hv]|--(?:help|version))$| (?:(?:--(?:dir|filter)(?:=| )[^ ]+|-C(?:[^ ]+| [^-][^ ]*)) )*exec(?: --)? (?:(?:knip|next|oxfmt|oxlint|playwright|plugins|prettier|publint|sass|skills|stylelint|svgo|tsc|vite|vitest|vp)(?: |$)|which(?: [A-Za-z0-9_.+][A-Za-z0-9_.+-]*)+$)| (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=| )[^ ]+|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|--[^ =]+=[^ ]+|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*(?:(?:access|add|adduser|approve-builds|audit|bin|bugs|c|cache|cat-file|cat-index|change|ci|clean|clean-install|completion|config|dedupe|deploy|deprecate|dislink|dist-tag|dist-tags|docs|doctor|env)(?: |$)|(?:create|dlx|exec|init|with) (?:-h|--help)$|(?:fetch|find|find-hash|get|help|home|i|ic|ignored-builds|import|info|install|install-test|issues|it|la|lane|licenses|link|list|ll|ln|login|logout|ls|m|multi|outdated|owner|owners|pack|pack-app|patch|patch-commit|patch-remove|peers|ping|pkg|prefix|prune|publish|purge|rb|rebuild|recursive|remove|repo|restart|rm|root|rt|run|run-script|runtime|s|sbom|se|search|self-update|set|set-script|setup|show|ss|stage|star|stars|start|store|t|team|test|un|undeprecate|uni|uninstall|unlink|unpublish|unstar|up|update|upgrade|v|version|view|whoami|why)(?: |$)))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm(?:$| (?:-[hv]|--(?:help|version))$| (?:(?:--(?:dir|filter)(?:=| )[^ ]+|-C(?:[^ ]+| [^-][^ ]*)) )*exec(?: --)? (?:(?:knip|next|oxfmt|oxlint|playwright|plugins|prettier|publint|sass|skills|stylelint|svgo|tsc|vite|vitest|vp)(?: |$)|which(?: [A-Za-z0-9_.+][A-Za-z0-9_.+-]*)+$)| (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=| )[^ ]+|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|--[^ =]+=[^ ]+|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*(?:(?:access|add|adduser|approve-builds|audit|bin|bugs|c|cache|cat-file|cat-index|change|ci|clean|clean-install|completion|config|dedupe|deploy|deprecate|dislink|dist-tag|dist-tags|docs|doctor|env)(?: |$)|(?:completion-server|create|dlx|edit|init|profile|token|with|xmas) (?:-h|--help)$|(?:fetch|find|find-hash|get|help|home|i|ic|ignored-builds|import|info|install|install-clean|install-test|issues|it|la|lane|licenses|link|list|ll|ln|login|logout|ls|m|multi|outdated|owner|owners|pack|pack-app|patch|patch-commit|patch-remove|peers|ping|pkg|prefix|prune|publish|purge|rb|rebuild|recursive|remove|repo|restart|rm|root|rt|run|run-script|runtime|s|sbom|se|search|self-update|set|set-script|setup|show|ss|stage|star|stars|start|store|t|team|test|typecheck|un|undeprecate|uni|uninstall|unlink|unpublish|unstar|up|update|upgrade|v|version|view|whoami|why)(?: |$)))",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*printenv (?:TEMP|TMP|TMPDIR)$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*printenv (?:CI|DEVELOPER_DIR|HOME|LANG|LC_ALL|LC_COLLATE|LC_CTYPE|LC_MESSAGES|LC_MONETARY|LC_NUMERIC|LC_TIME|PATH|PWD|SHELL|TEMP|TERM|TMP|TMPDIR|USER|XDG_CACHE_HOME|XDG_CONFIG_HOME|XDG_DATA_HOME|XDG_STATE_HOME)$",
 							"case_sensitive": true
 						},
 						{
@@ -755,7 +774,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*sed -n '?(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p'?(?: [^-][^ ]*)*$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*sed -n '?(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p(?:;(?:(?:[0-9]+|\\$|/[^/']*/)(?:,(?:[0-9]+|\\$|/[^/']*/))?)?p)*'?(?: [^-][^ ]*)*$",
 							"case_sensitive": true
 						},
 						{
@@ -811,11 +830,15 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^xcode-select (?:-p|--print-path)$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^xcrun(?: --(?:sdk|toolchain)(?:=| )[^ ]+)* (?:--find(?:=| )[^ ]+|--show-sdk-path)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?yarn(?:$| (?:-[hv]|--(?:help|version))$| (?:(?:--cwd(?:=| )[^ ]+) )*exec(?: --)? (?:(?:knip|next|oxfmt|oxlint|playwright|plugins|prettier|publint|sass|skills|stylelint|svgo|tsc|vite|vitest|vp)(?: |$)|which(?: [A-Za-z0-9_.+][A-Za-z0-9_.+-]*)+$)| (?:(?:--(?:cache-folder|cwd|global-folder|https-proxy|link-folder|modules-folder|mutex|network-concurrency|network-timeout|otp|preferred-cache-folder|proxy|registry|use-yarnrc)(?:=| )[^ ]+|--[^ =]+=[^ ]+|--(?:emoji|prod|production|scripts-prepend-node-path)(?:=[^ ]+)?|-[^- ][^ ]*) )*(?:(?:access|add|audit|autoclean|bin|cache|check|config|constraints|dedupe|explain|generate-lock-entry|generateLockEntry|global|help|import|info|install|licenses|link|list|lockfile|login|logout|npm|outdated|owner|pack|patch|policies|prune|publish|rebuild|remove|run|set|stage|tag|team|test|unlink|unplug|up|upgrade|upgrade-interactive|upgradeInteractive|version|versions|why|workspace|workspaces)(?: |$)|(?:create|dlx|exec|init|node) (?:-h|--help)$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?yarn(?:$| (?:-[hv]|--(?:help|version))$| (?:(?:--cwd(?:=| )[^ ]+) )*exec(?: --)? (?:(?:knip|next|oxfmt|oxlint|playwright|plugins|prettier|publint|sass|skills|stylelint|svgo|tsc|vite|vitest|vp)(?: |$)|which(?: [A-Za-z0-9_.+][A-Za-z0-9_.+-]*)+$)| (?:(?:--(?:cache-folder|cwd|global-folder|https-proxy|link-folder|modules-folder|mutex|network-concurrency|network-timeout|otp|preferred-cache-folder|proxy|registry|use-yarnrc)(?:=| )[^ ]+|--[^ =]+=[^ ]+|--(?:emoji|prod|production|scripts-prepend-node-path)(?:=[^ ]+)?|-[^- ][^ ]*) )*(?:(?:access|add|audit|autoclean|bin|cache|check|config|constraints|dedupe|explain|generate-lock-entry|generateLockEntry|global|help|import|info|install|licenses|link|list|lockfile|login|logout|npm|outdated|owner|pack|patch|policies|prune|publish|rebuild|remove|run|set|stage|tag|team|test|typecheck|unlink|unplug|up|upgrade|upgrade-interactive|upgradeInteractive|version|versions|why|workspace|workspaces)(?: |$)|(?:create|exec|init|node) (?:-h|--help)$))",
 							"case_sensitive": true
 						},
 						{
@@ -857,15 +880,19 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*(?:config (?:.* )?(?:-l|--list|list)(?: |$)|var -l$)",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*mv (?:--?[^- ][^ ]* )*(?:--f(?:o(?:r(?:c(?:e)?)?)?)?|-[A-Za-z]*f[A-Za-z]*)(?: |$)",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ha (?:.* )?(?:--(?:api-token|config|endpoint)(?:[ =]|$)|--log-level(?:=| )(?i:debug)(?: |$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ha (?:.* )?--config(?:[ =]|$)",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm (?:(?:.* )?(?:--a(?:l(?:low-scripts)?)?|--dange[^ ]*|--f|--forc(?:e)?|--no-ig[^ ]*|--no-strict-a[^ ]*|--scr[^ ]*|-[^- ]*f[^- ]*)(?:[ =]|$)|(?:.* )?--(?:ig[^ =]*|strict-a[^ =]*)(?:=| )(?:0|false)(?: |$)|(?:.* )?ca(?:c(?:h(?:e)?)?)? (?:clean|clear|npx rm|rm)(?: |$)|(?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*explo(?:r(?:e)?)? +[^- ][^ ]*(?: |$)|(?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*unp(?:u(?:b(?:l(?:i(?:s(?:h)?)?)?)?)?)?(?: |$)|(?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global) (?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?npm(?:@[^ ]+)? (?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global)(?: |$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm (?:(?:.* )?(?:--a(?:l(?:low-scripts)?)?|--dange[^ ]*|--f|--forc(?:e)?|--no-ig[^ ]*|--no-strict-a[^ ]*|--scr[^ ]*|-[^- ]*f[^- ]*)(?:[ =]|$)|(?:.* )?--(?:ig[^ =]*|strict-a[^ =]*)(?:=| )(?:0|false)(?: |$)|(?:.* )?ca(?:c(?:h(?:e)?)?)? (?:clean|clear|npx rm|rm)(?: |$)|(?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*explo(?:r(?:e)?)? +[^- ][^ ]*(?: |$)|(?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global) (?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?npm(?:@[^ ]+)? (?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global)(?: |$))",
 							"case_sensitive": true
 						},
 						{
@@ -881,7 +908,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* (?:fd|ffprobe|file|find|rg|xattr)(?: |$)",
+							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* (?:fd|ffprobe|file|find|jq|ps|rg|xattr)(?: |$)",
 							"case_sensitive": true
 						},
 						{
@@ -889,15 +916,93 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?yarn (?:(?:.* )?--(?:force|update-checksums)(?:[ =]|$)|(?:.* )?cache clean(?: |$)|(?:.* )?global remove (?:.* )?yarn(?:@[^ ]+)?(?: |$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?yarn (?:(?:.* )?--(?:force|update-checksums)(?:[ =]|$)|(?:.* )?cache clean(?: |$)|(?:.* )?config list(?: |$)|(?:.* )?global remove (?:.* )?yarn(?:@[^ ]+)?(?: |$))",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed (?:.* )?--(?:dev-container|dev-server-token|uninstall|user-data-dir|zed)(?:[ =]|$)",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed (?:.* )?--(?:dev-container|dev-server-token|uninstall|user-data-dir)(?:[ =]|$)",
 							"case_sensitive": true
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zizmor (?:.* )?--(?:fix|gh-hostname)(?:[ =]|$)",
+							"case_sensitive": true
+						}
+					],
+					"always_deny": [
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*codex (?:(?:-|--[^ ]+|-[^- ][^ ]*|[^- ][^ ]*) )*(?:(?:-a(?:=?never| never)|--ask-for-approval(?:=never| never))(?: |$)|--dangerously-bypass-approvals-and-sandbox(?: |$)|--dangerously-bypass-hook-trust(?: |$)|--remote-auth-token-env(?:[ =]|$)|(?:-s(?:=?danger-full-access| danger-full-access)|--sandbox(?:=danger-full-access| danger-full-access))(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?corepack (?:pnpm|yarn)@[^ ]+ (?:-[hv]|--(?:help|version))$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*env(?: -| -(?:[0iv]+|[0iv]*u(?:[^ =]+| [^ =]+)))*(?: --)?(?: [^ =]+=[^ ]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*(?:credential fill$|credential-[^ ]+(?: [^ ]+)* get$|ls-remote(?: [^ ]+)* [^ ]*(?i:https)://[^/:@ ?#]*:[^/@ ?#]+@[^/@ ?#]+[^ ]*(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ha (?:.* )?(?:--(?:api-token|endpoint)(?:[ =]|$)|--log-level(?:=| )(?i:debug)(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*jq (?:.*\\$ENV(?:[^A-Za-z0-9_]|$)|(?:env|.*[^.A-Za-z0-9_$]env)(?:[^A-Za-z0-9_]|$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm (?:(?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*(?:rum|run|run-script|runScript|urn) (?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*env(?: |$)|(?:(?:--(?:location|prefix|workspace)(?:=| )[^ ]+|--[^ =]+=[^ ]+|--(?:force|global|include-workspace-root|workspaces)|-[fg]+|-[Lw](?:[^ ]+| [^-][^ ]*)) )*token create(?:$| (?:[^- ][^ ]*|-|-[^-h ][^ ]*|-h[^ ]+|--|--(?:[^ ]{1,3}|[^h][^ ]{3}|h[^e][^ ]{2}|he[^l][^ ]|hel[^p]|[^ ]{5,}))(?: |$)))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:npx|pnpx|pnx) (?:help|options|usage|version)(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=| )[^ ]+|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|--[^ =]+=[^ ]+|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*(?:config get (?:.* )?[^ ]*_authToken(?: |$)|exec (?:-(?:[^- ][^ ]*)?|--[^- ][^ ]*)(?: |$)|(?:fix|format) (?:-(?:[^- ][^ ]*)?|--[^- ][^ ]*)(?: |$)|get (?:.* )?[^ ]*_authToken(?: |$)|(?:lint:ts|prepare) (?:-(?:[^- ][^ ]*)?|--[^- ][^ ]*)(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*printenv(?:(?: --)?$| (?:.* )?(?:(?i:PASSWORD|SSH_AUTH_SOCK)|[^ ]*(?i:_(?:KEY|PASSPHRASE|PASSWORD|PROXY|SECRET|TOKEN))|[^ ]*[*?\\[\\]][^ ]*)(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ps (?:(?:.* )?-[^- ]*[Ee][^- ]*(?: |$)|[A-Za-z]*[Ee][A-Za-z]*(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*security (?:.* )?(?:dump-keychain (?:.* )?-[^- ]*d[^- ]*(?: |$)|find-(?:generic|internet)-password (?:.* )?-[^- ]*[gw][^- ]*(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:LC_ALL=C )?sort (?:.* )?--(?:co|com|comp|compr|compre|compres|compress|compress-|compress-p|compress-pr|compress-pro|compress-prog|compress-progr|compress-progra|compress-program)(?:[ =]|$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*spctl (?:(?:-|--[^ ]+|-[^- ][^ ]*|[^- ][^ ]*) )*--global-disable(?:[ =]|$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ssh-add(?:(?: (?:--apple-load-keychain|--apple-use-keychain|-[ACcKkNqv]+|-[ACcKkNqv]*(?:E|H|h|S|t)(?:[^ ]+| [^ ]+)))*(?:$| (?:-|[^- ][^ ]*)(?: (?:-|[^- ][^ ]*))*$| --(?: [^ ]+)*$)|(?: -[Cv]+)* -[Cv]*s(?:[^ ]+| [^ ]+)(?: -[Cv]+)*(?: (?:-|[^- ][^ ]*))*$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*xattr (?:(?:-[rsv]+ )*-[rsv]*c[rsv]*(?: |$)|(?:-[rsv]+ )*-[rsv]*d[rsv]*(?: -[rsv]+)*(?: --)? com[.]apple[.]quarantine(?: |$)|(?:-[rsx]+ )*-[rsx]*w[rsx]*(?: -[rsx]+)*(?: --)? com[.]apple[.]quarantine(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?yarn (?:(?:(?:--(?:cache-folder|cwd|global-folder|https-proxy|link-folder|modules-folder|mutex|network-concurrency|network-timeout|otp|preferred-cache-folder|proxy|registry|use-yarnrc)(?:=| )[^ ]+|--[^ =]+=[^ ]+|--(?:emoji|prod|production|scripts-prepend-node-path)(?:=[^ ]+)?|-[^- ][^ ]*) )*(?:config get (?:.* )?[^ ]*_authToken(?: |$)|dlx (?:-(?:[^- ][^ ]*)?|--[^- ][^ ]*)(?: |$)|(?:fix|format) (?:-(?:[^- ][^ ]*)?|--[^- ][^ ]*)(?: |$)|(?:lint:ts|prepare) (?:-(?:[^- ][^ ]*)?|--[^- ][^ ]*)(?: |$))|(?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*env(?: |$)|(?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*run (?:(?:--|--?[^ ]+)(?: [^-][^ ]*)? )*env(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed (?:(?:(?:-|--[^ ]+|-[^- ][^ ]*|[^- ][^ ]*) )*--zed(?:[ =]|$)|(?:.* )?(?i:ssh)://[^ /:@]+:[^ /@]*@[^ /][^ ]*(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zizmor (?:(?:-|--[^ ]+|-[^- ][^ ]*|[^- ][^ ]*) )*--gh-token(?:[ =]|$)",
 							"case_sensitive": true
 						}
 					]

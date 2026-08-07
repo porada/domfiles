@@ -26,6 +26,24 @@ Treat Zed’s agent sandbox, tool defaults, command allowances, and confirmation
 
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
 
+### Zed automatic terminal denials
+
+Use `terminal.always_deny` for forms whose purpose or verified behavior exposes ambient credentials or authentication capabilities, transports literal credentials, disables agent or operating-system security boundaries, or loads authentication identities and providers. The exact command inventory remains canonical in [Zed settings](../.config/zed/settings.json); denied forms cannot be approved manually.
+
+Information-looking forms receive the same treatment when their actual behavior is more privileged than their spelling suggests:
+
+- `corepack` manager selectors can download the selected pnpm or Yarn release before displaying its help or version output.
+- Direct `git credential-* … get` calls invoke credential helpers and can print stored usernames and passwords.
+- HA API-token, alternate-endpoint, and debug-logging forms can expose, transmit, or log Supervisor credentials; macOS `security` password-output and decrypted-dump flags print Keychain secrets.
+- Package-runner operands named like discovery commands can install and execute packages, while option-looking first arguments to known mutating pnpm or Yarn script shorthands are forwarded to those scripts instead of producing package-manager help.
+- `sort --compress-program` and its accepted abbreviated long forms execute an arbitrary compression helper.
+
+These forms are denied rather than left confirmable so a discovery-looking command cannot be approved under a false premise. Custom HA config selection remains confirmable because it changes credential and endpoint sources without inherently disclosing them.
+
+### Zed bulk configuration output
+
+Bulk value listings through `git config list`, its legacy `--list` and `-l` forms, `git var -l`, and `yarn config list` remain user-confirmable because configuration can contain credentials. Their higher-precedence confirmation overrides intentionally cover display options, including name-only output, rather than relying on a brittle complement expression. Targeted configuration reads retain their existing permission treatment.
+
 ### Zed fetch and sandbox host scope
 
 URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname may intentionally omit that hostname from `agent.sandbox_permissions.network_hosts`. A `network_hosts` entry would persistently grant the entire host, broadening trust beyond the path-qualified fetch allowance. Preserve the extra sandbox boundary; do not report this documented divergence as accidental.
@@ -40,6 +58,12 @@ Brace expansion, broader `rm` options, command substitution, parent-removing `rm
 
 Treat npm’s exact `--all` as an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. Keep the ambiguous `--a` and `--al` forms and exact `--allow-scripts` behind confirmation; `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
 
+### Zed `printenv` exposure
+
+Automatically allow `printenv` only for the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
+
+Automatically deny exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names ending case-insensitively in `_KEY`, `_PASSPHRASE`, `_PASSWORD`, `_PROXY`, `_SECRET`, or `_TOKEN`, wildcard-bearing variable operands, and zero-name output from either a bare invocation or exact `--`. Preserve this denial even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
+
 ### Zed temporary archive staging
 
 Publication audits may automatically stage the tracked `HEAD` tree only by writing Git’s built-in `tar` format to a descendant of a Zed agent terminal temporary directory, then extracting it beneath such a directory. The exact allowances are `git archive --format=tar --output=<temporary-path> HEAD` and `tar -xf <temporary-archive> -C <temporary-directory>`. The exact help (`-h` and `--help`) and list (`-l` and `--list`) forms are also allowed.
@@ -53,6 +77,8 @@ Additional archive operands, alternate formats, broader extraction flags, extra 
 Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Keep trusted local package-manager `exec` binaries inside each manager’s positive command-family allowance, using an `exec`-specific option grammar, and keep ordinary npm, pnpm, and Yarn workflows in positive command alternatives. Unlisted executable names then fall through the terminal’s confirm-by-default boundary; broad `exec` confirmation overrides would make the allowlist require brittle complement expressions. Exact informational forms can be allowed separately.
 
 Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
+
+Package-manager subcommand arguments are version-specific and must be tested as invocations rather than inferred from option-like spelling. pnpm 11 treats an option-looking first operand after `pnpm exec` as an executable name rather than a pnpm flag; bare `--` remains a separator. Yarn Classic 1 treats unknown `dlx` as a package-script invocation and passes an option-looking first operand to that script. Deny those option-leading forms so they cannot be approved by mistake; use `pnpm help exec` or `yarn help <name>` for discovery.
 
 Every Git allowance and matching confirmation override uses the same optional, repeated, fixed-value environment-assignment grammar; the exact positive list in [Zed settings](../.config/zed/settings.json) is canonical. It deliberately contains only values used by recurring approved workflows to disable optional writes, neutralize runtime config, or suppress interaction or output. `MANPAGER=cat` and `PAGER=cat` remain part of the shared prefix.
 
@@ -72,7 +98,7 @@ Keep the naming convention and permission patterns synchronized. After the requi
 
 Worktree lock, unlock, and repair forms accept only exact `.agent-<name>` targets, and worktree moves require both source and destination to use that namespace. Unlock remains automatic because the disposable namespace already permits forced move and removal. Worktree creation and branch copy or rename patterns enforce both namespaces but cannot compare their `<name>` suffixes, so the global instructions require preserving each worktree-branch pair. `--detach` remains confirmable because it breaks that pairing.
 
-Zed’s native `move_path` evaluates its source and destination together and uses the most restrictive permission result. Its automatic allowance therefore matches only strict descendants of `.agent-*`: both endpoints must remain inside an agent worktree, while moving a top-level `.agent-*` directory still confirms. Use `git worktree move` for top-level worktree moves so Git’s administrative metadata stays synchronized. Zed’s sensitive-settings and symlink-escape checks remain additional confirmation gates.
+Zed’s native `move_path` evaluates its source and destination together and uses the most restrictive permission result. Its automatic allowance therefore matches only strict descendants of `.agent-*`: both endpoints must remain inside an agent worktree, while moving a top-level `.agent-*` directory still confirms. Use native `move_path` rather than terminal `mv` for descendant moves: terminal regexes can constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere. Use `git worktree move` for top-level worktree moves so Git’s administrative metadata stays synchronized. Zed’s sensitive-settings and symlink-escape checks remain additional confirmation gates.
 
 Prune is automatically allowed only with `-n` or `--dry-run`; those forms may add `-v`, `--verbose`, or a simple `--expire` value. Worktree list may use the same simple expiration value. Complex lock reasons or expiration values, actual pruning, out-of-namespace paths or branches, remote operations, shell globs, path traversal, parent-removing `rmdir -p`, and other broader deletion mechanisms intentionally remain subject to confirmation.
 
@@ -80,7 +106,7 @@ Prune is automatically allowed only with `-n` or `--dry-run`; those forms may ad
 
 The `xargs` terminal allowance intentionally mirrors the executable alternatives in the consolidated general terminal allowance so agents can batch the same baseline commands. Update both lists together and keep `xargs`’s own options limited to bounded, noninteractive argument splitting and batching controls.
 
-Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Require confirmation for the complete nested command family whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form.
+Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Require confirmation for the complete nested command family whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
 
 ## Tooling
 
