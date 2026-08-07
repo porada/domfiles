@@ -1,9 +1,17 @@
 import { defineOxlintConfig } from '@standard-config/oxlint';
-import { defineConfig } from 'vite-plus';
+import { configDefaults, defineConfig } from 'vite-plus';
 
 export default defineConfig({
 	test: {
-		projects: ['packages/*'],
+		exclude: [
+			/* prettier-ignore */
+			...configDefaults.exclude,
+			'.agent-*/**',
+		],
+		projects: [
+			/* prettier-ignore */
+			'packages/*',
+		],
 	},
 	lint: defineOxlintConfig(),
 	staged: {

@@ -1,3 +1,4 @@
+.agent-*
 .config/fish/completions
 .config/fish/conf.d
 .config/fish/fish_variables
@@ -11,6 +12,7 @@
 .config/zed/themes
 .DS_Store
 .lastsync
+.pnpm-store
 .vite-hooks/_
 coverage
 node_modules

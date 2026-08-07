@@ -5,11 +5,6 @@
 		".git",
 		"bin/git-diff-highlight"
 	],
-	"file_types": {
-		"Git Ignore": [
-			".config/git/ignore"
-		]
-	},
 	"format_on_save": "on",
 	"formatter": [
 		{

@@ -29,9 +29,6 @@
 [commit]
 	gpgSign = true
 
-[core]
-	excludesFile = ~/.config/git/ignore
-
 [diff]
 	algorithm = patience
 
