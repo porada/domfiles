@@ -11,7 +11,10 @@ for source in .curlrc .gitconfig .vimrc; do
   __symlink "$DOMFILES_CONFIG_DIR/$source" "$HOME/$source"
 done
 
+__print_heading_dimmed 'Linking agent instructions'
+
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
+__symlink "$DOMFILES_SKILLS_DIR/package-release-notes" "$HOME/.agents/skills/package-release-notes"
 
 __print_heading_dimmed 'Provisioning additional files'
 

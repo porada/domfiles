@@ -1,8 +1,6 @@
 # Project documentation
 
-This document records durable architecture, tooling decisions, compatibility constraints, and maintenance procedures that are not obvious from the source alone. `AGENTS.md` remains authoritative for agent instructions; use this file for project rationale and operational context.
-
-Organize future entries under broad second-level sections so this document can grow without becoming a flat list of unrelated notes.
+This document records durable architecture, tooling decisions, compatibility constraints, and maintenance procedures that are not obvious from the source alone. `AGENTS.md` remains authoritative for agent instructions. Project rationale and operational context live here.
 
 ## Compatibility
 
@@ -14,6 +12,8 @@ The root `engines.node` range intentionally declares the minimum supported Node.
 
 `domfiles` actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
 
+The README’s “only prerequisite” statement is intentionally scoped to third-party bootstrap software rather than an exhaustive restatement of the supported environment. Its omission of platform, operating-system, `PATH`, and vendor-tool guarantees is intentional. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
+
 The canonical Apple Silicon location fallback for `brew` is only a convenience for invoking Homebrew itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
 
 `fish` is the default interactive shell on every managed machine. Shell behavior and setup logic must not assume that Bash or Zsh is the user’s default shell.
@@ -22,19 +22,17 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ### Zed agent permission model
 
-Treat Zed’s agent sandbox, tool defaults, command allowances, and confirmation overrides as separate security boundaries.
-
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
 
 ### Zed automatic terminal denials
 
-Use `terminal.always_deny` for forms whose purpose or verified behavior exposes ambient credentials or authentication capabilities, transports literal credentials, disables agent or operating-system security boundaries, or loads authentication identities and providers. The exact command inventory remains canonical in [Zed settings](../.config/zed/settings.json); denied forms cannot be approved manually.
+Configured `terminal.always_deny` rules cover forms whose purpose or verified behavior exposes ambient credentials or authentication capabilities, transports literal credentials, disables agent or operating-system security boundaries, or loads authentication identities and providers. The exact command inventory remains canonical in [Zed settings](../.config/zed/settings.json). Configured denials cannot be approved manually.
 
 Information-looking forms receive the same treatment when their actual behavior is more privileged than their spelling suggests:
 
 - `corepack` manager selectors can download the selected pnpm or Yarn release before displaying its help or version output.
 - Direct `git credential-* … get` calls invoke credential helpers and can print stored usernames and passwords.
-- HA API-token, alternate-endpoint, and debug-logging forms can expose, transmit, or log Supervisor credentials; macOS `security` password-output and decrypted-dump flags print Keychain secrets.
+- HA API-token, alternate-endpoint, and debug-logging forms can expose, transmit, or log Supervisor credentials. macOS `security` password-output and decrypted-dump flags print Keychain secrets.
 - Package-runner operands named like discovery commands can install and execute packages, while option-looking first arguments to known mutating pnpm or Yarn script shorthands are forwarded to those scripts instead of producing package-manager help.
 - `sort --compress-program` and its accepted abbreviated long forms execute an arbitrary compression helper.
 
@@ -46,147 +44,155 @@ Bulk value listings through `git config list`, its legacy `--list` and `-l` form
 
 ### Zed fetch and sandbox host scope
 
-URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname may intentionally omit that hostname from `agent.sandbox_permissions.network_hosts`. A `network_hosts` entry would persistently grant the entire host, broadening trust beyond the path-qualified fetch allowance. Preserve the extra sandbox boundary; do not report this documented divergence as accidental.
+URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname may intentionally omit that hostname from `agent.sandbox_permissions.network_hosts`. A `network_hosts` entry would persistently grant the entire host, broadening trust beyond the path-qualified fetch allowance.
 
 ### Zed generated-output deletion
 
 Directories named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` are treated as disposable generated output at any path depth. Native `delete_path` may remove either a directory root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
 
-Brace expansion, broader `rm` options, command substitution, parent-removing `rmdir -p`, path traversal, paths outside those named trees, similarly named directories, and variable expansion remain confirmable. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
+Brace expansion, broader `rm` options, parent-removing `rmdir -p`, path traversal, paths outside those named trees, and similarly named directories remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
 
 ### Zed npm `--all` option
 
-Treat npm’s exact `--all` as an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. Keep the ambiguous `--a` and `--al` forms and exact `--allow-scripts` behind confirmation; `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
+npm’s exact `--all` is an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. The ambiguous `--a` and `--al` forms and exact `--allow-scripts` remain behind confirmation. `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
 
 ### Zed `printenv` exposure
 
-Automatically allow `printenv` only for the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
+The automatic `printenv` allowance is limited to the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
 
-Automatically deny exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names ending case-insensitively in `_KEY`, `_PASSPHRASE`, `_PASSWORD`, `_PROXY`, `_SECRET`, or `_TOKEN`, wildcard-bearing variable operands, and zero-name output from either a bare invocation or exact `--`. Preserve this denial even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
+The automatic denial covers exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names ending case-insensitively in `_KEY`, `_PASSPHRASE`, `_PASSWORD`, `_PROXY`, `_SECRET`, or `_TOKEN`, wildcard-bearing variable operands, and zero-name output from either a bare invocation or exact `--`. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
 
 ### Zed temporary archive staging
 
-Publication audits may automatically stage the tracked `HEAD` tree only by writing Git’s built-in `tar` format to a descendant of a Zed agent terminal temporary directory, then extracting it beneath such a directory. The exact allowances are `git archive --format=tar --output=<temporary-path> HEAD` and `tar -xf <temporary-archive> -C <temporary-directory>`. The exact help (`-h` and `--help`) and list (`-l` and `--list`) forms are also allowed.
+[Zed settings](../.config/zed/settings.json) provide publication audits a narrow terminal temporary namespace for staging tracked `HEAD` without modifying the checkout. The allowance covers Git’s built-in tar archive and extraction beneath that namespace. Alternate refs, formats, paths, and broader extraction options remain confirmable.
 
-Both `/private/var/folders/.../T/zed-agent-terminal-*` and `/var/folders/.../T/zed-agent-terminal-*` roots are accepted. Every path must contain at least one safe descendant segment, and path traversal remains excluded. The Rust-compatible permission engine cannot require the archive and destination to share one generated terminal-directory identifier, so each path is constrained independently to the same temporary namespace.
-
-Additional archive operands, alternate formats, broader extraction flags, extra operands, non-`HEAD` refs, non-temporary paths, and other archive options remain confirmable.
+macOS can expose the same terminal temporary area through canonical and noncanonical root spellings, so both are accepted. Each path requires a safe descendant and excludes traversal. The Rust-compatible permission engine cannot require the archive and destination to share one generated terminal-directory identifier, so each is constrained independently to the same temporary namespace.
 
 ### Zed terminal permission limitations
 
-Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Keep trusted local package-manager `exec` binaries inside each manager’s positive command-family allowance, using an `exec`-specific option grammar, and keep ordinary npm, pnpm, and Yarn workflows in positive command alternatives. Unlisted executable names then fall through the terminal’s confirm-by-default boundary; broad `exec` confirmation overrides would make the allowlist require brittle complement expressions. Exact informational forms can be allowed separately.
+Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Trusted local package-manager `exec` binaries remain inside each manager’s positive command-family allowance with an `exec`-specific option grammar, while ordinary npm, pnpm, and Yarn workflows remain in positive command alternatives. Unlisted executable names then fall through the terminal’s confirm-by-default boundary. Broad `exec` confirmation overrides would make the allowlist require brittle complement expressions. Exact informational forms can be allowed separately.
 
-Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Recheck version-dependent option abbreviations when a package-manager major changes instead of widening a pattern speculatively.
+Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Version-dependent option abbreviations require revalidation when a package-manager major changes rather than speculative widening.
 
-Package-manager subcommand arguments are version-specific and must be tested as invocations rather than inferred from option-like spelling. pnpm 11 treats an option-looking first operand after `pnpm exec` as an executable name rather than a pnpm flag; bare `--` remains a separator. Yarn Classic 1 treats unknown `dlx` as a package-script invocation and passes an option-looking first operand to that script. Deny those option-leading forms so they cannot be approved by mistake; use `pnpm help exec` or `yarn help <name>` for discovery.
+Package-manager subcommand arguments are version-specific, so invocation tests rather than option-like spelling determine their behavior. pnpm 11 treats an option-looking first operand after `pnpm exec` as an executable name rather than a pnpm flag. Bare `--` remains a separator. Yarn Classic 1 treats unknown `dlx` as a package-script invocation and passes an option-looking first operand to that script. Those option-leading forms are denied so they cannot be approved by mistake. The supported discovery forms are `pnpm help exec` and `yarn help <name>`.
 
-Every Git allowance and matching confirmation override uses the same optional, repeated, fixed-value environment-assignment grammar; the exact positive list in [Zed settings](../.config/zed/settings.json) is canonical. It deliberately contains only values used by recurring approved workflows to disable optional writes, neutralize runtime config, or suppress interaction or output. `MANPAGER=cat` and `PAGER=cat` remain part of the shared prefix.
+The [Git prefix policy](skills/domfiles-zed-permissions/SKILL.md#apply-the-permission-policy) separates shared and dedicated discovery so approved fixed-value assignments do not broaden the common discovery boundary. A prefixed root `git -h` therefore remains confirmable, while dedicated Git discovery covers approved assignments. Reusing the settings-owned grammar across dedicated Git patterns prevents the same assignment from receiving different permission treatment across command families. Fixed values that disable optional behavior or interaction avoid arbitrary environment-driven execution changes.
 
-A Git variable is not eligible merely because a documented value appears safe. Add a name and value only after recurring approved use demonstrates that automatic permission is useful, prefer disabling or noninteractive values over default-restoring or enabling values, and keep every prefix copy byte-identical. Re-audit the retained semantics whenever Git changes.
+Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations, alternate config paths or config injection, and arbitrary diff, editor, helper, pager, proxy, or SSH executables. It also includes author, committer, and reflog metadata, CA, certificate, credential, key, and proxy-path selection, and every value of `GIT_SSL_NO_VERIFY`, including `0`. Generated, internal, test-only, or unknown variables and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls remain confirmable as well.
 
-Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations; alternate config paths or config injection; arbitrary diff, editor, helper, pager, proxy, or SSH executables; author, committer, and reflog metadata; CA, certificate, credential, key, and proxy-path selection; every value of `GIT_SSL_NO_VERIFY`, including `0`; generated, internal, test-only, or unknown variables; and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls.
-
-Git subcommand discovery is restricted to compiled command names so aliases and external `git-*` helpers remain confirmable. Exact `--help` is allowed for the alphabetized names returned by `git --list-cmds=builtins`; exact `-h` is allowed only for the alphabetized names returned by `git --list-cmds=parseopt`, whose built-ins use Git’s parse-options framework. Both inventory commands are informational allowances. Refresh the lists when Git changes.
+Git subcommand discovery is restricted to compiled command names so aliases and external `git-*` helpers remain confirmable. Exact `--help` is allowed for the alphabetized names returned by `git --list-cmds=builtins`. Exact `-h` is allowed for the alphabetized names returned by `git --list-cmds=parseopt`, whose built-ins use Git’s parse-options framework, plus the explicitly verified `credential` exception. `git credential -h` prints usage and exits before reading credential protocol input. Both inventory commands are informational allowances. The lists require refresh when Git changes.
 
 ### Zed worktree permission coupling
 
-The global [agent instructions](../.config/zed/AGENTS.md#git-worktrees) pair the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. The corresponding allowances in [Zed settings](../.config/zed/settings.json) deliberately couple creation, cleanup, and maintenance permission to those namespaces for scoped `git worktree add` forms—including force, `-B`, `--lock`, `--no-checkout`, and `--orphan`; native `delete_path` for `.agent-*` roots and descendants; native `move_path` between strict descendants of `.agent-*` worktrees; destructive `git -C .agent-<name>` checkout, switch, reset, and clean forms; `git worktree lock`, `unlock`, dry-run `prune`, repair, and `move` or `remove` with up to two force options; `rm`; `rmdir`; and non-forced or forced `git branch` copy, deletion, reset, or rename.
+The global [agent instructions](../.config/zed/AGENTS.md#git-worktrees) pair the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
 
-Automatic task integration additionally permits three alphabetized, namespace-bound forms: `git -C .agent-* add` with one or more explicit safe-descendant pathspecs and no behavior options; `git -C .agent-* commit -m` with constrained non-option input; and `git merge --ff-only agent/<name>`. Broader add, commit, and merge forms remain confirmable. Because Zed strips ordinary shell quotes before permission matching, the commit grammar cannot distinguish normalized message words from non-option relative pathspec tokens; both are intentionally trusted inside agent worktrees, while option-looking tokens remain confirmable. The allowed forms intentionally trust repository-defined clean filters and commit or post-merge hooks within the user-managed repository; options that broaden staged paths, rewrite existing commits, or select other refs remain confirmable.
+Automatic task integration is limited to explicit staging inside agent worktrees, constrained non-rewriting commits, and fast-forward-only merges from agent branches. Because Zed strips ordinary shell quotes before permission matching, the commit grammar cannot distinguish normalized message words from non-option relative pathspec tokens. Both are trusted only inside agent worktrees, while option-looking tokens and broader operations remain confirmable. The allowed forms also trust repository-defined clean filters and commit or post-merge hooks within the user-managed repository.
 
-Keep the naming convention and permission patterns synchronized. After the required status and integration-or-abandonment verification, `.agent-<name>` directories and `agent/<name>` branches are disposable. Forced worktree move or removal is permitted only for exact paths in the worktree namespace, while forced branch deletion or rename is permitted only for branches in the agent namespace. Non-forced branch deletion retains Git’s fully-merged check; forced deletion bypasses that check but remains namespace-constrained.
+Permission patterns can require the worktree and branch namespaces independently but cannot compare their `<name>` suffixes, so pair equality remains an agent-level invariant. Forced operations remain namespace-bound. Non-forced branch deletion retains Git’s fully-merged check, while forced deletion bypasses it.
 
-Worktree lock, unlock, and repair forms accept only exact `.agent-<name>` targets, and worktree moves require both source and destination to use that namespace. Unlock remains automatic because the disposable namespace already permits forced move and removal. Worktree creation and branch copy or rename patterns enforce both namespaces but cannot compare their `<name>` suffixes, so the global instructions require preserving each worktree-branch pair. `--detach` remains confirmable because it breaks that pairing.
+Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Terminal regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere, while top-level worktree moves must also update Git’s administrative metadata. Zed’s sensitive-settings and symlink-escape checks remain additional confirmation gates.
 
-Zed’s native `move_path` evaluates its source and destination together and uses the most restrictive permission result. Its automatic allowance therefore matches only strict descendants of `.agent-*`: both endpoints must remain inside an agent worktree, while moving a top-level `.agent-*` directory still confirms. Use native `move_path` rather than terminal `mv` for descendant moves: terminal regexes can constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere. Use `git worktree move` for top-level worktree moves so Git’s administrative metadata stays synchronized. Zed’s sensitive-settings and symlink-escape checks remain additional confirmation gates.
-
-Prune is automatically allowed only with `-n` or `--dry-run`; those forms may add `-v`, `--verbose`, or a simple `--expire` value. Worktree list may use the same simple expiration value. Complex lock reasons or expiration values, actual pruning, out-of-namespace paths or branches, remote operations, shell globs, path traversal, parent-removing `rmdir -p`, and other broader deletion mechanisms intentionally remain subject to confirmation.
+Dry-run pruning can inspect stale worktree metadata without changing it. Actual pruning, complex or out-of-namespace inputs, and broader deletion mechanisms remain confirmable because they extend mutation beyond the bounded agent namespaces.
 
 ### Zed xargs permission mirroring
 
-The `xargs` terminal allowance intentionally mirrors the executable alternatives in the consolidated general terminal allowance so agents can batch the same baseline commands. Update both lists together and keep `xargs`’s own options limited to bounded, noninteractive argument splitting and batching controls.
+The `xargs` terminal allowance mirrors the executable alternatives in the consolidated general terminal allowance so agents can batch the same baseline commands without broadening the trusted child-executable set.
 
-Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Require confirmation for the complete nested command family whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
+Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Standard input can therefore activate hazardous child behavior after the shell segment has already been allowed. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
 
 ## Tooling
 
 ### Codex distribution
 
-Keep `codex` installed through Homebrew rather than declaring `@openai/codex` as a project dependency. The Homebrew cask runs the native executable directly, provisions Fish completions, and remains excluded from dependency installation in CI because `codex` is a development Homebrew dependency.
+`codex` is intentionally installed through Homebrew rather than declared as an `@openai/codex` project dependency. The Homebrew cask runs the native executable directly, provisions Fish completions, and remains excluded from dependency installation in CI because `codex` is a development Homebrew dependency.
 
 The npm package adds a large platform-specific native package to every environment that installs the root pnpm dependencies. Lockfile ownership does not outweigh that installation and CI overhead for this machine-level command.
 
 ### Dependency status labels
 
-`domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available; keep the concise `ssh` label for consistency with the adjacent dependency rows.
+`domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
 ### FFmpeg media preset compatibility
 
-When auditing `bin/ffmpeg-wav-png`, assume that every supplied input and generated output media format, dimension, duration, and other size constraint is compliant with every platform targeted by the script. Treat this as one platform-agnostic rule for current and future presets; do not question, independently verify, or report those compatibility choices unless the user explicitly requests it.
+Every supplied input and generated output media format, dimension, duration, and other size constraint in `bin/ffmpeg-wav-png` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
 
-`ffmpeg` is an intentionally unmanaged optional runtime dependency for this command. Its availability check defines the supported failure behavior; do not report its omission from bootstrap or synchronization provisioning unless the user explicitly asks to change that dependency policy.
+`ffmpeg` is an intentionally unmanaged optional runtime dependency for this command. Its availability check defines the supported failure behavior, and bootstrap and synchronization intentionally do not provision it.
 
 The Instagram branch intentionally combines `-t 60` and `-shortest` so output ends at 60 seconds or when shorter audio ends. The hard cap takes precedence over preserving a stream-copied audio packet that crosses the limit.
 
 ### Fish abbreviation ownership
 
-The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations; abbreviations defined outside domfiles are not preserved across shell startup.
+The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations. Abbreviations defined outside domfiles are not preserved across shell startup.
 
 ### Fish formatter plugin
 
-Keep `prettier-plugin-fish` a thin whole-file wrapper around `fish_indent`. Preserve `fish_indent` output verbatim and let it own Fish formatting semantics; Prettier options such as `tabWidth` and `useTabs` intentionally do not affect Fish output.
+`prettier-plugin-fish` is intentionally a thin whole-file wrapper around `fish_indent`. Its output is preserved verbatim, and `fish_indent` owns Fish formatting semantics. Prettier options such as `tabWidth` and `useTabs` intentionally do not affect Fish output.
 
 Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. `fish_indent` has no range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged.
 
-The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist; behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports. Do not report the assertion as vacuous solely because the current `Plugin` properties are optional.
+The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports. The assertion’s forward-compatibility value remains despite the current `Plugin` properties being optional.
 
 ### Fish local configuration
 
-Sourcing `.config/fish/local.fish` intentionally suppresses both stdout and stderr. Do not report this redirection as hidden diagnostics; inspect or validate `local.fish` directly when its behavior is in scope.
+`.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.
 
 ### Git short status command
 
-`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`; use `git status` directly for status options or alternate output formats.
+`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
+
+### Global system-available tooling
+
+The [global system-available tooling list](../.config/zed/AGENTS.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
+
+The list also includes `fish`, `node`, and `pnpm` even though `domfiles-sync-install` classifies them as primary dependencies: they support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
+
+The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system-maintenance utility outside coding workflows. `vim` is an interactive editor.
+
+`brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, and `npx`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
+
+### Package release-note bullet marker
+
+The [release-note bullet-marker policy](skills/package-release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
 
 ### Peer dependency versions
 
-Declare every peer dependency in workspace packages with the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. Do not flag `"*"` peer ranges as missing compatibility constraints or narrow them solely to mirror the currently resolved version.
+Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints and are not intended to mirror the currently resolved version.
 
 ### Repository-scoped commands
 
-Keep `plugins` and `skills` in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
+`plugins` and `skills` intentionally remain in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
 
-Do not invoke `plugins update` from `domfiles-sync-update`: the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. Re-evaluate this only if upstream adds a supported update workflow.
+`domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
 
-The corresponding scripts in `bin/` are the stable command interfaces. Their implementations are resolved from the domfiles pnpm workspace so `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Do not install parallel copies through global pnpm state.
+The corresponding scripts in `bin/` are the stable command interfaces. Their implementations are resolved from the domfiles pnpm workspace so `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
-The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization when Git-visible tracked files differ from `HEAD`, `domfiles-sync-update` overrides this behavior with `error` so commands can run only when dependencies are already current. Revalidate these assumptions when changing the pinned pnpm major version or overriding `verifyDepsBeforeRun`.
+The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization when Git-visible tracked files differ from `HEAD`, `domfiles-sync-update` overrides this behavior with `error` so commands can run only when dependencies are already current. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
 
 ### Shell wrapper duplication
 
-Keep the Fish and POSIX discovery and lint wrappers separate even though their orchestration overlaps. They are short, language-specific entrypoints, and direct repetition is preferable to a parameterized abstraction that exists only to remove those similarities. Do not report their shared traversal, argument handling, or heading setup as duplication.
+The Fish and POSIX discovery and lint wrappers are short, language-specific entrypoints. Parameterizing them would add indirection solely to remove surface similarities.
 
-Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned, as with the lockfile-aware presentation in `git-d` and `git-view`.
+The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
 
 ### String helper reuse
 
-Do not report the `__string_*` helpers themselves or equivalent inline string operations anywhere in this repository as reimplementations. Treat these helpers as optional conveniences rather than mandatory shared abstractions.
+The `__string_*` helpers are optional conveniences rather than a mandatory abstraction boundary.
 
 ### Synchronization checkout state
 
-`__domfiles_is_clean` intentionally checks only whether Git-visible tracked files differ from `HEAD`. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation; repository-update safety handles assume-unchanged entries separately.
+`__domfiles_is_clean` intentionally checks only whether Git-visible tracked files differ from `HEAD`. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation. Repository-update safety handles assume-unchanged entries separately.
 
-### Synchronization completion
+Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. While those entries are present, synchronization avoids rebases and hard resets because Git may overwrite their working tree contents.
 
-`domfiles sync` prioritizes completing as much independent synchronization work as possible with minimal interruption. Recoverable issues must be reported, but fixing them is not a prerequisite for running or completing unrelated sync stages.
+### Synchronization workflow
 
-Synchronization scripts otherwise fail fast. An unhandled error or a nonzero exit from a sync stage stops the broader workflow; the best-effort policy does not suppress script failures.
+`domfiles sync` is the repository’s canonical update path. It intentionally establishes the repository-managed state, including replacing the initial contents of managed paths. That replacement is expected synchronization behavior rather than accidental data loss.
 
-Repository fetch, rebase, stashing, and stash-restoration failures are recoverable. They are reported without aborting the broader synchronization workflow, which continues against the available checkout so the remaining setup, installation, update, and cleanup stages can still run.
+`domfiles sync` prioritizes completing as much independent work as possible with minimal interruption. Repository fetch, rebase, stashing, and stash-restoration failures are recoverable. They are reported without aborting the broader workflow, which continues against the available checkout so the remaining setup, installation, update, and cleanup stages can still run.
 
-Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. Synchronization must not rebase or perform a hard reset while those entries are present because Git may overwrite their working tree contents.
+Outside those recoverable cases, synchronization scripts fail fast. An unhandled error or a nonzero exit from a sync stage stops the broader workflow. The best-effort policy does not suppress script failures.
 
 The final dependency status is advisory. Its failures remain visible but do not invalidate that the broader workflow reached completion.
 
@@ -194,16 +200,20 @@ The final dependency status is advisory. Its failures remain visible but do not 
 
 ### Zed and Codex global instructions
 
-The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared by Zed and Codex. `domfiles sync` links that source to `~/.config/zed/AGENTS.md` for Zed and `~/.codex/AGENTS.md` for Codex. Both agents therefore load one instruction source across every project; it is not project scoped.
+The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared by Zed and Codex. `domfiles sync` links that source to `~/.config/zed/AGENTS.md` for Zed and `~/.codex/AGENTS.md` for Codex. Both agents therefore load one instruction source across every project. It is not project scoped.
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
 
-Keep guidance specific to this repository in the root `AGENTS.md` or applicable project skills instead.
+Repository-specific guidance instead belongs in the root `AGENTS.md` or applicable project skills.
+
+### Global agent skills
+
+Skills tracked under `.agents/skills` without the `domfiles-` prefix are portable global skills whose canonical sources live in this repository. They are not scoped to `domfiles`. `domfiles sync` exposes selected portable skills through the user’s global skill directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations.
 
 ### Zed project scan exclusions
 
-The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. Do not restate or refresh the installed defaults. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
+The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
 
 ### Zed selection-to-new-thread key binding
 
-The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. Preserve the `cmd-? cmd-n cmd->` sequence: focusing the agent panel first makes `cmd-n` resolve to `agent::NewThread` instead of the editor’s `workspace::NewFile`, and the final keystroke invokes `agent::AddSelectionToThread` for the active editor selection.
+The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd->` sequence is intentional. Focusing the agent panel first makes `cmd-n` resolve to `agent::NewThread` instead of the editor’s `workspace::NewFile`, and the final keystroke invokes `agent::AddSelectionToThread` for the active editor selection.

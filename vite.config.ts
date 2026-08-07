@@ -7,10 +7,11 @@ export default defineConfig({
 			/* prettier-ignore */
 			...configDefaults.exclude,
 			'.agent-*/**',
+			'.agents/**',
 		],
 		projects: [
 			/* prettier-ignore */
-			'packages/*',
+			'packages/**/vite.config.ts',
 		],
 	},
 	lint: defineOxlintConfig(),

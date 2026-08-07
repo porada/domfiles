@@ -15,8 +15,8 @@
 
 ## Temporary files
 
-- Place every temporary file created for a task under one task-specific `.agent-<name>` directory at the relevant project root instead of scattering temporary files across the project.
-    - Use a unique, filesystem-safe `<name>` that identifies the task; add a short suffix when needed to avoid collisions.
+- Place temporary files managed directly by the agent under one task-specific `.agent-<name>` directory at the relevant project root instead of scattering them across the project, unless applicable project instructions require another approved temporary namespace.
+    - Use a unique, filesystem-safe `<name>` that identifies the task. Add a short suffix when needed to avoid collisions.
 - Treat `.agent-<name>` as the shared naming convention for temporary task directories and Git worktrees, not as a worktree-only path.
     - Before reusing, moving, or deleting an existing `.agent-<name>` directory, inspect it and determine whether it is a registered worktree.
 - Remove only temporary directories created for the current task when they are no longer needed.
@@ -30,11 +30,11 @@
     - The task requires isolated branch, dependency, build, or test state.
     - The change is broad or high-risk enough to benefit materially from independent rollback, and there is a clear integration plan.
 - Do not create a worktree solely because the repository is dirty, concurrent activity is possible, or the task modifies repository files. Keep follow-up edits to the same uncommitted task in its existing checkout.
-- When a worktree is required, use a unique, filesystem-safe `<name>` containing a task slug and short unique suffix. Do not include path separators. Create the pair with `git worktree add -b agent/<name> .agent-<name> <start-point>`. Do not use `--detach`; every agent worktree must retain its paired branch. When changing `<name>`, move the worktree and rename its branch together so the pair remains `.agent-<name>` and `agent/<name>`.
+- When a worktree is required, use a unique, filesystem-safe `<name>` containing a task slug and short unique suffix. Do not include path separators. Create the pair with `git worktree add -b agent/<name> .agent-<name> <start-point>`. Do not use `--detach`. Every agent worktree must retain its paired branch. When changing `<name>`, move the worktree and rename its branch together so the pair remains `.agent-<name>` and `agent/<name>`.
 - Before moving or removing a worktree, or force-renaming or deleting its branch, inspect the affected worktree status and verify that its changes are integrated or explicitly abandoned.
-    - Remove worktrees with `git worktree remove`; use one or two exact `-f` or `--force` options only after the preceding verification when an unclean or locked worktree requires them. Afterward, verify that the corresponding `.agent-<name>` directory no longer exists. If it remains, inspect it rather than deleting it recursively.
+    - Remove worktrees with `git worktree remove`. Use one or two exact `-f` or `--force` options only after the preceding verification when an unclean or locked worktree requires them. Afterward, verify that the corresponding `.agent-<name>` directory no longer exists. If it remains, inspect it rather than deleting it recursively.
     - After removing the worktree, first delete its branch with `git branch -d agent/<name>`. If Git refuses because the branch is unmerged, use `git branch -D agent/<name>` only when the preceding verification established that its changes are integrated or explicitly abandoned.
-- For historical analysis and reviews, inspect revisions through Git without materializing them. Materialize a revision only when a filesystem-based tool must operate on it; when isolation is required, follow the worktree policy above.
+- For historical analysis and reviews, inspect revisions through Git without materializing them. Materialize a revision only when a filesystem-based tool must operate on it. When isolation is required, follow the worktree policy above.
 
 ## Communication
 
@@ -72,8 +72,9 @@
 ## Documentation
 
 - Never edit a consumer-facing `README` file without the user’s explicit permission.
+- As an editorial rule for Markdown, keep standalone block elements such as tables and fenced code blocks aligned to the document’s left edge. Restructure surrounding lists or other blocks to reference them rather than nesting them.
 - Give each durable detail one canonical home and link to it instead of paraphrasing it elsewhere.
-- When these global instructions conflict with applicable project documentation—including a project’s `AGENTS.md`—follow the project documentation.
+- When these global instructions conflict with applicable project agent instructions, follow the project agent instructions.
 - Always reference the applicable `AGENTS.md` line number when reporting a violation.
 - When reporting issues, support each one with concrete evidence relevant to the current task.
     - Do not treat speculation or alternatives based only on preference as issues.
@@ -83,22 +84,35 @@
 
 ## Tooling
 
-- Always assume that `*.ts` files can be run directly with the system-installed `node`.
 - Always use `git mv` when renaming tracked files.
 - Disable commit signing with `git -c commit.gpgsign=false commit …` when creating commits in disposable Git repositories for tests so global signing configuration does not make the test interactive.
 - Invoke commands by name through `PATH` instead of using absolute executable paths.
-    - Use an absolute path only when selecting a specific installation is required, `PATH` resolution is being diagnosed, or another concrete constraint makes the location material; make the justification evident.
-- Use the system-installed `actionlint` for GitHub Actions correctness and `zizmor` for GitHub Actions security reviews.
-- Apply the following pnpm rules to commands executed by agents, including command examples that instruct agents; do not treat them as repository code-style requirements for scripts, workflows, or configuration:
-    - Invoke package scripts through `pnpm`’s explicit `run` subcommand, such as `pnpm run <script> …` or `pnpm --filter <selector> run <script> …`.
-    - Invoke project-local executables without a package script through `pnpm`’s explicit `exec` subcommand (`pnpm exec <executable> …`) instead of invoking them implicitly (`pnpm <executable> …`) or directly from `node_modules/.bin`.
-        - Exempt the external formatter command in `.zed/settings.json` from this requirement.
-    - Invoke one-off package executables that are not declared by the current project through `pnpm dlx <package> …` instead of `npx`.
-        - When instructions use `npx skills …`, `pnpm dlx skills …`, `npx plugins …`, or `pnpm dlx plugins …`, invoke the corresponding system-provided `skills …` or `plugins …` command directly.
+    - Use an absolute path only when selecting a specific installation is required, `PATH` resolution is being diagnosed, or another concrete constraint makes the location material. Make the justification evident.
 - Prefer the agent’s native fetch tooling when the task only requires retrieving or reading content from a known URL.
     - This preference does not apply to web searches.
     - Use `curl` when command line HTTP behavior is relevant, native fetch tooling lacks a required capability, exact response bytes or files are needed, or the request must run in a shell, container, or remote environment.
     - Preserve explicit user requests, project workflows, and repository code that use `curl`.
+
+### System-available tooling
+
+Assume the following non-standard development commands are system-installed and available through `PATH`:
+
+| Command | Purpose | Guidance |
+| --- | --- | --- |
+| `actionlint` | GitHub Actions correctness | — |
+| `fd` | Filesystem path search | — |
+| `fish` | Fish shell and configuration checks | — |
+| `jq` | JSON querying and transformation | — |
+| `node` | JavaScript and TypeScript execution | Run `*.ts` files directly |
+| `plugins` | Agent plugin installation | Invoke directly—not through `npx` or `pnpm dlx` |
+| `pnpm` | JavaScript package management | Preferred. Use `run` for scripts, `exec` for local binaries, and `dlx` for undeclared one-offs |
+| `rg` | File-content search | — |
+| `shellcheck` | Shell-script analysis | — |
+| `skills` | Agent skill management | Invoke directly—not through `npx` or `pnpm dlx` |
+| `yarn` | JavaScript package management | Use for Yarn-based projects |
+| `zizmor` | GitHub Actions security reviews | — |
+
+Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.
 
 ### Low-friction tool use
 
@@ -117,31 +131,13 @@
 - Treat permission prompts as security boundaries rather than command-syntax problems.
     - Do not inspect or reverse-engineer editor permission settings merely to choose command syntax unless the task explicitly concerns those settings.
     - If an inspection-only operation prompts unexpectedly, try the applicable native tool or canonical repository workflow once.
-    - If a necessary operation still requires confirmation, request it once with a concise reason; do not obscure or repeatedly reformulate it solely to avoid confirmation.
+    - If a necessary operation still requires confirmation, request it once with a concise reason. Do not obscure or repeatedly reformulate it solely to avoid confirmation.
 
 ## Writing
 
-- Use typographic punctuation in prose: curly quotation marks, curly apostrophes, and em dashes without surrounding spaces.
-- Reserve straight quotation marks, straight apostrophes, and hyphens for code, identifiers, URLs, commands, and other syntax read by machines.
+- In prose, avoid semicolons, use typographic quotation marks and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it.
 - For nonconsecutive numbered items, write each number explicitly in the item text instead of relying on Markdown’s ordered list numbering.
-- Wrap quoted tokens and code fragments in backticks. Follow the format below as an example.
-
-```ts
-/**
- * Tests for the `Icon` component
- */
-describe('`Icon` component with a custom `ASSET_PATH`', () => {
-    process.env.ASSET_PATH = '/assets';
-
-    test('accepts `true` as the `name` prop', () => {
-        // …
-    });
-
-    test('returns `undefined` if the `name` prop isn’t provided', () => {
-        // …
-    });
-});
-```
+- Wrap identifiers, paths, commands, and quoted code tokens in backticks.
 
 ## Shorthand commands
 
@@ -150,9 +146,6 @@ describe('`Icon` component with a custom `ASSET_PATH`', () => {
 
 ### Verify
 
-- Read all applicable `AGENTS.md` files and all reported files again to confirm whether reported issues remain relevant.
-    - Ensure that all findings align with the latest applicable `AGENTS.md` files.
-- Classify each previously reported finding as resolved, intentional, or unresolved.
-    - Exclude resolved findings from future reports.
-    - Exclude intentional findings from future reports unless the relevant code or `AGENTS.md` changes.
-- Report only unresolved findings that still apply.
+- Reread every applicable `AGENTS.md` file and previously reported file, then align each finding with the latest instructions and contents.
+- Reclassify each previously reported finding as resolved, intentional, or unresolved.
+- Report only findings that remain unresolved.
