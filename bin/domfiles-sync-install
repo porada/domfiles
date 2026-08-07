@@ -35,7 +35,7 @@ done
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in codex fd jq ripgrep shellcheck yarn zizmor; do
+  for formula in actionlint codex fd jq ripgrep shellcheck yarn zizmor; do
     install "$formula"
   done
 fi

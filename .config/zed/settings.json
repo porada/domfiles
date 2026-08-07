@@ -447,7 +447,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:\\[|apk|brew|caffeinate|codex|command|corepack|cp|curl|date|defaults|dig|docker|(?:bin/)?domfiles(?:-(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh))?|dscacheutil|fish|fish_indent|git|ha|hostname|ifconfig|kill|launchctl|ln|man|mo|mole|node|npm|npx|perl|pkgutil|plugins|plutil|pnpm|pnpx|pnx|printenv|rm|ruby|sed|sips|skills|sort|tar|tee|umask|yarn|zed|zizmor) (?:-[hv]|--(?:help|version))$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:\\[|actionlint|apk|brew|caffeinate|codex|command|corepack|cp|curl|date|defaults|dig|docker|(?:bin/)?domfiles(?:-(?:dependencies|dev-lint-fish|dev-lint-sh|dev-list-fish|dev-list-sh))?|dscacheutil|fish|fish_indent|git|ha|hostname|ifconfig|kill|launchctl|ln|man|mo|mole|node|npm|npx|perl|pkgutil|plugins|plutil|pnpm|pnpx|pnx|printenv|rm|ruby|sed|sips|skills|sort|tar|tee|umask|yarn|zed|zizmor) (?:-[hv]|--(?:help|version))$",
 							"case_sensitive": true
 						},
 						{
@@ -456,6 +456,10 @@
 						},
 						{
 							"pattern": "^\\[ .*\\]$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*actionlint(?: (?:--?(?:color|debug|no-color|oneline|verbose|version)(?:=(?:false|true))?|--?(?:config-file|format|ignore|stdin-filename)(?:=[^ ]+| [^-][^ ]*)|--?(?:pyflakes|shellcheck)=))*(?:(?: [^-][^ ]*)*| -| --(?: [^ ]+)*)$",
 							"case_sensitive": true
 						},
 						{

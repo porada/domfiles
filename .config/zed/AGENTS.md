@@ -88,7 +88,7 @@
 - Disable commit signing with `git -c commit.gpgsign=false commit …` when creating commits in disposable Git repositories for tests so global signing configuration does not make the test interactive.
 - Invoke commands by name through `PATH` instead of using absolute executable paths.
     - Use an absolute path only when selecting a specific installation is required, `PATH` resolution is being diagnosed, or another concrete constraint makes the location material; make the justification evident.
-- Use the system-installed `zizmor` when reviewing GitHub Actions workflows.
+- Use the system-installed `actionlint` for GitHub Actions correctness and `zizmor` for GitHub Actions security reviews.
 - Apply the following pnpm rules to commands executed by agents, including command examples that instruct agents; do not treat them as repository code-style requirements for scripts, workflows, or configuration:
     - Invoke package scripts through `pnpm`’s explicit `run` subcommand, such as `pnpm run <script> …` or `pnpm --filter <selector> run <script> …`.
     - Invoke project-local executables without a package script through `pnpm`’s explicit `exec` subcommand (`pnpm exec <executable> …`) instead of invoking them implicitly (`pnpm <executable> …`) or directly from `node_modules/.bin`.
