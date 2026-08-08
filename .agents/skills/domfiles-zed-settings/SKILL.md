@@ -18,9 +18,9 @@ Use this skill as the canonical source for general Zed settings policy and workf
 
 ## Choose the workflow
 
-- For a change, investigate the current behavior, plan the implementation, make the smallest applicable edit, and use the change-validation workflow below.
-- For an audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
-- For a review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
+- For an explicit change, including a request that also uses review or audit language, investigate the current behavior, plan the implementation, make the smallest applicable edit, and use the change-validation workflow below.
+- For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
+- For a standalone review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
 
 ## Investigate and plan
 

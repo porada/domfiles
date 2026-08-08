@@ -13,8 +13,11 @@ done
 
 __print_heading_dimmed 'Linking agent instructions'
 
+for source in agent-documentation release-notes technical-copy; do
+  __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.agents/skills/$source"
+done
+
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
-__symlink "$DOMFILES_SKILLS_DIR/package-release-notes" "$HOME/.agents/skills/package-release-notes"
 
 __print_heading_dimmed 'Provisioning additional files'
 

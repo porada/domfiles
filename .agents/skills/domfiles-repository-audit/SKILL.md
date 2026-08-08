@@ -1,6 +1,6 @@
 ---
 name: domfiles-repository-audit
-description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill whenever the user requests an audit—including the bare `Audit` command—for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it for commit reviews, ordinary code review, debugging, or implementation tasks.
+description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill for standalone audit requests—including the bare `Audit` command—for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
 ---
 
 # Domfiles repository audit

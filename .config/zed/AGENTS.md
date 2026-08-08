@@ -8,7 +8,7 @@
 ## Collaboration
 
 - Always assume that others may be working concurrently in the same project.
-- Ignore untracked files named `TODO` or `TODO.*` unless the user explicitly includes them in the task.
+- Ignore untracked files named `TODO` or `TODO.*`. Do not read or modify them unless the user explicitly requests work on them.
 - Always treat subagents’ extremely short context windows as a critical constraint.
     - Keep each assignment limited to the minimum necessary scope.
     - Use additional subagents when needed to keep each assignment small.
@@ -19,6 +19,7 @@
     - Use a unique, filesystem-safe `<name>` that identifies the task. Add a short suffix when needed to avoid collisions.
 - Treat `.agent-<name>` as the shared naming convention for temporary task directories and Git worktrees, not as a worktree-only path.
     - Before reusing, moving, or deleting an existing `.agent-<name>` directory, inspect it and determine whether it is a registered worktree.
+- Helper scripts may remain in their task-specific `.agent-<name>` directory across sessions when likely reuse makes retaining them more efficient than recreating them. Treat that expected reuse as continued need under the cleanup rule.
 - Remove only temporary directories created for the current task when they are no longer needed.
 
 ## Git worktrees
@@ -135,7 +136,9 @@ Command guidance applies to agent invocations and command examples, not reposito
 
 ## Writing
 
-- In prose, avoid semicolons, use typographic quotation marks and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it.
+- Write every JSDoc comment as a multiline block with `/**` and `*/` on separate lines, including one-sentence comments.
+- Write suppression directives as `/* … */` block comments when both the language and relevant tool accept that form, including `/* oxlint-disable-next-line rule/name */`, `/* prettier-ignore */`, and `/* @ts-expect-error */`. Use the tool-required syntax otherwise. Do not add explanatory text unless applicable repository or linter policy requires it.
+- In prose, avoid semicolons, use typographic “quotation marks” and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it.
 - For nonconsecutive numbered items, write each number explicitly in the item text instead of relying on Markdown’s ordered list numbering.
 - Wrap identifiers, paths, commands, and quoted code tokens in backticks.
 

@@ -49,8 +49,9 @@ Use this skill as the canonical source for Zed agent permission policy and permi
 
 ## Extend the workflow
 
-- For a permission audit, keep the task read-only, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), and use the permission audit validation below.
-- For a permission review, keep the task read-only and use the permission review validation below without change planning, implementation, or formatting.
+- For an explicit permission change, including a request that also uses review or audit language, follow the change workflow in `domfiles-zed-settings` and apply the [permission policy](#apply-the-permission-policy).
+- For a standalone permission audit, keep the task read-only, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), and use the permission audit validation below.
+- For a standalone permission review, keep the task read-only and use the permission review validation below without change planning, implementation, or formatting.
 
 For either read-only workflow:
 

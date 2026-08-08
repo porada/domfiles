@@ -1,6 +1,6 @@
 # Project documentation
 
-This document records durable architecture, tooling decisions, compatibility constraints, and maintenance procedures that are not obvious from the source alone. `AGENTS.md` remains authoritative for agent instructions. Project rationale and operational context live here.
+This document records durable facts, rationale, constraints, and maintenance decisions that are not obvious from source and configuration. `AGENTS.md` remains authoritative for agent instructions.
 
 ## Compatibility
 
@@ -100,6 +100,70 @@ The `xargs` terminal allowance mirrors the executable alternatives in the consol
 
 Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Standard input can therefore activate hazardous child behavior after the shell segment has already been allowed. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
 
+## Agent integration
+
+### Global agent skills
+
+Skills tracked under `.agents/skills` without the `domfiles-` prefix are portable global skills whose canonical sources live in this repository. They are not scoped to `domfiles`. `domfiles sync` exposes selected portable skills through the user’s global skill directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations.
+
+Portable skill documentation is maintained under the assumption that an installation exposing one portable skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
+
+Edits to an exposed portable skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a portable skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
+
+Every installation of the portable `agent-documentation` skill is assumed to use the tracked global `.config/zed/AGENTS.md`. The skill relies on that document’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
+
+The portable `release-notes` and `technical-copy` skills include decision-capture prompts for producing self-contained relays from completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md)). They are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+
+### Global system-available tooling
+
+The [global system-available tooling list](../.config/zed/AGENTS.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
+
+The list also includes `fish`, `node`, and `pnpm` even though `domfiles-sync-install` classifies them as primary dependencies: they support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
+
+The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system-maintenance utility outside coding workflows. `vim` is an interactive editor.
+
+`brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, and `npx`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
+
+### Package release-note bullet marker
+
+The [release-note bullet-marker policy](skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
+
+### Zed and Codex global instructions
+
+The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared by Zed and Codex. `domfiles sync` links that source to `~/.config/zed/AGENTS.md` for Zed and `~/.codex/AGENTS.md` for Codex. Both agents therefore load one instruction source across every project. It is not project scoped.
+
+Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
+
+Repository-specific guidance instead belongs in the root `AGENTS.md` or applicable project skills.
+
+### Zed project scan exclusions
+
+The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
+
+### Zed selection-to-new-thread key binding
+
+The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd->` sequence is intentional. Focusing the agent panel first makes `cmd-n` resolve to `agent::NewThread` instead of the editor’s `workspace::NewFile`, and the final keystroke invokes `agent::AddSelectionToThread` for the active editor selection.
+
+## Synchronization
+
+### Synchronization checkout state
+
+`__domfiles_is_clean` intentionally checks only whether Git-visible tracked files differ from `HEAD`. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation. Repository-update safety handles assume-unchanged entries separately.
+
+Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. While those entries are present, synchronization avoids rebases and hard resets because Git may overwrite their working tree contents.
+
+### Synchronization workflow
+
+`domfiles sync` is the repository’s canonical update path. It intentionally establishes the repository-managed state, including replacing the initial contents of managed paths. That replacement is expected synchronization behavior rather than accidental data loss.
+
+`domfiles sync` prioritizes completing as much independent work as possible with minimal interruption. Repository fetch, rebase, stashing, and stash-restoration failures are recoverable. They are reported without aborting the broader workflow, which continues against the available checkout so the remaining setup, installation, update, and cleanup stages can still run.
+
+Outside those recoverable cases, synchronization scripts fail fast. An unhandled error or a nonzero exit from a sync stage stops the broader workflow. The best-effort policy does not suppress script failures.
+
+The final dependency status is advisory. Its failures remain visible but do not invalidate that the broader workflow reached completion.
+
+`.lastsync` records that the broader workflow reached completion. It is intentionally write-only for now and reserved for a possible future feature.
+
 ## Tooling
 
 ### Codex distribution
@@ -140,20 +204,6 @@ The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves
 
 `git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
 
-### Global system-available tooling
-
-The [global system-available tooling list](../.config/zed/AGENTS.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
-
-The list also includes `fish`, `node`, and `pnpm` even though `domfiles-sync-install` classifies them as primary dependencies: they support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
-
-The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system-maintenance utility outside coding workflows. `vim` is an interactive editor.
-
-`brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, and `npx`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
-
-### Package release-note bullet marker
-
-The [release-note bullet-marker policy](skills/package-release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
-
 ### Peer dependency versions
 
 Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints and are not intended to mirror the currently resolved version.
@@ -179,41 +229,3 @@ The lockfile-aware presentation in `git-d` and `git-view` is consolidated becaus
 ### String helper reuse
 
 The `__string_*` helpers are optional conveniences rather than a mandatory abstraction boundary.
-
-### Synchronization checkout state
-
-`__domfiles_is_clean` intentionally checks only whether Git-visible tracked files differ from `HEAD`. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation. Repository-update safety handles assume-unchanged entries separately.
-
-Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. While those entries are present, synchronization avoids rebases and hard resets because Git may overwrite their working tree contents.
-
-### Synchronization workflow
-
-`domfiles sync` is the repository’s canonical update path. It intentionally establishes the repository-managed state, including replacing the initial contents of managed paths. That replacement is expected synchronization behavior rather than accidental data loss.
-
-`domfiles sync` prioritizes completing as much independent work as possible with minimal interruption. Repository fetch, rebase, stashing, and stash-restoration failures are recoverable. They are reported without aborting the broader workflow, which continues against the available checkout so the remaining setup, installation, update, and cleanup stages can still run.
-
-Outside those recoverable cases, synchronization scripts fail fast. An unhandled error or a nonzero exit from a sync stage stops the broader workflow. The best-effort policy does not suppress script failures.
-
-The final dependency status is advisory. Its failures remain visible but do not invalidate that the broader workflow reached completion.
-
-`.lastsync` records that the broader workflow reached completion. It is intentionally write-only for now and reserved for a possible future feature.
-
-### Zed and Codex global instructions
-
-The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared by Zed and Codex. `domfiles sync` links that source to `~/.config/zed/AGENTS.md` for Zed and `~/.codex/AGENTS.md` for Codex. Both agents therefore load one instruction source across every project. It is not project scoped.
-
-Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
-
-Repository-specific guidance instead belongs in the root `AGENTS.md` or applicable project skills.
-
-### Global agent skills
-
-Skills tracked under `.agents/skills` without the `domfiles-` prefix are portable global skills whose canonical sources live in this repository. They are not scoped to `domfiles`. `domfiles sync` exposes selected portable skills through the user’s global skill directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations.
-
-### Zed project scan exclusions
-
-The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
-
-### Zed selection-to-new-thread key binding
-
-The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd->` sequence is intentional. Focusing the agent panel first makes `cmd-n` resolve to `agent::NewThread` instead of the editor’s `workspace::NewFile`, and the final keystroke invokes `agent::AddSelectionToThread` for the active editor selection.

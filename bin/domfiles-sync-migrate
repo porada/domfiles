@@ -13,3 +13,8 @@ if __is_callable pnpm; then
     fi
   done
 fi
+
+if [ -L "$HOME/.agents/skills/package-release-notes" ]; then
+  __print_heading_dimmed 'Cleaning up outdated agent instructions'
+  __ rm -f "$HOME/.agents/skills/package-release-notes"
+fi

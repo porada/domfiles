@@ -1,6 +1,6 @@
 ---
 name: domfiles-shell-scripts
-description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.vite-hooks`—but not merely because the task runs terminal commands.
+description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.vite-hooks`—or evaluates whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
 ---
 
 # Domfiles shell scripts
@@ -9,9 +9,9 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 ## Choose the workflow
 
-- For a change, investigate the affected scripts and cross-file invariants, make the smallest applicable edit, and use the change-validation workflow below.
-- For an audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md) and apply the shell-specific checks below.
-- For a review, keep the task read-only. Apply the policy below and use the read-only validation workflow without formatting or modifying files.
+- For an explicit change, including a request that also uses review or audit language, investigate the affected scripts and cross-file invariants, make the smallest applicable edit, and use the change-validation workflow below.
+- For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md) and apply the shell-specific checks below.
+- For a standalone review, keep the task read-only. Apply the policy below and use the read-only validation workflow without formatting or modifying files.
 
 ## Investigate the task
 
@@ -55,6 +55,14 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 - Report unused functions or variables defined in `domlib`.
     - Do not treat variables as unused when they exist solely to maintain parity with `.config/fish/config.fish`.
 - Report every POSIX shell function prefixed with `__` when it is defined outside `domlib`.
+
+## Choose Git helper form
+
+- Before adding or reviewing a `bin/git-*` entrypoint, inspect `.config/.gitconfig` and determine whether a plain Git alias preserves the required behavior.
+- Prefer a plain Git alias when the helper invokes one Git subcommand with fixed options and relies on Git’s normal argument forwarding.
+- Keep a script when the behavior requires shell control flow, dynamic values, safety checks, external commands, or shared `domlib` behavior.
+- If a Git alias would require the `!` shell-command form, implement it as a `bin/git-*` script instead. Never define shell commands inside `.config/.gitconfig` aliases.
+- Do not retain a script solely for custom argument-count validation unless strict arity is required behavior.
 
 ## Evaluate duplication and reuse
 
