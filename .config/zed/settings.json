@@ -28,6 +28,11 @@
 		"button": false
 	},
 	"diff_view_style": "unified",
+	"file_types": {
+		"Plain Text": [
+			"TODO"
+		]
+	},
 	"git": {
 		"inline_blame": {
 			"enabled": false
@@ -55,7 +60,8 @@
 		},
 		"Plain Text": {
 			"format_on_save": "off",
-			"show_edit_predictions": false
+			"show_edit_predictions": false,
+			"soft_wrap": "editor_width"
 		},
 		"TSX": {
 			"language_servers": [
@@ -132,6 +138,7 @@
 				"*.apple.com",
 				"*.brew.sh",
 				"*.chatgpt.com",
+				"*.cve.org",
 				"*.docker.com",
 				"*.github.com",
 				"*.githubusercontent.com",
@@ -162,6 +169,8 @@
 				"chatgpt.com",
 				"crates.io",
 				"curl.se",
+				"cve.org",
+				"cveawg.mitre.org",
 				"docs.rs",
 				"dom.engineering",
 				"e18e.dev",
@@ -250,6 +259,9 @@
 							"pattern": "^https://(?:[^./?#:@]+\\.)*chatgpt\\.com(?:[/?#]|$)"
 						},
 						{
+							"pattern": "^https://(?:[^./?#:@]+\\.)*cve\\.org(?:[/?#]|$)"
+						},
+						{
 							"pattern": "^https://(?:[^./?#:@]+\\.)*github(?:usercontent)?\\.com(?:[/?#]|$)"
 						},
 						{
@@ -320,6 +332,9 @@
 						},
 						{
 							"pattern": "^https://curl\\.se(?:[/?#]|$)"
+						},
+						{
+							"pattern": "^https://cveawg\\.mitre\\.org(?:[/?#]|$)"
 						},
 						{
 							"pattern": "^https://docs\\.rs(?:[/?#]|$)"
@@ -518,7 +533,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*cp -n(?: [^-][^ ]*){2,}$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*cp -n --(?: (?:[.]/|/)?(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~-]*|[.]{3,}))*/?){2,}$",
 							"case_sensitive": true
 						},
 						{
@@ -574,7 +589,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*--(?:help|list-cmds=(?:builtins|parseopt)|version)$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*--(?:help|list-cmds=(?:builtins|parseopt)|man-path|version)$",
 							"case_sensitive": true
 						},
 						{
@@ -586,11 +601,15 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-c commit[.]gpgsign=false|--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/? (?:(?:-c commit[.]gpgsign=false|--no-optional-locks|--no-pager) )*(?:add (?:(?:-A|--all|[.])|(?:-u|--update)(?: (?:-- )?(?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*)?|(?:-- )?(?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*)|branch (?:(?:-C|-c|--copy)(?: --)? [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]* [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*|(?:-D|-d|--delete)(?: --)? [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*|(?:-M|-m|--move)(?: --)? [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?|(?:-f|--force)(?: --)? [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?)|checkout (?:(?:-B|-b) (?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*(?: (?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)?|(?:-|(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: -- (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*)?|-- (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*)|cherry-pick (?:(?:--abort|--quit)|(?:(?:--no-commit|--no-edit) )*--no-gpg-sign [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*)|clean -(?:fd|fdx)|config (?:(?:--local )?(?:commit[.]gpgsign false|core[.]hooksPath /dev/null|tag[.]gpgsign false|user[.]email [A-Za-z0-9._+-]+@[A-Za-z0-9.-]+|user[.]name [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*)|set (?:--local )?(?:commit[.]gpgsign false|core[.]hooksPath /dev/null|tag[.]gpgsign false|user[.]email [A-Za-z0-9._+-]+@[A-Za-z0-9.-]+|user[.]name [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*))|merge (?:(?:--abort|--quit)|--ff-only [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*|--no-edit --no-gpg-sign --no-verify-signatures [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)|rebase (?:(?:--abort|--quit)|--no-gpg-sign [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?|--no-gpg-sign --onto [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]* [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?)|remote (?:(?:remove|rm) [A-Za-z0-9][A-Za-z0-9._-]*|rename [A-Za-z0-9][A-Za-z0-9._-]* [A-Za-z0-9][A-Za-z0-9._-]*|set-branches(?: --add)? [A-Za-z0-9][A-Za-z0-9._-]* [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*|set-head [A-Za-z0-9][A-Za-z0-9._-]* (?:-d|--delete|[A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*))|reset(?: (?:(?:--hard|--mixed|--soft)(?: (?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)?|(?:(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)?-- (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*))?|restore (?:(?:--source=(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--staged) )*(?:-- )?(?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*|revert (?:(?:--abort|--quit)|--no-edit (?:--no-commit )?--no-gpg-sign [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*)|rm (?:(?:-f|-r|--cached|--force|--recursive) )*(?:-- )?(?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*|stash(?: (?:apply(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?|clear|drop(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?|pop(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?|push(?: (?:-u|--include-untracked))?(?: -- (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)(?: (?:[.]|(?:[.]/)?(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~:^][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*))*)?))?|switch (?:(?:-C|-c|--create|--force-create) [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)?|(?:--detach )?(?:-|[A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*))|tag (?:-d|--delete) [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*)$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*add(?: --)? (?:[.]/)?(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*(?: (?:[.]/)?(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)*$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*branch (?:(?:-a|--all)(?: --contains [^-][^ ]*)?|(?:-C|-c|--copy)(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]* agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*|(?:-D|-(?:df|fd)|(?:-d|--delete)(?: (?:-f|--force))?|(?:-f|--force) (?:-d|--delete))(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*(?: agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*|(?:-f|--force)(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*(?: (?:-|[^-][^ ]*))?|--list(?: [^-][^ ]*)*|(?:-M|-(?:fm|mf)|(?:-m|--move)(?: (?:-f|--force))?|(?:-f|--force) (?:-m|--move))(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]* agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*|--show-current)|(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*branch (?:(?:-a|--all)(?: --contains [^-][^ ]*)?|--(?:list|show-current)(?: .*)?|[^-][^ ]*(?: [^-][^ ]*)?))$",
+							"pattern": "^(?:(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*branch (?:(?:-[av]+|--(?:all|no-abbrev|verbose))(?: (?:-[av]+|--(?:all|no-abbrev|verbose)))*(?: --contains [^-][^ ]*)?|(?:-C|-c|--copy)(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]* agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*|(?:-D|-(?:df|fd)|(?:-d|--delete)(?: (?:-f|--force))?|(?:-f|--force) (?:-d|--delete))(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*(?: agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*|(?:-f|--force)(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*(?: (?:-|[^-][^ ]*))?|--list(?: [^-][^ ]*)*|(?:-M|-(?:fm|mf)|(?:-m|--move)(?: (?:-f|--force))?|(?:-f|--force) (?:-m|--move))(?: --)? agent/[A-Za-z0-9_-][A-Za-z0-9_.-]* agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*|--show-current)|(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*branch (?:(?:-[av]+|--(?:all|no-abbrev|verbose))(?: (?:-[av]+|--(?:all|no-abbrev|verbose)))*(?: --contains [^-][^ ]*)?|--(?:list|show-current)(?: .*)?|[^-][^ ]*(?: [^-][^ ]*)?))$",
 							"case_sensitive": true
 						},
 						{
@@ -614,7 +633,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*commit -m (?:\"[ A-Za-z0-9.,:_+/-]+\"|'[ A-Za-z0-9.,:_+/-]+'|[A-Za-z0-9][A-Za-z0-9.,:_+/-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/-]*)*)$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*clone (?:(?:(?:--no-hardlinks --quiet|--quiet --no-hardlinks))(?: --no-checkout)? -- (?:[.]|(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/?) (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/?|--quiet --no-local --no-tags (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/?)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:(?:--no-optional-locks|--no-pager) )*-c commit[.]gpgsign=false (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)?/? (?:(?:--no-optional-locks|--no-pager) )*|(?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)?/? (?:(?:--no-optional-locks|--no-pager) )*-c commit[.]gpgsign=false (?:(?:--no-optional-locks|--no-pager) )*)commit (?:(?:(?:-a|--all|--allow-empty|--no-verify|--signoff) )*-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|-am [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|(?:--no-verify )?--amend (?:--no-edit|-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*))$",
 							"case_sensitive": true
 						},
 						{
@@ -630,6 +653,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*init --quiet --initial-branch=[A-Za-z0-9_-][A-Za-z0-9_.-]* (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*merge --ff-only agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*$",
 							"case_sensitive": true
 						},
@@ -642,7 +669,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*remote(?:$| -v$| (?:get-url|show)(?: |$))",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*remote(?:$| -v$| get-url(?: |$)| show(?:$| -n(?: |$)))",
 							"case_sensitive": true
 						},
 						{
@@ -666,7 +693,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*tag (?:-l|--list)(?: .*)?$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*tag (?:(?:-l|--list)(?: .*)?|--points-at [^-][^ ]*)$",
 							"case_sensitive": true
 						},
 						{
@@ -695,10 +722,6 @@
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*launchctl (?:help$|(?:list|print|print-disabled)(?: |$))",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*ln -s(?: --)? [^-][^ ]* [^-][^ ]*$",
 							"case_sensitive": true
 						},
 						{

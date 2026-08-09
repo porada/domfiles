@@ -29,6 +29,7 @@ Use this skill as the canonical source for Zed agent permission policy and permi
     - Prefer explicit alternatives over optional fragments when consolidating distinct executable names.
     - Keep command-specific prefixes and wrappers out of the consolidated general and shared discovery patterns. Define family-specific allowances separately. Account for approved prefixes and wrappers in applicable allowances and confirmation overrides.
         - Account for the optional `-C <path>`, `--no-optional-locks`, and `--no-pager` global options before every Git subcommand.
+        - Treat exact root-level Git options that print an installation path and exit as informational only after verifying the local manual. Keep value-taking variants that change helper lookup confirmable.
         - Apply the same optional repeated fixed-value `GIT_*`, `MANPAGER=cat`, and `PAGER=cat` prefix grammar from `.config/zed/settings.json` to every dedicated Git terminal allowance and matching confirmation override. Exempt shared discovery patterns, which retain only their common pager prefixes. Use dedicated Git discovery patterns for approved fixed-value `GIT_*` assignments. Treat the settings grammar as canonical, keep its variable and value alternatives alphabetized, and keep every copy byte-identical.
         - Never allow wildcard or unknown `GIT_*` assignments. Treat each variable and value as behavior-bearing, audit it against the hazard classes documented in [Zed terminal permission limitations](../../PROJECT.md#zed-terminal-permission-limitations), and update that rationale when the safety boundary changes.
         - Keep the fixed-value Git assignment list minimal and evidence-driven. Include a name and value only after recurring approved use demonstrates that automatic permission is useful. Documented safety alone is insufficient. Prefer disabling or noninteractive values over default-restoring or enabling values, and re-audit retained semantics whenever Git changes.
@@ -41,11 +42,21 @@ Use this skill as the canonical source for Zed agent permission policy and permi
 
 ## Maintain agent worktree permissions
 
-- Keep native-tool and terminal permission patterns synchronized with the [global worktree convention](../../../.config/zed/AGENTS.md#git-worktrees).
-- Use native `move_path` for strict descendant moves within agent worktrees and `git worktree move` for top-level worktree moves. Leave terminal `mv` confirmable.
-- Keep forced worktree and branch operations constrained to their respective namespaces, and keep `--detach` confirmable.
 - Allow `git worktree prune` automatically only in dry-run forms. Keep actual pruning, out-of-namespace paths or branches, remote operations, shell globs, path traversal, parent-removing `rmdir -p`, and broader deletion mechanisms confirmable.
+- Keep forced worktree and branch operations constrained to their respective namespaces, and keep `--detach` confirmable.
+- Allow commits inside agent worktrees to stage tracked changes with `-a` or `--all` and to amend the current commit through bounded noninteractive `-m` or `--no-edit` forms. Keep editor-driven amendments and broader history rewriting confirmable.
+- Keep native-tool and terminal permission patterns synchronized with the [global worktree convention](../../../.config/zed/AGENTS.md#git-worktrees).
+- Leave direct symbolic-link creation confirmable. Treat existing worktree-internal symlinks as user-managed repository state when native path operations are automatically allowed.
 - See [Zed worktree permission coupling](../../PROJECT.md#zed-worktree-permission-coupling) for rationale.
+- Use native `move_path` for strict descendant moves within agent worktrees and `git worktree move` for top-level worktree moves. Leave terminal `mv` confirmable.
+
+## Maintain disposable fixture repository permissions
+
+- Treat strict descendants of project-relative `.agent-<name>` directories as task-owned fixture repository scope, distinct from top-level agent worktrees. Permit audited local Git forms for fixture setup, history construction, ref management, teardown, and working-tree changes.
+- Require an explicit traversal-free strict-descendant `-C` path and a positive command grammar. Leave blanket trailing-argument allowances confirmable.
+- Keep cross-boundary path options, explicit credential access, external-helper selection, network subcommands, signing requests, submodule-recursion options, and unrestricted configuration confirmable. Permit remote metadata changes only when the form does not contact a remote.
+- Treat existing descendant state and user-managed configuration as trusted within this boundary, following the [documented residual limitations](../../PROJECT.md#zed-fixture-repository-permissions).
+- Keep commands whose `-C` operand is the top-level `.agent-<name>` worktree governed by the narrower worktree policy above. Descendant rules intentionally accept Git’s upward discovery as part of task-owned state.
 
 ## Extend the workflow
 

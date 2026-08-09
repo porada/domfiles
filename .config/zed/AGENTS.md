@@ -18,7 +18,7 @@
 - Place temporary files managed directly by the agent under one task-specific `.agent-<name>` directory at the relevant project root instead of scattering them across the project, unless applicable project instructions require another approved temporary namespace.
     - Use a unique, filesystem-safe `<name>` that identifies the task. Add a short suffix when needed to avoid collisions.
 - Treat `.agent-<name>` as the shared naming convention for temporary task directories and Git worktrees, not as a worktree-only path.
-    - Before reusing, moving, or deleting an existing `.agent-<name>` directory, inspect it and determine whether it is a registered worktree.
+    - Before reusing, moving, or deleting an existing `.agent-<name>` directory, inspect it and use `git --no-pager worktree list --porcelain` to determine whether it is registered. Add `-z` only when a parser consumes the output.
 - Helper scripts may remain in their task-specific `.agent-<name>` directory across sessions when likely reuse makes retaining them more efficient than recreating them. Treat that expected reuse as continued need under the cleanup rule.
 - Remove only temporary directories created for the current task when they are no longer needed.
 
@@ -52,6 +52,7 @@
     - Defer unrelated observations until the current task is complete, then mention them separately and briefly.
     - After three consecutive failed attempts, stop repeating the approach, identify the assumption that may be wrong, and ask one focused diagnostic question.
 - Make progress and failures explicit.
+    - Prefer positive, direct phrasing over double negatives.
     - State what now works and how it was verified.
     - Describe errors plainly with the evidence, known cause, and next corrective action.
     - When a time estimate would help the user plan their own work, give a concrete range and state its assumptions.
@@ -125,6 +126,7 @@ Command guidance applies to agent invocations and command examples, not reposito
 - Keep terminal commands direct and canonical.
     - Run one logical operation per tool call and set its working directory through the tool when supported.
     - Use canonical casing and documented option forms, and prefer literal project-relative operands.
+    - When terminal copying is necessary, default to `cp -n --`. Do not treat an existing destination as updated, and leave link-creating, link-preserving, overwriting, or recursive forms confirmable.
     - Avoid shell or interpreter wrappers, ad hoc environment assignments, command substitution, expansion, redirection, and pipelines unless they are necessary to the operation.
 - Prefer inspection before materialization or mutation.
     - During investigation, use list, inspect, check, dry-run, and no-execute modes where they answer the question.

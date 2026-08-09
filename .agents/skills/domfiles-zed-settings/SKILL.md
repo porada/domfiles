@@ -15,6 +15,7 @@ Use this skill as the canonical source for general Zed settings policy and workf
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
     - Exempt `file_scan_exclusions`. Preserve its repository-specific override without adding installed Zed defaults, following the [documented rationale](../../PROJECT.md#zed-project-scan-exclusions).
 - Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
+    - Within URL-pattern arrays, preserve hostname-scope groupings and alphabetize each group by the represented hostname rather than the raw escaped regex text.
 
 ## Choose the workflow
 
