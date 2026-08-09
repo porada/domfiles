@@ -1,6 +1,6 @@
 [alias]
-	a = add -v
-	c = commit -v
+	a = add --verbose
+	c = commit --verbose
 	p = pull
 	v = view
 
@@ -12,19 +12,20 @@
 	rc = rebase --continue
 	rs = rebase --skip
 
-	branches = branch -a
-	contributors = shortlog -sn
+	branches = branch --all
+	contributors = shortlog --numbered --summary
 	names = show --name-only
-	remotes = remote -v
-	tags = tag -l
+	renames = show --diff-filter=R --find-renames --summary
+	remotes = remote --verbose
+	tags = tag --list
 
 	skip = update-index --assume-unchanged
 	unskip = update-index --no-assume-unchanged
 
 	# Quick commits
-	boom = commit -am '💥' --allow-empty --no-verify
-	deps = commit -am 'Update dependencies'
-	rd = commit -am 'Update `README`'
+	boom = commit --all --allow-empty --message '💥' --no-verify
+	deps = commit --all --message 'Update dependencies'
+	rd = commit --all --message 'Update `README`'
 
 [commit]
 	gpgSign = true
@@ -45,8 +46,13 @@
 	ff = only
 
 [pager]
+	branches = false
+	contributors = false
 	diff = git-diff-highlight | less --chop-long-lines
+	remotes = false
+	renames = false
 	show = git-diff-highlight | less --chop-long-lines
+	tags = false
 
 [pull]
 	rebase = true
@@ -56,6 +62,7 @@
 	autoSetupRemote = true
 
 [rebase]
+	autoSquash = true
 	autoStash = true
 
 [rerere]
