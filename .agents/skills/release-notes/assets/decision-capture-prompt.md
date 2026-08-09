@@ -42,7 +42,7 @@ Identify:
 
 ## Final result
 
-Present the final accepted release notes when reasonably sized. For a long aggregate file or broad consistency pass, identify the changed release or package sections and quote only the passages needed to understand the decisions.
+Present the latest release-note result when reasonably sized. Describe it as accepted only when direct user evidence establishes acceptance. For a long aggregate file or broad consistency pass, identify the changed release or package sections and quote only the passages needed to understand the decisions.
 
 ## Material decisions
 

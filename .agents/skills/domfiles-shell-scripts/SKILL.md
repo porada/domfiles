@@ -12,6 +12,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 - For an explicit change, including a request that also uses review or audit language, investigate the affected scripts and cross-file invariants, make the smallest applicable edit, and use the change-validation workflow below.
 - For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md) and apply the shell-specific checks below.
 - For a standalone review, keep the task read-only. Apply the policy below and use the read-only validation workflow without formatting or modifying files.
+- For a standalone diagnosis, keep the task read-only. Reproduce the reported behavior when possible, trace the relevant execution path and cross-file invariants, and report the root cause with evidence using the read-only validation workflow below.
 
 ## Investigate the task
 
@@ -19,7 +20,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 2. Identify whether each in-scope file uses Fish or POSIX `sh` from its shebang and syntax rather than its extension alone.
 3. When `domlib` or `.config/fish/config.fish` is relevant, inspect both files before evaluating shared variables or functions.
 4. Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
-5. When `.config/fish/local.fish` is in the resolved scope, inspect or validate it directly. Do not report its [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
+5. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
 
 ## Check supported-environment compatibility
 
@@ -72,7 +73,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 ## Write robust shell control flow
 
-- Set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
+- In POSIX `sh`, set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.
     - Exempt `printf` output piped into `while`.
     - Exempt `domlib` command output piped into `while`.
@@ -99,7 +100,7 @@ After editing, use the narrowest applicable validation scope:
 4. Check formatting only for changed `.fish` files with `pnpm exec prettier --check <changed-fish-files>`. Do not pass POSIX or extensionless Fish files because the configured plugin registers only the `.fish` extension.
 5. Verify every applicable policy invariant above, including `domlib` ordering, usage, and `$DOMFILES_*` parity when relevant. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned unstaged and staged diffs, inspect task-owned untracked files directly without staging them, and review the final status without altering concurrent changes.
 
-## Validate a shell audit or review
+## Validate a shell audit, review, or diagnosis
 
 1. Inspect every in-scope shell file and applicable cross-file invariant.
 2. Verify the policy above against the current contents.

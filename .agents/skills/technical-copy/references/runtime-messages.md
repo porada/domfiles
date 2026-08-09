@@ -26,14 +26,15 @@ Apply the standard path and applicable project policy before this workflow.
 
 ## Preserve upstream errors
 
+- Evaluate exposure before including an upstream error. If the text is appropriate for the destination, preserve it completely and unchanged. If it is not, omit the upstream block or follow an explicit project redaction policy rather than editing it as though it remained the original error.
 - End project-authored context with a colon when an original error follows, then place one blank line before the unchanged upstream text.
 - Keep a useful filepath or other project-authored context in the headline before the colon. Do not add a period before the colon.
-- Do not merge, normalize, improve, summarize, duplicate, or speculatively explain wording owned by the upstream dependency.
-- Preserve the complete original error beneath the project-authored context unless the current task explicitly changes that ownership boundary.
+- Do not merge, normalize, improve, summarize, duplicate, or speculatively explain wording owned by the upstream dependency. An explicit project redaction policy authorizes only the redactions it defines and does not transfer ownership or permit other edits.
+- When included without redaction, preserve the complete original error beneath the project-authored context unless the current task explicitly changes that ownership boundary. Do not present redacted text as complete or unchanged.
 
 ## Propagate and review
 
-- Reuse a message pattern only across semantically equivalent failures. Adapt module attribution and dynamic values to the destination while preserving ownership boundaries.
+- Adapt module attribution and dynamic values to the destination while preserving ownership boundaries.
 - Keep related failures that share an operation structurally parallel. When one uses a `Failed to …` headline, preserve that headline across the family unless a materially different failure requires another framing.
 - Confirm that any prefix names the destination module rather than the source whose wording was consulted.
 - Once the user selects a structure, preserve its prefix, punctuation, line breaks, code formatting, and lack of terminal punctuation exactly across equivalent paths.

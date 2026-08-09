@@ -9,8 +9,9 @@ Use this workflow for README files, other technical documents, and GitHub issue 
 - When reproducing an existing heading, preserve its exact identifier spelling, significant characters, entities, and intentional markup. Omit an unchanged heading from a structural outline rather than normalizing its markup. Do not introduce nonbreaking characters, entities, or presentational markup where the source does not already use them unless project policy or the user requires it.
 - During feature work, update only the task-owned passage and the minimal navigation or adjacent copy needed to integrate it. Do not turn one documented addition into a broad document rewrite.
 - Preserve headings, section order, taglines, links, examples, and wording that the user has selected or restored unless the current request targets them.
-- Apply the global README permission rule to README edits. When permission is absent, provide the proposed structure or ready-to-use copy without modifying the file.
+- Apply the global README permission rule to README edits. When permission is absent, identify the target location and provide the proposed structure or ready-to-use copy without modifying the file.
 - Drafting a GitHub issue, pull request, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
+- For any security report—whether standalone or submitted through an issue or pull request form—also follow the [security-report workflow](security-reports.md).
 
 ## Design the reading path
 
@@ -27,29 +28,18 @@ Treat that sequence as a decision framework rather than a fixed template. A visu
 | Surface | Apply |
 | --- | --- |
 | README | Open with a compact project or package identity and practical value. Move through the first useful demonstration, installation, setup, and core usage before optional configuration or questions as applicable. Keep related projects, provenance, and license information near the end when established. Preserve intentional hero artwork, badges, and layout. |
-| Other technical document | Follow the established document hierarchy and keep each durable fact in its canonical home. Lead with the document’s purpose, decision, or required action and include only the context needed to understand it. |
-| Issue or pull request title and description | Follow the repository template. Make the problem, outcome, or scope recognizable immediately, then provide relevant evidence, impact, proposed or implemented changes, validation, and next action. For a security report, also apply the [security-report guidance](#compose-security-reports). |
+| Other technical document | Follow the established document hierarchy. Lead with the document’s purpose, decision, or required action and include only the context needed to understand it. |
+| Issue or pull request title and description | Follow the repository template. Make the problem, outcome, or scope recognizable immediately, then provide relevant evidence, impact, proposed or implemented changes, validation, and next action. |
 | Follow-up comment or code review | Lead with the answer, finding, or required action. Include only the thread context needed to support it, and distinguish required changes from optional suggestions. |
-
-## Compose security reports
-
-Follow the receiving platform’s template. When it separates the summary, details, proof of concept, and impact, give each fact one primary role and remove cross-section repetition without removing unique evidence.
-
-- **Title:** Prefer a familiar mechanism paired with a concrete security consequence. Keep lower-level terminology in the details unless it is needed for accuracy or distinguishability.
-- **Summary:** State the verified mechanism, affected security boundary, and representative impact. Retain any prerequisite or limitation needed to avoid overstating exploitability, while leaving its complete explanation to the impact section.
-- **Details:** Preserve the verified causal sequence and only the source identifiers needed to locate important transitions. If investigation disproves the original theory, rewrite the narrative around the verified mechanism rather than retaining the old framing through a caveat.
-- **Proof of concept:** Provide a complete, repeatable, minimally hazardous reproduction. Preserve the exact setup, configuration, control cases, and expected and actual behavior.
-- **Impact:** Identify affected users, attacker prerequisites, possible consequences, and limitations imposed by independent security boundaries. Distinguish those limitations from restoration of the bypassed security decision.
 
 ## Compose the content
 
 - Use short, title-cased headings unless another pattern is established. Keep FAQ questions and other quote-like headings in natural casing. Preserve an established heading rather than replacing it with a merely synonymous label.
-- Put the direct instruction, answer, finding, or outcome first. Keep prerequisites, caveats, alternatives, and evidence close to the claim or action they constrain.
+- Keep prerequisites, caveats, alternatives, and evidence close to the claim or action they constrain.
 - Use a callout for an operational constraint or risk that readers could otherwise miss. Place it beside the affected action, use the least severe established callout type that fits, and keep it concise. Do not use callouts for ordinary notes or decorative emphasis.
-- Use the smallest complete example that demonstrates the intended behavior. Place it next to the explanation it supports.
-- Present document fragments and heading outlines as rendered Markdown, not as an outer fenced block. Keep code fences only when they are part of the document content.
+- Present document fragments and heading outlines directly rather than wrapping the entire fragment in an outer code block. Preserve code blocks that are part of the document content.
 - Keep equivalent package-manager or environment paths parallel when the project presents them as equal options.
-- Across related documents or discussions, keep shared facts and terminology consistent while preserving each surface’s purpose and abstraction level. Link to a canonical source for broader guidance instead of repeating it.
+- Across related documents or discussions, keep shared facts and terminology consistent while preserving each surface’s purpose and abstraction level.
 - Preserve established layout and intentional link wording. Do not introduce or normalize presentation merely because another document uses it.
 
 ## Validate the result

@@ -15,7 +15,6 @@ Treat applicable project policy—including `AGENTS.md` instructions and narrowe
 - During feature implementation, treat relevant JSDoc, language-native documentation comments or docstrings, explanatory comments, runtime messages, and test titles as part of the feature. Do not turn a local addition into a broader copy pass.
 - For a review-only request, remain read-only and report only evidence-backed factual, clarity, consistency, or established-voice problems. Do not report optional rewrites merely because another phrasing is possible. This read-only rule takes precedence over the consistency and delivery defaults below.
 - For an explicit consistency request, inspect the named family and align shared facts and canonical terminology. Unify wording only across equivalent surfaces and scopes, preserving behaviorally distinct items and each surface’s purpose and abstraction level.
-- Apply the global README edit permission. When a needed README edit is not authorized, identify the target location and present the actual proposed copy immediately instead of editing the file.
 
 ## Use the standard path
 

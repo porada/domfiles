@@ -1,11 +1,11 @@
 ---
 name: domfiles-zed-permissions
-description: Edit, review, audit, and diagnose Zed agent permission behavior in `.config/zed/settings.json` and `.zed/settings.json`. Use this skill with `domfiles-zed-settings` whenever the resolved task scope includes `agent.tool_permissions`, `agent.sandbox_permissions`, terminal rules, native path-tool permissions, fetch or network allowances, worktree permissions, or a tool or command unexpectedly allowing, confirming, or denying. Do not use it for unrelated settings or documentation-only tasks.
+description: Edit, review, audit, and diagnose Zed agent permission behavior configured through `.config/zed/settings.json`. Use this skill with `domfiles-zed-settings` whenever the resolved task scope includes `agent.tool_permissions`, `agent.sandbox_permissions`, terminal rules, native path-tool permissions, fetch or network allowances, worktree permissions, or a tool or command unexpectedly allowing, confirming, or denying. Do not use it for unrelated settings or documentation-only tasks.
 ---
 
 # Zed agent permissions
 
-Use this skill as the canonical source for Zed agent permission policy and permission-specific workflow. Follow `domfiles-zed-settings` for general settings policy, workflow, validation, and reporting. Continue to follow applicable `AGENTS.md` files for repository-wide instructions. Do not copy the current command, domain, or settings inventory into this skill.
+Use this skill as the canonical source for Zed agent permission policy and permission-specific workflow. Follow `domfiles-zed-settings` for general settings policy, workflow, validation, and reporting. Continue to follow applicable `AGENTS.md` files for repository-wide instructions.
 
 ## Apply the permission policy
 
@@ -40,31 +40,16 @@ Use this skill as the canonical source for Zed agent permission policy and permi
     - Use `terminal.always_confirm` to override broader `terminal.always_allow` entries for hazardous argument forms, including code-execution hooks, package runners, destructive operations, force flags, and commands that uninstall the invoked tool itself. Account for global options, combined short flags, and accepted long-option abbreviations.
     - Do not report overlaps between `terminal.always_allow` and `terminal.always_confirm` when `terminal.always_confirm` acts as a safety override.
 
-## Maintain agent worktree permissions
-
-- Allow `git worktree prune` automatically only in dry-run forms. Keep actual pruning, out-of-namespace paths or branches, remote operations, shell globs, path traversal, parent-removing `rmdir -p`, and broader deletion mechanisms confirmable.
-- Keep forced worktree and branch operations constrained to their respective namespaces, and keep `--detach` confirmable.
-- Allow commits inside agent worktrees to stage tracked changes with `-a` or `--all` and to amend the current commit through bounded noninteractive `-m` or `--no-edit` forms. Keep editor-driven amendments and broader history rewriting confirmable.
-- Keep native-tool and terminal permission patterns synchronized with the [global worktree convention](../../../.config/zed/AGENTS.md#git-worktrees).
-- Leave direct symbolic-link creation confirmable. Treat existing worktree-internal symlinks as user-managed repository state when native path operations are automatically allowed.
-- See [Zed worktree permission coupling](../../PROJECT.md#zed-worktree-permission-coupling) for rationale.
-- Use native `move_path` for strict descendant moves within agent worktrees and `git worktree move` for top-level worktree moves. Leave terminal `mv` confirmable.
-
-## Maintain disposable fixture repository permissions
-
-- Treat strict descendants of project-relative `.agent-<name>` directories as task-owned fixture repository scope, distinct from top-level agent worktrees. Permit audited local Git forms for fixture setup, history construction, ref management, teardown, and working-tree changes.
-- Require an explicit traversal-free strict-descendant `-C` path and a positive command grammar. Leave blanket trailing-argument allowances confirmable.
-- Keep cross-boundary path options, explicit credential access, external-helper selection, network subcommands, signing requests, submodule-recursion options, and unrestricted configuration confirmable. Permit remote metadata changes only when the form does not contact a remote.
-- Treat existing descendant state and user-managed configuration as trusted within this boundary, following the [documented residual limitations](../../PROJECT.md#zed-fixture-repository-permissions).
-- Keep commands whose `-C` operand is the top-level `.agent-<name>` worktree governed by the narrower worktree policy above. Descendant rules intentionally accept Git’s upward discovery as part of task-owned state.
+When agent worktree or disposable fixture repository permissions are in scope, follow the [agent repository permission policy](references/agent-repository-permissions.md).
 
 ## Extend the workflow
 
 - For an explicit permission change, including a request that also uses review or audit language, follow the change workflow in `domfiles-zed-settings` and apply the [permission policy](#apply-the-permission-policy).
 - For a standalone permission audit, keep the task read-only, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), and use the permission audit validation below.
 - For a standalone permission review, keep the task read-only and use the permission review validation below without change planning, implementation, or formatting.
+- For a standalone permission diagnosis, keep the task read-only and follow the diagnosis workflow in `domfiles-zed-settings`. Apply [Investigate permission behavior](#investigate-permission-behavior) and [Evaluate permission behavior](#evaluate-permission-behavior), then use the permission read-only validation below.
 
-For either read-only workflow:
+For every read-only workflow:
 
 - Treat terminal command candidates as inert strings and evaluate them only through permission-pattern matching.
 - Limit shell execution to the bounded, non-mutating inspection and validation utilities required by the read-only validation workflow below.
@@ -91,7 +76,7 @@ For either read-only workflow:
 - Zed matches permission patterns case-insensitively by default. Follow the explicit case-sensitivity policy above for terminal commands, including patterns whose current tokens happen to be unambiguous.
 - Build positive branches for accepted grammar instead of trying to subtract cases with unsupported regex features.
 - Test against Zed’s normalized permission input, not merely the original shell line.
-- Permit exact `COMMAND --help` and `COMMAND --version` discovery forms for every allowed command family, even when the installed executable does not support one or both flags, so unsupported discovery attempts fail without prompting. Permit `COMMAND -h` and `COMMAND -v` only when both short forms have been verified to exit without executing input, reading commands from standard input, mutating state, or starting an interactive or workload mode. Keep every executable absent from the general allowance in the applicable shared discovery pattern, and keep all discovery forms end-anchored so flags cannot acquire operands.
+- Permit exact `COMMAND --help` and `COMMAND --version` discovery forms for every allowed command family, even when the installed executable does not support one or both flags, so unsupported discovery attempts fail without prompting. Permit `COMMAND -h` and `COMMAND -v` only when both short forms have been verified to exit without executing input, reading commands from standard input, mutating state, or starting an interactive or workload mode. Keep all discovery forms end-anchored so flags cannot acquire operands.
 - Apply optional repeated `MANPAGER=cat` and `PAGER=cat` prefixes to the general and both shared discovery patterns. Treat family-specific pager coverage independently from discovery-form ownership: preserve existing prefixes when they cover other approved forms, and do not remove them merely because exact discovery forms moved into a shared pattern.
 - Do not execute a destructive command merely to test a permission pattern.
 
@@ -114,20 +99,22 @@ Read the [permission evaluator reference](references/permission-evaluator.md) wh
 
 At the domain-specific step of the change-validation workflow in `domfiles-zed-settings`:
 
-1. Validate every changed pattern against representative inputs, using the [bounded smoke-test workflow](references/permission-evaluator.md#smoke-test-permission-patterns) only for eligible cases and current Zed source or observed Zed behavior for every other case:
+1. Validate every changed pattern against the representative inputs below using the [bounded smoke-test workflow](references/permission-evaluator.md#smoke-test-permission-patterns):
     - Intended commands or URLs that should match.
     - Hazardous forms that must match an override or remain unmatched by the allowance.
     - Near misses that must not match.
     - Every syntactic variant required by the policy above.
 2. Verify every applicable Zed permission policy invariant against the final values.
 
-## Validate a permission audit or review
+## Validate a permission audit, review, or diagnosis
 
 At the domain-specific step of the read-only validation workflow in `domfiles-zed-settings`:
 
-1. Validate relevant existing patterns against representative intended inputs, hazardous forms, and near misses, using the [bounded smoke-test workflow](references/permission-evaluator.md#smoke-test-permission-patterns) only for eligible cases and current Zed source or observed Zed behavior for every other case.
+1. Validate relevant existing patterns against representative intended inputs, hazardous forms, and near misses using the [bounded smoke-test workflow](references/permission-evaluator.md#smoke-test-permission-patterns).
 2. Verify the applicable Zed permission policy invariants against the audited contents.
 
 ## Extend the report
 
 For a permission change, state which forms are now allowed, which hazardous forms still require confirmation, and which requested forms were intentionally left confirmable.
+
+For a permission diagnosis, state the observed result, evaluated inputs, matching precedence, root cause, and corrective action without applying it.

@@ -1,26 +1,18 @@
 # Release structures
 
-Choose the smallest structure that communicates each material consumer decision.
+The exact italicized status bullets in this reference are status markers rather than ordinary outcome prose. Their leading `*` is intentional and follows the [release-note bullet-marker policy](../SKILL.md#write-concise-consumer-facing-prose). Preserve it instead of normalizing it.
 
 When an initial release or initial package section needs no more specific consumer-facing item, use exactly `* _Initial release._`. Do not use unbulleted prose or an emoji-only body.
 
 Do not repeat migration prose in later patch releases unless the user explicitly requests that reminder. When migration prose is intentionally repeated across one major release line, name that major version explicitly instead of referring to “this release.”
 
-## Concise single-package release
-
-Use a flat bullet list when every change belongs to one package and no thematic section improves comprehension:
-
-```text
-* Added support for the new input form.
-* Fixed handling of empty values.
-* Lowered the `engines` baseline to `node@>=20` (from `node@>=22`).
-```
-
 ## Aggregate release-note file
 
 Use `# <package> Release Notes` as the canonical top-level heading. Put `## Unreleased` first when present, then list linked `## [<version>](<release-url>)` sections newest-first and separate them with `---`. Omit the link only when no canonical release URL is available.
 
-When a supplied or previously approved aggregate file differs, preserve its heading hierarchy and inter-release delimiters unless the user approves normalization under the [approval gates](../SKILL.md#apply-approval-gates).
+For a new aggregate file shared by a synchronized package set, use a top-level title established by supplied context or repository metadata instead of selecting one package name. If neither establishes a title, ask rather than inventing one.
+
+When a supplied or previously approved aggregate file differs, preserve its heading hierarchy and inter-release delimiters unless the user approves normalization under the [approval gates](approval-gates.md).
 
 ## Structured release
 

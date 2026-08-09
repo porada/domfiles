@@ -26,10 +26,9 @@ Use this workflow for JSDoc and equivalent language-native documentation comment
 
 ## Propagate semantically
 
-- Copy canonical wording only when source and destination declarations share the same role, constraints, and observable behavior.
 - When family-wide wording depends on a subjective choice not established by project policy or a user decision, present one proposed canonical comment before propagating it.
 - Use parallel grammar and abstraction for genuinely parallel helpers, changing only the domain-specific terms. Do not force symmetry when responsibilities differ.
-- After copying shared comments, review destination-specific and adjacent comments independently. Previously acceptable local wording may become inconsistent beside the propagated family.
+- Previously acceptable local wording may require revision when it becomes inconsistent beside the propagated family.
 - Give related helpers their particular role in the larger control flow rather than interchangeable purpose comments.
 
 ## Review terminology and presentation
@@ -42,6 +41,6 @@ Use this workflow for JSDoc and equivalent language-native documentation comment
 
 ## Preserve and validate
 
-- Preserve user-selected wording, punctuation, tags, line breaks, and formatting exactly in later iterations and semantically equivalent destinations.
+- Preserve user-selected wording, punctuation, tags, line breaks, and formatting exactly in later iterations of the same destination. During initial propagation and across destinations, preserve wording, punctuation, and tags while wrapping each comment for its own project policy, formatter, indentation, and available width. Preserve selected line breaks when those constraints are equivalent, and do not rewrap accepted formatting merely for preference.
 - Keep edits within the requested declarations and minimal integration scope. Do not opportunistically revise accepted adjacent comments.
 - Run the project’s focused formatting, diagnostics, and whitespace validation after editing. Review the complete comment family after formatting because line wrapping and adjacency affect the final result.

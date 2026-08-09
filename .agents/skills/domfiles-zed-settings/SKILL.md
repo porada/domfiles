@@ -22,6 +22,7 @@ Use this skill as the canonical source for general Zed settings policy and workf
 - For an explicit change, including a request that also uses review or audit language, investigate the current behavior, plan the implementation, make the smallest applicable edit, and use the change-validation workflow below.
 - For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
 - For a standalone review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
+- For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, use the read-only validation workflow below, and report the root cause, evidence, and corrective action.
 
 ## Investigate and plan
 
@@ -49,13 +50,14 @@ After editing:
 
 Do not run the entire repository formatter when a targeted formatting check is sufficient.
 
-## Validate a Zed settings audit or review
+## Validate a Zed settings audit, review, or diagnosis
 
 1. Parse relevant JSON with `jq -e`.
 2. Run every applicable domain-specific read-only validation workflow.
 3. Verify the applicable general Zed settings policy invariants and repository-wide `AGENTS.md` instructions against the audited contents.
 
-## Report a change or review
+## Report a change, review, or diagnosis
 
 - For a change, lead with what changed.
 - For a review, report evidence-backed findings and identify any behavior that could not be verified.
+- For a diagnosis, report the reproduced behavior, root cause, evidence boundary, and corrective action.

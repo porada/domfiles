@@ -39,8 +39,8 @@ The outcome-shaped version applies the [prose rules](#write-concise-consumer-fac
 
 ## Choose the workflow
 
-- To edit existing notes, treat the supplied file or text as the working draft and verify it against the relevant changes when repository evidence is available.
-- To infer notes, honor the user’s explicit change scope. Otherwise compare the nearest relevant published tag strictly preceding the requested target with that target, build the change inventory, and edit the supplied note target or return a new draft.
+- To edit existing notes, treat the supplied file or text as the working draft and verify it against the relevant changes when repository evidence is available. For a user-supplied or previously approved draft, apply the [approval gates](references/approval-gates.md).
+- To infer notes, honor the user’s explicit change scope. Otherwise resolve the release scope below, use the nearest relevant published tag strictly preceding the target ref as the comparison boundary, build the change inventory through that target, and edit the supplied note target or return a new draft.
 - For a review-only request, keep the task read-only and report evidence-backed omissions or concrete consistency outliers without rewriting the notes. Distinguish defects from intentional or harmless variations.
 - Apply this skill’s structure, ordering, and prose rules without inspecting prior release notes or changelog entries for local conventions. Inspect them only when they are the requested draft or the user explicitly asks for comparison or consistency.
 
@@ -54,7 +54,7 @@ The outcome-shaped version applies the [prose rules](#write-concise-consumer-fac
     - Do not invent a version. Use an explicit `Unreleased` label when the next version has not been chosen.
 2. Detect the package manager and registry from repository configuration only when they are relevant to the evidence. Keep the note format independent of either.
 3. In a monorepo, determine which packages actually publish together, which release tag applies to each package, and whether the repository uses one shared release note or package-specific notes.
-4. Ask one focused question only when a missing release boundary or package scope cannot be resolved safely from the repository.
+4. Ask one focused question only when a missing target ref, preceding release boundary, or package scope cannot be resolved safely from the repository.
 
 ## Build an evidence-backed change inventory
 
@@ -81,66 +81,27 @@ If the complete release range or relevant artifact cannot be inspected, state th
 - Add a general reformatting warning only when evidence establishes a material release-level risk beyond the output change already described. Do not infer one merely because a formatter fix changes output. Place a warranted warning such as “Some existing files may be reformatted as a result” near the relevant top-level summary rather than burying it in details.
 - Inventory deprecation notices explicitly. Include one when it communicates material package status or a consumer action, and keep it concise.
 
-## Apply approval gates
-
-The approval gates below apply only to user-supplied or previously approved drafts. An explicit request to consolidate or restructure grants approval for that operation within the requested scope. Organize and consolidate an initial draft directly when evidence supports the result.
-
-For those drafts, propose and obtain approval before:
-
-- Removing or reclassifying a supplied release-note item, including treating a supplied refactor as internal-only.
-- Removing a supplied rationale or exact dependency version.
-- Adding, removing, or materially changing a consumer warning or evidence link.
-- Strengthening or weakening a supplied technical claim or qualifier.
-
 ## Propose thematic consolidation
 
 Look for bullets that verified source evidence or user-provided context shows are parts of one consumer-facing outcome. Similar vocabulary, adjacent placement, or a broad relationship is not enough. Do not invent an umbrella concept such as interoperability, compatibility, integration, or workflow to justify merging items.
 
-A shorter thematic bullet is easier to scan only when it preserves every material outcome and does not blur separate compatibility, migration, or breaking effects. It does not need to enumerate supporting behaviors merely to demonstrate completeness.
+A shorter thematic bullet is easier to scan only when it preserves every material outcome and does not blur separate compatibility, migration, or breaking effects.
 
 Treat exact rule identifiers as material outcomes. Keep distinct rules in separate, sortable bullets rather than replacing them with a category summary. Multiple changes to the same rule may share one bullet when they form one coherent change and splitting them would obscure the relationship.
 
-When approval is required, use this proposal format:
-
-**Before**
-
-```text
-* Added support for Prettier’s `checkIgnorePragma`, `insertPragma`, and `requirePragma` options.
-* Fixed cursor positioning and partial-range formatting.
-```
-
-**After**
-
-```text
-* Improved support for Prettier’s native formatting controls, including pragma options, cursor positioning, and partial-range formatting.
-```
-
-**Evidence**
-
-Explain the verified source or user context that connects the items.
-
-**Approval**
-
-Ask whether to apply the proposed wording.
+When approval is required, use the [gated-consolidation proposal](references/approval-gates.md#propose-a-gated-consolidation).
 
 Keep separate bullets when consolidation would hide a distinct consumer decision, downgrade a breaking change, combine unrelated package scopes, rely on an unsupported theme, or make the resulting sentence harder to scan. When context is insufficient, improve scanability by reordering the separate bullets rather than merging them.
 
-## Protect approved structure
-
-When approval is required for a major structural change, show the relevant before and after, explain the benefit, and ask whether to apply it before:
-
-- Converting bullets to prose or prose to bullets.
-- Introducing a named release theme.
-- Creating, renaming, removing, or materially reorganizing a heading or package section.
-- Moving a change into or out of `All Packages`.
-
 ## Choose the smallest useful structure
 
-Read the [release-structure reference](references/release-structures.md) when selecting or validating the note’s hierarchy. It defines the default shapes and rules for concise, aggregate, themed, and synchronized multi-package releases.
+Choose the smallest structure that communicates each material consumer decision. Use a flat bullet list when every change belongs to one package and no thematic section improves comprehension.
+
+Read the [release-structure reference](references/release-structures.md) for an initial release or initial package section, aggregate release-note file, clear theme, migration context, substantial group of related changes, nested hierarchy, hosted release body, repeated migration guidance, or synchronized multi-package release.
 
 ## Order items for quick scanning
 
-- Lead the overall note with its defining consumer-facing feature, breaking effect, or other material outcome. Put a warranted reformatting warning near the relevant summary.
+- Lead the overall note with its defining consumer-facing feature, breaking effect, or other material outcome.
 - In an ordinary mixed release, lead with new capabilities, then concrete output or behavior improvements, then broad compatibility outcomes, and put packaging last. Override this order only for a breaking change, an explicit release theme, or clearly greater consumer impact. Implementation complexity never determines prominence.
 - In a rule-heavy package section, put material peer or runtime requirements before routine rule maintenance when those requirements govern consumption.
 - Group rule changes by action in this order when applicable: `Enabled`, `Re-enabled`, `Updated`, `Lowered`, then `Disabled`. Alphabetize rule identifiers within each action group.
@@ -161,7 +122,7 @@ Read the [release-structure reference](references/release-structures.md) when se
 - Keep a concise, evidence-backed rationale when it identifies a replacement, temporary upstream limitation, or responsibility transfer that helps consumers interpret a disablement or removal. For a replacement, use the parenthetical form `Disabled X (in favor of Y).`
 - Verification does not make every identifier release-worthy. Name the capability rather than its module or API entry point when consumers do not need that identifier to act. Preserve the domain syntax of identifiers that remain, such as `<element>`, `--flag`, or `@scope/package`.
 - Use parallel wording for parallel changes without erasing intentional exceptions.
-- Wrap package names, versions, options, rules, file patterns, errors, and other machine-readable tokens in backticks.
+- In release-note prose outside headings, wrap package names, versions, options, rules, file patterns, errors, and other machine-readable tokens in backticks. Follow the canonical heading forms in the [release-structure reference](references/release-structures.md) without adding code formatting.
 - Hyperlink a package name only when its source repository is under `github.com/standard-config/*` or `github.com/porada/*`. Keep every other external package name backticked and unlinked, especially in `Updated ...` bullets.
 - Apply that allowlist only to package links. Continue to link advisories, migrations, specifications, pull requests, and other non-package evidence when the link helps consumers understand the change.
 - Default to neutral language. Preserve intentional humor, repetition, or tone when the user identifies it as deliberate.
@@ -186,11 +147,11 @@ Before delivery, reapply:
 
 - The [core principle](#apply-the-core-principle) and [evidence inventory](#build-an-evidence-backed-change-inventory).
 - The [epistemic precision](#preserve-epistemic-precision) rules.
-- The [approval gates](#apply-approval-gates), [thematic consolidation](#propose-thematic-consolidation), and [approved structure](#protect-approved-structure) rules.
-- The [release structures](references/release-structures.md), [ordering](#order-items-for-quick-scanning), and [prose](#write-concise-consumer-facing-prose) rules.
+- The [approval gates](references/approval-gates.md) for user-supplied or previously approved drafts and the [thematic-consolidation](#propose-thematic-consolidation) rules.
+- Any applicable [conditional release-structure rules](references/release-structures.md), plus the [ordering](#order-items-for-quick-scanning) and [prose](#write-concise-consumer-facing-prose) rules.
 - The [platform metadata](#keep-platform-metadata-out-of-the-note-body) exclusions.
 
-Correct any discrepancy before delivering.
+For drafting and editing, correct every discrepancy that the current request authorizes before delivery. For review-only tasks or gated changes awaiting approval, report the discrepancy without rewriting the notes.
 
 ## Deliver the result
 

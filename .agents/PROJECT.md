@@ -32,11 +32,11 @@ Information-looking forms receive the same treatment when their actual behavior 
 
 - `corepack` manager selectors can download the selected pnpm or Yarn release before displaying its help or version output.
 - Direct `git credential-* … get` calls invoke credential helpers and can print stored usernames and passwords.
-- HA API-token, alternate-endpoint, and debug-logging forms can expose, transmit, or log Supervisor credentials. macOS `security` password-output and decrypted-dump flags print Keychain secrets.
+- Home Assistant CLI API-token, alternate-endpoint, and debug-logging forms can expose, transmit, or log Supervisor credentials. macOS `security` password-output and decrypted-dump flags print Keychain secrets.
 - Package-runner operands named like discovery commands can install and execute packages, while option-looking first arguments to known mutating pnpm or Yarn script shorthands are forwarded to those scripts instead of producing package-manager help.
 - `sort --compress-program` and its accepted abbreviated long forms execute an arbitrary compression helper.
 
-These forms are denied rather than left confirmable so a discovery-looking command cannot be approved under a false premise. Custom HA config selection remains confirmable because it changes credential and endpoint sources without inherently disclosing them.
+These forms are denied rather than left confirmable so a discovery-looking command cannot be approved under a false premise. Custom Home Assistant configuration selection remains confirmable because it changes credential and endpoint sources without inherently disclosing them.
 
 ### Zed bulk configuration output
 
@@ -54,9 +54,9 @@ Git’s repository discovery can walk from a descendant into an enclosing worktr
 
 ### Zed generated-output deletion
 
-Directories named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` are treated as disposable generated output at any path depth. Native `delete_path` may remove either a directory root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
+Entries named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` and paths beneath them are treated as disposable generated output at any path depth. Because permissions match paths lexically, a matching root is intentionally allowed whether it is a directory or a regular file. Native `delete_path` may remove a matching root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
 
-Brace expansion, broader `rm` options, parent-removing `rmdir -p`, path traversal, paths outside those named trees, and similarly named directories remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
+Brace expansion, broader `rm` options, parent-removing `rmdir -p`, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
 
 ### Zed npm `--all` option
 
@@ -96,7 +96,7 @@ Automatic task integration permits explicit staging, commit-time staging of trac
 
 Permission patterns can require the worktree and branch namespaces independently but cannot compare their `<name>` suffixes, so pair equality remains an agent-level invariant. Forced operations remain namespace-bound. Non-forced branch deletion retains Git’s fully-merged check, while forced deletion bypasses it.
 
-Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Permission regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere inside an open worktree. The [worktree permission policy](skills/domfiles-zed-permissions/SKILL.md#maintain-agent-worktree-permissions) leaves direct symbolic-link creation confirmable, so native path allowances treat existing worktree-internal symlinks as previously trusted repository state. Top-level worktree moves must also update Git’s administrative metadata, while Zed’s sensitive-settings and outside-worktree symlink-escape checks remain additional confirmation gates.
+Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Permission regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere inside an open worktree. The [worktree permission policy](skills/domfiles-zed-permissions/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) leaves direct symbolic-link creation confirmable, so native path allowances treat existing worktree-internal symlinks as previously trusted repository state. Top-level worktree moves must also update Git’s administrative metadata, while Zed’s sensitive-settings and outside-worktree symlink-escape checks remain additional confirmation gates.
 
 Dry-run pruning can inspect stale worktree metadata without changing it. Actual pruning, complex or out-of-namespace inputs, and broader deletion mechanisms remain confirmable because they extend mutation beyond the bounded agent namespaces.
 

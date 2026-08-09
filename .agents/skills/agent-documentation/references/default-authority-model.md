@@ -11,8 +11,5 @@ Use this fallback only when a project has not defined its own agent-documentatio
 
 ## Apply the fallback
 
-- Apply a locally defined model instead whenever one becomes available.
 - Use existing documentation layers before proposing a new one.
 - Create a missing layer only when the requested task authorizes it and the durable detail has no safe existing owner.
-- Keep each normative detail in one canonical owner and replace secondary definitions with links.
-- Report an unresolved ownership decision instead of distributing the detail across several documents.
