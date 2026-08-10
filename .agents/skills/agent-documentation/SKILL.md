@@ -1,9 +1,9 @@
 ---
 name: agent-documentation
-description: Edit, review, audit, and maintain agent documentation in software projects, including `AGENTS.md`, `.agents/PROJECT.md`, and project-authored `.agents/skills/*` content. Use for agent-documentation authority, ownership, composition, routing, redundancy, and token-efficiency work when the project uses this model or has no established model. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, or source comments alone.
+description: Edit, review, audit, and maintain agent documentation and project-authored skill scripts in software projects, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` documentation, and reusable scripts with adjacent tests owned by those skills. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-owned script architecture. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
 ---
 
-# Project agent documentation
+# Project agent documentation and skill scripts
 
 Apply every applicable global and project instruction. Treat project instructions and a more specific project agent-documentation workflow as authoritative over this fallback.
 
@@ -26,6 +26,7 @@ Apply every applicable global and project instruction. Treat project instruction
 
 ## Choose the workflow
 
+- When a task adds, changes, reviews, or audits a reusable script or adjacent test owned by a project-authored skill, read the [skill-owned script policy](references/skill-owned-scripts.md) before planning the work. For a change, resolve skill and repository-root ownership, then follow applicable project and language implementation and validation workflows. For a standalone review or audit, keep the task read-only and follow applicable review or audit workflows. Update agent documentation only when the script contract, routing, or documented invocation changes.
 - An explicit request to change agent documentation uses the change workflow even when it also asks for a review or audit. Treat inspection as the evidence-gathering phase, then resolve the canonical owner, compose the change, and validate the final contents.
 - For a standalone ordinary review, keep the task read-only. Resolve the canonical owner and validate the existing contents, but skip composition, formatting, and every mutation.
 - For a standalone audit, keep the task read-only. Follow an applicable project audit workflow when one exists. Otherwise start from Git-tracked paths, add only explicitly named untracked documentation when local policy permits it, inspect the resolved documentation scope, report findings, and stop without formatting or mutation.
@@ -43,6 +44,7 @@ Apply every applicable global and project instruction. Treat project instruction
 
 - Update the selected canonical owner before adjusting secondary documents.
 - Preserve exact user terminology only when the terminology itself is required or established.
+- Write commit references as abbreviated hashes, following the repository’s established length. Use a full object ID only when disambiguation or an external format requires it.
 - Let rationale explain why a policy exists and link to its owner without repeating maintenance steps or exact inventory.
 - Keep `PROJECT.md` declarative and organized under broad second-level sections. Move agent actions, reporting exclusions, and workflows to the applicable `AGENTS.md` or domain skill, leaving facts, constraints, maintenance decisions, and rationale in `PROJECT.md`.
 - Keep skill descriptions limited to capability, triggering, and invocation language. Remove body text that only repeats why a skill loaded. When a description advertises review or audit, define an explicit read-only branch in the body that follows the workflow precedence above.
@@ -61,6 +63,6 @@ For a follow-up `Verify` request, execute the applicable global `Verify` procedu
 
 ## Report the result
 
-- For a change, state the canonical owner selected, the redundant definitions removed or replaced with links, and the validation performed.
+- For a change, identify the canonical owner and any redundant definitions removed or replaced with links. Follow the applicable communication policy for validation reporting.
 - For a review, lead with concrete findings, their evidence, the canonical owner, and the suggested fix. Do not edit files or return a rewritten replacement unless the user requests a change.
 - Report any ownership decision that remains unresolved instead of distributing the detail across multiple documents.

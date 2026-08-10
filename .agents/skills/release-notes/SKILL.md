@@ -1,15 +1,24 @@
 ---
 name: release-notes
-description: Draft, edit, review, and refine accurate package release notes and changelog entries from existing notes or verified changes. Use this skill immediately whenever the user asks for release notes, changelog notes, changelog entries, or release-ready prose for any change scope, including a single commit hash, commit range, pull request, branch, tag, diff, or changes since the latest release. Also use it for hosted release descriptions such as GitHub Release bodies and package-release wording or consistency checks, regardless of package manager or registry. Do not use it for ordinary commit summaries that are not intended as release or changelog prose.
+description: Draft, edit, review, and refine accurate package release notes and changelog entries from existing notes or verified changes. Use this skill immediately for the bare `Changelog` shorthand or whenever the user asks for release notes, changelog notes, changelog entries, or release-ready prose for any change scope, including a single commit hash, commit range, pull request, branch, tag, diff, or changes since the latest release. Also use it for hosted release descriptions such as GitHub Release bodies and package-release wording or consistency checks, regardless of package manager or registry. Do not use it for ordinary commit summaries that are not intended as release or changelog prose.
 ---
 
 # Package release notes
 
 Do not publish a release, create a tag, or bump a version unless the user explicitly requests that mutation.
 
+## Apply the `Changelog` shorthand
+
+Treat the exact prompt `Changelog` as this complete procedure:
+
+1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
+2. Resolve the affected publishable package scope and its release boundary or boundaries through [Resolve the release scope](#resolve-the-release-scope), using those defaults. Stop and ask whenever that workflow requires user direction.
+3. For each resolved release unit, use the initial-release marker when directed, or build the complete evidence inventory and derive the smallest consumer-facing release note.
+4. Output only the ready-to-paste changelog Markdown using the [draft delivery form](#deliver-the-result), with nothing before or after it. Do not edit or create a file, bump a version, create a tag, publish, or submit anything.
+
 ## Apply the core principle
 
-Keep two distinct layers throughout the task:
+For each non-initial release unit, keep two distinct layers throughout the task:
 
 - **Evidence inventory:** inspect the complete resolved change scope and record every verified release-relevant change, including details that may not appear in the final prose.
 - **Release note:** draft from independently material consumer outcomes rather than converting inventory clusters into prose. Select the smallest accurate set. Omit subordinate behavior when it only substantiates a broader outcome and does not change a consumer decision. Include internal maintenance only when it affects package consumers or the user requests another emphasis.
@@ -40,38 +49,53 @@ The outcome-shaped version applies the [prose rules](#write-concise-consumer-fac
 ## Choose the workflow
 
 - To edit existing notes, treat the supplied file or text as the working draft and verify it against the relevant changes when repository evidence is available. For a user-supplied or previously approved draft, apply the [approval gates](references/approval-gates.md).
-- To infer notes, honor the user’s explicit change scope. Otherwise resolve the release scope below, use the nearest relevant published tag strictly preceding the target ref as the comparison boundary, build the change inventory through that target, and edit the supplied note target or return a new draft.
+- To infer notes, honor the user’s explicit change scope. Otherwise [resolve the release scope](#resolve-the-release-scope), build the change inventory for the resolved range or ranges, and edit the supplied note target or return a new draft.
 - For a review-only request, keep the task read-only and report evidence-backed omissions or concrete consistency outliers without rewriting the notes. Distinguish defects from intentional or harmless variations.
 - Apply this skill’s structure, ordering, and prose rules without inspecting prior release notes or changelog entries for local conventions. Inspect them only when they are the requested draft or the user explicitly asks for comparison or consistency.
 
 ## Resolve the release scope
 
-1. Identify the target repository, package or synchronized package set, release version or unreleased state, and target ref.
+1. Identify the target repository, release version or unreleased state, and target ref.
+    - If the target ref cannot be resolved from the request or repository, stop and ask for direction.
+    - Do not invent a version. Use an explicit `Unreleased` label when the next version has not been chosen.
+2. Resolve the target publishable packages and release grouping before selecting any default release boundary.
+    - Use workspace manifests, release configuration, tag conventions, and package paths to determine whether packages release independently or as one synchronized set. Treat each independent package and each synchronized package set as a separate release unit.
+    - If the request does not identify a package, treat each publishable release unit as a candidate. Resolve its boundary before using its range in step 5 to determine whether it has unreleased changes.
+    - If package ownership or release grouping remains unclear, stop and ask for direction.
+3. Resolve the release boundary for each release unit.
     - Treat an explicitly requested lone commit as that commit’s diff against its first parent. For a root commit, use its complete contents.
     - Honor an explicit user-provided change range.
-    - Otherwise derive the nearest relevant published tag whose commit is an ancestor of and strictly older than the target. Use that tag through the target ref as the default range.
-    - Never select the target’s own tag, a newer tag, or a tag outside the target’s history. If no preceding relevant tag exists, treat the scope as an initial release or ask when the history is ambiguous.
-    - Do not invent a version. Use an explicit `Unreleased` label when the next version has not been chosen.
-2. Detect the package manager and registry from repository configuration only when they are relevant to the evidence. Keep the note format independent of either.
-3. In a monorepo, determine which packages actually publish together, which release tag applies to each package, and whether the repository uses one shared release note or package-specific notes.
-4. Ask one focused question only when a missing target ref, preceding release boundary, or package scope cannot be resolved safely from the repository.
+    - Otherwise derive one shared preceding tag for a synchronized package set and a separate package-relevant preceding tag for each independent package. Each tag must be an ancestor of and strictly older than the target. Use each tag through the target ref as that release unit’s default range.
+    - Never select the target’s own tag, a newer tag, or a tag outside the target’s history. If no preceding relevant tag can be located for a release unit, stop and ask for a release boundary or confirmation that it is an initial release. Do not infer an initial release from a missing tag.
+    - When the user identifies a release unit as an initial release, intentionally stop inspecting its change history and source. Resolve only the package and release structure needed to use the exact [initial-release marker](references/release-structures.md).
+4. Detect the package manager and registry from repository configuration only when they are relevant to the evidence. Keep the note format independent of either.
+5. Map the changes from each resolved range to its publishable packages. If the affected package scope remains unclear, stop and ask for direction.
 
 ## Build an evidence-backed change inventory
 
-Use repository evidence to infer a note and to verify the completeness of an existing draft. Review the complete change range rather than relying on commit subjects alone:
+Use repository evidence to infer a note and to verify the completeness of an existing draft. Review every complete non-initial change range rather than relying on commit subjects alone:
 
-- Inspect the diff from the resolved release boundary to the target ref. When editing existing notes, use that same scope to confirm their claims and identify material omissions.
+- Inspect the diff from each resolved release boundary to the target ref. When editing existing notes, use those same scopes to confirm their claims and identify material omissions.
 - Inspect package manifests, workspace metadata, changesets, migration notes, public types, exports, tests, and relevant documentation.
 - Treat added or expanded tests as verification, not proof that behavior changed. Promote a tested behavior only when source, artifacts, or before-and-after behavior establishes the consumer change.
 - When a claim concerns published contents, exports, source maps, provenance, or other package artifacts that source and manifests cannot establish, inspect the repository’s packed or built output through its applicable workflow.
 - Record consumer-facing capabilities, supported inputs, formatting behavior, APIs, configuration, interoperability, compatibility, fixes, breaking behavior, migrations, removed capabilities, changed defaults, and changes likely to reformat existing files.
 - Include meaningful packaging changes such as removed source maps, corrected exports, build provenance, or changed engine and peer baselines when they affect consumption.
-- Record dependency updates only when they are release-relevant. Name the resulting compatibility, behavior, or security impact when known.
+- Apply the [dependency update policy](#handle-dependency-updates).
 - Map implementation commits to a shared consumer-facing outcome only when source evidence supports that relationship. Otherwise, retain separate outcomes.
 - Verify exact identifiers, package names, version ranges, rule names, option names, and links against source before using them.
 - State uncertainty instead of turning an inference into a release-note claim.
 
-If the complete release range or relevant artifact cannot be inspected, state the evidence boundary—for example, that the draft is based only on supplied commits—instead of implying exhaustive verification.
+If any complete release range or relevant artifact cannot be inspected, state the evidence boundary—for example, that the draft is based only on supplied commits—instead of implying exhaustive verification.
+
+## Handle dependency updates
+
+- Never fetch or inspect a dependency’s changelog, release notes, repository history, or announcements merely because its version changed. An upstream dependency’s individual changelog never warrants an item in the current package’s release note.
+- Always omit development-only dependency updates and all transitive dependency updates, including those represented only in a lockfile.
+- Include one routine bullet for each direct runtime dependency update unless a material consumer-facing outcome already subsumes it. Do not include both the outcome and a generic dependency bullet for the same update.
+- Apply the [package-link map](references/package-links.md) to every routine dependency bullet, including its release-scope exclusions. Link an eligible mapped dependency to its exact mapped destination; use the form ``* Updated `dependency`.`` for an excluded or unlisted dependency. Omit versions and upstream-change summaries.
+- Keep one bullet per dependency, alphabetize the bullets by package name, and place them at the end of the applicable package section. Do not consolidate them.
+- Apply the [peer-dependency wording reference](references/peer-dependency-wording.md) instead when a release changes peer dependency ranges or classifications.
 
 ## Preserve epistemic precision
 
@@ -105,7 +129,6 @@ Read the [release-structure reference](references/release-structures.md) for an 
 - In an ordinary mixed release, lead with new capabilities, then concrete output or behavior improvements, then broad compatibility outcomes, and put packaging last. Override this order only for a breaking change, an explicit release theme, or clearly greater consumer impact. Implementation complexity never determines prominence.
 - In a rule-heavy package section, put material peer or runtime requirements before routine rule maintenance when those requirements govern consumption.
 - Group rule changes by action in this order when applicable: `Enabled`, `Re-enabled`, `Updated`, `Lowered`, then `Disabled`. Alphabetize rule identifiers within each action group.
-- Put routine non-peer package or plugin updates at the end of the package section. Let material compatibility, migration, or security impact override that placement.
 - Order other detail lists by their function and consumer impact rather than imposing one universal alphabetic scheme.
 
 ## Write concise consumer-facing prose
@@ -116,15 +139,15 @@ Read the [release-structure reference](references/release-structures.md) for an 
 - Prefer the most informative verb. For example, write “Lowered the `engines` baseline” when a runtime minimum decreases rather than the vaguer “Updated the `engines` baseline.”
 - Use `Fixed` only when a report, failing case, or before-and-after reproduction establishes a specific defect. Use `Improved` for broader stability or newly handled cases that were not established as a defect.
 - Use `compatibility` for cross-plugin or general host-tool behavior. Use `support` for a named control or workflow. For a broad compatibility outcome, use the shortest familiar integration category and omit hook types, implementation variants, and verification cases unless a remaining boundary changes consumer use or configuration. Do not expand a familiar category into a host-tool name plus a descriptive clause.
-- When a release changes peer dependency ranges or classifications, apply the [peer-dependency wording reference](references/peer-dependency-wording.md).
+- When an exact identifier is material, lead with it and its necessary qualifiers before broader package or integration context. Remove a generic phrase such as “handling of” when the sentence remains accurate without it.
 - Include the changed concept when it improves parallel wording. For example, write “Lowered `rule-name` severity to `warn`.”
 - State any affected scope that is narrower than the package default, such as “in test files.” Repeat the package, rule, or configuration identifier when a pronoun would make the scope ambiguous.
+- Omit package, publication, or other scope already established by the release surface or heading unless the bullet narrows or contrasts that scope.
 - Keep a concise, evidence-backed rationale when it identifies a replacement, temporary upstream limitation, or responsibility transfer that helps consumers interpret a disablement or removal. For a replacement, use the parenthetical form `Disabled X (in favor of Y).`
 - Verification does not make every identifier release-worthy. Name the capability rather than its module or API entry point when consumers do not need that identifier to act. Preserve the domain syntax of identifiers that remain, such as `<element>`, `--flag`, or `@scope/package`.
 - Use parallel wording for parallel changes without erasing intentional exceptions.
 - In release-note prose outside headings, wrap package names, versions, options, rules, file patterns, errors, and other machine-readable tokens in backticks. Follow the canonical heading forms in the [release-structure reference](references/release-structures.md) without adding code formatting.
-- Hyperlink a package name only when its source repository is under `github.com/standard-config/*` or `github.com/porada/*`. Keep every other external package name backticked and unlinked, especially in `Updated ...` bullets.
-- Apply that allowlist only to package links. Continue to link advisories, migrations, specifications, pull requests, and other non-package evidence when the link helps consumers understand the change.
+- Apply the [package-link map](references/package-links.md) to every package name in release-note prose outside headings.
 - Default to neutral language. Preserve intentional humor, repetition, or tone when the user identifies it as deliberate.
 - Treat user-approved wording as authoritative. Do not silently rewrite portions outside the requested revision.
 
@@ -146,7 +169,7 @@ Unless the user explicitly requests it, omit:
 Before delivery, reapply:
 
 - The [core principle](#apply-the-core-principle) and [evidence inventory](#build-an-evidence-backed-change-inventory).
-- The [epistemic precision](#preserve-epistemic-precision) rules.
+- The [epistemic precision](#preserve-epistemic-precision) and [dependency update](#handle-dependency-updates) rules.
 - The [approval gates](references/approval-gates.md) for user-supplied or previously approved drafts and the [thematic-consolidation](#propose-thematic-consolidation) rules.
 - Any applicable [conditional release-structure rules](references/release-structures.md), plus the [ordering](#order-items-for-quick-scanning) and [prose](#write-concise-consumer-facing-prose) rules.
 - The [platform metadata](#keep-platform-metadata-out-of-the-note-body) exclusions.

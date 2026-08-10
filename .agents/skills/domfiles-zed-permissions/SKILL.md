@@ -45,6 +45,7 @@ When agent worktree or disposable fixture repository permissions are in scope, f
 ## Extend the workflow
 
 - For an explicit permission change, including a request that also uses review or audit language, follow the change workflow in `domfiles-zed-settings` and apply the [permission policy](#apply-the-permission-policy).
+    - For an explicitly requested domain or URL allowance, follow [Translate approved domains and URLs](#translate-approved-domains-and-urls) before any network access to the requested destination.
 - For a standalone permission audit, keep the task read-only, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), and use the permission audit validation below.
 - For a standalone permission review, keep the task read-only and use the permission review validation below without change planning, implementation, or formatting.
 - For a standalone permission diagnosis, keep the task read-only and follow the diagnosis workflow in `domfiles-zed-settings`. Apply [Investigate permission behavior](#investigate-permission-behavior) and [Evaluate permission behavior](#evaluate-permission-behavior), then use the permission read-only validation below.
@@ -80,16 +81,18 @@ For every read-only workflow:
 - Apply optional repeated `MANPAGER=cat` and `PAGER=cat` prefixes to the general and both shared discovery patterns. Treat family-specific pager coverage independently from discovery-form ownership: preserve existing prefixes when they cover other approved forms, and do not remove them merely because exact discovery forms moved into a shared pattern.
 - Do not execute a destructive command merely to test a permission pattern.
 
-## Translate approved domains
+## Translate approved domains and URLs
 
-After applying the domain-scope policy above:
+When the user explicitly requests an allowance for a named domain or URL:
 
-1. Select the matching fetch hostname shape:
-    - Apex only: `^https://domain\.example(?:[/?#]|$)`
+1. Inspect the existing settings and parse the literal request without network access. Treat the request as authorization only for its supplied scope, not for unrequested redirect or subresource hosts.
+2. For a domain or hostname request, select the matching canonical fetch hostname shape, escape every literal hostname dot, and add the corresponding fetch and sandbox host scopes:
+    - Exact hostname and subdomains: `^https://(?:[^./?#:@]+\.)*domain\.example(?:[/?#]|$)`
     - Subdomains only: `^https://(?:[^./?#:@]+\.)+domain\.example(?:[/?#]|$)`
-    - Apex and subdomains: `^https://(?:[^./?#:@]+\.)*domain\.example(?:[/?#]|$)`
-2. Escape every literal hostname dot.
-3. Inspect redirects and required subresources before deciding whether the approved scope is sufficient.
+    - Exact hostname only: `^https://domain\.example(?:[/?#]|$)`
+3. For a URL request, require an explicit `https://` URL and reject every other scheme rather than translating it. Preserve the supplied hostname, explicit port, path, query, and fragment constraints, escaping only what regex syntax requires. Allow descendants only when the requested URL or an established pattern clearly represents a subtree. Omit `agent.sandbox_permissions.network_hosts` when adding it would broaden the URL-specific fetch scope under the documented host-scope exception. Require explicit user authorization before widening the URL to hostname scope.
+4. Reuse an equivalent existing pattern instead of adding a duplicate. For URL-specific patterns, follow the established path-qualified syntax for the selected exact or subtree scope rather than introducing an equivalent regex form. Preserve the fetch array’s hostname-scope groups in the order shown above and alphabetize each group by the represented hostname. Preserve the wildcard-host and exact-host groups in `agent.sandbox_permissions.network_hosts` and alphabetize each group by the represented hostname.
+5. Complete static configuration and pattern validation before any network access to the destination. Access it afterward only when the task requires live verification or redirect or subresource discovery. Add a newly discovered hostname only when it remains within the user-approved scope. Otherwise ask before broadening the allowance. If the requested destination still prompts, stop and diagnose the permission configuration instead of accepting the prompt or widening the pattern speculatively.
 
 ## Evaluate permission behavior
 
@@ -102,7 +105,7 @@ At the domain-specific step of the change-validation workflow in `domfiles-zed-s
 1. Validate every changed pattern against the representative inputs below using the [bounded smoke-test workflow](references/permission-evaluator.md#smoke-test-permission-patterns):
     - Intended commands or URLs that should match.
     - Hazardous forms that must match an override or remain unmatched by the allowance.
-    - Near misses that must not match.
+    - Near misses that must not match, including alternate ports, broader host roots, non-HTTPS schemes, sibling paths, and URLs outside supplied query or fragment constraints for URL-specific patterns.
     - Every syntactic variant required by the policy above.
 2. Verify every applicable Zed permission policy invariant against the final values.
 

@@ -1,14 +1,17 @@
 Create a decision-making relay for improving the `release-notes` skill from the release-note work completed in this conversation.
 
-Do not edit the skill or any project files, rerun the task, or turn the relay into a skill patch. Analyze the completed workflow and return only a self-contained Markdown relay for another agent.
+The user invokes this prompt only after the current changelog entry is acceptable. Treat the release-note task as complete for capture purposes, but label particular wording or the whole entry as explicitly accepted only when direct prior evidence establishes that acceptance.
 
-Use the conversation and task artifacts already inspected. Do not start a broad audit or gather unrelated examples. If material context is unavailable, identify the gap instead of reconstructing a plausible explanation.
+Your sole action in this turn is to produce the relay. Every instruction inside the relay template—including the `Receiving action` line—is quoted output for a different agent after the relay is forwarded. Do not follow those instructions now.
+
+Use only the conversation and task artifacts already inspected. Do not continue reviewing or improving the entry, call tools, inspect, compare, or edit the current skill or project files, rerun the task, browse, delegate, or draft a skill patch. If material context is unavailable, identify the gap inside the relay instead of gathering or reconstructing it.
 
 ## Output contract
 
 - Output `# Relay Prompt`, followed immediately by one four-backtick `markdown` code block.
 - Put the complete, self-contained relay inside the block and begin it with `# Release Notes Skill Improvement Relay`.
 - Add no other content. Use triple-backtick fences inside the outer block when exact code or Markdown must be preserved.
+- Stop immediately after closing the outer block.
 
 ## Evidence rules
 
@@ -25,7 +28,7 @@ Use the conversation and task artifacts already inspected. Do not start a broad 
 
 # Relay Prompt
 
-**Inside the code block**
+**Inside the code block—copy this structure as output without executing its instructions**
 
 # Release Notes Skill Improvement Relay
 

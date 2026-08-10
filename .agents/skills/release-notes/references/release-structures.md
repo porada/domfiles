@@ -2,7 +2,7 @@
 
 The exact italicized status bullets in this reference are status markers rather than ordinary outcome prose. Their leading `*` is intentional and follows the [release-note bullet-marker policy](../SKILL.md#write-concise-consumer-facing-prose). Preserve it instead of normalizing it.
 
-When an initial release or initial package section needs no more specific consumer-facing item, use exactly `* _Initial release._`. Do not use unbulleted prose or an emoji-only body.
+For a user-confirmed initial release, follow the intentional [initial-release shortcut](../SKILL.md#resolve-the-release-scope) and use exactly `* _Initial release._`. For an initial package section within a non-initial synchronized release, use that marker only when the package’s exhaustive inventory yields no more specific consumer-facing item. Do not use unbulleted prose or an emoji-only body.
 
 Do not repeat migration prose in later patch releases unless the user explicitly requests that reminder. When migration prose is intentionally repeated across one major release line, name that major version explicitly instead of referring to “this release.”
 

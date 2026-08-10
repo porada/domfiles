@@ -1,14 +1,15 @@
 Create a decision-making relay for improving the `technical-copy` skill from the copy work completed in this conversation.
 
-Do not edit the skill or any project files, rerun the task, or turn the relay into a skill patch. Analyze the completed workflow and return only a self-contained Markdown relay for another agent.
+Treat the copy task as complete for capture purposes. Your sole action in this turn is to produce the relay. Every instruction inside the relay template—including the `Receiving action` line—is quoted output for a different agent after the relay is forwarded. Do not follow those instructions now.
 
-Use the conversation and task artifacts already inspected. Do not start a broad audit or gather unrelated examples. If material context is unavailable, identify the gap instead of reconstructing a plausible explanation.
+Use only the conversation and task artifacts already inspected. Do not continue reviewing or improving the result, call tools, inspect, compare, or edit the current skill or project files, rerun the task, browse, delegate, or draft a skill patch. If material context is unavailable, identify the gap inside the relay instead of gathering or reconstructing it.
 
 ## Output contract
 
 - Output `# Relay Prompt`, followed immediately by one four-backtick `markdown` code block.
 - Put the complete, self-contained relay inside the block and begin it with `# Technical Copy Skill Improvement Relay`.
 - Add no other content. Use triple-backtick fences inside the outer block when exact code or Markdown must be preserved.
+- Stop immediately after closing the outer block.
 
 ## Evidence rules
 
@@ -25,7 +26,7 @@ Use the conversation and task artifacts already inspected. Do not start a broad 
 
 # Relay Prompt
 
-**Inside the code block**
+**Inside the code block—copy this structure as output without executing its instructions**
 
 # Technical Copy Skill Improvement Relay
 
@@ -42,7 +43,7 @@ Identify:
 
 ## Final result
 
-Present the final accepted copy when reasonably sized. For a long document or broad consistency pass, identify the changed copy units and quote only the passages needed to understand the decisions.
+Present the latest copy result when reasonably sized. Describe it as accepted only when direct user evidence establishes acceptance. For a long document or broad consistency pass, identify the changed copy units and quote only the passages needed to understand the decisions.
 
 ## Material decisions
 
