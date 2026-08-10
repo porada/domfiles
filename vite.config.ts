@@ -18,6 +18,7 @@ export default defineConfig({
 	staged: {
 		'*': 'pnpm prettier --ignore-unknown --write',
 		'*.fish': 'pnpm lint:fish',
+		'*.rs': () => 'pnpm lint:rs:check',
 		'*.sh': 'pnpm lint:sh',
 		'*.ts': () => 'pnpm lint:ts:check',
 		'bin/!(domlib|git-diff-highlight)': [

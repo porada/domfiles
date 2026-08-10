@@ -1,38 +1,42 @@
 import type { AstPath, ParserOptions, Plugin } from 'prettier';
 import { exec, NonZeroExitError } from 'tinyexec';
 
-type FishAst = {
+type RustAst = {
 	formattedText: string;
 	sourceLength: number;
 };
 
 export const languages: Plugin['languages'] = [
 	{
-		extensions: ['.fish'],
-		name: 'Fish',
-		parsers: ['fish'],
+		extensions: ['.rs'],
+		name: 'Rust',
+		parsers: ['rust'],
 	},
 ];
 
 export const parsers: Plugin['parsers'] = {
-	fish: {
-		astFormat: 'fish-text',
+	rust: {
+		astFormat: 'rust-text',
 
 		/* v8 ignore next -- @preserve */
 		locStart: () => 0,
 		/* v8 ignore next -- @preserve */
-		locEnd: (node: FishAst) => node.sourceLength,
+		locEnd: (node: RustAst) => node.sourceLength,
 
 		parse: async (
 			text: string,
 			options: ParserOptions
-		): Promise<FishAst> => {
+		): Promise<RustAst> => {
 			try {
-				const { stdout } = await exec('fish_indent', [], {
-					nodePath: false,
-					stdin: text,
-					throwOnError: true,
-				});
+				const { stdout } = await exec(
+					'rustfmt',
+					['--edition', '2024', '--emit', 'stdout'],
+					{
+						nodePath: false,
+						stdin: text,
+						throwOnError: true,
+					}
+				);
 
 				return {
 					formattedText: stdout,
@@ -46,8 +50,8 @@ export const parsers: Plugin['parsers'] = {
 };
 
 export const printers: Plugin['printers'] = {
-	'fish-text': {
-		print: (path: AstPath<FishAst>): string => path.node.formattedText,
+	'rust-text': {
+		print: (path: AstPath<RustAst>): string => path.node.formattedText,
 	},
 };
 
@@ -55,7 +59,7 @@ function reportFormattingError(
 	filepath: string | undefined,
 	error: unknown
 ): never {
-	let message = '[prettier-plugin-fish] Failed to format';
+	let message = '[prettier-plugin-rust] Failed to format';
 
 	if (filepath) {
 		message += ` \`${filepath}\``;

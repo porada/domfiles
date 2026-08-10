@@ -1,6 +1,6 @@
 import type { Plugin } from 'prettier';
 import { format, formatWithCursor } from 'prettier';
-import { expect, expectTypeOf, test } from 'vite-plus/test';
+import { expect, expectTypeOf, test, vi } from 'vite-plus/test';
 import * as pluginFish from './index.ts';
 
 test('exposes correct public API', () => {
@@ -22,55 +22,162 @@ echo "$name" > /dev/null 2>&1
 `;
 
 test('formats Fish files', async () => {
-	const output = await format(TEST_FISH, {
-		parser: 'fish',
+	const options = {
+		parser: 'fish' as const,
 		plugins: [pluginFish],
-	});
+	};
+
+	const output = await format(TEST_FISH, options);
 
 	expect(output).toMatchSnapshot();
-});
-
-test('formats `.fish` files without an explicit parser', async () => {
-	const output = await format(TEST_FISH, {
-		filepath: 'test.fish',
-		plugins: [pluginFish],
-	});
-
-	expect(output).toMatchSnapshot();
+	await expect(format(output, options)).resolves.toBe(output);
 });
 
 test('preserves escaped trailing whitespace from `fish_indent`', async () => {
-	const source = "printf '<%s>\\n' test\\ \n";
-	const output = await format(source, {
+	const input = "printf '<%s>\\n' test\\ \n";
+
+	const output = await format(input, {
 		parser: 'fish',
 		plugins: [pluginFish],
 	});
 
-	expect(output).toBe(source);
+	expect(output).toBe(input);
 });
 
-test('leaves partial ranges unchanged', async () => {
-	const source = 'echo    test\necho    test';
-	const output = await format(source, {
-		parser: 'fish',
+test('preserves native formatter output with `tabWidth` and `useTabs`', async () => {
+	const options = {
+		parser: 'fish' as const,
 		plugins: [pluginFish],
-		rangeEnd: 13,
-		rangeStart: 0,
+	};
+
+	const expectedOutput = await format(TEST_FISH, options);
+	const output = await format(TEST_FISH, {
+		...options,
+		tabWidth: 8,
+		useTabs: true,
 	});
 
-	expect(output).toBe(source);
+	expect(output).toBe(expectedOutput);
 });
 
-test('preserves a cursor at the end of the source', async () => {
-	const source = 'echo    test\n';
-	const result = await formatWithCursor(source, {
-		cursorOffset: source.length,
+test('respects `cursorOffset` at the end of the input', async () => {
+	const input = 'echo    foo\n';
+	const expectedOutput = 'echo foo\n';
+
+	const result = await formatWithCursor(input, {
+		cursorOffset: input.length,
 		parser: 'fish',
 		plugins: [pluginFish],
 	});
 
 	expect(result).toMatchObject({
-		cursorOffset: 10,
-		formatted: 'echo test\n',
+		cursorOffset: expectedOutput.length,
+		formatted: expectedOutput,
 	});
+});
+
+test('respects `embeddedLanguageFormatting`', async () => {
+	const input = `\`\`\`fish
+echo    foo
+\`\`\`
+`;
+
+	const outputs: string[] = [];
+
+	for (const embeddedLanguageFormatting of ['auto', 'off'] as const) {
+		outputs.push(
+			await format(input, {
+				embeddedLanguageFormatting,
+				parser: 'markdown',
+				plugins: [pluginFish],
+			})
+		);
+	}
+
+	expect(outputs).toMatchInlineSnapshot(`
+		[
+		  "\`\`\`fish
+		echo foo
+		\`\`\`
+		",
+		  "\`\`\`fish
+		echo    foo
+		\`\`\`
+		",
+		]
+	`);
+});
+
+test('respects `filepath`', async () => {
+	const expectedOutput = await format(TEST_FISH, {
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+	const output = await format(TEST_FISH, {
+		filepath: 'test.fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toBe(expectedOutput);
+});
+
+test('handles empty files', async () => {
+	const input = '\n';
+
+	const output = await format(input, {
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toBe('');
+});
+
+test('preserves comment-only files', async () => {
+	const input = '# Comment\n';
+
+	const output = await format(input, {
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toBe(input);
+});
+
+test('reports formatting errors', async () => {
+	const input = 'echo foo\n';
+	const options = {
+		parser: 'fish' as const,
+		plugins: [pluginFish],
+	};
+
+	vi.stubEnv('PATH', '');
+
+	try {
+		const errorWithSource = (await format(input, {
+			filepath: 'foo/bar.fish',
+			...options,
+		}).catch((error: unknown) => error)) as Error;
+		const errorWithoutSource = (await format(input, options).catch(
+			(error: unknown) => error
+		)) as Error;
+
+		const [errorMessageWithSource] = errorWithSource.message.split('\n');
+		const [errorMessageWithoutSource] =
+			errorWithoutSource.message.split('\n');
+
+		expect(errorWithSource).toBeInstanceOf(Error);
+		expect(errorWithSource.cause).toBeInstanceOf(Error);
+		expect(errorMessageWithSource).toMatchInlineSnapshot(
+			`"[prettier-plugin-fish] Failed to format \`foo/bar.fish\`:"`
+		);
+
+		expect(errorWithoutSource).toBeInstanceOf(Error);
+		expect(errorWithoutSource.cause).toBeInstanceOf(Error);
+		expect(errorMessageWithoutSource).toMatchInlineSnapshot(
+			`"[prettier-plugin-fish] Failed to format:"`
+		);
+		expect(errorWithoutSource.message).toContain('\n\n');
+	} finally {
+		vi.unstubAllEnvs();
+	}
 });

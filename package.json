@@ -26,6 +26,8 @@
 		"eslint": "^10.8.1",
 		"prettier": "catalog:",
 		"prettier-plugin-fish": "workspace:*",
+		"prettier-plugin-rust": "workspace:*",
+		"prettier-plugin-toml": "workspace:*",
 		"typescript": "catalog:",
 		"vite-plus": "catalog:"
 	},

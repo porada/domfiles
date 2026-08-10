@@ -110,6 +110,7 @@ Assume the following non-standard development commands are system-installed and 
 | Command | Purpose | Guidance |
 | --- | --- | --- |
 | `actionlint` | GitHub Actions correctness | — |
+| `cargo` | Rust package management and workspace workflows | — |
 | `fd` | Filesystem path search | — |
 | `fish` | Fish shell and configuration checks | — |
 | `jq` | JSON querying and transformation | — |
@@ -117,8 +118,10 @@ Assume the following non-standard development commands are system-installed and 
 | `plugins` | Agent plugin installation | Invoke directly—not through `npx` or `pnpm dlx` |
 | `pnpm` | JavaScript package management | Preferred. Use `run` for scripts, `exec` for local binaries, and `dlx` for undeclared one-offs |
 | `rg` | File-content search | — |
+| `rustc` | Direct Rust compilation | Use for standalone source files |
 | `shellcheck` | Shell-script analysis | — |
 | `skills` | Agent skill management | Invoke directly—not through `npx` or `pnpm dlx` |
+| `taplo` | TOML formatting and validation | — |
 | `yarn` | JavaScript package management | Use for Yarn-based projects |
 | `zizmor` | GitHub Actions security reviews | — |
 

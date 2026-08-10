@@ -1,34 +1,34 @@
 import type { AstPath, ParserOptions, Plugin } from 'prettier';
 import { exec, NonZeroExitError } from 'tinyexec';
 
-type FishAst = {
+type TOMLAst = {
 	formattedText: string;
 	sourceLength: number;
 };
 
 export const languages: Plugin['languages'] = [
 	{
-		extensions: ['.fish'],
-		name: 'Fish',
-		parsers: ['fish'],
+		extensions: ['.toml'],
+		name: 'TOML',
+		parsers: ['toml'],
 	},
 ];
 
 export const parsers: Plugin['parsers'] = {
-	fish: {
-		astFormat: 'fish-text',
+	toml: {
+		astFormat: 'toml-text',
 
 		/* v8 ignore next -- @preserve */
 		locStart: () => 0,
 		/* v8 ignore next -- @preserve */
-		locEnd: (node: FishAst) => node.sourceLength,
+		locEnd: (node: TOMLAst) => node.sourceLength,
 
 		parse: async (
 			text: string,
 			options: ParserOptions
-		): Promise<FishAst> => {
+		): Promise<TOMLAst> => {
 			try {
-				const { stdout } = await exec('fish_indent', [], {
+				const { stdout } = await exec('taplo', ['fmt', '-'], {
 					nodePath: false,
 					stdin: text,
 					throwOnError: true,
@@ -46,8 +46,8 @@ export const parsers: Plugin['parsers'] = {
 };
 
 export const printers: Plugin['printers'] = {
-	'fish-text': {
-		print: (path: AstPath<FishAst>): string => path.node.formattedText,
+	'toml-text': {
+		print: (path: AstPath<TOMLAst>): string => path.node.formattedText,
 	},
 };
 
@@ -55,7 +55,7 @@ function reportFormattingError(
 	filepath: string | undefined,
 	error: unknown
 ): never {
-	let message = '[prettier-plugin-fish] Failed to format';
+	let message = '[prettier-plugin-toml] Failed to format';
 
 	if (filepath) {
 		message += ` \`${filepath}\``;

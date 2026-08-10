@@ -124,11 +124,11 @@ The portable `release-notes` and `technical-copy` skills include decision-captur
 
 The [global system-available tooling list](../.config/zed/AGENTS.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
 
-The list also includes `fish`, `node`, and `pnpm` even though `domfiles-sync-install` classifies them as primary dependencies: they support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
+The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
 
 The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system-maintenance utility outside coding workflows. `vim` is an interactive editor.
 
-`brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, and `npx`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
+`brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
 
 ### Package release-note bullet marker
 
@@ -194,14 +194,6 @@ The Instagram branch intentionally combines `-t 60` and `-shortest` so output en
 
 The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations. Abbreviations defined outside domfiles are not preserved across shell startup.
 
-### Fish formatter plugin
-
-`prettier-plugin-fish` is intentionally a thin whole-file wrapper around `fish_indent`. Its output is preserved verbatim, and `fish_indent` owns Fish formatting semantics. Prettier options such as `tabWidth` and `useTabs` intentionally do not affect Fish output.
-
-Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. `fish_indent` has no range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged.
-
-The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports. The assertion’s forward-compatibility value remains despite the current `Plugin` properties being optional.
-
 ### Fish local configuration
 
 `.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.
@@ -213,6 +205,20 @@ The `expectTypeOf(pluginFish).toExtend<Plugin>()` assertion intentionally serves
 ### Peer dependency versions
 
 Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints and are not intended to mirror the currently resolved version.
+
+### Prettier formatter wrappers
+
+`prettier-plugin-fish`, `prettier-plugin-rust`, and `prettier-plugin-toml` are intentionally thin whole-file wrappers around Homebrew-provided `fish_indent`, `rustfmt`, and `taplo`, respectively. Each native formatter’s output is preserved verbatim, and that formatter owns its language’s formatting semantics. Prettier options such as `tabWidth` and `useTabs` intentionally do not affect their output.
+
+The Rust wrapper invokes `rustfmt --edition 2024 --emit stdout`. The explicit edition is required because direct stdin formatting otherwise defaults to Rust 2015. Native `rustfmt` defaults own all remaining Rust formatting policy, so the repository intentionally has no `rustfmt.toml` and exposes no duplicate Prettier options. The TOML wrapper invokes `taplo fmt -` and likewise relies on the native formatter’s defaults, so the repository has no Taplo configuration or duplicate Prettier options. Homebrew’s `fish`, `rust`, and `taplo` formulas provision all three native formatters, while `rustup` and `rust-analyzer` are intentionally unmanaged.
+
+Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. None of the native formatters has a range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged. Prettier’s standalone mode is also intentionally unsupported because these wrappers require a Node.js process to execute their external formatter binaries.
+
+Prettier pragma comments—including `@format`, `@prettier`, `@noformat`, and `@noprettier`—are intentionally unsupported. The wrappers omit `hasPragma`, `hasIgnorePragma`, and `insertPragma`, so `requirePragma` and `checkIgnorePragma` do not gate formatting and `insertPragma` does not add a pragma.
+
+Interior cursor mapping is intentionally omitted. The wrappers expose a single whole-file AST node because the native formatters provide neither token locations nor source maps. End-of-input cursor positions remain supported, but interior cursors may not remain attached to the same token after formatting. The wrappers do not implement heuristic source-to-output mapping.
+
+Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports. The assertion’s forward-compatibility value remains despite the current `Plugin` properties being optional.
 
 ### Repository-scoped commands
 

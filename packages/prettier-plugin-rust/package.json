@@ -1,5 +1,5 @@
 {
-	"name": "prettier-plugin-fish",
+	"name": "prettier-plugin-rust",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",

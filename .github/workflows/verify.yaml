@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - run: brew install fish
+      - run: brew install fish rust taplo
       - uses: pnpm/setup@v2.0.1
         with:
           cache: true
@@ -34,6 +34,20 @@ jobs:
           persist-credentials: false
       - run: brew install fish
       - run: bin/domfiles-dev-lint-fish
+
+  lint-rs:
+    name: lint / rs
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: brew install rust
+      - uses: pnpm/setup@v2.0.1
+        with:
+          cache: true
+          runtime: node@24
+      - run: pnpm lint:rs:check
 
   lint-sh:
     name: lint / sh
