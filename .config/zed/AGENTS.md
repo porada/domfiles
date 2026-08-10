@@ -9,9 +9,14 @@
 
 - Always assume that others may be working concurrently in the same project.
 - Ignore untracked files named `TODO` or `TODO.*`. Do not read or modify them unless the user explicitly requests work on them.
-- Always treat subagents’ extremely short context windows as a critical constraint.
-    - Keep each assignment limited to the minimum necessary scope.
-    - Use additional subagents when needed to keep each assignment small.
+- Use subagents as context-isolation boundaries for evidence gathering whose source count or output size cannot be bounded safely before execution.
+    - Delegate exploratory online research before the first potentially unbounded search, fetch, or open-ended navigation. Treat searches across GitHub issues, pull requests, discussions, release histories, and similar collections as exploratory.
+    - For local investigation, first narrow the scope and use native pagination or output limits. Delegate broad command output, large Git ranges, or independent repository audit scopes when those controls are insufficient and the main thread needs only a concise result.
+    - Treat subagents’ extremely short context windows as a critical constraint. Give each one a narrow question, explicit source constraints and stop conditions, and a concise output contract. Default to the five strongest findings with URLs or project-relative evidence, and split independent questions across subagents instead of broadening one assignment.
+    - Keep final synthesis and decisions in the main thread. Save substantial supporting evidence in the [task-specific temporary directory](#temporary-files) and read only targeted portions back into the main thread.
+    - If a subagent fails or exhausts its context, continue in the original thread and start a new, narrower subagent rather than repeating the unbounded investigation in the main thread.
+- When online research depends on authenticated or otherwise nontransferable browser state, keep it in the main thread but define a narrow source count and stopping point before browsing.
+- Do not delegate known bounded retrieval, targeted diagnostics or file reads, reliably bounded commands, or the `Verify` shorthand solely for context isolation. Do not delegate mutating work merely because its validation may be verbose.
 
 ## Temporary files
 
@@ -90,10 +95,6 @@
 - Disable commit signing with `git -c commit.gpgsign=false commit …` when creating commits in disposable Git repositories for tests so global signing configuration does not make the test interactive.
 - Invoke commands by name through `PATH` instead of using absolute executable paths.
     - Use an absolute path only when selecting a specific installation is required, `PATH` resolution is being diagnosed, or another concrete constraint makes the location material. Make the justification evident.
-- Prefer the agent’s native fetch tooling when the task only requires retrieving or reading content from a known URL.
-    - This preference does not apply to web searches.
-    - Use `curl` when command line HTTP behavior is relevant, native fetch tooling lacks a required capability, exact response bytes or files are needed, or the request must run in a shell, container, or remote environment.
-    - Preserve explicit user requests, project workflows, and repository code that use `curl`.
 
 ### System-available tooling
 
@@ -121,6 +122,12 @@ Command guidance applies to agent invocations and command examples, not reposito
 - Prefer the most specific native tool that directly represents the operation.
     - Use native file, search, diagnostics, fetch, and browser tools instead of shell commands when they can complete the task.
     - Use the terminal for repository workflows and capabilities unavailable through a dedicated tool.
+- Access ordinary local files and directly addressable URLs without MCP indirection.
+    - Use native file tools for ordinary local files and native fetch tooling for known URLs. This preference does not apply to web searches.
+    - Use `cat` or `curl` when exact bytes, delivery through standard input, a necessary shell pipeline, command-line HTTP behavior, exact response files, or execution in a shell, container, or remote environment is material to the task. Prefer passing a file path directly when the downstream command supports it. Preserve explicit user requests, project workflows, and repository code that use `curl`.
+    - Do not use MCP servers as generic filesystem or HTTP proxies. Do not open the same file or URL through Chrome MCP, browser automation, a subagent, or another indirect proxy merely because direct access failed.
+    - If direct access fails because of a tool, permission, sandbox, network, or unexplained transport error, stop retrieving that resource and report the resource, attempted method, exact error, and smallest corrective action. Correct ordinary path or URL mistakes through direct discovery. Do not submit an external tooling issue unless the user explicitly requests it.
+    - Use MCP or a browser when the task depends on server-owned semantics, remote-only state, rendered DOM state, user interaction, browser-managed downloads, nontransferable authentication, or an explicit user or project workflow. Select that route for the required capability, not as a retrieval fallback.
 - Prefer repository-owned workflows over ad hoc execution.
     - Use existing package scripts, repository entrypoints, and configured tooling instead of direct interpreter invocations, reconstructed command pipelines, or one-off package runners.
 - Keep terminal commands direct and canonical.
@@ -141,6 +148,7 @@ Command guidance applies to agent invocations and command examples, not reposito
 - Write every JSDoc comment as a multiline block with `/**` and `*/` on separate lines, including one-sentence comments.
 - Write suppression directives as `/* … */` block comments when both the language and relevant tool accept that form, including `/* oxlint-disable-next-line rule/name */`, `/* prettier-ignore */`, and `/* @ts-expect-error */`. Use the tool-required syntax otherwise. Do not add explanatory text unless applicable repository or linter policy requires it.
 - In prose, avoid semicolons, use typographic “quotation marks” and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it.
+- In prose, use the ellipsis character `…` for placeholders and ordinary ellipses. Preserve language-required spread and rest syntax, exact literals, and quoted source text.
 - For nonconsecutive numbered items, write each number explicitly in the item text instead of relying on Markdown’s ordered list numbering.
 - Wrap identifiers, paths, commands, and quoted code tokens in backticks.
 

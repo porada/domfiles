@@ -16,7 +16,7 @@
 		"bindings": {
 			"ctrl-enter": [
 				"workspace::SendKeystrokes",
-				"cmd-? cmd-n cmd->"
+				"cmd-? cmd-n cmd-? cmd->"
 			]
 		}
 	},

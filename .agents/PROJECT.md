@@ -148,7 +148,7 @@ The repository-level `.zed/settings.json` intentionally replaces Zed’s complet
 
 ### Zed selection-to-new-thread key binding
 
-The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd->` sequence is intentional. Focusing the agent panel first makes `cmd-n` resolve to `agent::NewThread` instead of the editor’s `workspace::NewFile`, and the final keystroke invokes `agent::AddSelectionToThread` for the active editor selection.
+The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
 
 ## Synchronization
 
