@@ -30,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install fish
-      - uses: pnpm/setup@v2.0.0
+      - uses: pnpm/setup@v2.0.1
         with:
           cache: true
           runtime: node@24
