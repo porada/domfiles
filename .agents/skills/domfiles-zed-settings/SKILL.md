@@ -1,11 +1,13 @@
 ---
 name: domfiles-zed-settings
-description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json`. Use this skill whenever the resolved task scope includes either settings file—even when the user did not name it—including language, formatter, scan, agent, or MCP settings. Also use `domfiles-zed-permissions` when agent tool or sandbox permissions, terminal rules, fetch or network allowances, worktree permissions, or permission outcomes are in scope. Do not use it for other Zed files alone.
+description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json` plus project-authored maintainer assets, policy, and skill scripts for those settings. Use this skill whenever the resolved scope includes either settings file—even when the user did not name it—including agent permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal rules, tool or sandbox permissions, unexpected permission outcomes, or worktree permissions. Do not use it for other Zed files alone.
 ---
 
 # Zed settings
 
-Use this skill as the canonical source for general Zed settings policy and workflow. `domfiles-zed-permissions` owns agent permission policy and permission-specific workflow. Continue to follow applicable `AGENTS.md` files for repository-wide instructions. Do not copy the current command, domain, or settings inventory into either skill.
+Use this skill as the canonical source for Zed settings policy and workflow. Continue to follow applicable `AGENTS.md` files for repository-wide instructions. Do not copy the current command, domain, permission-pattern, or settings inventories into agent documentation.
+
+When agent tool or sandbox permissions, terminal rules, native path-tool permissions, fetch or network allowances, agent repository permissions, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/permissions.md) before investigation or planning. Read only the branch references it selects.
 
 ## Apply the general policy
 
@@ -44,8 +46,8 @@ After editing:
 1. Parse changed JSON with `jq -e`.
 2. Check formatting through the repository’s existing `pnpm` formatter workflow.
 3. Run `git --no-pager diff --check`.
-4. Run every applicable domain-specific change-validation workflow.
-5. Verify every applicable general Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
+4. Run every applicable conditional-branch change-validation workflow.
+5. Verify every applicable general and selected-branch Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
 6. Inspect the final diff and status. Remove only artifacts created by validation.
 
 Do not run the entire repository formatter when a targeted formatting check is sufficient.
@@ -53,8 +55,8 @@ Do not run the entire repository formatter when a targeted formatting check is s
 ## Validate a Zed settings audit, review, or diagnosis
 
 1. Parse relevant JSON with `jq -e`.
-2. Run every applicable domain-specific read-only validation workflow.
-3. Verify the applicable general Zed settings policy invariants and repository-wide `AGENTS.md` instructions against the audited contents.
+2. Run every applicable conditional-branch read-only validation workflow.
+3. Verify the applicable general and selected-branch Zed settings policy invariants and repository-wide `AGENTS.md` instructions against the audited contents.
 
 ## Report a change, review, or diagnosis
 

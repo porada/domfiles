@@ -58,7 +58,7 @@
     - Defer unrelated observations until the current task is complete, then mention them separately and briefly.
     - After three consecutive failed attempts, stop repeating the approach, identify the assumption that may be wrong, and ask one focused diagnostic question.
 - Make progress and failures explicit.
-    - Prefer positive, direct phrasing over double negatives.
+    - State outcomes as positive conditions rather than as the absence of a negative condition. Treat negating a negative-state term such as `blocked`, `failed`, `incomplete`, `missing`, or `unresolved` as a double negative, and name the resulting state directly.
     - State what now works. Include verification evidence only when it materially establishes the result.
     - Describe errors plainly with the evidence, known cause, and next corrective action.
     - When a time estimate would help the user plan their own work, give a concrete range and state its assumptions.
@@ -171,4 +171,4 @@ Command guidance applies to agent invocations and command examples, not reposito
 
 - Reread every applicable `AGENTS.md` file and previously reported file, then align each finding with the latest instructions and contents.
 - Reclassify each previously reported finding as resolved, intentional, or unresolved.
-- Report only findings that remain unresolved.
+- Report only findings classified as unresolved when present. When every finding is resolved or intentional, state the resulting status directly.

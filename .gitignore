@@ -16,4 +16,5 @@
 .vite-hooks/_
 coverage
 node_modules
+target
 tsconfig.tsbuildinfo

@@ -1,0 +1,28 @@
+[package]
+name = "domfiles"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+regex = "=1.12.3"
+
+[[bin]]
+bench = false
+name = "domfiles-zed-settings-zed-regex-audit"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-regex-audit.rs"
+test = false
+
+[[bin]]
+bench = false
+name = "domfiles-zed-settings-zed-pattern-match"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-pattern-match.rs"
+test = false
+
+[[test]]
+name = "domfiles-zed-settings-zed-regex-audit-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-regex-audit.test.rs"
+
+[[test]]
+name = "domfiles-zed-settings-zed-pattern-match-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-pattern-match.test.rs"

@@ -23,7 +23,18 @@ jobs:
       - run: bin/domfiles-sync
       - run: fish --command 'domfiles sync'
 
-  test:
+  test-rs:
+    name: lint / rs
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: brew install rust
+      - run: cargo test --locked --workspace
+
+  test-ts:
+    name: lint / ts
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v7.0.1

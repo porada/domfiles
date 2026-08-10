@@ -17,3 +17,7 @@
 - Keep cross-boundary path options, explicit credential access, external-helper selection, network subcommands, signing requests, submodule-recursion options, and unrestricted configuration confirmable. Permit remote metadata changes only when the form does not contact a remote.
 - Treat existing descendant state and user-managed configuration as trusted within this boundary, following the [documented residual limitations](../../../PROJECT.md#zed-fixture-repository-permissions).
 - Keep commands whose `-C` operand is the top-level `.agent-<name>` worktree governed by the narrower worktree policy above. Descendant rules intentionally accept Git’s upward discovery as part of task-owned state.
+
+## Validate agent repository permissions
+
+Validate in-scope patterns against intended namespace-bounded worktree and fixture operations plus near misses involving top-level or out-of-namespace paths, traversal, detached worktrees, remote operations, direct symbolic-link creation, and broader deletion or history-rewriting forms.

@@ -1,0 +1,758 @@
+use regex::{Regex, RegexBuilder};
+use std::{
+    collections::BTreeSet,
+    ffi::{OsStr, OsString},
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
+
+const HELP: &str = concat!(
+    "Usage: zed-regex-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
+    "       zed-regex-audit [--case-sensitive] --pattern-file <path> [--pattern-file <path> …]\n",
+    "\n",
+    "Audit Zed-compatible regex dependencies and configured patterns\n",
+    "\n",
+    "Options:\n",
+    "  --case-sensitive               Compile patterns case-sensitively\n",
+    "  --help                         Print help\n",
+    "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
+    "  --pattern-file <path>          Compile a pattern from this file (repeatable)\n",
+    "  --upstream-lock <path>         Read upstream locked `regex` dependencies\n",
+    "  --upstream-revision <commit>   Identify the upstream Zed commit\n",
+    "\n",
+    "Exit statuses:\n",
+    "  0  Dependencies matched, patterns compiled, or help displayed\n",
+    "  1  Dependencies differed\n",
+    "  2  Invalid arguments or data, or an I/O failure\n",
+);
+
+const STATUS_ERROR: u8 = 2;
+const STATUS_MATCH: u8 = 0;
+const STATUS_MISMATCH: u8 = 1;
+
+struct VersionArguments {
+    local_manifest: PathBuf,
+    upstream_lock: PathBuf,
+    upstream_revision: String,
+}
+
+struct PatternArguments {
+    case_sensitive: bool,
+    pattern_files: Vec<PathBuf>,
+}
+
+struct ManifestPackage {
+    name: String,
+    version: String,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+struct PackageIdentity {
+    name: String,
+    version: String,
+    source: Option<String>,
+    checksum: Option<String>,
+}
+
+struct DependencyReference {
+    name: String,
+    version: Option<String>,
+    source: Option<String>,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+struct DependencyEdge {
+    from: PackageIdentity,
+    to: PackageIdentity,
+}
+
+struct LockedPackage {
+    identity: PackageIdentity,
+    dependencies: Vec<DependencyReference>,
+}
+
+struct LockedRegexPackages {
+    regex_version: String,
+    packages: BTreeSet<PackageIdentity>,
+    dependencies: BTreeSet<DependencyEdge>,
+}
+
+struct VersionComparison {
+    local: LockedRegexPackages,
+    local_version: String,
+    upstream: LockedRegexPackages,
+}
+
+enum Operation {
+    CompareVersions(VersionArguments),
+    CompilePatterns(PatternArguments),
+}
+
+enum ParsedArguments {
+    Help,
+    Run(Operation),
+}
+
+fn parse_arguments<I>(arguments: I) -> Result<ParsedArguments, String>
+where
+    I: IntoIterator<Item = OsString>,
+{
+    let arguments: Vec<OsString> = arguments.into_iter().collect();
+
+    if arguments.len() == 1 && arguments[0].as_os_str() == OsStr::new("--help") {
+        return Ok(ParsedArguments::Help);
+    }
+
+    let mut arguments = arguments.into_iter();
+    let mut case_sensitive = false;
+    let mut local_manifest = None;
+    let mut pattern_files = Vec::new();
+    let mut upstream_lock = None;
+    let mut upstream_revision = None;
+
+    while let Some(argument) = arguments.next() {
+        let Some(option) = argument.to_str() else {
+            return Err("Option names must be valid UTF-8".to_owned());
+        };
+
+        match option {
+            "--case-sensitive" => {
+                if case_sensitive {
+                    return Err("Option `--case-sensitive` may be specified only once".to_owned());
+                }
+
+                case_sensitive = true;
+            }
+            "--help" => {
+                return Err("Option `--help` must be used alone".to_owned());
+            }
+            "--local-manifest" => {
+                if local_manifest.is_some() {
+                    return Err("Option `--local-manifest` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--local-manifest` requires a path".to_owned());
+                };
+                local_manifest = Some(PathBuf::from(path));
+            }
+            "--pattern-file" => {
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--pattern-file` requires a path".to_owned());
+                };
+                pattern_files.push(PathBuf::from(path));
+            }
+            "--upstream-lock" => {
+                if upstream_lock.is_some() {
+                    return Err("Option `--upstream-lock` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--upstream-lock` requires a path".to_owned());
+                };
+                upstream_lock = Some(PathBuf::from(path));
+            }
+            "--upstream-revision" => {
+                if upstream_revision.is_some() {
+                    return Err(
+                        "Option `--upstream-revision` may be specified only once".to_owned()
+                    );
+                }
+
+                let Some(revision) = arguments.next() else {
+                    return Err("Option `--upstream-revision` requires a commit".to_owned());
+                };
+                let Some(revision) = revision.to_str() else {
+                    return Err("The upstream revision must be valid UTF-8".to_owned());
+                };
+                upstream_revision = Some(revision.to_owned());
+            }
+            _ => {
+                return Err(format!(
+                    "Unknown option `{option}`. Run `zed-regex-audit --help` for usage"
+                ));
+            }
+        }
+    }
+
+    let uses_pattern_mode = case_sensitive || !pattern_files.is_empty();
+    let uses_version_mode =
+        local_manifest.is_some() || upstream_lock.is_some() || upstream_revision.is_some();
+
+    if uses_pattern_mode && uses_version_mode {
+        return Err(
+            "Pattern compilation options cannot be combined with version comparison options"
+                .to_owned(),
+        );
+    }
+
+    if uses_pattern_mode {
+        if pattern_files.is_empty() {
+            return Err(
+                "Option `--case-sensitive` requires at least one `--pattern-file <path>`"
+                    .to_owned(),
+            );
+        }
+
+        return Ok(ParsedArguments::Run(Operation::CompilePatterns(
+            PatternArguments {
+                case_sensitive,
+                pattern_files,
+            },
+        )));
+    }
+
+    let local_manifest = local_manifest
+        .ok_or_else(|| "Missing required option `--local-manifest <path>`".to_owned())?;
+    let upstream_lock = upstream_lock
+        .ok_or_else(|| "Missing required option `--upstream-lock <path>`".to_owned())?;
+    let upstream_revision = upstream_revision
+        .ok_or_else(|| "Missing required option `--upstream-revision <commit>`".to_owned())?;
+
+    let revision_pattern = Regex::new(r"^[0-9a-f]{7,40}$").expect("Revision pattern must compile");
+    if !revision_pattern.is_match(&upstream_revision) {
+        return Err(
+            "The upstream revision must be a 7- to 40-character lowercase hexadecimal commit"
+                .to_owned(),
+        );
+    }
+
+    Ok(ParsedArguments::Run(Operation::CompareVersions(
+        VersionArguments {
+            local_manifest,
+            upstream_lock,
+            upstream_revision,
+        },
+    )))
+}
+
+fn read_utf8_file(path: &Path, description: &str) -> Result<String, String> {
+    let bytes = fs::read(path).map_err(|error| {
+        format!(
+            "Failed to read {description} file `{}`:\n\n{error}",
+            path.display()
+        )
+    })?;
+
+    String::from_utf8(bytes).map_err(|error| {
+        format!(
+            "Invalid UTF-8 in {description} file `{}`:\n\n{error}",
+            path.display()
+        )
+    })
+}
+
+pub(crate) fn local_regex_version(manifest: &str) -> Result<String, String> {
+    let pin_pattern =
+        Regex::new(r#"(?m)^regex = "=([^"\r\n]+)"\r?$"#).expect("Pin pattern must compile");
+    let versions: Vec<String> = pin_pattern
+        .captures_iter(manifest)
+        .map(|captures| captures[1].to_owned())
+        .collect();
+
+    match versions.as_slice() {
+        [version] => Ok(version.to_owned()),
+        [] => Err(
+            "Local manifest must contain one exact `regex = \"=VERSION\"` dependency".to_owned(),
+        ),
+        _ => Err("Local manifest contains more than one exact `regex` pin".to_owned()),
+    }
+}
+
+fn local_manifest_package(manifest: &str) -> Result<ManifestPackage, String> {
+    let mut in_package = false;
+    let mut name = None;
+    let mut package_sections = 0;
+    let mut version = None;
+
+    for line in manifest.lines() {
+        let line = line.trim_end_matches('\r');
+        if line == "[package]" {
+            in_package = true;
+            package_sections += 1;
+            continue;
+        }
+        if line.starts_with('[') {
+            in_package = false;
+            continue;
+        }
+        if !in_package {
+            continue;
+        }
+
+        if let Some(value) = line
+            .strip_prefix("name = \"")
+            .and_then(|value| value.strip_suffix('"'))
+            && name.replace(value.to_owned()).is_some()
+        {
+            return Err("Local manifest package contains more than one `name` field".to_owned());
+        }
+        if let Some(value) = line
+            .strip_prefix("version = \"")
+            .and_then(|value| value.strip_suffix('"'))
+            && version.replace(value.to_owned()).is_some()
+        {
+            return Err("Local manifest package contains more than one `version` field".to_owned());
+        }
+    }
+
+    if package_sections != 1 {
+        return Err("Local manifest must contain exactly one `[package]` section".to_owned());
+    }
+
+    Ok(ManifestPackage {
+        name: name.ok_or_else(|| "Local manifest package has no quoted `name`".to_owned())?,
+        version: version
+            .ok_or_else(|| "Local manifest package has no quoted `version`".to_owned())?,
+    })
+}
+
+fn quoted_field(block: &str, field: &str) -> Option<String> {
+    let prefix = format!("{field} = \"");
+
+    block.lines().find_map(|line| {
+        line.strip_suffix('\r')
+            .unwrap_or(line)
+            .strip_prefix(&prefix)
+            .and_then(|value| value.strip_suffix('"'))
+            .map(str::to_owned)
+    })
+}
+
+fn parse_dependency_reference(value: &str) -> Result<DependencyReference, String> {
+    let (package_and_version, source) = if let Some((package, source)) = value.rsplit_once(" (") {
+        let source = source
+            .strip_suffix(')')
+            .ok_or_else(|| format!("Invalid lockfile dependency reference `{value}`"))?;
+        (package, Some(source.to_owned()))
+    } else {
+        (value, None)
+    };
+    let (name, version) = match package_and_version.split_once(' ') {
+        Some((name, version))
+            if !name.is_empty() && !version.is_empty() && !version.contains(' ') =>
+        {
+            (name, Some(version.to_owned()))
+        }
+        None if !package_and_version.is_empty() => (package_and_version, None),
+        _ => return Err(format!("Invalid lockfile dependency reference `{value}`")),
+    };
+
+    Ok(DependencyReference {
+        name: name.to_owned(),
+        version,
+        source,
+    })
+}
+
+fn parse_dependencies(
+    block: &str,
+    description: &str,
+    package_name: &str,
+) -> Result<Vec<DependencyReference>, String> {
+    let mut lines = block.lines();
+
+    while let Some(line) = lines.next() {
+        if line.trim_end_matches('\r').trim() != "dependencies = [" {
+            continue;
+        }
+
+        let mut dependencies = Vec::new();
+        loop {
+            let Some(line) = lines.next() else {
+                return Err(format!(
+                    "{description} lockfile has an unterminated dependency list for `{package_name}`"
+                ));
+            };
+            let line = line.trim_end_matches('\r').trim();
+            if line == "]" {
+                return Ok(dependencies);
+            }
+
+            let value = line
+                .strip_prefix('"')
+                .and_then(|value| {
+                    value
+                        .strip_suffix("\",")
+                        .or_else(|| value.strip_suffix('"'))
+                })
+                .ok_or_else(|| {
+                    format!(
+                        "{description} lockfile has an invalid dependency entry for `{package_name}`"
+                    )
+                })?;
+            dependencies.push(parse_dependency_reference(value)?);
+        }
+    }
+
+    Ok(Vec::new())
+}
+
+fn parse_lock_packages(lockfile: &str, description: &str) -> Result<Vec<LockedPackage>, String> {
+    lockfile
+        .split("[[package]]")
+        .skip(1)
+        .map(|block| {
+            let name = quoted_field(block, "name")
+                .ok_or_else(|| format!("{description} lockfile package has no name"))?;
+            let version = quoted_field(block, "version")
+                .ok_or_else(|| format!("{description} lockfile package `{name}` has no version"))?;
+            let dependencies = parse_dependencies(block, description, &name)?;
+
+            Ok(LockedPackage {
+                identity: PackageIdentity {
+                    name,
+                    version,
+                    source: quoted_field(block, "source"),
+                    checksum: quoted_field(block, "checksum"),
+                },
+                dependencies,
+            })
+        })
+        .collect()
+}
+
+fn resolve_dependency(
+    dependency: &DependencyReference,
+    packages: &[LockedPackage],
+    description: &str,
+    parent: &PackageIdentity,
+) -> Result<usize, String> {
+    let candidates = packages
+        .iter()
+        .enumerate()
+        .filter(|(_, package)| {
+            package.identity.name == dependency.name
+                && dependency
+                    .version
+                    .as_ref()
+                    .is_none_or(|version| package.identity.version == *version)
+                && dependency
+                    .source
+                    .as_ref()
+                    .is_none_or(|source| package.identity.source.as_ref() == Some(source))
+        })
+        .map(|(index, _)| index)
+        .collect::<Vec<_>>();
+
+    match candidates.as_slice() {
+        [index] => Ok(*index),
+        [] => Err(format!(
+            "{description} lockfile cannot resolve dependency `{}` from `{} {}`",
+            dependency.name, parent.name, parent.version
+        )),
+        _ => Err(format!(
+            "{description} lockfile resolves dependency `{}` from `{} {}` ambiguously",
+            dependency.name, parent.name, parent.version
+        )),
+    }
+}
+
+fn locked_regex_packages(
+    lockfile: &str,
+    description: &str,
+    local_package: Option<&ManifestPackage>,
+) -> Result<LockedRegexPackages, String> {
+    let packages = parse_lock_packages(lockfile, description)?;
+    let regex_index = if let Some(local_package) = local_package {
+        let root_packages = packages
+            .iter()
+            .enumerate()
+            .filter(|(_, package)| {
+                package.identity.name == local_package.name
+                    && package.identity.version == local_package.version
+                    && package.identity.source.is_none()
+            })
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        let root_index = match root_packages.as_slice() {
+            [index] => *index,
+            [] => {
+                return Err(format!(
+                    "{description} lockfile does not contain source-less root package `{} {}`",
+                    local_package.name, local_package.version
+                ));
+            }
+            _ => {
+                return Err(format!(
+                    "{description} lockfile contains multiple source-less root packages named `{} {}`",
+                    local_package.name, local_package.version
+                ));
+            }
+        };
+        let root_package = &packages[root_index];
+        let regex_dependencies = root_package
+            .dependencies
+            .iter()
+            .filter(|dependency| dependency.name == "regex")
+            .collect::<Vec<_>>();
+        let dependency = match regex_dependencies.as_slice() {
+            [dependency] => *dependency,
+            [] => {
+                return Err(format!(
+                    "{description} lockfile root package `{} {}` does not depend on `regex`",
+                    local_package.name, local_package.version
+                ));
+            }
+            _ => {
+                return Err(format!(
+                    "{description} lockfile root package `{} {}` contains multiple `regex` dependency references",
+                    local_package.name, local_package.version
+                ));
+            }
+        };
+
+        resolve_dependency(dependency, &packages, description, &root_package.identity)?
+    } else {
+        let regex_packages = packages
+            .iter()
+            .enumerate()
+            .filter(|(_, package)| package.identity.name == "regex")
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+
+        match regex_packages.as_slice() {
+            [index] => *index,
+            [] => {
+                return Err(format!(
+                    "{description} lockfile does not contain a `regex` package"
+                ));
+            }
+            _ => {
+                let versions = regex_packages
+                    .iter()
+                    .map(|index| format!("`{}`", packages[*index].identity.version))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                return Err(format!(
+                    "{description} lockfile contains multiple `regex` packages: {versions}"
+                ));
+            }
+        }
+    };
+    let regex_version = packages[regex_index].identity.version.clone();
+    let mut pending = vec![regex_index];
+    let mut resolved_dependencies = BTreeSet::new();
+    let mut resolved_packages = BTreeSet::new();
+
+    while let Some(index) = pending.pop() {
+        let package = &packages[index];
+        if !resolved_packages.insert(package.identity.clone()) {
+            continue;
+        }
+
+        let Some(source) = package.identity.source.as_deref() else {
+            return Err(format!(
+                "{description} lockfile package `{} {}` has no source",
+                package.identity.name, package.identity.version
+            ));
+        };
+        if source.starts_with("registry+") && package.identity.checksum.is_none() {
+            return Err(format!(
+                "{description} lockfile registry package `{} {}` has no checksum",
+                package.identity.name, package.identity.version
+            ));
+        }
+
+        for dependency in &package.dependencies {
+            let dependency_index =
+                resolve_dependency(dependency, &packages, description, &package.identity)?;
+            resolved_dependencies.insert(DependencyEdge {
+                from: package.identity.clone(),
+                to: packages[dependency_index].identity.clone(),
+            });
+            pending.push(dependency_index);
+        }
+    }
+
+    Ok(LockedRegexPackages {
+        regex_version,
+        packages: resolved_packages,
+        dependencies: resolved_dependencies,
+    })
+}
+
+#[cfg(test)]
+pub(crate) fn upstream_regex_version(lockfile: &str) -> Result<String, String> {
+    Ok(locked_regex_packages(lockfile, "Upstream", None)?.regex_version)
+}
+
+fn evaluate_versions(arguments: &VersionArguments) -> Result<VersionComparison, String> {
+    let local_manifest = read_utf8_file(&arguments.local_manifest, "local manifest")?;
+    let local_lock_path = arguments.local_manifest.with_file_name("Cargo.lock");
+    let local_lock = read_utf8_file(&local_lock_path, "local lockfile")?;
+    let upstream_lock = read_utf8_file(&arguments.upstream_lock, "upstream lockfile")?;
+    let local_package = local_manifest_package(&local_manifest)?;
+    let local_version = local_regex_version(&local_manifest)?;
+    let local = locked_regex_packages(&local_lock, "Local", Some(&local_package))?;
+    let upstream = locked_regex_packages(&upstream_lock, "Upstream", None)?;
+
+    if local_version != local.regex_version {
+        return Err(format!(
+            "Local manifest pins `regex` `{local_version}`, but adjacent `Cargo.lock` resolves `{}`",
+            local.regex_version
+        ));
+    }
+
+    Ok(VersionComparison {
+        local,
+        local_version,
+        upstream,
+    })
+}
+
+fn compile_patterns(arguments: &PatternArguments) -> Result<usize, String> {
+    for pattern_file in &arguments.pattern_files {
+        let pattern = read_utf8_file(pattern_file, "pattern")?;
+        if pattern.is_empty() {
+            return Err(format!(
+                "Pattern file `{}` is empty",
+                pattern_file.display()
+            ));
+        }
+
+        RegexBuilder::new(&pattern)
+            .case_insensitive(!arguments.case_sensitive)
+            .build()
+            .map_err(|error| {
+                let message = error.to_string();
+                let summary = message
+                    .lines()
+                    .rev()
+                    .find_map(|line| line.trim().strip_prefix("error: "))
+                    .unwrap_or("Regex compilation failed");
+
+                format!(
+                    "Invalid regex in pattern file `{}`: {summary}",
+                    pattern_file.display()
+                )
+            })?;
+    }
+
+    Ok(arguments.pattern_files.len())
+}
+
+fn report_error(stderr: &mut dyn Write, message: &str) {
+    let _ = writeln!(stderr, "zed-regex-audit: {message}");
+}
+
+fn run_pattern_audit(
+    arguments: &PatternArguments,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> u8 {
+    let pattern_count = match compile_patterns(arguments) {
+        Ok(pattern_count) => pattern_count,
+        Err(error) => {
+            report_error(stderr, &error);
+            return STATUS_ERROR;
+        }
+    };
+    let pattern_label = if pattern_count == 1 {
+        "pattern"
+    } else {
+        "patterns"
+    };
+
+    if let Err(error) = writeln!(stdout, "Compiled {pattern_count} Zed regex {pattern_label}") {
+        report_error(stderr, &format!("Failed to write result:\n\n{error}"));
+        return STATUS_ERROR;
+    }
+
+    STATUS_MATCH
+}
+
+fn run_version_audit(
+    arguments: &VersionArguments,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> u8 {
+    let comparison = match evaluate_versions(arguments) {
+        Ok(comparison) => comparison,
+        Err(error) => {
+            report_error(stderr, &error);
+            return STATUS_ERROR;
+        }
+    };
+
+    if comparison.local_version != comparison.upstream.regex_version {
+        if writeln!(
+            stderr,
+            "Zed commit `{}` uses `regex` `{}`, but `Cargo.toml` pins `{}`",
+            arguments.upstream_revision,
+            comparison.upstream.regex_version,
+            comparison.local_version
+        )
+        .is_err()
+        {
+            return STATUS_ERROR;
+        }
+
+        return STATUS_MISMATCH;
+    }
+
+    if comparison.local.packages != comparison.upstream.packages
+        || comparison.local.dependencies != comparison.upstream.dependencies
+    {
+        if writeln!(
+            stderr,
+            "Zed commit `{}` and local `Cargo.lock` use `regex` `{}` but resolve different dependency graphs",
+            arguments.upstream_revision, comparison.local_version
+        )
+        .is_err()
+        {
+            return STATUS_ERROR;
+        }
+
+        return STATUS_MISMATCH;
+    }
+
+    if let Err(error) = writeln!(
+        stdout,
+        "Zed commit `{}` and `Cargo.toml` use `regex` `{}`",
+        arguments.upstream_revision, comparison.local_version
+    ) {
+        report_error(stderr, &format!("Failed to write result:\n\n{error}"));
+        return STATUS_ERROR;
+    }
+
+    STATUS_MATCH
+}
+
+pub(crate) fn run<I>(arguments: I, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8
+where
+    I: IntoIterator<Item = OsString>,
+{
+    let parsed_arguments = match parse_arguments(arguments) {
+        Ok(parsed_arguments) => parsed_arguments,
+        Err(error) => {
+            report_error(stderr, &error);
+            return STATUS_ERROR;
+        }
+    };
+
+    let ParsedArguments::Run(operation) = parsed_arguments else {
+        if let Err(error) = stdout.write_all(HELP.as_bytes()) {
+            report_error(stderr, &format!("Failed to write help:\n\n{error}"));
+            return STATUS_ERROR;
+        }
+
+        return STATUS_MATCH;
+    };
+
+    match operation {
+        Operation::CompareVersions(arguments) => run_version_audit(&arguments, stdout, stderr),
+        Operation::CompilePatterns(arguments) => run_pattern_audit(&arguments, stdout, stderr),
+    }
+}
+
+#[cfg(not(test))]
+fn main() -> std::process::ExitCode {
+    let stdout = std::io::stdout();
+    let stderr = std::io::stderr();
+    let mut stdout = stdout.lock();
+    let mut stderr = stderr.lock();
+
+    std::process::ExitCode::from(run(std::env::args_os().skip(1), &mut stdout, &mut stderr))
+}

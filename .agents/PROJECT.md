@@ -56,17 +56,25 @@ Git’s repository discovery can walk from a descendant into an enclosing worktr
 
 Entries named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` and paths beneath them are treated as disposable generated output at any path depth. Because permissions match paths lexically, a matching root is intentionally allowed whether it is a directory or a regular file. Native `delete_path` may remove a matching root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
 
-Brace expansion, broader `rm` options, parent-removing `rmdir -p`, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
+Brace expansion, broader `rm` options, parent-removing `rmdir -p`, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
 
 ### Zed npm `--all` option
 
 npm’s exact `--all` is an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. The ambiguous `--a` and `--al` forms and exact `--allow-scripts` remain behind confirmation. `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
+
+### Zed permission regex compatibility
+
+`Cargo.toml` pins the `regex` crate, while `Cargo.lock` locks its dependency closure to the package identities used by Zed commit `9e23609`. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) revalidates this baseline against current Zed source.
 
 ### Zed `printenv` exposure
 
 The automatic `printenv` allowance is limited to the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
 
 The automatic denial covers exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names ending case-insensitively in `_KEY`, `_PASSPHRASE`, `_PASSWORD`, `_PROXY`, `_SECRET`, or `_TOKEN`, wildcard-bearing variable operands, and zero-name output from either a bare invocation or exact `--`. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
+
+### Zed command discovery defaults
+
+The terminal discovery policy intentionally includes exact `-h`, `-help`, `--help`, `-v`, `-version`, and `--version` forms by default without requiring positive command-specific verification. Unsupported forms terminate without prompting, while a known form that starts normal execution, reads input, mutates state, or enters an interactive mode is omitted. This places the evidence requirement on exceptions so each executable can own a consistent discovery surface without shared command patterns.
 
 ### Zed temporary archive staging
 
@@ -80,9 +88,11 @@ Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its 
 
 Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Version-dependent option abbreviations require revalidation when a package-manager major changes rather than speculative widening.
 
+Every `rust-lldb` invocation containing `--local-lldbinit` is denied. Zed’s regex engine cannot express the option’s ordering-sensitive `--no-lldbinit` neutralization without a brittle complement, so the intentional false positive preserves LLDB’s current-directory initialization boundary.
+
 Package-manager subcommand arguments are version-specific, so invocation tests rather than option-like spelling determine their behavior. pnpm 11 treats an option-looking first operand after `pnpm exec` as an executable name rather than a pnpm flag. Bare `--` remains a separator. Yarn Classic 1 treats unknown `dlx` as a package-script invocation and passes an option-looking first operand to that script. Those option-leading forms are denied so they cannot be approved by mistake. The supported discovery forms are `pnpm help exec` and `yarn help <name>`.
 
-The [Git prefix policy](skills/domfiles-zed-permissions/SKILL.md#apply-the-permission-policy) separates shared and dedicated discovery so approved fixed-value assignments do not broaden the common discovery boundary. A prefixed root `git -h` therefore remains confirmable, while dedicated Git discovery covers approved assignments. Reusing the settings-owned grammar across dedicated Git patterns prevents the same assignment from receiving different permission treatment across command families. Fixed values that disable optional behavior or interaction avoid arbitrary environment-driven execution changes.
+The [Git prefix policy](skills/domfiles-zed-settings/references/git-permissions.md#apply-the-git-permission-policy) keeps approved fixed-value assignments, pager wrappers, and global options within command-owned root, subcommand, or compound-workflow groups. Reusing the settings-owned grammar across applicable allowances and confirmation overrides prevents the same assignment from receiving different permission treatment across Git owners. Fixed values that disable optional behavior or interaction avoid arbitrary environment-driven execution changes.
 
 Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations, alternate config paths or config injection, and arbitrary diff, editor, helper, pager, proxy, or SSH executables. It also includes author, committer, and reflog metadata, CA, certificate, credential, key, and proxy-path selection, and every value of `GIT_SSL_NO_VERIFY`, including `0`. Generated, internal, test-only, or unknown variables and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls remain confirmable as well.
 
@@ -96,13 +106,13 @@ Automatic task integration permits explicit staging, commit-time staging of trac
 
 Permission patterns can require the worktree and branch namespaces independently but cannot compare their `<name>` suffixes, so pair equality remains an agent-level invariant. Forced operations remain namespace-bound. Non-forced branch deletion retains Git’s fully-merged check, while forced deletion bypasses it.
 
-Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-permissions/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Permission regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere inside an open worktree. The [worktree permission policy](skills/domfiles-zed-permissions/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) leaves direct symbolic-link creation confirmable, so native path allowances treat existing worktree-internal symlinks as previously trusted repository state. Top-level worktree moves must also update Git’s administrative metadata, while Zed’s sensitive-settings and outside-worktree symlink-escape checks remain additional confirmation gates.
+Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Permission regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere inside an open worktree. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) leaves direct symbolic-link creation confirmable, so native path allowances treat existing worktree-internal symlinks as previously trusted repository state. Top-level worktree moves must also update Git’s administrative metadata, while Zed’s sensitive-settings and outside-worktree symlink-escape checks remain additional confirmation gates.
 
 Dry-run pruning can inspect stale worktree metadata without changing it. Actual pruning, complex or out-of-namespace inputs, and broader deletion mechanisms remain confirmable because they extend mutation beyond the bounded agent namespaces.
 
-### Zed xargs permission mirroring
+### Zed xargs command ownership
 
-The `xargs` terminal allowance mirrors the executable alternatives in the consolidated general terminal allowance so agents can batch the same baseline commands without broadening the trusted child-executable set.
+The terminal permission policy treats `xargs` as a per-command wrapper. `xargs` owns only its root and discovery forms, while each child command owns its bounded `xargs … <command>` form beside its direct patterns. This removes the pooled child-command inventory while keeping one canonical bounded `xargs` option grammar across repeated command-owned forms.
 
 Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Standard input can therefore activate hazardous child behavior after the shell segment has already been allowed. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
 
@@ -118,7 +128,9 @@ Edits to an exposed portable skill affect its globally discovered installation t
 
 Every installation of the portable `agent-documentation` skill is assumed to use the tracked global `.config/zed/AGENTS.md`. The skill relies on that document’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
 
-The portable `release-notes` and `technical-copy` skills include decision-capture prompts for producing self-contained relays from completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md)). They are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+### Decision-capture prompts
+
+The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill include decision-capture prompts for producing self-contained relays from completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). They are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
 ### Global system-available tooling
 

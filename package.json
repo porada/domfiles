@@ -32,10 +32,12 @@
 		"vite-plus": "catalog:"
 	},
 	"scripts": {
-		"fix": "pnpm format && pnpm run '/^lint:(fish|sh|ts)$/' && pnpm format",
+		"fix": "pnpm format && pnpm run '/^lint:(fish|rs|sh|ts)$/' && pnpm format",
 		"format": "prettier --ignore-unknown --log-level=warn --write .",
 		"format:check": "prettier --check --ignore-unknown .",
 		"lint:fish": "bin/domfiles-dev-lint-fish",
+		"lint:rs": "cargo clippy --all-features --all-targets --allow-dirty --allow-no-vcs --allow-staged --fix --locked --workspace",
+		"lint:rs:check": "cargo clippy --all-features --all-targets --locked --workspace -- --deny warnings",
 		"lint:sh": "bin/domfiles-dev-lint-sh",
 		"lint:ts": "vp lint --fix",
 		"lint:ts:check": "vp lint --deny-warnings --type-check",

@@ -1,0 +1,466 @@
+#[path = "zed-regex-audit.rs"]
+mod helper;
+
+use std::{
+    env,
+    ffi::OsString,
+    fs,
+    path::{Path, PathBuf},
+    process,
+    sync::atomic::{AtomicUsize, Ordering},
+    time::{SystemTime, UNIX_EPOCH},
+};
+
+const LOCAL_MANIFEST: &str = concat!(
+    "[package]\n",
+    "name = \"domfiles\"\n",
+    "version = \"0.0.0\"\n",
+    "\n",
+    "[dependencies]\n",
+    "regex = \"=1.12.3\"\n",
+);
+
+const REGEX_LOCK: &str = concat!(
+    "version = 4\n",
+    "\n",
+    "[[package]]\n",
+    "name = \"domfiles\"\n",
+    "version = \"0.0.0\"\n",
+    "dependencies = [\n",
+    " \"regex\",\n",
+    "]\n",
+    "\n",
+    "[[package]]\n",
+    "name = \"aho-corasick\"\n",
+    "version = \"1.1.3\"\n",
+    "source = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+    "checksum = \"8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916\"\n",
+    "dependencies = [\n",
+    " \"memchr\",\n",
+    "]\n",
+    "\n",
+    "[[package]]\n",
+    "name = \"memchr\"\n",
+    "version = \"2.7.6\"\n",
+    "source = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+    "checksum = \"f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273\"\n",
+    "\n",
+    "[[package]]\n",
+    "name = \"regex\"\n",
+    "version = \"1.12.3\"\n",
+    "source = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+    "checksum = \"e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276\"\n",
+    "dependencies = [\n",
+    " \"aho-corasick\",\n",
+    " \"memchr\",\n",
+    " \"regex-automata\",\n",
+    " \"regex-syntax\",\n",
+    "]\n",
+    "\n",
+    "[[package]]\n",
+    "name = \"regex-automata\"\n",
+    "version = \"0.4.14\"\n",
+    "source = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+    "checksum = \"6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f\"\n",
+    "dependencies = [\n",
+    " \"aho-corasick\",\n",
+    " \"memchr\",\n",
+    " \"regex-syntax\",\n",
+    "]\n",
+    "\n",
+    "[[package]]\n",
+    "name = \"regex-syntax\"\n",
+    "version = \"0.8.8\"\n",
+    "source = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+    "checksum = \"7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58\"\n",
+);
+
+const LOCAL_LOCK: &str = REGEX_LOCK;
+const UPSTREAM_LOCK: &str = REGEX_LOCK;
+
+static NEXT_FIXTURE_ID: AtomicUsize = AtomicUsize::new(0);
+
+struct Fixture {
+    root: PathBuf,
+}
+
+impl Fixture {
+    fn new() -> Self {
+        let fixture_id = NEXT_FIXTURE_ID.fetch_add(1, Ordering::Relaxed);
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("System clock must be after the Unix epoch")
+            .as_nanos();
+        let root = env::temp_dir().join(format!(
+            "domfiles-zed-regex-audit-{}-{timestamp}-{fixture_id}",
+            process::id()
+        ));
+        fs::create_dir(&root).expect("Failed to create fixture directory");
+
+        Self { root }
+    }
+
+    fn write(&self, name: &str, contents: &str) -> PathBuf {
+        let path = self.root.join(name);
+        fs::write(&path, contents).expect("Failed to write fixture file");
+        path
+    }
+}
+
+impl Drop for Fixture {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.root);
+    }
+}
+
+fn run_with_files(
+    local_manifest: &Path,
+    upstream_lock: &Path,
+    upstream_revision: &str,
+) -> (u8, String, String) {
+    let arguments = [
+        OsString::from("--local-manifest"),
+        local_manifest.as_os_str().to_owned(),
+        OsString::from("--upstream-lock"),
+        upstream_lock.as_os_str().to_owned(),
+        OsString::from("--upstream-revision"),
+        OsString::from(upstream_revision),
+    ];
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    (
+        status,
+        String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
+        String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
+    )
+}
+
+fn write_version_files(
+    fixture: &Fixture,
+    local_lock: &str,
+    upstream_lock: &str,
+) -> (PathBuf, PathBuf) {
+    let local_manifest = fixture.write("Cargo.toml", LOCAL_MANIFEST);
+    fixture.write("Cargo.lock", local_lock);
+    let upstream_lock = fixture.write("upstream.lock", upstream_lock);
+
+    (local_manifest, upstream_lock)
+}
+
+fn run_pattern_files(pattern_files: &[PathBuf], case_sensitive: bool) -> (u8, String, String) {
+    let mut arguments = Vec::new();
+    if case_sensitive {
+        arguments.push(OsString::from("--case-sensitive"));
+    }
+    for pattern_file in pattern_files {
+        arguments.extend([
+            OsString::from("--pattern-file"),
+            pattern_file.as_os_str().to_owned(),
+        ]);
+    }
+
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    (
+        status,
+        String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
+        String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
+    )
+}
+
+#[test]
+fn compiles_multiple_pattern_files() {
+    let fixture = Fixture::new();
+    let first_pattern = fixture.write("first.regex", r"^foo$");
+    let second_pattern = fixture.write("second.regex", r"^(?i:https://example\.com)(?:[/?#]|$)");
+
+    let (status, stdout, stderr) = run_pattern_files(&[first_pattern, second_pattern], true);
+
+    assert_eq!(status, 0);
+    assert_eq!(stdout, "Compiled 2 Zed regex patterns\n");
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn rejects_invalid_pattern_without_echoing_it() {
+    let fixture = Fixture::new();
+    let invalid_pattern = format!("{}(?=bar)", "foo".repeat(200));
+    let pattern_file = fixture.write("invalid.regex", &invalid_pattern);
+
+    let (status, stdout, stderr) = run_pattern_files(&[pattern_file], true);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("Invalid regex in pattern file"));
+    assert!(stderr.contains("look-around"));
+    assert!(!stderr.contains(invalid_pattern.as_str()));
+}
+
+#[test]
+fn rejects_mixed_audit_modes() {
+    let fixture = Fixture::new();
+    let pattern_file = fixture.write("pattern.regex", "^foo$");
+    let arguments = [
+        OsString::from("--pattern-file"),
+        pattern_file.as_os_str().to_owned(),
+        OsString::from("--local-manifest"),
+        OsString::from("Cargo.toml"),
+    ];
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(
+        String::from_utf8(stderr)
+            .expect("Standard error must be valid UTF-8")
+            .contains("cannot be combined")
+    );
+}
+
+#[test]
+fn extracts_exact_local_pin() {
+    assert_eq!(
+        helper::local_regex_version(LOCAL_MANIFEST).expect("Local pin must be valid"),
+        "1.12.3"
+    );
+}
+
+#[test]
+fn extracts_upstream_package_version() {
+    assert_eq!(
+        helper::upstream_regex_version(UPSTREAM_LOCK)
+            .expect("Upstream package version must be valid"),
+        "1.12.3"
+    );
+}
+
+#[test]
+fn rejects_multiple_upstream_versions() {
+    let lockfile =
+        format!("{UPSTREAM_LOCK}\n[[package]]\nname = \"regex\"\nversion = \"1.13.0\"\n");
+
+    let error = helper::upstream_regex_version(&lockfile)
+        .expect_err("Multiple upstream versions must fail");
+
+    assert!(error.contains("multiple `regex` packages"));
+    assert!(error.contains("`1.12.3`"));
+    assert!(error.contains("`1.13.0`"));
+}
+
+#[test]
+fn rejects_unpinned_local_dependency() {
+    let manifest = LOCAL_MANIFEST.replace("regex = \"=1.12.3\"", "regex = \"1.12.3\"");
+
+    let error = helper::local_regex_version(&manifest).expect_err("Unpinned version must fail");
+
+    assert!(error.contains("exact `regex"));
+}
+
+#[test]
+fn rejects_invalid_upstream_revision() {
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let arguments = [
+        OsString::from("--local-manifest"),
+        OsString::from("Cargo.toml"),
+        OsString::from("--upstream-lock"),
+        OsString::from("Cargo.lock"),
+        OsString::from("--upstream-revision"),
+        OsString::from("main"),
+    ];
+
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(
+        String::from_utf8(stderr)
+            .expect("Standard error must be valid UTF-8")
+            .contains("lowercase hexadecimal commit")
+    );
+}
+
+#[test]
+fn accepts_unrelated_local_regex_version() {
+    let fixture = Fixture::new();
+    let local_lock = LOCAL_LOCK.replace(
+        " \"regex\",\n",
+        " \"regex 1.12.3 (registry+https://github.com/rust-lang/crates.io-index)\",\n",
+    );
+    let local_lock = format!(
+        "{local_lock}\n[[package]]\nname = \"regex\"\nversion = \"1.11.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"1111111111111111111111111111111111111111111111111111111111111111\"\n"
+    );
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, &local_lock, UPSTREAM_LOCK);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Zed commit `abcdef1` and `Cargo.toml` use `regex` `1.12.3`\n"
+    );
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn rejects_pinned_regex_package_not_selected_by_root_dependency() {
+    let fixture = Fixture::new();
+    let local_lock = format!(
+        "{LOCAL_LOCK}\n[[package]]\nname = \"regex\"\nversion = \"1.11.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"1111111111111111111111111111111111111111111111111111111111111111\"\n"
+    );
+    let local_lock = local_lock.replace(
+        " \"regex\",\n",
+        " \"regex 1.11.1 (registry+https://github.com/rust-lang/crates.io-index)\",\n",
+    );
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, &local_lock, UPSTREAM_LOCK);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("adjacent `Cargo.lock` resolves `1.11.1`"));
+}
+
+#[test]
+fn reports_matching_versions() {
+    let fixture = Fixture::new();
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, UPSTREAM_LOCK);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Zed commit `abcdef1` and `Cargo.toml` use `regex` `1.12.3`\n"
+    );
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn reports_dependency_checksum_mismatch() {
+    let fixture = Fixture::new();
+    let upstream_lock = UPSTREAM_LOCK.replace(
+        "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+    );
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, &upstream_lock);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("resolve different dependency graphs"));
+}
+
+#[test]
+fn rejects_source_less_dependency() {
+    let fixture = Fixture::new();
+    let upstream_lock = UPSTREAM_LOCK.replace(
+        concat!(
+            "source = \"registry+https://github.com/rust-lang/crates.io-index\"\n",
+            "checksum = \"7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58\"\n",
+        ),
+        "",
+    );
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, &upstream_lock);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("`regex-syntax 0.8.8` has no source"));
+}
+
+#[test]
+fn reports_dependency_edge_mismatch() {
+    let fixture = Fixture::new();
+    let upstream_lock = UPSTREAM_LOCK.replace(
+        concat!(
+            "dependencies = [\n",
+            " \"aho-corasick\",\n",
+            " \"memchr\",\n",
+            " \"regex-automata\",\n",
+            " \"regex-syntax\",\n",
+            "]",
+        ),
+        concat!(
+            "dependencies = [\n",
+            " \"aho-corasick\",\n",
+            " \"regex-automata\",\n",
+            " \"regex-syntax\",\n",
+            "]",
+        ),
+    );
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, &upstream_lock);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("resolve different dependency graphs"));
+}
+
+#[test]
+fn reports_transitive_dependency_version_mismatch() {
+    let fixture = Fixture::new();
+    let upstream_lock = UPSTREAM_LOCK.replace("version = \"0.4.14\"", "version = \"0.4.13\"");
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, &upstream_lock);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("resolve different dependency graphs"));
+}
+
+#[test]
+fn reports_version_mismatch() {
+    let fixture = Fixture::new();
+    let upstream_lock = UPSTREAM_LOCK.replace("version = \"1.12.3\"", "version = \"1.13.0\"");
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, &upstream_lock);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr,
+        "Zed commit `abcdef1` uses `regex` `1.13.0`, but `Cargo.toml` pins `1.12.3`\n"
+    );
+}
+
+#[test]
+fn rejects_stale_local_lockfile() {
+    let fixture = Fixture::new();
+    let local_lock = LOCAL_LOCK.replace("version = \"1.12.3\"", "version = \"1.13.0\"");
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, &local_lock, UPSTREAM_LOCK);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("adjacent `Cargo.lock` resolves `1.13.0`"));
+}
+
+#[test]
+fn returns_success_for_help() {
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+
+    let status = helper::run(vec![OsString::from("--help")], &mut stdout, &mut stderr);
+
+    assert_eq!(status, 0);
+    assert!(
+        String::from_utf8(stdout)
+            .expect("Standard output must be valid UTF-8")
+            .starts_with("Usage: zed-regex-audit")
+    );
+    assert!(stderr.is_empty());
+}

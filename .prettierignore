@@ -1,2 +1,3 @@
 *.snap
+Cargo.lock
 pnpm-lock.yaml
