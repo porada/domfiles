@@ -1,6 +1,15 @@
 version: 2
 
 updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+    cooldown:
+      default-days: 1
+    ignore:
+      - dependency-name: regex
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

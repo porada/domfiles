@@ -2,10 +2,11 @@
 abbr --erase (abbr --list) >/dev/null 2>&1
 
 # Shorten frequently used commands
+abbr c cargo
 abbr g git
-abbr o open
 abbr k killall
 abbr n npm
+abbr o open
 abbr p pnpm
 abbr y yarn
 
