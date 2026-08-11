@@ -1,4 +1,4 @@
-Create a decision-making relay for improving the `domfiles-zed-settings` skill from the Zed settings work completed in this conversation.
+Create a decision relay for improving the `domfiles-zed-settings` skill from the Zed settings work completed in this conversation.
 
 The user invokes this prompt only after the current Zed settings task is complete. Treat the task as complete for capture purposes, but describe a particular result or decision as explicitly accepted only when direct prior evidence establishes that acceptance.
 
@@ -10,12 +10,15 @@ Use only the conversation and task artifacts already inspected. Do not reopen or
 
 - Output `# Relay Prompt`, followed immediately by one four-backtick `markdown` code block.
 - Put the complete, self-contained relay inside the block and begin it with `# Zed Settings Skill Improvement Relay`.
-- Add no other content. Use triple-backtick fences inside the outer block when exact code, JSON, regexes, or command inputs must be preserved.
-- Stop immediately after closing the outer block.
+- After the block, output `The prompt is ready for relay.`
+- Keep all content intended for the receiving agent inside the block. Outside it, output only the required `# Relay Prompt` heading and closing paragraph.
+- Use triple-backtick fences inside the outer block when exact code, JSON, regexes, or command inputs must be preserved.
+- When the user asks to revise the prompt, output the complete corrected relay with this same frame. Do not return a patch, fragment, or splicing instructions.
 
 ## Evidence rules
 
-- Distinguish direct user instructions, corrections, selections, settled classifications, and explicit acceptances from agent proposals, current configuration, project policy, official Zed evidence, locally observed behavior, and inferences.
+- Distinguish direct user instructions, corrections, selections, explicit acceptances, and settled user evidence from agent proposals, project policy, contextual requirements, repository evidence, documentation evidence, observed behavior, and inferences.
+- Use `Documentation evidence` for local help, manuals, official command documentation, or authoritative source consulted as documentation. Use `Repository evidence` for current source, configuration, tests, or history. Reserve `Observed behavior` for executed commands or runtime results that were actually observed.
 - Preserve a user-supplied classification as settled evidence when the original task established that boundary. Do not retrospectively challenge or re-research it.
 - Preserve exact normalized inputs, token ordering, flags, assignments, wrappers, case distinctions, URLs, paths, and precedence outcomes when they materially affected a permission decision.
 - Never reproduce literal credentials, tokens, private values, or secret-bearing URLs. Describe the redacted security boundary and resulting classification instead.
@@ -88,13 +91,13 @@ Explain the behavioral, security, ownership, structural, efficiency, compatibili
 
 **Decision basis**
 
-Use one or more precise labels: `Direct instruction`, `Correction`, `User selection`, `Explicit acceptance`, `Settled user evidence`, `Observed behavior`, `Official Zed evidence`, `Project policy`, `Context-specific requirement`, `Agent inference`, `Implementation limitation`, or `Unresolved`.
+Use one or more precise labels: `Agent inference`, `Context-specific requirement`, `Correction`, `Direct instruction`, `Documentation evidence`, `Explicit acceptance`, `Implementation limitation`, `Observed behavior`, `Project policy`, `Repository evidence`, `Settled user evidence`, `Unresolved`, or `User selection`.
 
 ## Evidence and validation
 
 Record only evidence that materially established the result:
 
-- Which behavior classifications came from the user and which were derived from local help, official documentation or source, observed Zed behavior, or project configuration.
+- Which behavior classifications came from the user and which were derived from project policy, repository evidence, documentation evidence, observed behavior, or agent inference.
 - The important normalized inputs and near misses that established the accepted grammar or scope.
 - Whether the inventory-first and candidate-first workflows were used and which repository-owned scripts or suite modes materially aided the work.
 - Whether regex compilation, pattern expectations, configured-pattern precedence decisions, complete effective permission behavior, and any actual post-change Zed permission behavior were verified. Keep these evidence levels distinct.
@@ -122,3 +125,7 @@ Separate strong candidates supported by direct user decisions or repeated eviden
 List decisions that should not be generalized, stricter boundaries caused by current matcher limits, open questions, contradictory signals, and areas where more examples are needed. Omit this section when none remain.
 
 Keep the relay concise enough to scan, but complete enough that the receiving agent does not need the original conversation to understand each reported decision.
+
+**After the code block**
+
+The prompt is ready for relay.

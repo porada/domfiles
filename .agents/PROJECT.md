@@ -64,7 +64,7 @@ npm’s exact `--all` is an ordinary scope option rather than a lifecycle-script
 
 ### Zed permission regex compatibility
 
-`Cargo.toml` pins the `regex` crate, while `Cargo.lock` locks its dependency closure to the package identities used by Zed commit `9e23609`. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) revalidates this baseline against current Zed source.
+The exact `regex` crate version pinned in `Cargo.toml` was verified against Zed as of commit `9e23609`. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) revalidates the direct version baseline against current Zed source.
 
 ### Zed `printenv` exposure
 
@@ -128,9 +128,9 @@ Edits to an exposed portable skill affect its globally discovered installation t
 
 Every installation of the portable `agent-documentation` skill is assumed to use the tracked global `.config/zed/AGENTS.md`. The skill relies on that document’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
 
-### Decision-capture prompts
+### Prompt relays
 
-The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill include decision-capture prompts for producing self-contained relays from completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). They are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+The [global agent instructions](../.config/zed/AGENTS.md#prompt-relays) define prompt relay delivery and complete-revision defaults. The portable [`agent-documentation` skill](skills/agent-documentation/SKILL.md) owns the complementary [relay composition and evidence standard](skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](skills/agent-documentation/assets/task-relay-prompt.md). The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
 ### Global system-available tooling
 

@@ -1,6 +1,6 @@
 ---
 name: agent-documentation
-description: Edit, review, audit, and maintain agent documentation and project-authored skill scripts in software projects, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` documentation, and reusable scripts with adjacent tests owned by those skills. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-owned script architecture. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
+description: Edit, review, audit, and maintain agent documentation and project-authored skill scripts in software projects, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` documentation, prompt-relay assets, and reusable scripts with adjacent tests owned by those skills. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-owned script architecture. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
 ---
 
 # Project agent documentation and skill scripts
@@ -26,6 +26,7 @@ Apply every applicable global and project instruction. Treat project instruction
 
 ## Choose the workflow
 
+- When a task creates, revises, reviews, or maintains a prompt relay or capture prompt, read the [prompt relay policy](references/prompt-relays.md) before resolving its canonical owner or composing it.
 - When a task adds, changes, reviews, or audits a reusable script or adjacent test owned by a project-authored skill, read the [skill-owned script policy](references/skill-owned-scripts.md) before planning the work. For a change, resolve skill and repository-root ownership, then follow applicable project and language implementation and validation workflows. For a standalone review or audit, keep the task read-only and follow applicable review or audit workflows. Update agent documentation only when the script contract, routing, or documented invocation changes.
 - An explicit request to change agent documentation uses the change workflow even when it also asks for a review or audit. Treat inspection as the evidence-gathering phase, then resolve the canonical owner, compose the change, and validate the final contents.
 - For a standalone ordinary review, keep the task read-only. Resolve the canonical owner and validate the existing contents, but skip composition, formatting, and every mutation.

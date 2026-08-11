@@ -1,6 +1,6 @@
 # Technical documents
 
-Use this workflow for README files, other technical documents, and GitHub issue or pull request titles, descriptions, comments, and reviews. Apply the standard path from the skill entrypoint. Treat applicable project policy, repository templates, and explicit user decisions about wording, structure, links, examples, and scope as authoritative over these defaults.
+Use this workflow for README files, other technical documents, GitHub issue or pull request titles, descriptions, comments, and reviews, and GitHub Discussion titles, posts, and comments. Apply the standard path from the skill entrypoint. Treat applicable project policy, repository templates, and explicit user decisions about wording, structure, links, examples, and scope as authoritative over these defaults.
 
 ## Resolve the requested surface
 
@@ -9,8 +9,9 @@ Use this workflow for README files, other technical documents, and GitHub issue 
 - When reproducing an existing heading, preserve its exact identifier spelling, significant characters, entities, and intentional markup. Omit an unchanged heading from a structural outline rather than normalizing its markup. Do not introduce nonbreaking characters, entities, or presentational markup where the source does not already use them unless project policy or the user requires it.
 - During feature work, update only the task-owned passage and the minimal navigation or adjacent copy needed to integrate it. Do not turn one documented addition into a broad document rewrite.
 - Preserve headings, section order, taglines, links, examples, and wording that the user has selected or restored unless the current request targets them.
+- Treat supplied template sections as information-allocation boundaries. When a template separates the proposal, rationale, evidence, examples, and implementation ideas, keep the opening proposal to the smallest complete statement of the requested outcome and its essential boundary, then place each supporting detail in its designated section.
 - Apply the global README permission rule to README edits. When permission is absent, identify the target location and provide the proposed structure or ready-to-use copy without modifying the file.
-- Drafting a GitHub issue, pull request, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
+- Drafting a GitHub issue, pull request, Discussion, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
 - For any security report—whether standalone or submitted through an issue or pull request form—also follow the [security-report workflow](security-reports.md).
 
 ## Design the reading path
@@ -29,7 +30,7 @@ Treat that sequence as a decision framework rather than a fixed template. A visu
 | --- | --- |
 | README | Open with a compact project or package identity and practical value. Move through the first useful demonstration, installation, setup, and core usage before optional configuration or questions as applicable. Keep related projects, provenance, and license information near the end when established. Preserve intentional hero artwork, badges, and layout. |
 | Other technical document | Follow the established document hierarchy. Lead with the document’s purpose, decision, or required action and include only the context needed to understand it. |
-| Issue or pull request title and description | Follow the repository template. Make the problem, outcome, or scope recognizable immediately, then provide relevant evidence, impact, proposed or implemented changes, validation, and next action. |
+| Issue, pull request, or Discussion title and body | Follow the repository template. Make the problem, outcome, or scope recognizable immediately, then provide relevant evidence, impact, proposed or implemented changes, validation, and next action. |
 | Follow-up comment or code review | Lead with the answer, finding, or required action. Include only the thread context needed to support it, and distinguish required changes from optional suggestions. |
 
 ## Compose the content
@@ -41,6 +42,7 @@ Treat that sequence as a decision framework rather than a fixed template. A visu
 - Keep equivalent package-manager or environment paths parallel when the project presents them as equal options.
 - Across related documents or discussions, keep shared facts and terminology consistent while preserving each surface’s purpose and abstraction level.
 - Preserve established layout and intentional link wording. Do not introduce or normalize presentation merely because another document uses it.
+- On GitHub surfaces that autolink same-repository references, prefer bare `#…` issue, pull request, and Discussion references when user or repository convention permits them. Use an explicit link for cross-repository, ambiguous, or off-platform references.
 
 ## Validate the result
 

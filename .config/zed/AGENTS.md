@@ -73,6 +73,12 @@
     - Avoid generic preambles, redundant recaps, closing pleasantries, figurative language, and hedging that adds no information.
     - Give full explanations when requested. Safety, real ambiguity, task requirements, and higher priority instructions override brevity.
 
+### Prompt relays
+
+- Put each complete prompt intended for another conversation in its own four-backtick `markdown` block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short paragraph stating that the prompt is ready for relay.
+- When asked to change a prompt, return each affected prompt in full with the change applied. Do not return a patch, replacement fragment, or instructions that require the user to splice edits into the previous prompt.
+- Do not add worktree instructions to a relayed prompt unless the user explicitly requests them or an already applicable policy requires them for that task.
+
 ## Dependencies
 
 - Add `--ignore-scripts` to `npm install`, `pnpm install`, and `yarn install` by default so package lifecycle scripts do not run.

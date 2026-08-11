@@ -1,6 +1,5 @@
 use regex::{Regex, RegexBuilder};
 use std::{
-    collections::BTreeSet,
     ffi::{OsStr, OsString},
     fs,
     io::Write,
@@ -11,19 +10,19 @@ const HELP: &str = concat!(
     "Usage: zed-regex-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
     "       zed-regex-audit [--case-sensitive] --pattern-file <path> [--pattern-file <path> …]\n",
     "\n",
-    "Audit Zed-compatible regex dependencies and configured patterns\n",
+    "Audit Zed-compatible regex versions and configured patterns\n",
     "\n",
     "Options:\n",
     "  --case-sensitive               Compile patterns case-sensitively\n",
     "  --help                         Print help\n",
     "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
     "  --pattern-file <path>          Compile a pattern from this file (repeatable)\n",
-    "  --upstream-lock <path>         Read upstream locked `regex` dependencies\n",
+    "  --upstream-lock <path>         Read the upstream locked `regex` version\n",
     "  --upstream-revision <commit>   Identify the upstream Zed commit\n",
     "\n",
     "Exit statuses:\n",
-    "  0  Dependencies matched, patterns compiled, or help displayed\n",
-    "  1  Dependencies differed\n",
+    "  0  Versions matched, patterns compiled, or help displayed\n",
+    "  1  Versions differed\n",
     "  2  Invalid arguments or data, or an I/O failure\n",
 );
 
@@ -47,12 +46,10 @@ struct ManifestPackage {
     version: String,
 }
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct PackageIdentity {
     name: String,
     version: String,
     source: Option<String>,
-    checksum: Option<String>,
 }
 
 struct DependencyReference {
@@ -61,27 +58,14 @@ struct DependencyReference {
     source: Option<String>,
 }
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-struct DependencyEdge {
-    from: PackageIdentity,
-    to: PackageIdentity,
-}
-
 struct LockedPackage {
     identity: PackageIdentity,
     dependencies: Vec<DependencyReference>,
 }
 
-struct LockedRegexPackages {
-    regex_version: String,
-    packages: BTreeSet<PackageIdentity>,
-    dependencies: BTreeSet<DependencyEdge>,
-}
-
 struct VersionComparison {
-    local: LockedRegexPackages,
     local_version: String,
-    upstream: LockedRegexPackages,
+    upstream_version: String,
 }
 
 enum Operation {
@@ -405,7 +389,6 @@ fn parse_lock_packages(lockfile: &str, description: &str) -> Result<Vec<LockedPa
                     name,
                     version,
                     source: quoted_field(block, "source"),
-                    checksum: quoted_field(block, "checksum"),
                 },
                 dependencies,
             })
@@ -449,25 +432,24 @@ fn resolve_dependency(
     }
 }
 
-fn locked_regex_packages(
+fn locked_regex_version(
     lockfile: &str,
     description: &str,
     local_package: Option<&ManifestPackage>,
-) -> Result<LockedRegexPackages, String> {
+) -> Result<String, String> {
     let packages = parse_lock_packages(lockfile, description)?;
-    let regex_index = if let Some(local_package) = local_package {
+
+    if let Some(local_package) = local_package {
         let root_packages = packages
             .iter()
-            .enumerate()
-            .filter(|(_, package)| {
+            .filter(|package| {
                 package.identity.name == local_package.name
                     && package.identity.version == local_package.version
                     && package.identity.source.is_none()
             })
-            .map(|(index, _)| index)
             .collect::<Vec<_>>();
-        let root_index = match root_packages.as_slice() {
-            [index] => *index,
+        let root_package = match root_packages.as_slice() {
+            [package] => *package,
             [] => {
                 return Err(format!(
                     "{description} lockfile does not contain source-less root package `{} {}`",
@@ -481,7 +463,6 @@ fn locked_regex_packages(
                 ));
             }
         };
-        let root_package = &packages[root_index];
         let regex_dependencies = root_package
             .dependencies
             .iter()
@@ -502,80 +483,41 @@ fn locked_regex_packages(
                 ));
             }
         };
+        let regex_index =
+            resolve_dependency(dependency, &packages, description, &root_package.identity)?;
 
-        resolve_dependency(dependency, &packages, description, &root_package.identity)?
-    } else {
-        let regex_packages = packages
-            .iter()
-            .enumerate()
-            .filter(|(_, package)| package.identity.name == "regex")
-            .map(|(index, _)| index)
-            .collect::<Vec<_>>();
-
-        match regex_packages.as_slice() {
-            [index] => *index,
-            [] => {
-                return Err(format!(
-                    "{description} lockfile does not contain a `regex` package"
-                ));
-            }
-            _ => {
-                let versions = regex_packages
-                    .iter()
-                    .map(|index| format!("`{}`", packages[*index].identity.version))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                return Err(format!(
-                    "{description} lockfile contains multiple `regex` packages: {versions}"
-                ));
-            }
-        }
-    };
-    let regex_version = packages[regex_index].identity.version.clone();
-    let mut pending = vec![regex_index];
-    let mut resolved_dependencies = BTreeSet::new();
-    let mut resolved_packages = BTreeSet::new();
-
-    while let Some(index) = pending.pop() {
-        let package = &packages[index];
-        if !resolved_packages.insert(package.identity.clone()) {
-            continue;
-        }
-
-        let Some(source) = package.identity.source.as_deref() else {
-            return Err(format!(
-                "{description} lockfile package `{} {}` has no source",
-                package.identity.name, package.identity.version
-            ));
-        };
-        if source.starts_with("registry+") && package.identity.checksum.is_none() {
-            return Err(format!(
-                "{description} lockfile registry package `{} {}` has no checksum",
-                package.identity.name, package.identity.version
-            ));
-        }
-
-        for dependency in &package.dependencies {
-            let dependency_index =
-                resolve_dependency(dependency, &packages, description, &package.identity)?;
-            resolved_dependencies.insert(DependencyEdge {
-                from: package.identity.clone(),
-                to: packages[dependency_index].identity.clone(),
-            });
-            pending.push(dependency_index);
-        }
+        return Ok(packages[regex_index].identity.version.clone());
     }
 
-    Ok(LockedRegexPackages {
-        regex_version,
-        packages: resolved_packages,
-        dependencies: resolved_dependencies,
-    })
+    let mut versions = packages
+        .iter()
+        .filter(|package| package.identity.name == "regex")
+        .map(|package| package.identity.version.clone())
+        .collect::<Vec<_>>();
+    versions.sort();
+    versions.dedup();
+
+    match versions.as_slice() {
+        [version] => Ok(version.to_owned()),
+        [] => Err(format!(
+            "{description} lockfile does not contain a `regex` package"
+        )),
+        _ => {
+            let versions = versions
+                .iter()
+                .map(|version| format!("`{version}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            Err(format!(
+                "{description} lockfile contains multiple `regex` versions: {versions}"
+            ))
+        }
+    }
 }
 
 #[cfg(test)]
 pub(crate) fn upstream_regex_version(lockfile: &str) -> Result<String, String> {
-    Ok(locked_regex_packages(lockfile, "Upstream", None)?.regex_version)
+    locked_regex_version(lockfile, "Upstream", None)
 }
 
 fn evaluate_versions(arguments: &VersionArguments) -> Result<VersionComparison, String> {
@@ -585,20 +527,18 @@ fn evaluate_versions(arguments: &VersionArguments) -> Result<VersionComparison, 
     let upstream_lock = read_utf8_file(&arguments.upstream_lock, "upstream lockfile")?;
     let local_package = local_manifest_package(&local_manifest)?;
     let local_version = local_regex_version(&local_manifest)?;
-    let local = locked_regex_packages(&local_lock, "Local", Some(&local_package))?;
-    let upstream = locked_regex_packages(&upstream_lock, "Upstream", None)?;
+    let locked_local_version = locked_regex_version(&local_lock, "Local", Some(&local_package))?;
+    let upstream_version = locked_regex_version(&upstream_lock, "Upstream", None)?;
 
-    if local_version != local.regex_version {
+    if local_version != locked_local_version {
         return Err(format!(
-            "Local manifest pins `regex` `{local_version}`, but adjacent `Cargo.lock` resolves `{}`",
-            local.regex_version
+            "Local manifest pins `regex` `{local_version}`, but adjacent `Cargo.lock` resolves `{locked_local_version}`"
         ));
     }
 
     Ok(VersionComparison {
-        local,
         local_version,
-        upstream,
+        upstream_version,
     })
 }
 
@@ -676,29 +616,11 @@ fn run_version_audit(
         }
     };
 
-    if comparison.local_version != comparison.upstream.regex_version {
+    if comparison.local_version != comparison.upstream_version {
         if writeln!(
             stderr,
             "Zed commit `{}` uses `regex` `{}`, but `Cargo.toml` pins `{}`",
-            arguments.upstream_revision,
-            comparison.upstream.regex_version,
-            comparison.local_version
-        )
-        .is_err()
-        {
-            return STATUS_ERROR;
-        }
-
-        return STATUS_MISMATCH;
-    }
-
-    if comparison.local.packages != comparison.upstream.packages
-        || comparison.local.dependencies != comparison.upstream.dependencies
-    {
-        if writeln!(
-            stderr,
-            "Zed commit `{}` and local `Cargo.lock` use `regex` `{}` but resolve different dependency graphs",
-            arguments.upstream_revision, comparison.local_version
+            arguments.upstream_revision, comparison.upstream_version, comparison.local_version
         )
         .is_err()
         {

@@ -249,7 +249,7 @@ fn rejects_multiple_upstream_versions() {
     let error = helper::upstream_regex_version(&lockfile)
         .expect_err("Multiple upstream versions must fail");
 
-    assert!(error.contains("multiple `regex` packages"));
+    assert!(error.contains("multiple `regex` versions"));
     assert!(error.contains("`1.12.3`"));
     assert!(error.contains("`1.13.0`"));
 }
@@ -344,7 +344,7 @@ fn reports_matching_versions() {
 }
 
 #[test]
-fn reports_dependency_checksum_mismatch() {
+fn accepts_transitive_dependency_checksum_mismatch() {
     let fixture = Fixture::new();
     let upstream_lock = UPSTREAM_LOCK.replace(
         "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f",
@@ -354,13 +354,16 @@ fn reports_dependency_checksum_mismatch() {
 
     let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
 
-    assert_eq!(status, 1);
-    assert!(stdout.is_empty());
-    assert!(stderr.contains("resolve different dependency graphs"));
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Zed commit `abcdef1` and `Cargo.toml` use `regex` `1.12.3`\n"
+    );
+    assert!(stderr.is_empty());
 }
 
 #[test]
-fn rejects_source_less_dependency() {
+fn accepts_source_less_transitive_dependency() {
     let fixture = Fixture::new();
     let upstream_lock = UPSTREAM_LOCK.replace(
         concat!(
@@ -373,13 +376,16 @@ fn rejects_source_less_dependency() {
 
     let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
 
-    assert_eq!(status, 2);
-    assert!(stdout.is_empty());
-    assert!(stderr.contains("`regex-syntax 0.8.8` has no source"));
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Zed commit `abcdef1` and `Cargo.toml` use `regex` `1.12.3`\n"
+    );
+    assert!(stderr.is_empty());
 }
 
 #[test]
-fn reports_dependency_edge_mismatch() {
+fn accepts_transitive_dependency_edge_mismatch() {
     let fixture = Fixture::new();
     let upstream_lock = UPSTREAM_LOCK.replace(
         concat!(
@@ -402,22 +408,28 @@ fn reports_dependency_edge_mismatch() {
 
     let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
 
-    assert_eq!(status, 1);
-    assert!(stdout.is_empty());
-    assert!(stderr.contains("resolve different dependency graphs"));
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Zed commit `abcdef1` and `Cargo.toml` use `regex` `1.12.3`\n"
+    );
+    assert!(stderr.is_empty());
 }
 
 #[test]
-fn reports_transitive_dependency_version_mismatch() {
+fn accepts_transitive_dependency_version_mismatch() {
     let fixture = Fixture::new();
     let upstream_lock = UPSTREAM_LOCK.replace("version = \"0.4.14\"", "version = \"0.4.13\"");
     let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, &upstream_lock);
 
     let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
 
-    assert_eq!(status, 1);
-    assert!(stdout.is_empty());
-    assert!(stderr.contains("resolve different dependency graphs"));
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Zed commit `abcdef1` and `Cargo.toml` use `regex` `1.12.3`\n"
+    );
+    assert!(stderr.is_empty());
 }
 
 #[test]

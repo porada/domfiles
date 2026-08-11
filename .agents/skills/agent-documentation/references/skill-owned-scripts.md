@@ -15,16 +15,19 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 
 ## Keep ownership clear
 
-- Store each script and its adjacent contract test directly under `<skill>/scripts`. Do not create a per-script directory for a single script-and-test pair. Use a subdirectory only when an established repository layout or multiple supporting source or fixture files make a flat pair insufficient.
+- Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Give every script and adjacent test the same filename stem, adding only the repository’s established test suffix to the test file. Rename the pair together so their stems never diverge. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`.
 - Let the skill own the source, tests, purpose, invocation, operation routes, artifact contract, and repair workflow.
 - Let the repository root own toolchain configuration, dependencies, static validation, optional Cargo integration, and repository build-output policy.
-- Do not give the scripts directory its own package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
-- Keep multiple related scripts directly in the same scripts directory rather than creating infrastructure around each one.
+- Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
+- Keep multiple related executable scripts directly in the same scripts directory. Extract code into `scripts/helpers` only when it is genuine shared implementation rather than infrastructure around superficial duplication.
 
 ## Make the interface discoverable
 
 - Support `--help` and describe the script’s purpose, modes, accepted inputs, output behavior, destination selection, overwrite policy, and relevant exit behavior.
 - Keep each operation bounded and deterministic for the same repository state and inputs.
+- Prefer one batch, manifest, or suite invocation that reads and prepares shared inputs once over repeated one-record processes. Parse, compile, hash, or index shared data once per invocation when later records reuse it.
+- Let cooperating modes or scripts consume one explicit manifest-relative artifact graph instead of repeatedly extracting the same source data. Keep each artifact’s authority, integrity boundary, and mutation contract clear.
+- Aggregate the complete result while retaining only the bounded details that can be reported. State exact total and omitted counts without storing or emitting every failure body.
 - Choose human-readable or structured output according to the consumer’s needs. Do not require JSON without a consumer that needs it.
 - Do not invent an output filename in the current directory. Use a declared repository destination or require the caller to supply one.
 
@@ -59,13 +62,27 @@ Before writing:
 
 - Pair each script with an adjacent test file that documents its behavior and edge cases.
 - Use the language’s native test framework when it is sufficient. Use `node:test` for JavaScript or TypeScript and Rust’s built-in `#[test]` harness for Rust.
+- Keep command-line entrypoints testable through an injectable function such as `run(arguments, stdout, stderr)` so focused contract tests avoid spawning a process for every case.
 - Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the applicable temporary-file policy.
 - Run focused tests and the repository’s root static validation. Direct execution and focused tests do not replace root typechecking or compilation.
 
 Document focused script and test commands in the owning skill or its repair reference.
 
-Prefer standard-library and repository-owned dependencies. Obtain explicit user approval before adding a third-party runtime package or Rust crate, then declare an approved dependency through the repository root rather than beside the script. Declare host-language types needed for static validation through the root toolchain as well.
+## Choose dependencies before implementation
+
+- Prefer an existing repository dependency or standard-library capability when it directly provides the required behavior and keeps the implementation small, complete, and maintainable.
+- Do not reimplement a mature general-purpose capability merely to avoid adding a dependency or requesting approval. This includes cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior.
+- When the best implementation requires a new dependency whose addition needs approval, stop before implementation or mutating delegation. Tell the user:
+    - Which dependency or smallest dependency set is proposed
+    - What each dependency provides
+    - Where it will be declared and which code will use it
+    - Why existing dependencies or the standard library are insufficient
+    - Why a custom implementation would be less correct, maintainable, proportionate, or secure
+    - Any material feature, licensing, runtime, supply-chain, or version implications
+- Ask one focused approval question after presenting that information. Do not create source files premised on either choice until the dependency decision is settled.
+- Treat missing dependency approval as a decision boundary, not as authorization to substitute a lower-quality custom implementation. If approval is declined, propose the strongest constrained alternative and explain its limitations. Implement custom infrastructure only when the user explicitly selects it or project constraints make it necessary.
+- Enable only the dependency features required by the approved design. Declare approved dependencies and host-language types through the repository root rather than beside the skill-owned script.
 
 ## Integrate root validation
 

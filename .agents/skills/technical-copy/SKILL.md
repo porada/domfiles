@@ -1,6 +1,6 @@
 ---
 name: technical-copy
-description: Draft, edit, review, and refine human-facing copy in engineering projects. Use this skill automatically whenever a task creates, changes, or reviews package or repository descriptions, README or other technical-document content or information architecture, GitHub issue or pull request titles, descriptions, comments, or reviews, JSDoc, language-native documentation comments or docstrings, explanatory source comments, runtime errors or warnings, test titles, labels, or other developer- or user-facing strings, including copy written during feature implementation and explicit consistency checks. Defer release notes, changelog entries, release-ready prose, hosted release descriptions, and package-release wording or consistency checks to `release-notes`. Do not use it for agent documentation or LICENSE text. Do not use it when all human-facing wording and document information architecture are explicitly unchanged, including formatting-only tasks.
+description: Draft, edit, review, and refine human-facing copy in engineering projects. Use this skill automatically whenever a task creates, changes, or reviews package or repository descriptions, README or other technical-document content or information architecture, GitHub issue or pull request titles, descriptions, comments, or reviews, GitHub Discussion titles, posts, or comments, JSDoc, language-native documentation comments or docstrings, explanatory source comments, runtime errors or warnings, test titles, labels, or other developer- or user-facing strings, including copy written during feature implementation and explicit consistency checks. Defer release notes, changelog entries, release-ready prose, hosted release descriptions, and package-release wording or consistency checks to `release-notes`. Do not use it for agent documentation or LICENSE text. Do not use it when all human-facing wording and document information architecture are explicitly unchanged, including formatting-only tasks.
 ---
 
 # Technical copy
@@ -31,7 +31,7 @@ Treat applicable project policy—including `AGENTS.md` instructions and narrowe
 | Surface | Default |
 | --- | --- |
 | Package and repository descriptions | Use one compact phrase without terminal punctuation. When both surfaces represent the same artifact, scope, and proposition, matching wording is the default. Do not enforce synchronization or edit an unrequested surface. |
-| README, technical-document, issue, and pull request copy | Follow the [technical-document workflow](references/technical-documents.md). |
+| README, technical-document, issue, pull request, and Discussion copy | Follow the [technical-document workflow](references/technical-documents.md). |
 | JSDoc | Follow the [JSDoc workflow](references/jsdoc-comments.md), including for language-native documentation comments and docstrings. |
 | Explanatory source comments | Explain non-obvious intent, constraints, invariants, or consequences rather than narrating nearby code. Proactively document a surprising tradeoff that could look accidental. Omit terminal periods from ordinary `//` comments. |
 | Runtime errors and warnings | Follow the [runtime-message workflow](references/runtime-messages.md). |
