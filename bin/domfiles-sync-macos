@@ -46,6 +46,45 @@ __ defaults write com.apple.AppStore InAppReviewEnabled -bool false || true
 # Quit the printer app when finished
 __ defaults write com.apple.print.PrintingPrefs 'Quit When Finished' -bool true
 
+# Prevent automatic sleep on power adapter
+if ! __is_ci; then
+  power_adapter_sleep="$(
+    pmset -g custom \
+      | awk '
+        /^AC Power:$/ {
+          adapter = 1
+          next
+        }
+
+        /^[^[:space:]]/ {
+          adapter = 0
+        }
+
+        adapter && $1 == "sleep" {
+          print $2
+          exit
+        }
+      ' \
+      || true
+  )"
+
+  if [ -z "$power_adapter_sleep" ]; then
+    __print_error 'Failed to read the automatic sleep setting on power adapter'
+  elif [ "$power_adapter_sleep" = 0 ]; then
+    __print_confirmation 'Automatic sleep disabled on power adapter'
+  else
+    if ! __is_tty; then
+      __print_warning 'Disabling automatic sleep on power adapter requires an interactive terminal'
+    else
+      __print_heading 'Disabling automatic sleep on power adapter'
+
+      if ! __ sudo pmset -c sleep 0; then
+        __print_error 'Failed to disable automatic sleep on power adapter'
+      fi
+    fi
+  fi
+fi
+
 __print_heading_dimmed 'Restarting affected apps'
 
 __ killall Dock || true

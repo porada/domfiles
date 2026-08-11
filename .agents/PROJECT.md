@@ -174,13 +174,13 @@ Repository updates are skipped when the checkout contains entries marked by `git
 
 `domfiles sync` is the repository’s canonical update path. It intentionally establishes the repository-managed state, including replacing the initial contents of managed paths. That replacement is expected synchronization behavior rather than accidental data loss.
 
-`domfiles sync` prioritizes completing as much independent work as possible with minimal interruption. Repository fetch, rebase, stashing, and stash-restoration failures are recoverable. They are reported without aborting the broader workflow, which continues against the available checkout so the remaining setup, installation, update, and cleanup stages can still run.
+`domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. An individual failure is recoverable only when the main workflow or a sync stage handles it explicitly, surfaces the result, and can continue later work independently of the failed operation. Source control flow defines the exact recoverable cases.
 
-Outside those recoverable cases, synchronization scripts fail fast. An unhandled error or a nonzero exit from a sync stage stops the broader workflow. The best-effort policy does not suppress script failures.
+The workflow can complete with visible, explicitly handled failures. An unhandled error or a nonzero exit from a sync stage stops the broader workflow.
 
-The final dependency status is advisory. Its failures remain visible but do not invalidate that the broader workflow reached completion.
+The final dependency status is advisory. Its result remains visible while synchronization continues to completion.
 
-`.lastsync` records that the broader workflow reached completion. It is intentionally write-only for now and reserved for a possible future feature.
+`.lastsync` records only that the broader workflow reached its end. Command output remains the record of individual operation outcomes. The file remains intentionally write-only until a consumer is introduced.
 
 ## Tooling
 
