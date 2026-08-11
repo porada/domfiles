@@ -1,4 +1,5 @@
-use regex::{Regex, RegexBuilder};
+use regex::Regex;
+use serde::Deserialize;
 use std::{
     ffi::{OsStr, OsString},
     fs,
@@ -7,21 +8,18 @@ use std::{
 };
 
 const HELP: &str = concat!(
-    "Usage: zed-regex-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
-    "       zed-regex-audit [--case-sensitive] --pattern-file <path> [--pattern-file <path> …]\n",
+    "Usage: zed-regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
     "\n",
-    "Audit Zed-compatible regex versions and configured patterns\n",
+    "Audit the direct Zed-compatible `regex` dependency version\n",
     "\n",
     "Options:\n",
-    "  --case-sensitive               Compile patterns case-sensitively\n",
     "  --help                         Print help\n",
     "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
-    "  --pattern-file <path>          Compile a pattern from this file (repeatable)\n",
     "  --upstream-lock <path>         Read the upstream locked `regex` version\n",
     "  --upstream-revision <commit>   Identify the upstream Zed commit\n",
     "\n",
     "Exit statuses:\n",
-    "  0  Versions matched, patterns compiled, or help displayed\n",
+    "  0  Versions matched or help displayed\n",
     "  1  Versions differed\n",
     "  2  Invalid arguments or data, or an I/O failure\n",
 );
@@ -34,11 +32,6 @@ struct VersionArguments {
     local_manifest: PathBuf,
     upstream_lock: PathBuf,
     upstream_revision: String,
-}
-
-struct PatternArguments {
-    case_sensitive: bool,
-    pattern_files: Vec<PathBuf>,
 }
 
 struct ManifestPackage {
@@ -63,19 +56,30 @@ struct LockedPackage {
     dependencies: Vec<DependencyReference>,
 }
 
+#[derive(Deserialize)]
+struct LockDocument {
+    #[serde(rename = "version")]
+    _version: u64,
+    package: Vec<LockPackage>,
+}
+
+#[derive(Deserialize)]
+struct LockPackage {
+    name: String,
+    version: String,
+    source: Option<String>,
+    #[serde(default)]
+    dependencies: Vec<String>,
+}
+
 struct VersionComparison {
     local_version: String,
     upstream_version: String,
 }
 
-enum Operation {
-    CompareVersions(VersionArguments),
-    CompilePatterns(PatternArguments),
-}
-
 enum ParsedArguments {
     Help,
-    Run(Operation),
+    Run(VersionArguments),
 }
 
 fn parse_arguments<I>(arguments: I) -> Result<ParsedArguments, String>
@@ -89,9 +93,7 @@ where
     }
 
     let mut arguments = arguments.into_iter();
-    let mut case_sensitive = false;
     let mut local_manifest = None;
-    let mut pattern_files = Vec::new();
     let mut upstream_lock = None;
     let mut upstream_revision = None;
 
@@ -101,13 +103,6 @@ where
         };
 
         match option {
-            "--case-sensitive" => {
-                if case_sensitive {
-                    return Err("Option `--case-sensitive` may be specified only once".to_owned());
-                }
-
-                case_sensitive = true;
-            }
             "--help" => {
                 return Err("Option `--help` must be used alone".to_owned());
             }
@@ -121,12 +116,7 @@ where
                 };
                 local_manifest = Some(PathBuf::from(path));
             }
-            "--pattern-file" => {
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--pattern-file` requires a path".to_owned());
-                };
-                pattern_files.push(PathBuf::from(path));
-            }
+
             "--upstream-lock" => {
                 if upstream_lock.is_some() {
                     return Err("Option `--upstream-lock` may be specified only once".to_owned());
@@ -154,37 +144,10 @@ where
             }
             _ => {
                 return Err(format!(
-                    "Unknown option `{option}`. Run `zed-regex-audit --help` for usage"
+                    "Unknown option `{option}`. Run `zed-regex-dependency-audit --help` for usage"
                 ));
             }
         }
-    }
-
-    let uses_pattern_mode = case_sensitive || !pattern_files.is_empty();
-    let uses_version_mode =
-        local_manifest.is_some() || upstream_lock.is_some() || upstream_revision.is_some();
-
-    if uses_pattern_mode && uses_version_mode {
-        return Err(
-            "Pattern compilation options cannot be combined with version comparison options"
-                .to_owned(),
-        );
-    }
-
-    if uses_pattern_mode {
-        if pattern_files.is_empty() {
-            return Err(
-                "Option `--case-sensitive` requires at least one `--pattern-file <path>`"
-                    .to_owned(),
-            );
-        }
-
-        return Ok(ParsedArguments::Run(Operation::CompilePatterns(
-            PatternArguments {
-                case_sensitive,
-                pattern_files,
-            },
-        )));
     }
 
     let local_manifest = local_manifest
@@ -202,13 +165,11 @@ where
         );
     }
 
-    Ok(ParsedArguments::Run(Operation::CompareVersions(
-        VersionArguments {
-            local_manifest,
-            upstream_lock,
-            upstream_revision,
-        },
-    )))
+    Ok(ParsedArguments::Run(VersionArguments {
+        local_manifest,
+        upstream_lock,
+        upstream_revision,
+    }))
 }
 
 fn read_utf8_file(path: &Path, description: &str) -> Result<String, String> {
@@ -228,20 +189,32 @@ fn read_utf8_file(path: &Path, description: &str) -> Result<String, String> {
 }
 
 pub(crate) fn local_regex_version(manifest: &str) -> Result<String, String> {
-    let pin_pattern =
-        Regex::new(r#"(?m)^regex = "=([^"\r\n]+)"\r?$"#).expect("Pin pattern must compile");
-    let versions: Vec<String> = pin_pattern
-        .captures_iter(manifest)
-        .map(|captures| captures[1].to_owned())
-        .collect();
-
-    match versions.as_slice() {
-        [version] => Ok(version.to_owned()),
-        [] => Err(
-            "Local manifest must contain one exact `regex = \"=VERSION\"` dependency".to_owned(),
-        ),
-        _ => Err("Local manifest contains more than one exact `regex` pin".to_owned()),
+    let document: toml::Value = toml::from_str(manifest)
+        .map_err(|error| format!("Local manifest is invalid TOML: {error}"))?;
+    let dependency = document
+        .get("dependencies")
+        .and_then(toml::Value::as_table)
+        .and_then(|dependencies| dependencies.get("regex"))
+        .ok_or_else(|| {
+            "Local manifest must contain an exact `[dependencies].regex` requirement".to_owned()
+        })?;
+    let requirement = match dependency {
+        toml::Value::String(requirement) => Some(requirement.as_str()),
+        toml::Value::Table(dependency) => dependency.get("version").and_then(toml::Value::as_str),
+        _ => None,
     }
+    .ok_or_else(|| {
+        "Local manifest `[dependencies].regex` must contain an exact `=VERSION` requirement"
+            .to_owned()
+    })?;
+    let version = requirement
+        .strip_prefix('=')
+        .filter(|version| !version.is_empty());
+
+    version.map(str::to_owned).ok_or_else(|| {
+        "Local manifest `[dependencies].regex` must contain an exact `=VERSION` requirement"
+            .to_owned()
+    })
 }
 
 fn local_manifest_package(manifest: &str) -> Result<ManifestPackage, String> {
@@ -292,18 +265,6 @@ fn local_manifest_package(manifest: &str) -> Result<ManifestPackage, String> {
     })
 }
 
-fn quoted_field(block: &str, field: &str) -> Option<String> {
-    let prefix = format!("{field} = \"");
-
-    block.lines().find_map(|line| {
-        line.strip_suffix('\r')
-            .unwrap_or(line)
-            .strip_prefix(&prefix)
-            .and_then(|value| value.strip_suffix('"'))
-            .map(str::to_owned)
-    })
-}
-
 fn parse_dependency_reference(value: &str) -> Result<DependencyReference, String> {
     let (package_and_version, source) = if let Some((package, source)) = value.rsplit_once(" (") {
         let source = source
@@ -330,65 +291,25 @@ fn parse_dependency_reference(value: &str) -> Result<DependencyReference, String
     })
 }
 
-fn parse_dependencies(
-    block: &str,
-    description: &str,
-    package_name: &str,
-) -> Result<Vec<DependencyReference>, String> {
-    let mut lines = block.lines();
-
-    while let Some(line) = lines.next() {
-        if line.trim_end_matches('\r').trim() != "dependencies = [" {
-            continue;
-        }
-
-        let mut dependencies = Vec::new();
-        loop {
-            let Some(line) = lines.next() else {
-                return Err(format!(
-                    "{description} lockfile has an unterminated dependency list for `{package_name}`"
-                ));
-            };
-            let line = line.trim_end_matches('\r').trim();
-            if line == "]" {
-                return Ok(dependencies);
-            }
-
-            let value = line
-                .strip_prefix('"')
-                .and_then(|value| {
-                    value
-                        .strip_suffix("\",")
-                        .or_else(|| value.strip_suffix('"'))
-                })
-                .ok_or_else(|| {
-                    format!(
-                        "{description} lockfile has an invalid dependency entry for `{package_name}`"
-                    )
-                })?;
-            dependencies.push(parse_dependency_reference(value)?);
-        }
-    }
-
-    Ok(Vec::new())
-}
-
 fn parse_lock_packages(lockfile: &str, description: &str) -> Result<Vec<LockedPackage>, String> {
-    lockfile
-        .split("[[package]]")
-        .skip(1)
-        .map(|block| {
-            let name = quoted_field(block, "name")
-                .ok_or_else(|| format!("{description} lockfile package has no name"))?;
-            let version = quoted_field(block, "version")
-                .ok_or_else(|| format!("{description} lockfile package `{name}` has no version"))?;
-            let dependencies = parse_dependencies(block, description, &name)?;
+    let document: LockDocument = toml::from_str(lockfile)
+        .map_err(|error| format!("{description} lockfile is invalid TOML: {error}"))?;
+
+    document
+        .package
+        .into_iter()
+        .map(|package| {
+            let dependencies = package
+                .dependencies
+                .iter()
+                .map(|dependency| parse_dependency_reference(dependency))
+                .collect::<Result<Vec<_>, _>>()?;
 
             Ok(LockedPackage {
                 identity: PackageIdentity {
-                    name,
-                    version,
-                    source: quoted_field(block, "source"),
+                    name: package.name,
+                    version: package.version,
+                    source: package.source,
                 },
                 dependencies,
             })
@@ -542,65 +463,8 @@ fn evaluate_versions(arguments: &VersionArguments) -> Result<VersionComparison, 
     })
 }
 
-fn compile_patterns(arguments: &PatternArguments) -> Result<usize, String> {
-    for pattern_file in &arguments.pattern_files {
-        let pattern = read_utf8_file(pattern_file, "pattern")?;
-        if pattern.is_empty() {
-            return Err(format!(
-                "Pattern file `{}` is empty",
-                pattern_file.display()
-            ));
-        }
-
-        RegexBuilder::new(&pattern)
-            .case_insensitive(!arguments.case_sensitive)
-            .build()
-            .map_err(|error| {
-                let message = error.to_string();
-                let summary = message
-                    .lines()
-                    .rev()
-                    .find_map(|line| line.trim().strip_prefix("error: "))
-                    .unwrap_or("Regex compilation failed");
-
-                format!(
-                    "Invalid regex in pattern file `{}`: {summary}",
-                    pattern_file.display()
-                )
-            })?;
-    }
-
-    Ok(arguments.pattern_files.len())
-}
-
 fn report_error(stderr: &mut dyn Write, message: &str) {
-    let _ = writeln!(stderr, "zed-regex-audit: {message}");
-}
-
-fn run_pattern_audit(
-    arguments: &PatternArguments,
-    stdout: &mut dyn Write,
-    stderr: &mut dyn Write,
-) -> u8 {
-    let pattern_count = match compile_patterns(arguments) {
-        Ok(pattern_count) => pattern_count,
-        Err(error) => {
-            report_error(stderr, &error);
-            return STATUS_ERROR;
-        }
-    };
-    let pattern_label = if pattern_count == 1 {
-        "pattern"
-    } else {
-        "patterns"
-    };
-
-    if let Err(error) = writeln!(stdout, "Compiled {pattern_count} Zed regex {pattern_label}") {
-        report_error(stderr, &format!("Failed to write result:\n\n{error}"));
-        return STATUS_ERROR;
-    }
-
-    STATUS_MATCH
+    let _ = writeln!(stderr, "zed-regex-dependency-audit: {message}");
 }
 
 fn run_version_audit(
@@ -654,7 +518,7 @@ where
         }
     };
 
-    let ParsedArguments::Run(operation) = parsed_arguments else {
+    let ParsedArguments::Run(arguments) = parsed_arguments else {
         if let Err(error) = stdout.write_all(HELP.as_bytes()) {
             report_error(stderr, &format!("Failed to write help:\n\n{error}"));
             return STATUS_ERROR;
@@ -663,10 +527,7 @@ where
         return STATUS_MATCH;
     };
 
-    match operation {
-        Operation::CompareVersions(arguments) => run_version_audit(&arguments, stdout, stderr),
-        Operation::CompilePatterns(arguments) => run_pattern_audit(&arguments, stdout, stderr),
-    }
+    run_version_audit(&arguments, stdout, stderr)
 }
 
 #[cfg(not(test))]

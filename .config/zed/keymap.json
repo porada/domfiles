@@ -21,6 +21,12 @@
 		}
 	},
 	{
+		"context": "Terminal",
+		"bindings": {
+			"cmd-t": "workspace::NewTerminal"
+		}
+	},
+	{
 		"context": "Workspace",
 		"bindings": {
 			"cmd-shift-d": null

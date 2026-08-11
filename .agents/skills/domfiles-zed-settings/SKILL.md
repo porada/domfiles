@@ -12,6 +12,7 @@ When agent tool or sandbox permissions, terminal rules, native path-tool permiss
 ## Apply the general policy
 
 - Always split Zed settings audits into multiple smaller steps because a single pass can easily exceed the available context window.
+- Keep every script owned by this skill in Rust. Store executable entrypoints and their adjacent tests directly under `scripts`, shared implementation helpers and their adjacent tests under `scripts/helpers`, and Cargo target and dependency declarations at the repository root, following the [skill-owned script policy](../agent-documentation/references/skill-owned-scripts.md).
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
     - Exempt `"tab_size": 4` from this requirement.
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
@@ -43,8 +44,8 @@ When agent tool or sandbox permissions, terminal rules, native path-tool permiss
 
 After editing:
 
-1. Parse changed JSON with `jq -e`.
-2. Check formatting through the repository’s existing `pnpm` formatter workflow.
+1. Parse each changed settings JSON file with `jq -e 'type == "object"' <path>`.
+2. Check formatting with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-files>` so a fresh worktree cannot silently reconcile dependencies or run lifecycle scripts. If dependencies are unavailable, report the formatting limitation unless the current task separately authorizes reconciliation, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands).
 3. Run `git --no-pager diff --check`.
 4. Run every applicable conditional-branch change-validation workflow.
 5. Verify every applicable general and selected-branch Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
@@ -54,7 +55,7 @@ Do not run the entire repository formatter when a targeted formatting check is s
 
 ## Validate a Zed settings audit, review, or diagnosis
 
-1. Parse relevant JSON with `jq -e`.
+1. Parse each relevant settings JSON file with `jq -e 'type == "object"' <path>`.
 2. Run every applicable conditional-branch read-only validation workflow.
 3. Verify the applicable general and selected-branch Zed settings policy invariants and repository-wide `AGENTS.md` instructions against the audited contents.
 

@@ -7,12 +7,14 @@ edition = "2024"
 
 [dependencies]
 regex = "=1.12.3"
-
-[[bin]]
-name = "domfiles-zed-settings-zed-regex-audit"
-path = ".agents/skills/domfiles-zed-settings/scripts/zed-regex-audit.rs"
-bench = false
-test = false
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151", features = ["preserve_order"] }
+sha2 = "0.11.0"
+toml = { version = "1.1.4", default-features = false, features = [
+  "parse",
+  "serde",
+  "std",
+] }
 
 [[bin]]
 name = "domfiles-zed-settings-zed-pattern-match"
@@ -20,10 +22,40 @@ path = ".agents/skills/domfiles-zed-settings/scripts/zed-pattern-match.rs"
 bench = false
 test = false
 
+[[bin]]
+name = "domfiles-zed-settings-zed-permission-candidate"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-permission-candidate.rs"
+bench = false
+test = false
+
+[[bin]]
+name = "domfiles-zed-settings-zed-permission-owner-audit"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-permission-owner-audit.rs"
+bench = false
+test = false
+
+[[bin]]
+name = "domfiles-zed-settings-zed-regex-dependency-audit"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-regex-dependency-audit.rs"
+bench = false
+test = false
+
 [[test]]
-name = "domfiles-zed-settings-zed-regex-audit-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/zed-regex-audit.test.rs"
+name = "domfiles-zed-settings-permission-patterns-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/helpers/permission-patterns.test.rs"
 
 [[test]]
 name = "domfiles-zed-settings-zed-pattern-match-test"
 path = ".agents/skills/domfiles-zed-settings/scripts/zed-pattern-match.test.rs"
+
+[[test]]
+name = "domfiles-zed-settings-zed-permission-candidate-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-permission-candidate.test.rs"
+
+[[test]]
+name = "domfiles-zed-settings-zed-permission-owner-audit-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-permission-owner-audit.test.rs"
+
+[[test]]
+name = "domfiles-zed-settings-zed-regex-dependency-audit-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/zed-regex-dependency-audit.test.rs"

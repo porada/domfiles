@@ -74,7 +74,7 @@ The automatic denial covers exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names 
 
 ### Zed command discovery defaults
 
-The terminal discovery policy intentionally includes exact `-h`, `-help`, `--help`, `-v`, `-version`, and `--version` forms by default without requiring positive command-specific verification. Unsupported forms terminate without prompting, while a known form that starts normal execution, reads input, mutates state, or enters an interactive mode is omitted. This places the evidence requirement on exceptions so each executable can own a consistent discovery surface without shared command patterns.
+Terminal discovery forms require verified exit-only behavior regardless of spelling. Long and single-dash options can be operational flags or ordinary operands, so an exact, end-anchored form qualifies only when it exits without entering an interactive mode, mutating state, reading input, or starting normal execution. A verified unsupported form may qualify when it terminates without prompting. This fail-closed boundary lets each executable own its discovery forms without treating option-like spelling as evidence of safety.
 
 ### Zed temporary archive staging
 

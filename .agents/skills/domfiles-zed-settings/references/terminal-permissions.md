@@ -4,7 +4,7 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 
 ## Apply the terminal permission policy
 
-- Treat ordinary package-manager workflows as intentional allowances. Continue to require confirmation for package runners that can download and execute arbitrary code.
+- For `corepack`, `npm`, `npx`, `pnpm`, `pnpx`, `pnx`, `yarn`, or a delegated Node package binary, follow [Node package manager permissions](node-package-manager-permissions.md).
 - Allow Docker inspection operations without confirmation. Require confirmation for operations that execute workloads or create, modify, or remove Docker state.
 - Set `"case_sensitive": true` on every terminal command pattern unless a verified command-specific requirement justifies case-insensitive matching. Prefer a scoped inline case-insensitive group for an exceptional token instead of making the entire pattern case-insensitive.
 - Give every normalized command form one command-owner group.
@@ -12,10 +12,12 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
     - Use that executable as the owner by default. A selected domain policy may partition one executable into root, subcommand, or compound-workflow owners when those forms require independent maintenance.
     - Keep distinct executable names in separate owner groups even when they use equivalent syntax. A domain partition never authorizes combining unrelated top-level executables.
     - Let one owner use multiple adjacent patterns when separate syntax roles keep them clearer.
+    - When splitting a pooled pattern, place each resulting owner group at its position in the complete bucket order. Do not insert every split object at the pooled object’s former index when the resulting owners belong on opposite sides of another group.
     - Keep command ownership consistent across `terminal.always_allow`, `terminal.always_confirm`, and `terminal.always_deny`. An explicitly command-independent lexical guard may remain global.
 - Let each command-owner group own its discovery, direct, and wrapped forms.
     - Do not maintain general allowances or shared discovery patterns.
-    - Include exact, end-anchored `-h`, `-help`, `--help`, `-v`, `-version`, and `--version` forms by default, including unsupported forms that exit without prompting. Omit a form only when the exact invocation is known to cross the discovery boundary by starting normal execution, reading input, mutating state, or entering an interactive mode. See [Zed command discovery defaults](../../../PROJECT.md#zed-command-discovery-defaults) for rationale.
+    - Keep every discovery form exact and end-anchored. Include `--help`, `--version`, or another discovery spelling only after positive command-specific evidence establishes that the exact invocation exits without entering an interactive mode, mutating state, reading input, or starting normal execution. Omit every form that crosses this boundary. A verified unsupported form that terminates without prompting qualifies. See [Zed command discovery defaults](../../../PROJECT.md#zed-command-discovery-defaults) for rationale.
+    - Keep distinct command-owned discovery grammars separate but adjacent when that is clearer than consolidation. Never combine them merely because their total decoded length fits one pattern.
     - Treat `nohup`, `xargs`, and comparable wrappers as per-command forms. `xargs` owns only its own root and discovery forms, while each child command owns its bounded `xargs … <command>` form. Do not maintain a pooled child-command inventory. See [Zed xargs command ownership](../../../PROJECT.md#zed-xargs-command-ownership) for rationale.
         - Limit `xargs`’s own options to bounded, noninteractive argument splitting and batching controls.
         - Require confirmation for the complete nested child-command owner group whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form. Do not narrow that override to individual nested syntax branches.
@@ -26,6 +28,7 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 - Group command-owned patterns alphabetically within each permission bucket.
     - Within one owner group, place discovery forms first, direct forms next, and wrapped forms alphabetically.
     - Alphabetize alternatives when their grammar permits.
+- When another serial task owns a shared or pooled pattern, keep that object byte-identical, record the exact alternatives deferred to its owner in task evidence, and do not report the pooled cleanup as resolved.
 - Keep command-specific prefixes and wrappers within the owning command group. Account for them in applicable allowances and confirmation overrides.
     - Apply optional `HOMEBREW_NO_*` prefixes with the fixed value `1` to every Homebrew terminal pattern.
     - Apply optional repeated `MANPAGER=cat` and `PAGER=cat` prefixes only within command-owned forms that support them. A pager prefix must not create shared command ownership.
@@ -35,6 +38,13 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 - For mixed-purpose utilities and interpreters, prefer positive allowlists of non-mutating forms. Use a broad allowance with `terminal.always_confirm` only when every hazardous form can be matched reliably. Otherwise, preserve default confirmation.
 - Use `terminal.always_confirm` to override broader `terminal.always_allow` entries for hazardous argument forms, including code-execution hooks, package runners, destructive operations, force flags, and commands that uninstall the invoked tool itself. Account for global options, combined short flags, and accepted long-option abbreviations.
 - Do not report overlaps between `terminal.always_allow` and `terminal.always_confirm` when `terminal.always_confirm` acts as a safety override.
+
+## Interpret commands that prompted for confirmation
+
+- When the user supplies commands because they prompted for confirmation and asks to make them automatic without explicitly limiting the request to literal invocations, treat each command as evidence of an operation they want made broadly frictionless. Seek the broadest currently established safe grammar, not an allowance for the exact normalized string.
+- Classify every supplied operation before editing. Generalize variable operand roles, verified aliases and equivalent forms, accepted option placement, and applicable wrappers only within the complete evidence-supported safety boundary. “Broadest” does not include experimental APIs unless explicitly requested, unknown future options, unrestricted operands, speculative aliases, or other unverified behavior unless a selected domain policy records an explicit user-approved namespace allowance. Keep such an exception bounded to that namespace’s established syntax and preserve higher-precedence hazard overrides.
+- Never use an exact allowance as an escape hatch when the natural operation family remains legitimately hazardous. If any supplied command should remain confirmable or denied, or cannot be generalized safely, stop before mutation and explain the concrete boundary. Do not add a literal exception, implement only the agreeable subset, or defer the unsafe explanation until after a partial edit.
+- Offer the defensible automatic family, when one exists, identify which part of the supplied invocation crosses it, and wait for the user to choose whether to keep confirmation or proceed with that boundary. An explicit request for one literal form does not override its safety classification.
 
 ## Investigate terminal behavior
 
@@ -47,7 +57,8 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 3. When behavior classifications are not already settled, inspect the locally installed executable’s help or manual to resolve the complete bounded command family.
     - Record documented aliases and every accepted option or operand placement and ordering that preserves the operation and safety classification. Prefer a repeated grammar for order-independent tokens rather than enumerating permutations.
     - Record the forms that execute code, write data, alter state, or remove resources.
-    - For a categorical allowance whose unknown future members must remain confirmable, record the complete finite set of currently allowed names. Never translate an open-ended semantic category into an open-ended allowance.
+    - Record forms that block indefinitely, monitor continuously, produce unbounded output, or return a terminating snapshot. Treat duration and output boundedness as classification dimensions rather than assuming every non-mutating inspection form is equivalent.
+    - For a categorical allowance whose unknown future members must remain confirmable, record the complete finite set of currently allowed names. Never translate an open-ended semantic category into an open-ended allowance. A selected domain policy may define an explicit user-approved namespace exception, which must remain bounded to that namespace’s established syntax.
     - Run each local help or manual inspection with a short, bounded timeout. Prefer `MANPAGER=cat PAGER=cat man <command> | col -b` when a manual is available.
     - If the executable is unavailable or local help remains interactive, consult current official documentation or source.
 4. When settled evidence supplies a semantic category without its finite current names, leave unenumerated members confirmable and report that stricter boundary. Do not research beyond the evidence when the request forbids it.
@@ -61,7 +72,7 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 - Anchor a pattern with `^`. Add `$` when trailing arguments would change the safety classification. In an allowance pattern that accepts trailing arguments, end each executable, subcommand, or option token with `(?: |$)`. The weaker `\b` is a lexical boundary, not a shell token boundary. Use it only when lexical matching is intentional, such as in a conservative confirmation override.
 - Use syntax supported by Zed’s Rust-compatible regex engine. It does not support lookarounds or backreferences.
 - Zed matches permission patterns case-insensitively by default. Follow the explicit case-sensitivity policy above for terminal commands, including patterns whose current tokens happen to be unambiguous.
-- Build positive branches from finite accepted grammar instead of trying to subtract cases with unsupported regex features. Keep unknown future names outside the allowance.
+- Build positive branches from finite accepted grammar instead of trying to subtract cases with unsupported regex features. Keep unknown future names outside the allowance unless a selected domain policy explicitly defines a user-approved bounded namespace wildcard.
 - Test against Zed’s normalized permission input, not merely the original shell line.
     - Ordinary shell quotes do not remain in the normalized input. Preserve their enclosed text and normalized spaces, and encode quote characters only when current Zed parsing treats them as data rather than shell syntax.
 - Encode discovery and wrapper forms according to the command-owner policy above.
@@ -72,6 +83,7 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 Validate every in-scope pattern against:
 
 - Each required matching example in normalized form, boundary values for every generalized operand role, and representative permutations that establish the accepted option and operand placement grammar.
+- Representative blocking, continuous-monitoring, terminating-snapshot, and unbounded-output forms when duration or output boundedness affects the classification.
 - Hazardous forms that must match a confirmation or denial override or remain unmatched by an allowance.
 - Near misses involving global options, wrappers, assignments, combined short flags, accepted long-option abbreviations, or trailing operands that cross the intended boundary.
 - The command-owner, ordering, discovery, wrapper, finite-inventory, and decoded-length invariants above before promoting a candidate.

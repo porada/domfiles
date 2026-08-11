@@ -15,7 +15,7 @@ Do not read every permission reference by default. Select only the branches requ
 - For Git commands or permission patterns, read both [Terminal permissions](terminal-permissions.md) and [Git permissions](git-permissions.md). The Git branch partitions command ownership within the terminal policy’s `git` executable family.
 - For fetch patterns, domains, URLs, and sandbox hosts, read [Fetch and network permissions](fetch-permissions.md).
 - For agent worktree or disposable fixture repository permissions, read [Agent repository permissions](agent-repository-permissions.md).
-- For pattern compilation or matching, Zed regex compatibility, permission-decision reconstruction, or pattern-family comparison, read the [Permission evaluator](permission-evaluator.md).
+- For pattern inventory, owner auditing, candidate promotion, pattern compilation or matching, Zed regex compatibility, permission-decision reconstruction, or pattern-family comparison, read the [Permission evaluator](permission-evaluator.md).
 
 Read every applicable branch when one task crosses these boundaries. Do not load terminal policy for fetch-only work or fetch policy for terminal-only work.
 
@@ -45,23 +45,25 @@ For every read-only workflow:
 
 At the branch-specific step of the parent change-validation workflow:
 
-1. Compile every pattern declared by the complete candidate suite through the [pattern-compilation workflow](permission-evaluator.md#compile-permission-patterns).
-2. Validate every declared pattern and configured-pattern precedence through the [pattern-matching workflow](permission-evaluator.md#match-permission-patterns).
-3. Resolve the candidate’s complete effective permission behavior through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior).
-4. Verify the shared and selected-branch permission invariants against the candidate, then promote only the validated settings subtree.
-5. Reparse and format the promoted settings, then confirm the live subtree matches the candidate.
+1. Audit every complete in-scope owner group through [Audit permission ownership](permission-evaluator.md#audit-permission-ownership).
+2. Compile and validate every changed pattern, participating overlap, and configured-precedence case through [Compile and match permission patterns](permission-evaluator.md#compile-and-match-permission-patterns).
+3. Compare baseline and candidate bucket unions plus configured decisions through [Compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior), except when object and match behavior are both unchanged.
+4. Resolve the candidate’s complete effective behavior through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior), verify every selected-branch invariant, then run the candidate’s guarded verification and promotion.
+5. Reparse and format the promoted settings, then confirm each live promoted scope matches the validated candidate.
 
 ## Validate a permission audit, review, or diagnosis
 
 At the branch-specific step of the parent read-only validation workflow:
 
-1. Compile relevant existing regexes through the [pattern-compilation workflow](permission-evaluator.md#compile-permission-patterns).
-2. Validate the patterns and configured-pattern precedence against representative intended inputs, hazardous forms, and near misses required by the selected branch through the [pattern-matching workflow](permission-evaluator.md#match-permission-patterns).
-3. Resolve the complete effective permission behavior for each representative operation through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior).
-4. Verify the shared and selected-branch permission invariants against the audited contents.
+1. Inventory relevant patterns and audit complete in-scope owner groups through the [permission evaluator](permission-evaluator.md).
+2. Compile and validate relevant patterns and configured precedence against representative intended inputs, hazardous forms, and near misses through [Compile and match permission patterns](permission-evaluator.md#compile-and-match-permission-patterns).
+3. Use [Compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior) when the read-only scope includes two settings states or a proposed transformation.
+4. Resolve complete effective behavior for each representative operation through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior), then verify every shared and selected-branch invariant.
 
 ## Extend the report
 
 For a permission change, state which forms are now allowed, which hazardous forms still require confirmation, and which requested forms were intentionally left confirmable.
 
 For a permission diagnosis, state the observed result, evaluated inputs, matching precedence, root cause, and corrective action without applying it.
+
+When one operation crosses terminal, fetch, or sandbox network boundaries, evaluate and state each applicable layer’s result independently. Do not describe one layer’s allowance as unconditional execution or imply that a terminal allowance grants network access.

@@ -1,7 +1,15 @@
-use regex::{Regex, RegexBuilder};
+#[allow(dead_code)]
+#[path = "helpers/permission-patterns.rs"]
+mod permission_patterns;
+
+pub(crate) use permission_patterns::{
+    BoundedIssues, Bucket, CompiledPattern, Decision, MatchState, PatternError, compile_pattern,
+    read_utf8_file, regex_error_summary,
+};
+use serde::{Deserialize, Deserializer, de};
 use std::{
+    collections::{HashMap, HashSet},
     ffi::{OsStr, OsString},
-    fs,
     io::{self, Write},
     path::{Path, PathBuf},
 };
@@ -10,17 +18,19 @@ const HELP: &str = concat!(
     "Usage:\n",
     "  zed-pattern-match [--case-sensitive] --input-file <path> --pattern-file <path>\n",
     "  zed-pattern-match [--case-sensitive] --cases-file <path> --pattern-file <path>\n",
+    "  zed-pattern-match --comparison-file <path>\n",
     "  zed-pattern-match --suite-file <path>\n",
     "\n",
     "Match one UTF-8 input or verify UTF-8 manifests against Zed-compatible regex patterns\n",
     "\n",
     "Options:\n",
-    "  --case-sensitive       Use case-sensitive matching\n",
-    "  --cases-file <path>    Read LF-delimited `match<TAB><input>` and `no-match<TAB><input>` cases\n",
-    "  --help                 Print help\n",
-    "  --input-file <path>    Read one complete UTF-8 input from this file\n",
-    "  --pattern-file <path>  Read the complete UTF-8 pattern from this file\n",
-    "  --suite-file <path>    Verify multiple patterns, pattern cases, and configured-pattern decisions\n",
+    "  --case-sensitive          Use case-sensitive matching\n",
+    "  --cases-file <path>       Read LF-delimited `match<TAB><input>` and `no-match<TAB><input>` cases\n",
+    "  --comparison-file <path>  Compare configured pattern sets over a representative JSON corpus. Mutually exclusive with every other option\n",
+    "  --help                    Print help\n",
+    "  --input-file <path>       Read one complete UTF-8 input from this file\n",
+    "  --pattern-file <path>     Read the complete UTF-8 pattern from this file\n",
+    "  --suite-file <path>       Verify multiple patterns, pattern cases, and configured-pattern decisions\n",
     "\n",
     "LF-delimited UTF-8 suite manifest with records in any order:\n",
     "  decision-case<TAB>allow|confirm|deny<TAB><input>\n",
@@ -38,17 +48,35 @@ const HELP: &str = concat!(
     "  Suite decisions apply configured pattern precedence to one input only\n",
     "  They do not reproduce full Zed permission evaluation\n",
     "\n",
+    "Version-1 UTF-8 JSON comparison manifest:\n",
+    "  Root: {\"version\":1,\"baseline\":<set>,\"candidate\":<set>,\"cases\":[<case>,...]}\n",
+    "  Set: {\"default\":\"allow|confirm|deny\",\"patterns\":[<pattern>,...]}\n",
+    "  Pattern: {\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"case_sensitive\":true|false,\"pattern_file\":\"path\"}\n",
+    "  Inline case: {\"type\":\"inline\",\"input\":\"single line\"}\n",
+    "  File case: {\"type\":\"file\",\"input_file\":\"path\"}\n",
+    "  Relative pattern and input paths resolve from the comparison file’s parent\n",
+    "\n",
+    "Comparison requirements:\n",
+    "  Define at least one pattern in each set and at least one case\n",
+    "  Keep pattern IDs nonempty and unique within each set\n",
+    "  Keep inline inputs single-line. Use file cases for multiline inputs\n",
+    "  Comparison checks each bucket’s matched state and the configured final decision\n",
+    "  This is configured pattern comparison over a representative corpus only\n",
+    "  It is not full Zed permission evaluation or formal language equivalence\n",
+    "\n",
     "Verification output:\n",
     "  Case-manifest success prints one verified-case count\n",
+    "  Comparison success prints case and baseline/candidate pattern counts\n",
     "  Suite success prints pattern-case, decision-case, and pattern counts\n",
-    "  Failure reports at most 10 manifest line numbers without echoing regexes or inputs\n",
+    "  Failure reports at most 10 manifest positions without echoing regexes or inputs\n",
     "\n",
     "Exit statuses:\n",
-    "  0  Pattern matched, every expectation passed, or help displayed\n",
-    "  1  Pattern did not match or an expectation failed\n",
+    "  0  Pattern matched, every expectation passed, comparison was equivalent, or help displayed\n",
+    "  1  Pattern did not match, an expectation failed, or comparison found mismatches\n",
     "  2  Invalid arguments or data, or an I/O failure\n",
 );
 
+const COMPARISON_VERSION: u64 = 1;
 const MAX_REPORTED_FAILURES: usize = 10;
 const STATUS_ERROR: u8 = 2;
 const STATUS_MATCH: u8 = 0;
@@ -73,28 +101,115 @@ struct BatchFailure {
 
 struct BatchResult {
     cases_file: PathBuf,
-    failures: Vec<BatchFailure>,
+    failures: BoundedIssues<BatchFailure>,
     total: usize,
 }
 
-struct CompiledSuitePattern {
-    bucket: PatternBucket,
-    id: String,
-    regex: Regex,
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ComparisonManifestDefinition {
+    baseline: ComparisonPatternSetDefinition,
+    candidate: ComparisonPatternSetDefinition,
+    cases: Vec<ComparisonCaseDefinition>,
+    version: u64,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum PermissionDecision {
-    Allow,
-    Confirm,
-    Deny,
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ComparisonPatternSetDefinition {
+    #[serde(deserialize_with = "deserialize_decision")]
+    default: Decision,
+    patterns: Vec<ComparisonPatternDefinition>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ComparisonPatternDefinition {
+    bucket: Bucket,
+    case_sensitive: bool,
+    id: String,
+    pattern_file: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
+enum ComparisonCaseDefinition {
+    File { input_file: String },
+    Inline { input: String },
+}
+
+#[derive(Default)]
+struct ComparisonDifferences {
+    allow_bucket: bool,
+    confirm_bucket: bool,
+    deny_bucket: bool,
+    final_decision: bool,
+}
+
+impl ComparisonDifferences {
+    fn between(
+        baseline: MatchState,
+        baseline_default: Decision,
+        candidate: MatchState,
+        candidate_default: Decision,
+    ) -> Self {
+        Self {
+            allow_bucket: baseline.matched(Bucket::Allow) != candidate.matched(Bucket::Allow),
+            confirm_bucket: baseline.matched(Bucket::Confirm) != candidate.matched(Bucket::Confirm),
+            deny_bucket: baseline.matched(Bucket::Deny) != candidate.matched(Bucket::Deny),
+            final_decision: baseline.decision(baseline_default)
+                != candidate.decision(candidate_default),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        !self.allow_bucket && !self.confirm_bucket && !self.deny_bucket && !self.final_decision
+    }
+}
+
+struct ComparisonMismatch {
+    case_position: usize,
+    differences: ComparisonDifferences,
+}
+
+struct ComparisonResult {
+    baseline_pattern_count: usize,
+    candidate_pattern_count: usize,
+    case_count: usize,
+    comparison_file: PathBuf,
+    mismatches: BoundedIssues<ComparisonMismatch>,
+}
+
+struct PatternDefinition {
+    bucket: Bucket,
+    case_sensitive: bool,
+    id: String,
+    pattern_file: PathBuf,
 }
 
 #[derive(Clone, Copy)]
-enum PatternBucket {
-    Allow,
-    Confirm,
-    Deny,
+enum PatternCollection {
+    BaselineComparison,
+    CandidateComparison,
+    Suite,
+}
+
+impl PatternCollection {
+    fn owner_label(self) -> &'static str {
+        match self {
+            Self::BaselineComparison => "baseline comparison pattern",
+            Self::CandidateComparison => "candidate comparison pattern",
+            Self::Suite => "suite pattern",
+        }
+    }
+
+    fn read_description(self, id: &str) -> String {
+        match self {
+            Self::BaselineComparison => format!("baseline comparison pattern `{id}`"),
+            Self::CandidateComparison => format!("candidate comparison pattern `{id}`"),
+            Self::Suite => format!("pattern `{id}`"),
+        }
+    }
 }
 
 struct SuiteFailure {
@@ -103,7 +218,7 @@ struct SuiteFailure {
 }
 
 enum SuiteFailureExpectation {
-    Decision(PermissionDecision),
+    Decision(Decision),
     Pattern {
         expected_match: bool,
         pattern_id: String,
@@ -111,14 +226,15 @@ enum SuiteFailureExpectation {
 }
 
 struct SuiteManifest {
-    default: PermissionDecision,
+    default: Decision,
     expectations: Vec<SuiteExpectation>,
-    patterns: Vec<SuitePatternDefinition>,
+    pattern_indices: HashMap<String, usize>,
+    patterns: Vec<PatternDefinition>,
 }
 
 enum SuiteExpectation {
     DecisionCase {
-        expected: PermissionDecision,
+        expected: Decision,
         input: String,
         line_number: usize,
     },
@@ -130,16 +246,9 @@ enum SuiteExpectation {
     },
 }
 
-struct SuitePatternDefinition {
-    bucket: PatternBucket,
-    case_sensitive: bool,
-    id: String,
-    pattern_file: PathBuf,
-}
-
 struct SuiteResult {
     decision_cases: usize,
-    failures: Vec<SuiteFailure>,
+    failures: BoundedIssues<SuiteFailure>,
     pattern_cases: usize,
     pattern_count: usize,
     suite_file: PathBuf,
@@ -156,15 +265,10 @@ enum InputMode {
 }
 
 enum ParsedArguments {
+    Comparison(PathBuf),
     Help,
     Run(Arguments),
     Suite(PathBuf),
-}
-
-#[derive(Debug)]
-pub(crate) enum PatternError {
-    Empty,
-    Invalid(regex::Error),
 }
 
 fn parse_arguments<I>(arguments: I) -> Result<ParsedArguments, String>
@@ -180,6 +284,7 @@ where
     let mut arguments = arguments.into_iter();
     let mut case_sensitive = false;
     let mut cases_file = None;
+    let mut comparison_file = None;
     let mut input_file = None;
     let mut pattern_file = None;
     let mut suite_file = None;
@@ -206,6 +311,16 @@ where
                 }
 
                 case_sensitive = true;
+            }
+            "--comparison-file" => {
+                if comparison_file.is_some() {
+                    return Err("Option `--comparison-file` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--comparison-file` requires a path".to_owned());
+                };
+                comparison_file = Some(PathBuf::from(path));
             }
             "--help" => {
                 return Err("Option `--help` must be used alone".to_owned());
@@ -248,6 +363,22 @@ where
         }
     }
 
+    if let Some(comparison_file) = comparison_file {
+        if case_sensitive
+            || cases_file.is_some()
+            || input_file.is_some()
+            || pattern_file.is_some()
+            || suite_file.is_some()
+        {
+            return Err(
+                "Option `--comparison-file` is mutually exclusive with `--case-sensitive`, `--cases-file`, `--input-file`, `--pattern-file`, and `--suite-file`"
+                    .to_owned(),
+            );
+        }
+
+        return Ok(ParsedArguments::Comparison(comparison_file));
+    }
+
     if let Some(suite_file) = suite_file {
         if case_sensitive || cases_file.is_some() || input_file.is_some() || pattern_file.is_some()
         {
@@ -282,22 +413,6 @@ where
         input,
         pattern_file,
     }))
-}
-
-fn read_utf8_file(path: &Path, description: &str) -> Result<String, String> {
-    let bytes = fs::read(path).map_err(|error| {
-        format!(
-            "Failed to read {description} file `{}`:\n\n{error}",
-            path.display()
-        )
-    })?;
-
-    String::from_utf8(bytes).map_err(|error| {
-        format!(
-            "Invalid UTF-8 in {description} file `{}`:\n\n{error}",
-            path.display()
-        )
-    })
 }
 
 fn invalid_case_line(path: &Path, line_number: usize) -> String {
@@ -339,34 +454,14 @@ fn parse_case_manifest(path: &Path, manifest: &str) -> Result<Vec<BatchCase>, St
         .collect()
 }
 
-impl PatternBucket {
-    fn parse(value: &str) -> Option<Self> {
-        match value {
-            "always_allow" => Some(Self::Allow),
-            "always_confirm" => Some(Self::Confirm),
-            "always_deny" => Some(Self::Deny),
-            _ => None,
-        }
-    }
-}
+fn deserialize_decision<'de, D>(deserializer: D) -> Result<Decision, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = String::deserialize(deserializer)?;
 
-impl PermissionDecision {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Allow => "allow",
-            Self::Confirm => "confirm",
-            Self::Deny => "deny",
-        }
-    }
-
-    fn parse(value: &str) -> Option<Self> {
-        match value {
-            "allow" => Some(Self::Allow),
-            "confirm" => Some(Self::Confirm),
-            "deny" => Some(Self::Deny),
-            _ => None,
-        }
-    }
+    Decision::parse(&value)
+        .ok_or_else(|| de::Error::unknown_variant(&value, &["allow", "confirm", "deny"]))
 }
 
 fn invalid_suite_line(path: &Path, line_number: usize) -> String {
@@ -376,12 +471,12 @@ fn invalid_suite_line(path: &Path, line_number: usize) -> String {
     )
 }
 
-fn resolve_suite_path(suite_file: &Path, referenced_file: &str) -> PathBuf {
+fn resolve_manifest_path(manifest_file: &Path, referenced_file: &str) -> PathBuf {
     let referenced_file = Path::new(referenced_file);
     if referenced_file.is_absolute() {
         referenced_file.to_owned()
     } else {
-        suite_file
+        manifest_file
             .parent()
             .unwrap_or_else(|| Path::new(""))
             .join(referenced_file)
@@ -397,7 +492,7 @@ fn suite_expected_match(value: &str) -> Option<bool> {
 }
 
 fn read_suite_input(suite_file: &Path, input_file: &str) -> Result<String, String> {
-    let input_file = resolve_suite_path(suite_file, input_file);
+    let input_file = resolve_manifest_path(suite_file, input_file);
 
     read_utf8_file(&input_file, "suite input")
 }
@@ -405,7 +500,8 @@ fn read_suite_input(suite_file: &Path, input_file: &str) -> Result<String, Strin
 fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, String> {
     let mut default = None;
     let mut expectations = Vec::new();
-    let mut patterns: Vec<SuitePatternDefinition> = Vec::new();
+    let mut pattern_indices = HashMap::new();
+    let mut patterns: Vec<PatternDefinition> = Vec::new();
 
     for (index, line) in manifest.split_terminator('\n').enumerate() {
         let line_number = index + 1;
@@ -420,7 +516,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                 if fields.len() != 2 {
                     return Err(invalid_suite_line(path, line_number));
                 }
-                let Some(decision) = PermissionDecision::parse(fields[1]) else {
+                let Some(decision) = Decision::parse(fields[1]) else {
                     return Err(invalid_suite_line(path, line_number));
                 };
                 if default.is_some() {
@@ -436,7 +532,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                 if fields.len() != 5 || fields[1].is_empty() || fields[4].is_empty() {
                     return Err(invalid_suite_line(path, line_number));
                 }
-                let Some(bucket) = PatternBucket::parse(fields[2]) else {
+                let Some(bucket) = Bucket::parse(fields[2]) else {
                     return Err(invalid_suite_line(path, line_number));
                 };
                 let case_sensitive = match fields[3] {
@@ -444,7 +540,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                     "case-sensitive" => true,
                     _ => return Err(invalid_suite_line(path, line_number)),
                 };
-                if patterns.iter().any(|pattern| pattern.id == fields[1]) {
+                if pattern_indices.contains_key(fields[1]) {
                     return Err(format!(
                         "Duplicate pattern id `{}` in suite manifest `{}` at line {line_number}",
                         fields[1],
@@ -452,11 +548,13 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                     ));
                 }
 
-                patterns.push(SuitePatternDefinition {
+                let id = fields[1].to_owned();
+                pattern_indices.insert(id.clone(), patterns.len());
+                patterns.push(PatternDefinition {
                     bucket,
                     case_sensitive,
-                    id: fields[1].to_owned(),
-                    pattern_file: resolve_suite_path(path, fields[4]),
+                    id,
+                    pattern_file: resolve_manifest_path(path, fields[4]),
                 });
             }
             Some("pattern-case") | Some("pattern-case-file") => {
@@ -488,7 +586,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                 if fields.len() != 3 {
                     return Err(invalid_suite_line(path, line_number));
                 }
-                let Some(expected) = PermissionDecision::parse(fields[1]) else {
+                let Some(expected) = Decision::parse(fields[1]) else {
                     return Err(invalid_suite_line(path, line_number));
                 };
                 let input = if record_type == Some("decision-case-file") {
@@ -522,6 +620,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
             path.display()
         ));
     }
+    let mut pattern_case_coverage = vec![false; patterns.len()];
     for expectation in &expectations {
         let SuiteExpectation::PatternCase {
             line_number,
@@ -531,12 +630,13 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
         else {
             continue;
         };
-        if !patterns.iter().any(|pattern| pattern.id == *pattern_id) {
+        let Some(pattern_index) = pattern_indices.get(pattern_id) else {
             return Err(format!(
                 "Unknown pattern id `{pattern_id}` in suite manifest `{}` at line {line_number}",
                 path.display()
             ));
-        }
+        };
+        pattern_case_coverage[*pattern_index] = true;
     }
 
     if !expectations
@@ -549,13 +649,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
         ));
     }
 
-    for pattern in &patterns {
-        let has_pattern_case = expectations.iter().any(|expectation| {
-            matches!(
-                expectation,
-                SuiteExpectation::PatternCase { pattern_id, .. } if pattern_id == &pattern.id
-            )
-        });
+    for (pattern, has_pattern_case) in patterns.iter().zip(pattern_case_coverage) {
         if !has_pattern_case {
             return Err(format!(
                 "Suite manifest `{}` must include at least one `pattern-case` for pattern `{}`",
@@ -568,46 +662,126 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
     Ok(SuiteManifest {
         default,
         expectations,
+        pattern_indices,
         patterns,
     })
 }
 
-fn regex_error_summary(error: &regex::Error) -> String {
-    let message = error.to_string();
-
-    message
-        .lines()
-        .rev()
-        .find_map(|line| line.trim().strip_prefix("error: "))
-        .unwrap_or("Regex compilation failed")
-        .to_owned()
-}
-
-pub(crate) fn compile_pattern(pattern: &str, case_sensitive: bool) -> Result<Regex, PatternError> {
-    if pattern.is_empty() {
-        return Err(PatternError::Empty);
+fn validate_comparison_pattern_set(
+    comparison_file: &Path,
+    label: &str,
+    definition: &ComparisonPatternSetDefinition,
+) -> Result<(), String> {
+    if definition.patterns.is_empty() {
+        return Err(format!(
+            "Comparison manifest `{}` must define at least one {label} pattern",
+            comparison_file.display()
+        ));
     }
 
-    RegexBuilder::new(pattern)
-        .case_insensitive(!case_sensitive)
-        .build()
-        .map_err(PatternError::Invalid)
+    let mut ids = HashSet::with_capacity(definition.patterns.len());
+    for pattern in &definition.patterns {
+        if pattern.id.is_empty() {
+            return Err(format!(
+                "Comparison manifest `{}` contains an empty {label} pattern id",
+                comparison_file.display()
+            ));
+        }
+        if pattern.pattern_file.is_empty() {
+            return Err(format!(
+                "Comparison pattern `{}` in the {label} set must define a nonempty `pattern_file`",
+                pattern.id
+            ));
+        }
+        if !ids.insert(pattern.id.as_str()) {
+            return Err(format!(
+                "Duplicate pattern id `{}` in the {label} set of comparison manifest `{}`",
+                pattern.id,
+                comparison_file.display()
+            ));
+        }
+    }
+
+    Ok(())
 }
 
-fn compile_suite_patterns(
-    definitions: Vec<SuitePatternDefinition>,
-) -> Result<Vec<CompiledSuitePattern>, String> {
+fn validate_comparison_manifest(
+    comparison_file: &Path,
+    definition: &ComparisonManifestDefinition,
+) -> Result<(), String> {
+    if definition.version != COMPARISON_VERSION {
+        return Err(format!(
+            "Unsupported comparison manifest version {} in `{}`. Expected version {COMPARISON_VERSION}",
+            definition.version,
+            comparison_file.display()
+        ));
+    }
+
+    validate_comparison_pattern_set(comparison_file, "baseline", &definition.baseline)?;
+    validate_comparison_pattern_set(comparison_file, "candidate", &definition.candidate)?;
+
+    if definition.cases.is_empty() {
+        return Err(format!(
+            "Comparison manifest `{}` must define at least one case",
+            comparison_file.display()
+        ));
+    }
+
+    for (index, case) in definition.cases.iter().enumerate() {
+        let case_position = index + 1;
+        match case {
+            ComparisonCaseDefinition::File { input_file } if input_file.is_empty() => {
+                return Err(format!(
+                    "File comparison case {case_position} in `{}` must define a nonempty `input_file`",
+                    comparison_file.display()
+                ));
+            }
+            ComparisonCaseDefinition::Inline { input }
+                if input.contains('\r') || input.contains('\n') =>
+            {
+                return Err(format!(
+                    "Inline comparison case {case_position} in `{}` must not contain CR or LF. Use a file case for multiline input",
+                    comparison_file.display()
+                ));
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
+
+fn resolve_pattern_definitions(
+    comparison_file: &Path,
+    definitions: Vec<ComparisonPatternDefinition>,
+) -> Vec<PatternDefinition> {
+    definitions
+        .into_iter()
+        .map(|definition| PatternDefinition {
+            bucket: definition.bucket,
+            case_sensitive: definition.case_sensitive,
+            id: definition.id,
+            pattern_file: resolve_manifest_path(comparison_file, &definition.pattern_file),
+        })
+        .collect()
+}
+
+fn compile_patterns(
+    definitions: Vec<PatternDefinition>,
+    collection: PatternCollection,
+) -> Result<Vec<CompiledPattern>, String> {
     let mut patterns = Vec::with_capacity(definitions.len());
 
     for definition in definitions {
-        let description = format!("pattern `{}`", definition.id);
+        let description = collection.read_description(&definition.id);
         let pattern = read_utf8_file(&definition.pattern_file, &description)?;
         let regex = match compile_pattern(&pattern, definition.case_sensitive) {
             Ok(regex) => regex,
             Err(PatternError::Empty) => {
                 return Err(format!(
-                    "Pattern file `{}` for suite pattern `{}` is empty",
+                    "Pattern file `{}` for {} `{}` is empty",
                     definition.pattern_file.display(),
+                    collection.owner_label(),
                     definition.id
                 ));
             }
@@ -615,14 +789,15 @@ fn compile_suite_patterns(
                 let summary = regex_error_summary(&error);
 
                 return Err(format!(
-                    "Invalid regex in pattern file `{}` for suite pattern `{}`: {summary}",
+                    "Invalid regex in pattern file `{}` for {} `{}`: {summary}",
                     definition.pattern_file.display(),
+                    collection.owner_label(),
                     definition.id
                 ));
             }
         };
 
-        patterns.push(CompiledSuitePattern {
+        patterns.push(CompiledPattern {
             bucket: definition.bucket,
             id: definition.id,
             regex,
@@ -632,33 +807,106 @@ fn compile_suite_patterns(
     Ok(patterns)
 }
 
-fn permission_decision(
-    input: &str,
-    patterns: &[CompiledSuitePattern],
-    default: PermissionDecision,
-) -> PermissionDecision {
-    let mut matched_allow = false;
-    let mut matched_confirm = false;
+fn read_comparison_input(
+    comparison_file: &Path,
+    case_position: usize,
+    case: ComparisonCaseDefinition,
+) -> Result<String, String> {
+    match case {
+        ComparisonCaseDefinition::File { input_file } => {
+            let input_file = resolve_manifest_path(comparison_file, &input_file);
+            let description = format!("comparison case {case_position} input");
 
-    for pattern in patterns {
-        if !pattern.regex.is_match(input) {
-            continue;
+            read_utf8_file(&input_file, &description)
         }
+        ComparisonCaseDefinition::Inline { input } => Ok(input),
+    }
+}
 
-        match pattern.bucket {
-            PatternBucket::Allow => matched_allow = true,
-            PatternBucket::Confirm => matched_confirm = true,
-            PatternBucket::Deny => return PermissionDecision::Deny,
+fn comparison_json_error(error: &serde_json::Error) -> String {
+    let summary = match error.classify() {
+        serde_json::error::Category::Data => {
+            "JSON data does not match the version-1 comparison schema"
+        }
+        serde_json::error::Category::Eof => "JSON input ended before the manifest was complete",
+        serde_json::error::Category::Io => "JSON input could not be read",
+        serde_json::error::Category::Syntax => "JSON syntax is invalid",
+    };
+
+    format!(
+        "{summary} at line {} column {}",
+        error.line(),
+        error.column()
+    )
+}
+
+fn parse_comparison_manifest(
+    comparison_file: &Path,
+    manifest: &str,
+) -> Result<ComparisonManifestDefinition, String> {
+    let definition: ComparisonManifestDefinition =
+        serde_json::from_str(manifest).map_err(|error| {
+            let summary = comparison_json_error(&error);
+
+            format!(
+                "Invalid comparison manifest `{}`: {summary}",
+                comparison_file.display()
+            )
+        })?;
+    validate_comparison_manifest(comparison_file, &definition)?;
+
+    Ok(definition)
+}
+
+fn evaluate_comparison(comparison_file: &Path) -> Result<ComparisonResult, String> {
+    let manifest = read_utf8_file(comparison_file, "comparison manifest")?;
+    let ComparisonManifestDefinition {
+        baseline,
+        candidate,
+        cases,
+        version: _,
+    } = parse_comparison_manifest(comparison_file, &manifest)?;
+    let baseline_default = baseline.default;
+    let candidate_default = candidate.default;
+    let baseline_patterns = compile_patterns(
+        resolve_pattern_definitions(comparison_file, baseline.patterns),
+        PatternCollection::BaselineComparison,
+    )?;
+    let candidate_patterns = compile_patterns(
+        resolve_pattern_definitions(comparison_file, candidate.patterns),
+        PatternCollection::CandidateComparison,
+    )?;
+    let baseline_pattern_count = baseline_patterns.len();
+    let candidate_pattern_count = candidate_patterns.len();
+    let case_count = cases.len();
+    let mut mismatches = BoundedIssues::new(MAX_REPORTED_FAILURES);
+
+    for (index, case) in cases.into_iter().enumerate() {
+        let case_position = index + 1;
+        let input = read_comparison_input(comparison_file, case_position, case)?;
+        let baseline_state = MatchState::evaluate(&input, &baseline_patterns);
+        let candidate_state = MatchState::evaluate(&input, &candidate_patterns);
+        let differences = ComparisonDifferences::between(
+            baseline_state,
+            baseline_default,
+            candidate_state,
+            candidate_default,
+        );
+        if !differences.is_empty() {
+            mismatches.push(ComparisonMismatch {
+                case_position,
+                differences,
+            });
         }
     }
 
-    if matched_confirm {
-        PermissionDecision::Confirm
-    } else if matched_allow {
-        PermissionDecision::Allow
-    } else {
-        default
-    }
+    Ok(ComparisonResult {
+        baseline_pattern_count,
+        candidate_pattern_count,
+        case_count,
+        comparison_file: comparison_file.to_owned(),
+        mismatches,
+    })
 }
 
 fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
@@ -666,12 +914,13 @@ fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
     let SuiteManifest {
         default,
         expectations,
+        pattern_indices,
         patterns,
     } = parse_suite_manifest(suite_file, &manifest)?;
-    let patterns = compile_suite_patterns(patterns)?;
+    let patterns = compile_patterns(patterns, PatternCollection::Suite)?;
     let pattern_count = patterns.len();
     let mut decision_cases = 0;
-    let mut failures = Vec::new();
+    let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
     let mut pattern_cases = 0;
 
     for expectation in expectations {
@@ -682,7 +931,8 @@ fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
                 line_number,
             } => {
                 decision_cases += 1;
-                if permission_decision(&input, &patterns, default) != expected {
+                let state = MatchState::evaluate(&input, &patterns);
+                if state.decision(default) != expected {
                     failures.push(SuiteFailure {
                         expectation: SuiteFailureExpectation::Decision(expected),
                         line_number,
@@ -696,16 +946,8 @@ fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
                 pattern_id,
             } => {
                 pattern_cases += 1;
-                let Some(pattern) = patterns
-                    .iter()
-                    .find(|pattern| pattern.id == pattern_id.as_str())
-                else {
-                    return Err(format!(
-                        "Unknown pattern id `{pattern_id}` in suite manifest `{}` at line {line_number}",
-                        suite_file.display()
-                    ));
-                };
-                if pattern.regex.is_match(&input) != expected_match {
+                let pattern_index = pattern_indices[&pattern_id];
+                if patterns[pattern_index].regex.is_match(&input) != expected_match {
                     failures.push(SuiteFailure {
                         expectation: SuiteFailureExpectation::Pattern {
                             expected_match,
@@ -752,15 +994,15 @@ fn evaluate(arguments: &Arguments) -> Result<Evaluation, String> {
             let manifest = read_utf8_file(cases_file, "case manifest")?;
             let cases = parse_case_manifest(cases_file, &manifest)?;
             let total = cases.len();
-            let failures = cases
-                .into_iter()
-                .filter_map(|case| {
-                    (regex.is_match(&case.input) != case.expected_match).then_some(BatchFailure {
+            let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
+            for case in cases {
+                if regex.is_match(&case.input) != case.expected_match {
+                    failures.push(BatchFailure {
                         expected_match: case.expected_match,
                         line_number: case.line_number,
-                    })
-                })
-                .collect();
+                    });
+                }
+            }
 
             Ok(Evaluation::Batch(BatchResult {
                 cases_file: cases_file.clone(),
@@ -788,6 +1030,10 @@ fn failure_label(count: usize) -> &'static str {
     if count == 1 { "failure" } else { "failures" }
 }
 
+fn mismatch_label(count: usize) -> &'static str {
+    if count == 1 { "mismatch" } else { "mismatches" }
+}
+
 fn pattern_label(count: usize) -> &'static str {
     if count == 1 { "pattern" } else { "patterns" }
 }
@@ -796,12 +1042,12 @@ fn report_batch_failures(stderr: &mut dyn Write, result: &BatchResult) -> io::Re
     writeln!(
         stderr,
         "zed-pattern-match: {} of {} {} failed in `{}`",
-        result.failures.len(),
+        result.failures.total_count(),
         result.total,
         case_label(result.total),
         result.cases_file.display()
     )?;
-    for failure in result.failures.iter().take(MAX_REPORTED_FAILURES) {
+    for failure in result.failures.issues() {
         let expectation = if failure.expected_match {
             "a match"
         } else {
@@ -814,7 +1060,7 @@ fn report_batch_failures(stderr: &mut dyn Write, result: &BatchResult) -> io::Re
         )?;
     }
 
-    let omitted = result.failures.len().saturating_sub(MAX_REPORTED_FAILURES);
+    let omitted = result.failures.omitted_count();
     if omitted > 0 {
         writeln!(
             stderr,
@@ -831,10 +1077,10 @@ fn report_suite_failures(stderr: &mut dyn Write, result: &SuiteResult) -> io::Re
     writeln!(
         stderr,
         "zed-pattern-match: {} of {total} suite expectations failed in `{}`",
-        result.failures.len(),
+        result.failures.total_count(),
         result.suite_file.display()
     )?;
-    for failure in result.failures.iter().take(MAX_REPORTED_FAILURES) {
+    for failure in result.failures.issues() {
         match &failure.expectation {
             SuiteFailureExpectation::Decision(expected) => {
                 writeln!(
@@ -862,7 +1108,7 @@ fn report_suite_failures(stderr: &mut dyn Write, result: &SuiteResult) -> io::Re
         }
     }
 
-    let omitted = result.failures.len().saturating_sub(MAX_REPORTED_FAILURES);
+    let omitted = result.failures.omitted_count();
     if omitted > 0 {
         writeln!(
             stderr,
@@ -874,8 +1120,77 @@ fn report_suite_failures(stderr: &mut dyn Write, result: &SuiteResult) -> io::Re
     Ok(())
 }
 
+fn comparison_dimension_labels(differences: &ComparisonDifferences) -> Vec<&'static str> {
+    let mut labels = Vec::with_capacity(4);
+    if differences.allow_bucket {
+        labels.push("always_allow bucket");
+    }
+    if differences.confirm_bucket {
+        labels.push("always_confirm bucket");
+    }
+    if differences.deny_bucket {
+        labels.push("always_deny bucket");
+    }
+    if differences.final_decision {
+        labels.push("final decision");
+    }
+
+    labels
+}
+
+fn report_comparison_mismatches(
+    stderr: &mut dyn Write,
+    result: &ComparisonResult,
+) -> io::Result<()> {
+    writeln!(
+        stderr,
+        "zed-pattern-match: {} {} across {} comparison {} in `{}`",
+        result.mismatches.total_count(),
+        mismatch_label(result.mismatches.total_count()),
+        result.case_count,
+        case_label(result.case_count),
+        result.comparison_file.display()
+    )?;
+    for mismatch in result.mismatches.issues() {
+        let dimensions = comparison_dimension_labels(&mismatch.differences).join(", ");
+        writeln!(
+            stderr,
+            "  Case {} differs in: {dimensions}",
+            mismatch.case_position
+        )?;
+    }
+
+    let omitted = result.mismatches.omitted_count();
+    if omitted > 0 {
+        writeln!(
+            stderr,
+            "  … {omitted} additional {} omitted",
+            mismatch_label(omitted)
+        )?;
+    }
+
+    Ok(())
+}
+
 fn report_error(stderr: &mut dyn Write, message: &str) {
     let _ = writeln!(stderr, "zed-pattern-match: {message}");
+}
+
+fn report_equivalent_comparison(
+    stdout: &mut dyn Write,
+    result: &ComparisonResult,
+) -> Result<(), String> {
+    writeln!(
+        stdout,
+        "Representative corpus comparison found equivalent configured pattern behavior across {} {} with {} baseline {} and {} candidate {}",
+        result.case_count,
+        case_label(result.case_count),
+        result.baseline_pattern_count,
+        pattern_label(result.baseline_pattern_count),
+        result.candidate_pattern_count,
+        pattern_label(result.candidate_pattern_count)
+    )
+    .map_err(|error| format!("Failed to write comparison result:\n\n{error}"))
 }
 
 fn report_verified_cases(stdout: &mut dyn Write, total: usize) -> Result<(), String> {
@@ -910,6 +1225,28 @@ where
     };
 
     match parsed_arguments {
+        ParsedArguments::Comparison(comparison_file) => match evaluate_comparison(&comparison_file)
+        {
+            Ok(result) if result.mismatches.total_count() == 0 => {
+                if let Err(error) = report_equivalent_comparison(stdout, &result) {
+                    report_error(stderr, &error);
+                    return STATUS_ERROR;
+                }
+
+                STATUS_MATCH
+            }
+            Ok(result) => {
+                if report_comparison_mismatches(stderr, &result).is_err() {
+                    return STATUS_ERROR;
+                }
+
+                STATUS_NO_MATCH
+            }
+            Err(error) => {
+                report_error(stderr, &error);
+                STATUS_ERROR
+            }
+        },
         ParsedArguments::Help => {
             if let Err(error) = stdout.write_all(HELP.as_bytes()) {
                 report_error(stderr, &format!("Failed to write help:\n\n{error}"));
@@ -919,7 +1256,7 @@ where
             STATUS_MATCH
         }
         ParsedArguments::Run(arguments) => match evaluate(&arguments) {
-            Ok(Evaluation::Batch(result)) if result.failures.is_empty() => {
+            Ok(Evaluation::Batch(result)) if result.failures.total_count() == 0 => {
                 if let Err(error) = report_verified_cases(stdout, result.total) {
                     report_error(stderr, &error);
                     return STATUS_ERROR;
@@ -942,7 +1279,7 @@ where
             }
         },
         ParsedArguments::Suite(suite_file) => match evaluate_suite(&suite_file) {
-            Ok(result) if result.failures.is_empty() => {
+            Ok(result) if result.failures.total_count() == 0 => {
                 if let Err(error) = report_verified_suite(stdout, &result) {
                     report_error(stderr, &error);
                     return STATUS_ERROR;

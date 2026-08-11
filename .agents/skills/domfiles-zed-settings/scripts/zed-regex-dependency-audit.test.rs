@@ -1,4 +1,4 @@
-#[path = "zed-regex-audit.rs"]
+#[path = "zed-regex-dependency-audit.rs"]
 mod helper;
 
 use std::{
@@ -92,7 +92,7 @@ impl Fixture {
             .expect("System clock must be after the Unix epoch")
             .as_nanos();
         let root = env::temp_dir().join(format!(
-            "domfiles-zed-regex-audit-{}-{timestamp}-{fixture_id}",
+            "domfiles-zed-regex-dependency-audit-{}-{timestamp}-{fixture_id}",
             process::id()
         ));
         fs::create_dir(&root).expect("Failed to create fixture directory");
@@ -149,79 +149,23 @@ fn write_version_files(
     (local_manifest, upstream_lock)
 }
 
-fn run_pattern_files(pattern_files: &[PathBuf], case_sensitive: bool) -> (u8, String, String) {
-    let mut arguments = Vec::new();
-    if case_sensitive {
-        arguments.push(OsString::from("--case-sensitive"));
+#[test]
+fn rejects_removed_pattern_options() {
+    for option in ["--case-sensitive", "--pattern-file"] {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+
+        let status = helper::run([OsString::from(option)], &mut stdout, &mut stderr);
+
+        assert_eq!(status, 2);
+        assert!(stdout.is_empty());
+        assert_eq!(
+            String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
+            format!(
+                "zed-regex-dependency-audit: Unknown option `{option}`. Run `zed-regex-dependency-audit --help` for usage\n"
+            )
+        );
     }
-    for pattern_file in pattern_files {
-        arguments.extend([
-            OsString::from("--pattern-file"),
-            pattern_file.as_os_str().to_owned(),
-        ]);
-    }
-
-    let mut stdout = Vec::new();
-    let mut stderr = Vec::new();
-    let status = helper::run(arguments, &mut stdout, &mut stderr);
-
-    (
-        status,
-        String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
-        String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
-    )
-}
-
-#[test]
-fn compiles_multiple_pattern_files() {
-    let fixture = Fixture::new();
-    let first_pattern = fixture.write("first.regex", r"^foo$");
-    let second_pattern = fixture.write("second.regex", r"^(?i:https://example\.com)(?:[/?#]|$)");
-
-    let (status, stdout, stderr) = run_pattern_files(&[first_pattern, second_pattern], true);
-
-    assert_eq!(status, 0);
-    assert_eq!(stdout, "Compiled 2 Zed regex patterns\n");
-    assert!(stderr.is_empty());
-}
-
-#[test]
-fn rejects_invalid_pattern_without_echoing_it() {
-    let fixture = Fixture::new();
-    let invalid_pattern = format!("{}(?=bar)", "foo".repeat(200));
-    let pattern_file = fixture.write("invalid.regex", &invalid_pattern);
-
-    let (status, stdout, stderr) = run_pattern_files(&[pattern_file], true);
-
-    assert_eq!(status, 2);
-    assert!(stdout.is_empty());
-    assert!(stderr.contains("Invalid regex in pattern file"));
-    assert!(stderr.contains("look-around"));
-    assert!(!stderr.contains(invalid_pattern.as_str()));
-}
-
-#[test]
-fn rejects_mixed_audit_modes() {
-    let fixture = Fixture::new();
-    let pattern_file = fixture.write("pattern.regex", "^foo$");
-    let arguments = [
-        OsString::from("--pattern-file"),
-        pattern_file.as_os_str().to_owned(),
-        OsString::from("--local-manifest"),
-        OsString::from("Cargo.toml"),
-    ];
-    let mut stdout = Vec::new();
-    let mut stderr = Vec::new();
-
-    let status = helper::run(arguments, &mut stdout, &mut stderr);
-
-    assert_eq!(status, 2);
-    assert!(stdout.is_empty());
-    assert!(
-        String::from_utf8(stderr)
-            .expect("Standard error must be valid UTF-8")
-            .contains("cannot be combined")
-    );
 }
 
 #[test]
@@ -255,12 +199,60 @@ fn rejects_multiple_upstream_versions() {
 }
 
 #[test]
+fn rejects_malformed_upstream_lockfile() {
+    let fixture = Fixture::new();
+    let malformed_upstream = format!("this is invalid TOML\n{UPSTREAM_LOCK}");
+    let (local_manifest, upstream_lock) =
+        write_version_files(&fixture, LOCAL_LOCK, &malformed_upstream);
+
+    let (status, stdout, stderr) = run_with_files(&local_manifest, &upstream_lock, "abcdef1");
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("Upstream lockfile is invalid TOML"));
+}
+
+#[test]
 fn rejects_unpinned_local_dependency() {
     let manifest = LOCAL_MANIFEST.replace("regex = \"=1.12.3\"", "regex = \"1.12.3\"");
 
     let error = helper::local_regex_version(&manifest).expect_err("Unpinned version must fail");
 
-    assert!(error.contains("exact `regex"));
+    assert!(error.contains("exact `=VERSION`"));
+}
+
+#[test]
+fn rejects_unpinned_dependency_despite_exact_metadata_key() {
+    let manifest = concat!(
+        "[package]\n",
+        "name = \"domfiles\"\n",
+        "version = \"0.0.0\"\n",
+        "\n",
+        "[dependencies]\n",
+        "regex = \"1.12.3\"\n",
+        "\n",
+        "[package.metadata.audit]\n",
+        "regex = \"=1.12.3\"\n",
+    );
+
+    let error = helper::local_regex_version(manifest)
+        .expect_err("An unrelated metadata key must not satisfy the dependency pin");
+
+    assert!(error.contains("`[dependencies].regex`"));
+    assert!(error.contains("exact `=VERSION`"));
+}
+
+#[test]
+fn extracts_exact_local_pin_from_detailed_dependency() {
+    let manifest = LOCAL_MANIFEST.replace(
+        "regex = \"=1.12.3\"",
+        "regex = { version = \"=1.12.3\", default-features = false }",
+    );
+
+    assert_eq!(
+        helper::local_regex_version(&manifest).expect("Detailed local pin must be valid"),
+        "1.12.3"
+    );
 }
 
 #[test]
@@ -469,10 +461,24 @@ fn returns_success_for_help() {
     let status = helper::run(vec![OsString::from("--help")], &mut stdout, &mut stderr);
 
     assert_eq!(status, 0);
-    assert!(
-        String::from_utf8(stdout)
-            .expect("Standard output must be valid UTF-8")
-            .starts_with("Usage: zed-regex-audit")
+    assert_eq!(
+        String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
+        concat!(
+            "Usage: zed-regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
+            "\n",
+            "Audit the direct Zed-compatible `regex` dependency version\n",
+            "\n",
+            "Options:\n",
+            "  --help                         Print help\n",
+            "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
+            "  --upstream-lock <path>         Read the upstream locked `regex` version\n",
+            "  --upstream-revision <commit>   Identify the upstream Zed commit\n",
+            "\n",
+            "Exit statuses:\n",
+            "  0  Versions matched or help displayed\n",
+            "  1  Versions differed\n",
+            "  2  Invalid arguments or data, or an I/O failure\n",
+        )
     );
     assert!(stderr.is_empty());
 }
