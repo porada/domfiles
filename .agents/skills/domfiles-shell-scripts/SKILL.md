@@ -1,6 +1,6 @@
 ---
 name: domfiles-shell-scripts
-description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.vite-hooks`—or evaluates whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
+description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or evaluates whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
 ---
 
 # Domfiles shell scripts
@@ -40,7 +40,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 ## Keep POSIX scripts portable
 
 - Ensure every shell script not written in Fish strictly conforms to POSIX `sh`, applying strict mode when applicable.
-- Ensure every POSIX shell entrypoint sources `domlib`. Exempt `.vite-hooks` scripts. Treat `bin/domlib` as the shared library rather than an entrypoint, and keep strict mode there so sourced scripts inherit it.
+- Ensure every POSIX shell entrypoint sources `domlib`. Exempt `.hooks` scripts. Treat `bin/domlib` as the shared library rather than an entrypoint, and keep strict mode there so sourced scripts inherit it.
 
 ## Quote shell strings appropriately
 

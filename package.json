@@ -41,7 +41,7 @@
 		"lint:sh": "bin/domfiles-dev-lint-sh",
 		"lint:ts": "vp lint --fix",
 		"lint:ts:check": "vp lint --deny-warnings --type-check",
-		"prepare": "vp config",
+		"prepare": "vp config --hooks-dir .hooks",
 		"test": "vp test",
 		"typecheck": "tsc --noEmit"
 	}

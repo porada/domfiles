@@ -11,9 +11,9 @@
 .config/zed/prompts
 .config/zed/themes
 .DS_Store
+.hooks/_
 .lastsync
 .pnpm-store
-.vite-hooks/_
 coverage
 node_modules
 target
