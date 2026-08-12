@@ -143,6 +143,7 @@
 				"*.docker.com",
 				"*.github.com",
 				"*.githubusercontent.com",
+				"*.gnu.org",
 				"*.go.dev",
 				"*.grep.app",
 				"*.home-assistant.io",
@@ -174,6 +175,7 @@
 				"curl.se",
 				"cve.org",
 				"cveawg.mitre.org",
+				"docs.python.org",
 				"docs.rs",
 				"dom.engineering",
 				"e18e.dev",
@@ -187,6 +189,7 @@
 				"github.blog",
 				"github.com",
 				"githubusercontent.com",
+				"gnu.org",
 				"go.dev",
 				"grep.app",
 				"jqlang.org",
@@ -278,6 +281,10 @@
 						},
 						{
 							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*github(?:usercontent)?\\.com)(?:[/?#]|$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*gnu\\.org)(?:[/?#]|$)",
 							"case_sensitive": true
 						},
 						{
@@ -378,6 +385,10 @@
 						},
 						{
 							"pattern": "^(?i:https://cveawg\\.mitre\\.org)(?:[/?#]|$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?i:https://docs\\.python\\.org)(?:[/?#]|$)",
 							"case_sensitive": true
 						},
 						{

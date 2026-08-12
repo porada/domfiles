@@ -12,21 +12,24 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     ffi::{OsStr, OsString},
     io::Write,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 const HELP: &str = concat!(
-    "Usage: zed-permission-owner-audit --settings <settings.json> --manifest <manifest.json>\n",
-    "       zed-permission-owner-audit --settings <settings.json> --owner <top-level-executable>\n",
+    "Usage:\n",
+    "  permission-owner-audit --settings <settings-path> --manifest <manifest-path>\n",
+    "  permission-owner-audit --settings <settings-path> --owner <top-level-executable>\n",
+    "  permission-owner-audit --help\n",
     "\n",
     "Audit declared terminal permission owners, roles, ordering, and finite discovery coverage,\n",
     "or list bounded terminal pattern inventory candidates by top-level executable token.\n",
     "\n",
     "Options:\n",
-    "  --help                 Print help. This option must be used alone\n",
-    "  --manifest <path>      Read the version-1 audit manifest\n",
-    "  --owner <token>        Inventory one top-level executable token. Mutually exclusive\n",
-    "                         with --manifest. The token must match [A-Za-z0-9_.+-]+\n",
+    "  --help                 Print help. Must be used alone\n",
+    "  --manifest <path>      Audit entries declared by a version-1 manifest\n",
+    "  --owner <token>        List inventory candidates for one top-level executable token.\n",
+    "                         Mutually exclusive with `--manifest`. The token must match\n",
+    "                         `[A-Za-z0-9_.+-]+`\n",
     "  --settings <path>      Read Zed settings containing terminal permission buckets\n",
     "\n",
     "Version-1 manifest schema (unknown fields are rejected):\n",
@@ -51,32 +54,36 @@ const HELP: &str = concat!(
     "  }\n",
     "\n",
     "Manifest contract:\n",
-    "  Omit discovery_coverage and discovery_inputs for direct and wrapped entries. Discovery\n",
-    "  entries require a coverage kind and nonempty inputs containing witness. complete_finite\n",
-    "  claims the complete finite grammar and enables duplicate-coverage findings. representative\n",
+    "  Omit `discovery_coverage` and `discovery_inputs` for direct and wrapped entries. Discovery\n",
+    "  entries require a coverage kind and nonempty inputs containing `witness`. `complete_finite`\n",
+    "  claims the complete finite grammar and enables duplicate-coverage findings. `representative`\n",
     "  records bounded cases for variable grammar and leaves complete coverage to matcher suites.\n",
     "  IDs and bucket/index pairs must be unique. Sort tuples must be unique within a bucket.\n",
-    "  Omit case_insensitive_reason for case-sensitive patterns. A selected case-insensitive\n",
+    "  Omit `case_insensitive_reason` for case-sensitive patterns. A selected case-insensitive\n",
     "  pattern requires a nonempty reason recording its verified command-specific exception.\n",
-    "  The manifest must declare complete owner groups for every group it audits.\n",
+    "  Each selected decoded pattern must contain at most 999 Unicode scalar values.\n",
+    "  Completeness spans use the independently inferred bucket, semantic owner, and Git repository\n",
+    "  scope: general, exact top-level agent worktree, or traversal-free descendant fixture.\n",
+    "  `section_sort_key` participates in ordering but never partitions completeness spans.\n",
     "  Semantic owners name the independently inferred executable or manager, for example\n",
-    "  npm, git:hash-object, or git:root. Section keys place domain sections such as Git\n",
-    "  root/discovery, direct-subcommand, and compound-workflow groups.\n",
-    "  Actual bucket order is checked by (owner_sort_key, section_sort_key, role order\n",
-    "  discovery/direct/wrapped, owner, pattern_sort_key).\n",
+    "  `npm`, `git:hash-object`, or `git:root`.\n",
+    "  Actual bucket order is checked by (`owner_sort_key`, `section_sort_key`, role order\n",
+    "  `discovery`/`direct`/`wrapped`, `owner`, `pattern_sort_key`).\n",
     "\n",
     "Inventory contract:\n",
     "  Inventory inspects regex source text without compiling permission patterns. Owner\n",
     "  occurrences must have source-text token boundaries. Matches are inventory candidates,\n",
-    "  not semantic owner proof. At most 100 hits are printed. Each hit contains only its\n",
-    "  bucket/index, decoded character count, required boolean case_sensitive setting, and\n",
+    "  not semantic ownership proof. At most 100 hits are printed. Each hit contains only its\n",
+    "  bucket/index, decoded character count, required boolean `case_sensitive` setting, and\n",
     "  a preview of at most 160 Unicode scalar values beginning at the owner token.\n",
     "\n",
     "Output:\n",
-    "  A successful manifest audit prints entry, owner-group, and bucket counts only. Audit\n",
-    "  findings report at most 10 entry IDs with concise reasons. Inventory prints bounded\n",
-    "  source-text candidates, an omitted count when needed, and an exact total. Regex bodies\n",
-    "  and witness inputs are never printed as complete fields.\n",
+    "  Help, successful manifest-audit results, and inventory are written to standard output.\n",
+    "  Audit findings and errors are written to standard error. A successful manifest audit\n",
+    "  reports entry, owner-group, and bucket counts only. Findings report at most 10 entry IDs\n",
+    "  with concise reasons. Inventory reports bounded source-text candidates, an omitted count\n",
+    "  when needed, and an exact total. Regex bodies and witness inputs are never printed as\n",
+    "  complete fields.\n",
     "\n",
     "Exit statuses:\n",
     "  0  Audit passed, inventory completed including zero hits, or help displayed\n",
@@ -199,6 +206,13 @@ pub(crate) struct InferredOwner {
     pub(crate) role: Role,
 }
 
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+enum RepositoryScope {
+    AgentWorktree,
+    FixtureRepository,
+    General,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct Finding {
     pub(crate) id: String,
@@ -289,14 +303,14 @@ where
             }
             _ => {
                 return Err(format!(
-                    "Unknown option `{option}`. Run `zed-permission-owner-audit --help` for usage"
+                    "Unknown option `{option}`. Run `permission-owner-audit --help` for usage"
                 ));
             }
         }
     }
 
     let settings = settings
-        .ok_or_else(|| "Missing required option `--settings <settings.json>`".to_owned())?;
+        .ok_or_else(|| "Missing required option `--settings <settings-path>`".to_owned())?;
     let operation = match (manifest, owner) {
         (Some(_), Some(_)) => {
             return Err("Options `--manifest` and `--owner` are mutually exclusive".to_owned());
@@ -305,7 +319,7 @@ where
         (None, Some(owner)) => Operation::Inventory { owner },
         (None, None) => {
             return Err(
-                "Missing required operation `--manifest <manifest.json>` or `--owner <top-level-executable>`"
+                "Missing required operation `--manifest <manifest-path>` or `--owner <top-level-executable>`"
                     .to_owned(),
             );
         }
@@ -320,7 +334,7 @@ where
 fn validate_manifest(manifest: &Manifest) -> Result<(), String> {
     if manifest.version != 1 {
         return Err(format!(
-            "Unsupported manifest version `{}`. Expected version `1`",
+            "Unsupported manifest version. Expected `1`, received `{}`",
             manifest.version
         ));
     }
@@ -338,7 +352,7 @@ fn validate_manifest(manifest: &Manifest) -> Result<(), String> {
         }
         if entry.owner.is_empty() {
             return Err(format!(
-                "Manifest entry `{}` must declare a nonempty owner",
+                "Manifest entry `{}` must declare a nonempty `owner`",
                 entry.id
             ));
         }
@@ -348,14 +362,14 @@ fn validate_manifest(manifest: &Manifest) -> Result<(), String> {
             .is_some_and(|reason| reason.trim().is_empty())
         {
             return Err(format!(
-                "Manifest entry `{}` must declare a nonempty case_insensitive_reason",
+                "Manifest entry `{}` must declare a nonempty `case_insensitive_reason`",
                 entry.id
             ));
         }
 
         if let Some(existing_id) = positions.insert((entry.bucket, entry.index), entry.id.clone()) {
             return Err(format!(
-                "Manifest entries `{existing_id}` and `{}` select the same {} index {}",
+                "Manifest entries `{existing_id}` and `{}` select the same `{}` index {}",
                 entry.id,
                 entry.bucket.label(),
                 entry.index
@@ -365,7 +379,7 @@ fn validate_manifest(manifest: &Manifest) -> Result<(), String> {
         let sort_key = (entry.bucket, SortTuple::from_entry(entry));
         if let Some(existing_id) = sort_tuples.insert(sort_key, entry.id.clone()) {
             return Err(format!(
-                "Manifest entries `{existing_id}` and `{}` have the same sort tuple in {}",
+                "Manifest entries `{existing_id}` and `{}` have the same sort tuple in `{}`",
                 entry.id,
                 entry.bucket.label()
             ));
@@ -378,32 +392,32 @@ fn validate_manifest(manifest: &Manifest) -> Result<(), String> {
         ) {
             (Role::Discovery, None, _) => {
                 return Err(format!(
-                    "Discovery entry `{}` must declare discovery_coverage",
+                    "Discovery entry `{}` must declare `discovery_coverage`",
                     entry.id
                 ));
             }
             (Role::Discovery, Some(_), None) => {
                 return Err(format!(
-                    "Discovery entry `{}` must declare discovery_inputs",
+                    "Discovery entry `{}` must declare `discovery_inputs`",
                     entry.id
                 ));
             }
             (Role::Discovery, Some(_), Some(inputs)) if inputs.is_empty() => {
                 return Err(format!(
-                    "Discovery entry `{}` must declare at least one discovery input",
+                    "Discovery entry `{}` must declare at least one `discovery_inputs` value",
                     entry.id
                 ));
             }
             (Role::Discovery, Some(_), Some(inputs)) if !inputs.contains(&entry.witness) => {
                 return Err(format!(
-                    "Discovery entry `{}` must include its witness in discovery_inputs",
+                    "Discovery entry `{}` must include its `witness` in `discovery_inputs`",
                     entry.id
                 ));
             }
             (Role::Discovery, Some(_), Some(_)) => {}
             (_, Some(_), _) | (_, _, Some(_)) => {
                 return Err(format!(
-                    "Non-discovery entry `{}` must omit discovery_coverage and discovery_inputs",
+                    "Non-discovery entry `{}` must omit `discovery_coverage` and `discovery_inputs`",
                     entry.id
                 ));
             }
@@ -436,7 +450,7 @@ fn owner_source_matcher(owner: &str) -> Result<Regex, String> {
     ))
     .map_err(|error| {
         format!(
-            "Failed to build the owner source-text matcher: {}",
+            "Failed to build the owner source-text matcher:\n\n{}",
             regex_error_summary(&error)
         )
     })
@@ -504,7 +518,7 @@ fn inventory_settings(
 fn inventory_json(settings_json: &str, owner: &str) -> Result<BoundedIssues<InventoryHit>, String> {
     validate_owner(owner)?;
     let settings: Value = serde_json::from_str(settings_json)
-        .map_err(|error| format!("Invalid settings JSON: {error}"))?;
+        .map_err(|error| format!("Invalid settings JSON:\n\n{error}"))?;
     inventory_settings(&settings, owner)
 }
 
@@ -526,7 +540,7 @@ fn selected_entries(
             })?;
         let value = bucket.get(declaration.index).ok_or_else(|| {
             format!(
-                "Manifest entry `{}` selects missing {} index {}",
+                "Manifest entry `{}` selects missing `{}` index {}",
                 declaration.id,
                 declaration.bucket.label(),
                 declaration.index
@@ -534,7 +548,7 @@ fn selected_entries(
         })?;
         let object = value.as_object().ok_or_else(|| {
             format!(
-                "Selected {} index {} for `{}` must be an object",
+                "Selected `{}` index {} for `{}` must be an object",
                 declaration.bucket.label(),
                 declaration.index,
                 declaration.id
@@ -545,7 +559,7 @@ fn selected_entries(
             .and_then(Value::as_str)
             .ok_or_else(|| {
                 format!(
-                    "Selected {} index {} for `{}` must contain string `pattern`",
+                    "Selected `{}` index {} for `{}` must contain string `pattern`",
                     declaration.bucket.label(),
                     declaration.index,
                     declaration.id
@@ -556,7 +570,7 @@ fn selected_entries(
             .and_then(Value::as_bool)
             .ok_or_else(|| {
                 format!(
-                    "Selected {} index {} for `{}` must contain boolean `case_sensitive`",
+                    "Selected `{}` index {} for `{}` must contain boolean `case_sensitive`",
                     declaration.bucket.label(),
                     declaration.index,
                     declaration.id
@@ -617,7 +631,7 @@ fn parse_xargs_child(tokens: &[&str]) -> Result<usize, String> {
         }
         if let Some(value) = token.strip_prefix("--max-args=") {
             if !is_positive_integer(value) {
-                return Err("xargs has an invalid `--max-args` value".to_owned());
+                return Err("`xargs` has an invalid `--max-args` value".to_owned());
             }
             index += 1;
             continue;
@@ -633,10 +647,10 @@ fn parse_xargs_child(tokens: &[&str]) -> Result<usize, String> {
         }
         if token == "-L" || token == "-n" {
             let Some(value) = tokens.get(index + 1) else {
-                return Err("xargs has a missing numeric option value".to_owned());
+                return Err("`xargs` has a missing numeric option value".to_owned());
             };
             if !is_positive_integer(value) {
-                return Err("xargs has an invalid numeric option value".to_owned());
+                return Err("`xargs` has an invalid numeric option value".to_owned());
             }
             index += 2;
             continue;
@@ -650,13 +664,13 @@ fn parse_xargs_child(tokens: &[&str]) -> Result<usize, String> {
             continue;
         }
         if token.starts_with('-') {
-            return Err("xargs uses an unsupported or ambiguous option".to_owned());
+            return Err("`xargs` uses an unsupported or ambiguous option".to_owned());
         }
 
         return Ok(index);
     }
 
-    Err("xargs witness does not identify a child executable".to_owned())
+    Err("`xargs` witness does not identify a child executable".to_owned())
 }
 
 fn git_owner(tokens: &[&str]) -> Result<String, String> {
@@ -704,6 +718,91 @@ fn owner_for_executable(tokens: &[&str]) -> Result<String, String> {
     } else {
         Ok(executable.to_owned())
     }
+}
+
+fn is_agent_name(value: &str) -> bool {
+    let mut characters = value.chars();
+    let Some(first) = characters.next() else {
+        return false;
+    };
+
+    (first.is_ascii_alphanumeric() || matches!(first, '-' | '_'))
+        && characters.all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '-' | '.' | '_')
+        })
+}
+
+fn repository_scope_from_path(path: &str) -> RepositoryScope {
+    if Path::new(path).is_absolute()
+        || path
+            .split('/')
+            .any(|component| component.is_empty() || matches!(component, "." | ".."))
+    {
+        return RepositoryScope::General;
+    }
+    let mut components = path.split('/');
+    let Some(root) = components.next() else {
+        return RepositoryScope::General;
+    };
+    let Some(name) = root.strip_prefix(".agent-") else {
+        return RepositoryScope::General;
+    };
+    if !is_agent_name(name) {
+        return RepositoryScope::General;
+    }
+
+    if components.next().is_some() {
+        RepositoryScope::FixtureRepository
+    } else {
+        RepositoryScope::AgentWorktree
+    }
+}
+
+fn git_tokens_after_wrappers<'a>(tokens: &'a [&'a str]) -> Option<&'a [&'a str]> {
+    let mut index = 0;
+    while tokens.get(index).is_some_and(|token| is_assignment(token)) {
+        index += 1;
+    }
+    if tokens.get(index) == Some(&"nohup") {
+        index += 1;
+    }
+    let command = &tokens[index..];
+    if command.first() == Some(&"xargs") {
+        let child_index = parse_xargs_child(command).ok()?;
+        return Some(&command[child_index..]).filter(|child| child.first() == Some(&"git"));
+    }
+
+    Some(command).filter(|command| command.first() == Some(&"git"))
+}
+
+fn infer_repository_scope(witness: &str) -> RepositoryScope {
+    let tokens = witness.split(' ').collect::<Vec<_>>();
+    let Some(git_tokens) = git_tokens_after_wrappers(&tokens) else {
+        return RepositoryScope::General;
+    };
+    let mut index = 1;
+    let mut scope = None;
+    while index < git_tokens.len() {
+        match git_tokens[index] {
+            "--no-optional-locks" | "--no-pager" => index += 1,
+            "-c" if git_tokens.get(index + 1).copied() == Some("commit.gpgsign=false") => {
+                index += 2;
+            }
+            "-C" => {
+                let Some(path) = git_tokens.get(index + 1) else {
+                    return RepositoryScope::General;
+                };
+                if scope.is_some() {
+                    return RepositoryScope::General;
+                }
+                scope = Some(repository_scope_from_path(path));
+                index += 2;
+            }
+            _ => break,
+        }
+    }
+
+    scope.unwrap_or(RepositoryScope::General)
 }
 
 pub(crate) fn infer_owner_role(
@@ -838,13 +937,17 @@ fn validate_selected_patterns(entries: &mut [SelectedEntry], findings: &mut Find
     for selected in entries {
         let id = selected.declaration.id.as_str();
         if !selected.case_sensitive && selected.declaration.case_insensitive_reason.is_none() {
-            findings.add(selected.finding_key, id, "case_sensitive is not true");
+            findings.add(
+                selected.finding_key,
+                id,
+                "`case_sensitive` is `false` without `case_insensitive_reason`",
+            );
         }
         if selected.case_sensitive && selected.declaration.case_insensitive_reason.is_some() {
             findings.add(
                 selected.finding_key,
                 id,
-                "case_insensitive_reason is declared for a case-sensitive pattern",
+                "case-sensitive pattern must omit `case_insensitive_reason`",
             );
         }
         let character_count = selected.pattern.chars().count();
@@ -852,7 +955,9 @@ fn validate_selected_patterns(entries: &mut [SelectedEntry], findings: &mut Find
             findings.add(
                 selected.finding_key,
                 id,
-                format!("decoded pattern length is {character_count}, not less than 1000"),
+                format!(
+                    "decoded pattern contains {character_count} Unicode scalar values. Maximum: {MAX_PATTERN_CHARACTERS}"
+                ),
             );
         }
 
@@ -943,7 +1048,7 @@ fn validate_bucket_order(entries: &[SelectedEntry], findings: &mut FindingAccumu
                     actual_entry.finding_key,
                     &actual_entry.declaration.id,
                     format!(
-                        "{} index order differs from declared sort order",
+                        "`{}` index order differs from declared sort order",
                         bucket.label()
                     ),
                 );
@@ -953,15 +1058,24 @@ fn validate_bucket_order(entries: &[SelectedEntry], findings: &mut FindingAccumu
 }
 
 fn validate_owner_spans(entries: &[SelectedEntry], findings: &mut FindingAccumulator) {
-    let mut groups: BTreeMap<(Bucket, String), Vec<&SelectedEntry>> = BTreeMap::new();
+    let mut groups: BTreeMap<(Bucket, String, RepositoryScope), Vec<&SelectedEntry>> =
+        BTreeMap::new();
     for entry in entries {
+        let discovery_inputs = entry.declaration.discovery_inputs.as_deref().unwrap_or(&[]);
+        let Ok(inferred) = infer_owner_role(&entry.declaration.witness, discovery_inputs) else {
+            continue;
+        };
         groups
-            .entry((entry.declaration.bucket, entry.declaration.owner.clone()))
+            .entry((
+                entry.declaration.bucket,
+                inferred.owner,
+                infer_repository_scope(&entry.declaration.witness),
+            ))
             .or_default()
             .push(entry);
     }
 
-    for ((bucket, _), group) in groups {
+    for ((bucket, _, _), group) in groups {
         let minimum = group
             .iter()
             .map(|entry| entry.declaration.index)
@@ -984,7 +1098,7 @@ fn validate_owner_spans(entries: &[SelectedEntry], findings: &mut FindingAccumul
                         entry.finding_key,
                         &entry.declaration.id,
                         format!(
-                            "owner group does not completely occupy {} index {index} inside its span",
+                            "owner-section group does not completely occupy `{}` index {index} inside its span",
                             bucket.label()
                         ),
                     );
@@ -1043,7 +1157,7 @@ fn validate_discovery_redundancy(entries: &[SelectedEntry], findings: &mut Findi
             findings.add(
                 selected.finding_key,
                 &declaration.id,
-                "discovery entry is redundant within its always_allow manager group",
+                "discovery entry is redundant within its `always_allow` manager group",
             );
         }
     }
@@ -1051,9 +1165,9 @@ fn validate_discovery_redundancy(entries: &[SelectedEntry], findings: &mut Findi
 
 pub(crate) fn audit_json(settings_json: &str, manifest_json: &str) -> Result<AuditReport, String> {
     let settings: Value = serde_json::from_str(settings_json)
-        .map_err(|error| format!("Invalid settings JSON: {error}"))?;
+        .map_err(|error| format!("Invalid settings JSON:\n\n{error}"))?;
     let manifest: Manifest = serde_json::from_str(manifest_json)
-        .map_err(|error| format!("Invalid manifest JSON: {error}"))?;
+        .map_err(|error| format!("Invalid manifest JSON:\n\n{error}"))?;
     validate_manifest(&manifest)?;
 
     let (mut entries, bucket_count) = selected_entries(&settings, manifest)?;
@@ -1086,29 +1200,31 @@ fn count_label(count: usize, singular: &'static str, plural: &'static str) -> &'
 }
 
 fn report_error(stderr: &mut dyn Write, message: &str) {
-    let _ = writeln!(stderr, "zed-permission-owner-audit: {message}");
+    let _ = writeln!(stderr, "permission-owner-audit: {message}");
 }
 
 fn report_findings(stderr: &mut dyn Write, report: &AuditReport) -> Result<(), String> {
     writeln!(
         stderr,
-        "zed-permission-owner-audit: {} {} across {} {}",
+        "permission-owner-audit: {} {} across {} {}",
         report.finding_count,
         count_label(report.finding_count, "finding", "findings"),
         report.entry_count,
         count_label(report.entry_count, "entry", "entries")
     )
-    .map_err(|error| format!("Failed to write audit findings: {error}"))?;
+    .map_err(|error| format!("Failed to write audit findings to standard error:\n\n{error}"))?;
 
     for finding in &report.findings {
-        writeln!(stderr, "  `{}`: {}", finding.id, finding.reason)
-            .map_err(|error| format!("Failed to write audit findings: {error}"))?;
+        writeln!(stderr, "  `{}`: {}", finding.id, finding.reason).map_err(|error| {
+            format!("Failed to write audit findings to standard error:\n\n{error}")
+        })?;
     }
 
     let omitted = report.finding_count - report.findings.len();
     if omitted > 0 {
-        writeln!(stderr, "  … {omitted} additional findings omitted")
-            .map_err(|error| format!("Failed to write audit findings: {error}"))?;
+        writeln!(stderr, "  … {omitted} additional findings omitted").map_err(|error| {
+            format!("Failed to write audit findings to standard error:\n\n{error}")
+        })?;
     }
 
     Ok(())
@@ -1118,18 +1234,23 @@ fn report_inventory(
     stdout: &mut dyn Write,
     hits: &BoundedIssues<InventoryHit>,
 ) -> Result<(), String> {
-    writeln!(stdout, "Inventory candidates only—not semantic owner proof")
-        .map_err(|error| format!("Failed to write inventory result: {error}"))?;
+    writeln!(
+        stdout,
+        "Inventory results are candidates, not semantic ownership proof"
+    )
+    .map_err(|error| format!("Failed to write inventory result to standard output:\n\n{error}"))?;
 
     for hit in hits.issues() {
         let preview = serde_json::to_string(&hit.preview)
-            .map_err(|error| format!("Failed to encode inventory preview: {error}"))?;
+            .map_err(|error| format!("Failed to encode inventory preview as JSON:\n\n{error}"))?;
         writeln!(
             stdout,
             "{} characters={} case_sensitive={} preview={preview}",
             hit.id, hit.character_count, hit.case_sensitive
         )
-        .map_err(|error| format!("Failed to write inventory result: {error}"))?;
+        .map_err(|error| {
+            format!("Failed to write inventory result to standard output:\n\n{error}")
+        })?;
     }
 
     if hits.omitted_count() > 0 {
@@ -1138,11 +1259,13 @@ fn report_inventory(
             "… {} additional inventory candidates omitted",
             hits.omitted_count()
         )
-        .map_err(|error| format!("Failed to write inventory result: {error}"))?;
+        .map_err(|error| {
+            format!("Failed to write inventory result to standard output:\n\n{error}")
+        })?;
     }
 
     writeln!(stdout, "Total inventory candidates: {}", hits.total_count())
-        .map_err(|error| format!("Failed to write inventory result: {error}"))
+        .map_err(|error| format!("Failed to write inventory result to standard output:\n\n{error}"))
 }
 
 fn report_success(stdout: &mut dyn Write, report: &AuditReport) -> Result<(), String> {
@@ -1156,7 +1279,7 @@ fn report_success(stdout: &mut dyn Write, report: &AuditReport) -> Result<(), St
         report.bucket_count,
         count_label(report.bucket_count, "bucket", "buckets")
     )
-    .map_err(|error| format!("Failed to write audit result: {error}"))
+    .map_err(|error| format!("Failed to write audit result to standard output:\n\n{error}"))
 }
 
 pub(crate) fn run<I>(arguments: I, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8
@@ -1175,7 +1298,10 @@ where
         ParsedArguments::Help => match stdout.write_all(HELP.as_bytes()) {
             Ok(()) => STATUS_SUCCESS,
             Err(error) => {
-                report_error(stderr, &format!("Failed to write help: {error}"));
+                report_error(
+                    stderr,
+                    &format!("Failed to write help to standard output:\n\n{error}"),
+                );
                 STATUS_ERROR
             }
         },

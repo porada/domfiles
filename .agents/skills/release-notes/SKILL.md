@@ -13,8 +13,8 @@ Treat the exact prompt `Changelog` as this complete procedure:
 
 1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
 2. Resolve the affected publishable package scope and its release boundary or boundaries through [Resolve the release scope](#resolve-the-release-scope), using those defaults. Stop and ask whenever that workflow requires user direction.
-3. For each resolved release unit, use the initial-release marker when directed, or build the complete evidence inventory and derive the smallest consumer-facing release note.
-4. Output only the ready-to-paste changelog Markdown using the [draft delivery form](#deliver-the-result), with nothing before or after it. Do not edit or create a file, bump a version, create a tag, publish, or submit anything.
+3. For each resolved release unit, use the [initial-release marker](references/release-structures.md) when directed, or apply the [core principle](#apply-the-core-principle) to a complete [evidence inventory](#build-an-evidence-backed-change-inventory). If a complete required range or artifact cannot be inspected, stop before drafting and state the evidence boundary instead of continuing to the output-only step.
+4. Output only the ready-to-paste changelog Markdown using the [draft delivery form](#deliver-the-result), with nothing before or after it and without mutating or submitting anything.
 
 ## Apply the core principle
 
@@ -40,7 +40,7 @@ into independent consumer outcomes:
 
 ```text
 * Added support for standalone formatting.
-* Improved wrapping around `<alpha-box>`, `<beta-box>`, and `<gamma-box>` elements.
+* Fixed wrapping around `<alpha-box>`, `<beta-box>`, and `<gamma-box>` elements when `wrap: "always"` is enabled.
 * Improved compatibility with other document-formatting plugins.
 ```
 
@@ -48,7 +48,7 @@ The outcome-shaped version applies the [prose rules](#write-concise-consumer-fac
 
 ## Choose the workflow
 
-- To edit existing notes, treat the supplied file or text as the working draft and verify it against the relevant changes when repository evidence is available. For a user-supplied or previously approved draft, apply the [approval gates](references/approval-gates.md).
+- To edit existing notes, treat the supplied file or text as the working draft. Apply the [approval gates](references/approval-gates.md) to a user-supplied or previously approved draft, and use the [evidence inventory](#build-an-evidence-backed-change-inventory) to verify it when repository evidence is available.
 - To infer notes, honor the user’s explicit change scope. Otherwise [resolve the release scope](#resolve-the-release-scope), build the change inventory for the resolved range or ranges, and edit the supplied note target or return a new draft.
 - For a review-only request, keep the task read-only and report evidence-backed omissions or concrete consistency outliers without rewriting the notes. Distinguish defects from intentional or harmless variations.
 - Apply this skill’s structure, ordering, and prose rules without inspecting prior release notes or changelog entries for local conventions. Inspect them only when they are the requested draft or the user explicitly asks for comparison or consistency.
@@ -82,7 +82,7 @@ Use repository evidence to infer a note and to verify the completeness of an exi
 - Record consumer-facing capabilities, supported inputs, formatting behavior, APIs, configuration, interoperability, compatibility, fixes, breaking behavior, migrations, removed capabilities, changed defaults, and changes likely to reformat existing files.
 - Include meaningful packaging changes such as removed source maps, corrected exports, build provenance, or changed engine and peer baselines when they affect consumption.
 - Apply the [dependency update policy](#handle-dependency-updates).
-- Map implementation commits to a shared consumer-facing outcome only when source evidence supports that relationship. Otherwise, retain separate outcomes.
+- Use the [thematic-consolidation criteria](#propose-thematic-consolidation) when mapping implementation changes to consumer-facing outcomes.
 - Verify exact identifiers, package names, version ranges, rule names, option names, and links against source before using them.
 - State uncertainty instead of turning an inference into a release-note claim.
 
@@ -90,11 +90,10 @@ If any complete release range or relevant artifact cannot be inspected, state th
 
 ## Handle dependency updates
 
-- Never fetch or inspect a dependency’s changelog, release notes, repository history, or announcements merely because its version changed. An upstream dependency’s individual changelog never warrants an item in the current package’s release note.
+- Never fetch or inspect a dependency’s changelog, release notes, repository history, or announcements to justify an item merely because its version changed.
 - Always omit development-only dependency updates and all transitive dependency updates, including those represented only in a lockfile.
-- Include one routine bullet for each direct runtime dependency update unless a material consumer-facing outcome already subsumes it. Do not include both the outcome and a generic dependency bullet for the same update.
-- Apply the [package-link map](references/package-links.md) to every routine dependency bullet, including its release-scope exclusions. Link an eligible mapped dependency to its exact mapped destination; use the form ``* Updated `dependency`.`` for an excluded or unlisted dependency. Omit versions and upstream-change summaries.
-- Keep one bullet per dependency, alphabetize the bullets by package name, and place them at the end of the applicable package section. Do not consolidate them.
+- Include one routine `Updated` bullet for each direct runtime dependency update not already subsumed by a material consumer-facing outcome. Omit versions and upstream-change summaries.
+- Alphabetize routine dependency bullets by package name and place them at the end of the applicable package section.
 - Apply the [peer-dependency wording reference](references/peer-dependency-wording.md) instead when a release changes peer dependency ranges or classifications.
 
 ## Preserve epistemic precision
@@ -109,13 +108,11 @@ If any complete release range or relevant artifact cannot be inspected, state th
 
 Look for bullets that verified source evidence or user-provided context shows are parts of one consumer-facing outcome. Similar vocabulary, adjacent placement, or a broad relationship is not enough. Do not invent an umbrella concept such as interoperability, compatibility, integration, or workflow to justify merging items.
 
-A shorter thematic bullet is easier to scan only when it preserves every material outcome and does not blur separate compatibility, migration, or breaking effects.
-
 Treat exact rule identifiers as material outcomes. Keep distinct rules in separate, sortable bullets rather than replacing them with a category summary. Multiple changes to the same rule may share one bullet when they form one coherent change and splitting them would obscure the relationship.
 
 When approval is required, use the [gated-consolidation proposal](references/approval-gates.md#propose-a-gated-consolidation).
 
-Keep separate bullets when consolidation would hide a distinct consumer decision, downgrade a breaking change, combine unrelated package scopes, rely on an unsupported theme, or make the resulting sentence harder to scan. When context is insufficient, improve scanability by reordering the separate bullets rather than merging them.
+Keep separate bullets when consolidation would hide a distinct consumer decision, downgrade a breaking change, combine unrelated package scopes, or make the resulting sentence harder to scan. When context is insufficient, improve scanability by reordering the separate bullets rather than merging them.
 
 ## Choose the smallest useful structure
 
@@ -146,12 +143,8 @@ Read the [release-structure reference](references/release-structures.md) for an 
 - Keep a concise, evidence-backed rationale when it identifies a replacement, temporary upstream limitation, or responsibility transfer that helps consumers interpret a disablement or removal. For a replacement, use the parenthetical form `Disabled X (in favor of Y).`
 - Verification does not make every identifier release-worthy. Name the capability rather than its module or API entry point when consumers do not need that identifier to act. Preserve the domain syntax of identifiers that remain, such as `<element>`, `--flag`, or `@scope/package`.
 - Use parallel wording for parallel changes without erasing intentional exceptions.
-- In release-note prose outside headings, wrap package names, versions, options, rules, file patterns, errors, and other machine-readable tokens in backticks. Follow the canonical heading forms in the [release-structure reference](references/release-structures.md) without adding code formatting.
-- Apply the [package-link map](references/package-links.md) to every package name in release-note prose outside headings.
-- Default to neutral language. Preserve intentional humor, repetition, or tone when the user identifies it as deliberate.
-- Treat user-approved wording as authoritative. Do not silently rewrite portions outside the requested revision.
-
-Avoid implementation narration, commit-by-commit summaries, unsupported marketing claims, and vague statements that hide consumer impact.
+- In release-note prose outside headings, apply the [package-link map](references/package-links.md) to package names and wrap versions, options, rules, file patterns, errors, and other machine-readable tokens in backticks. Follow the canonical heading forms in the [release-structure reference](references/release-structures.md) without adding code formatting.
+- Default to neutral language. Preserve intentional humor, repetition, or tone when the user identifies it as deliberate. Avoid commit-by-commit summaries, unsupported marketing claims, and vague statements that hide consumer impact.
 
 ## Keep platform metadata out of the note body
 
@@ -173,8 +166,6 @@ Before delivery, reapply:
 - The [approval gates](references/approval-gates.md) for user-supplied or previously approved drafts and the [thematic-consolidation](#propose-thematic-consolidation) rules.
 - Any applicable [conditional release-structure rules](references/release-structures.md), plus the [ordering](#order-items-for-quick-scanning) and [prose](#write-concise-consumer-facing-prose) rules.
 - The [platform metadata](#keep-platform-metadata-out-of-the-note-body) exclusions.
-
-For drafting and editing, correct every discrepancy that the current request authorizes before delivery. For review-only tasks or gated changes awaiting approval, report the discrepancy without rewriting the notes.
 
 ## Deliver the result
 

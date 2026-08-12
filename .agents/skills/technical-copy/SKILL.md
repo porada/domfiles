@@ -1,20 +1,20 @@
 ---
 name: technical-copy
-description: Draft, edit, review, and refine human-facing copy in engineering projects. Use this skill automatically whenever a task creates, changes, or reviews package or repository descriptions, README or other technical-document content or information architecture, GitHub issue or pull request titles, descriptions, comments, or reviews, GitHub Discussion titles, posts, or comments, JSDoc, language-native documentation comments or docstrings, explanatory source comments, runtime errors or warnings, test titles, labels, or other developer- or user-facing strings, including copy written during feature implementation and explicit consistency checks. Defer release notes, changelog entries, release-ready prose, hosted release descriptions, and package-release wording or consistency checks to `release-notes`. Do not use it for agent documentation or LICENSE text. Do not use it when all human-facing wording and document information architecture are explicitly unchanged, including formatting-only tasks.
+description: Draft, edit, review, and refine human-facing technical copy. Use automatically for package or repository descriptions, README and technical-document content or information architecture, GitHub issue, pull request, or Discussion titles, bodies, comments, or reviews, CLI help and output, JSDoc, docstrings, explanatory comments, runtime messages, test titles, labels, and other developer- or user-facing strings—including copy changed during feature implementation or consistency checks. Defer release notes, changelogs, hosted release descriptions, and package-release wording to `release-notes`. Do not use for agent documentation, LICENSE text, formatting-only work, or tasks whose human-facing wording and information architecture are explicitly unchanged.
 ---
 
 # Technical copy
 
-Apply this skill without announcing it or narrating its editorial heuristics. Continue required progress, result, validation, uncertainty, and failure reporting.
+Apply this skill without announcing it or narrating its editorial heuristics.
 
 Treat applicable project policy—including `AGENTS.md` instructions and narrower project or domain skills—as authoritative over this skill’s defaults.
 
 ## Choose the workflow
 
-- For drafting or editing, compose the complete evidence-backed copy directly within the task-owned copy unit. Make only the minimal adjacent edits needed to integrate it naturally.
-- During feature implementation, treat relevant JSDoc, language-native documentation comments or docstrings, explanatory comments, runtime messages, and test titles as part of the feature. Do not turn a local addition into a broader copy pass.
+- For drafting or editing, compose the complete evidence-backed copy within the [authorized copy unit](#preserve-decisions-without-adding-friction).
+- During feature implementation, apply this workflow to task-owned human-facing copy as part of the feature.
 - For a review-only request, remain read-only and report only evidence-backed factual, clarity, consistency, or established-voice problems. Do not report optional rewrites merely because another phrasing is possible. This read-only rule takes precedence over the consistency and delivery defaults below.
-- For an explicit consistency request, inspect the named family and align shared facts and canonical terminology. Unify wording only across equivalent surfaces and scopes, preserving behaviorally distinct items and each surface’s purpose and abstraction level.
+- For an explicit consistency request, apply the standard path across the named family.
 
 ## Use the standard path
 
@@ -23,15 +23,17 @@ Treat applicable project policy—including `AGENTS.md` instructions and narrowe
 3. Lead with the answer, action, identity, failure, or observable behavior. Write for a short attention span without simplifying canonical technical terminology or burying the useful point in introductory context.
 4. Use precise verbs, restrained natural language, and the most concise wording that preserves meaning, purpose, causal framing, technical relationships, and established tone. Contractions and direct second-person wording are welcome when the reader’s action matters. Ground quality, maintenance, compatibility, performance, and testing claims in concrete evidence or careful qualifiers. Never overpromise.
 5. When a value’s representation is used only for comparison or lookup, describe those semantics without implying that the value itself is coerced, stringified, or mutated.
-6. When propagating or unifying copy, reuse wording only across semantically equivalent roles, constraints, and observable behavior. Review destination-specific and adjacent copy independently after propagation.
+6. When propagating or unifying copy, align verified shared facts and canonical terminology, but reuse wording only across semantically equivalent roles, constraints, and observable behavior. Review destination-specific and adjacent copy independently after propagation.
 7. Include implementation mechanics only when they explain a required action, limitation, non-obvious decision, or technical consequence. Validate the final copy against the evidence, requested scope, prior user decisions, nearby family, complete rendered output, and project formatting constraints.
+8. Before delivery, search the complete copy unit for stale wording variants and review every project-authored human-facing string, including failure-only test diagnostics. Perform a final typography and token-formatting sweep under applicable project writing rules, distinguishing prose from machine syntax, fixture payloads, and preserved upstream text so exact data remains unchanged.
 
 ## Apply surface defaults
 
 | Surface | Default |
 | --- | --- |
-| Package and repository descriptions | Use one compact phrase without terminal punctuation. When both surfaces represent the same artifact, scope, and proposition, matching wording is the default. Do not enforce synchronization or edit an unrequested surface. |
+| Package and repository descriptions | Use one compact phrase without terminal punctuation. When both requested surfaces represent the same artifact, scope, and proposition, matching wording is the default. |
 | README, technical-document, issue, pull request, and Discussion copy | Follow the [technical-document workflow](references/technical-documents.md). |
+| CLI documentation and command output | Treat `--help`, usage, option, operand, mode, default, side-effect, output-behavior, and exit-status text as human-facing documentation. Keep it accurate to the implementation. Use one canonical term and exact token spelling across help, project-authored stdout or stderr messages, and adjacent exact-string tests. Preserve machine-readable output contracts unless the task explicitly changes them. |
 | JSDoc | Follow the [JSDoc workflow](references/jsdoc-comments.md), including for language-native documentation comments and docstrings. |
 | Explanatory source comments | Explain non-obvious intent, constraints, invariants, or consequences rather than narrating nearby code. Proactively document a surprising tradeoff that could look accidental. Omit terminal periods from ordinary `//` comments. |
 | Runtime errors and warnings | Follow the [runtime-message workflow](references/runtime-messages.md). |
@@ -39,16 +41,15 @@ Treat applicable project policy—including `AGENTS.md` instructions and narrowe
 
 ## Preserve decisions without adding friction
 
-- An explicit request to compose or revise copy authorizes adding, removing, reordering, and rewriting wording within the task-owned copy unit. Apply those changes directly without requesting approval for each one.
+- An explicit request to compose or revise copy authorizes adding, removing, reordering, and rewriting wording within the task-owned copy unit and making the minimal adjacent changes needed to integrate it. Apply those changes directly without requesting approval for each one. Do not expand into unrelated copy, document structure, cross-surface synchronization, or behaviorally distinct items unless the request includes them.
 - Carry wording, punctuation, formatting, and structure decisions established by direct user instruction, correction, selection, or explicit acceptance through later iterations. An agent draft or endorsement, user silence, or copy’s mere presence in a file does not establish a decision. Do not reopen copy the user marked intentional, final, or implemented unless the current request clearly does so.
 - Do not remove an explanatory source comment whose purpose is to establish that behavior, a tradeoff, or an omission is intentional unless the current request explicitly authorizes its removal.
-- Do not expand into unrelated copy, change document structure, enforce cross-surface synchronization, merge behaviorally distinct items, or reverse an established decision unless the current request explicitly authorizes it.
 - If a requested shorter version would lose a material condition, exception, rationale, or qualifier, preserve the meaning and explain the limit rather than silently weakening the copy.
 
 ## Use examples and links sparingly
 
 - Include an example only when it clarifies non-obvious behavior, a required action, or a meaningful contrast. Use the smallest example that remains complete and place it next to what it demonstrates.
-- Preserve intentionally chosen links. Add a canonical link only when it helps the reader act, verify a claim, or access necessary technical detail. Do not link every package, identifier, or named concept merely because a URL exists.
+- Add a canonical link only when it helps the reader act, verify a claim, or access necessary technical detail. Do not link every package, identifier, or named concept merely because a URL exists.
 
 ## Deliver the copy
 

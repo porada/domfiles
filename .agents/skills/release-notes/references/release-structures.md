@@ -1,8 +1,8 @@
 # Release structures
 
-The exact italicized status bullets in this reference are status markers rather than ordinary outcome prose. Their leading `*` is intentional and follows the [release-note bullet-marker policy](../SKILL.md#write-concise-consumer-facing-prose). Preserve it instead of normalizing it.
+The exact italicized bullets in this reference are status markers rather than ordinary outcome prose and follow the [release-note bullet-marker policy](../SKILL.md#write-concise-consumer-facing-prose).
 
-For a user-confirmed initial release, follow the intentional [initial-release shortcut](../SKILL.md#resolve-the-release-scope) and use exactly `* _Initial release._`. For an initial package section within a non-initial synchronized release, use that marker only when the package’s exhaustive inventory yields no more specific consumer-facing item. Do not use unbulleted prose or an emoji-only body.
+Use exactly `* _Initial release._` for a user-confirmed initial release. For an initial package section within a non-initial synchronized release, use that marker only when the package’s exhaustive inventory yields no more specific consumer-facing item. Do not use unbulleted prose or an emoji-only body.
 
 Do not repeat migration prose in later patch releases unless the user explicitly requests that reminder. When migration prose is intentionally repeated across one major release line, name that major version explicitly instead of referring to “this release.”
 
@@ -12,7 +12,7 @@ Use `# <package> Release Notes` as the canonical top-level heading. Put `## Unre
 
 For a new aggregate file shared by a synchronized package set, use a top-level title established by supplied context or repository metadata instead of selecting one package name. If neither establishes a title, ask rather than inventing one.
 
-When a supplied or previously approved aggregate file differs, preserve its heading hierarchy and inter-release delimiters unless the user approves normalization under the [approval gates](approval-gates.md).
+Apply the [approval gates](approval-gates.md) before normalizing a supplied or previously approved aggregate file’s inter-release delimiters.
 
 ## Structured release
 
@@ -40,7 +40,7 @@ Use stable package sections when one repository publishes several packages under
 ```text
 ### Breaking Changes
 
-Describe the migration and its consumer impact.
+<migration-and-consumer-impact>
 
 ### All Packages
 

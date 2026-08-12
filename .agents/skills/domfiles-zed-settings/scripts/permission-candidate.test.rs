@@ -1,4 +1,4 @@
-#[path = "zed-permission-candidate.rs"]
+#[path = "permission-candidate.rs"]
 mod helper;
 
 use serde_json::{Value, json};
@@ -35,7 +35,7 @@ impl Fixture {
         let temporary_root = fs::canonicalize(env::temp_dir())
             .expect("Temporary directory must resolve to a real directory");
         let root = temporary_root.join(format!(
-            "domfiles-zed-permission-candidate-{}-{timestamp}-{fixture_id}",
+            "domfiles-permission-candidate-{}-{timestamp}-{fixture_id}",
             process::id()
         ));
         fs::create_dir(&root).expect("Failed to create fixture directory");
@@ -86,6 +86,7 @@ struct RunResult {
 }
 
 struct CaptureResult {
+    candidate: PathBuf,
     output: PathBuf,
     pattern_file: PathBuf,
     settings: PathBuf,
@@ -109,6 +110,25 @@ fn capture_arguments(settings: &Path, selection: &Path, output: &Path) -> Vec<Os
         OsString::from("capture"),
         OsString::from("--settings"),
         settings.as_os_str().to_owned(),
+        OsString::from("--selection"),
+        selection.as_os_str().to_owned(),
+        OsString::from("--output"),
+        output.as_os_str().to_owned(),
+    ]
+}
+
+fn materialize_arguments(
+    candidate: &Path,
+    state: &Path,
+    selection: &Path,
+    output: &Path,
+) -> Vec<OsString> {
+    vec![
+        OsString::from("materialize"),
+        OsString::from("--candidate"),
+        candidate.as_os_str().to_owned(),
+        OsString::from("--state"),
+        state.as_os_str().to_owned(),
         OsString::from("--selection"),
         selection.as_os_str().to_owned(),
         OsString::from("--output"),
@@ -193,6 +213,13 @@ fn selection(id: &str, index: usize) -> Value {
     })
 }
 
+fn materialization_selection(patterns: Vec<Value>) -> Value {
+    json!({
+        "version": 1,
+        "patterns": patterns
+    })
+}
+
 fn state_value(path: &Path) -> Value {
     serde_json::from_slice(&fs::read(path).expect("Failed to read state manifest"))
         .expect("State manifest must be valid JSON")
@@ -203,6 +230,21 @@ fn captured_pattern_file(output: &Path, state: &Value) -> PathBuf {
         state["patterns"][0]["pattern_file"]
             .as_str()
             .expect("State pattern file must be a string"),
+    )
+}
+
+fn catalog_value(output: &Path) -> Value {
+    serde_json::from_slice(
+        &fs::read(output.join("artifact-catalog.json")).expect("Failed to read artifact catalog"),
+    )
+    .expect("Artifact catalog must be valid JSON")
+}
+
+fn materialized_pattern_file(output: &Path, catalog: &Value, index: usize) -> PathBuf {
+    output.join(
+        catalog["patterns"][index]["pattern_file"]
+            .as_str()
+            .expect("Catalog pattern file must be a string"),
     )
 }
 
@@ -219,6 +261,7 @@ fn capture_standard(fixture: &Fixture, prefix: &str, baseline: &Value, id: &str)
     let pattern_file = captured_pattern_file(&output, &state_document);
 
     CaptureResult {
+        candidate: output.join("candidate-settings.json"),
         output,
         pattern_file,
         settings,
@@ -239,12 +282,38 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     assert_eq!(result.status, 0);
     assert!(result.stderr.is_empty());
     assert!(result.stdout.contains("capture --settings <path>"));
+    assert!(
+        result
+            .stdout
+            .contains("materialize --candidate <candidate-path>")
+    );
     assert!(result.stdout.contains("verify --settings <path>"));
-    assert!(result.stdout.contains("promote --settings <live>"));
-    assert!(result.stdout.contains("Selection JSON schema"));
+    assert!(
+        result
+            .stdout
+            .contains("promote --settings <live-settings-path>")
+    );
+    assert!(result.stdout.contains("permission-candidate --help"));
+    assert!(result.stdout.contains("Capture selection JSON schema"));
+    assert!(
+        result
+            .stdout
+            .contains("Materialization selection JSON schema")
+    );
     assert!(result.stdout.contains("State JSON schema"));
+    assert!(result.stdout.contains("Artifact catalog JSON schema"));
     assert!(result.stdout.contains("candidate-settings.json"));
     assert!(result.stdout.contains("does not authenticate itself"));
+    assert!(
+        result
+            .stdout
+            .contains("results are written to standard output")
+    );
+    assert!(
+        result
+            .stdout
+            .contains("Refusals and errors are written to standard error")
+    );
     assert!(result.stdout.contains("Exit statuses:"));
     assert!(result.stdout.contains("1  Current state"));
     assert!(result.stdout.contains("2  Arguments or data"));
@@ -391,7 +460,12 @@ fn refuses_existing_artifacts_before_writing() {
     let result = run(capture_arguments(&settings_path, &selection_path, &output));
 
     assert_eq!(result.status, 2);
-    assert!(result.stderr.contains("Refusing to overwrite"));
+    assert!(result.stderr.contains("already exists"));
+    assert!(
+        result
+            .stderr
+            .contains("Choose an output directory without existing artifacts")
+    );
     assert_eq!(fs::read(baseline_artifact).unwrap(), b"sentinel");
     assert!(!output.join("candidate-settings.json").exists());
     assert!(!output.join("state.json").exists());
@@ -714,7 +788,7 @@ fn reindexes_patterns_after_bucket_movement() {
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(
         result.stdout,
-        "alpha -> always_allow[1]\nVerified 1 patterns: 0 unchanged and 1 moved\n"
+        "alpha -> always_allow[1]\nVerified 1 pattern: 0 unchanged and 1 moved\n"
     );
     assert!(result.stderr.is_empty());
 }
@@ -787,7 +861,11 @@ fn refuses_missing_and_duplicate_exact_current_matches() {
 
     assert_eq!(missing_result.status, 1);
     assert!(missing_result.stdout.is_empty());
-    assert!(missing_result.stderr.contains("1 missing and 0 duplicate"));
+    assert!(
+        missing_result
+            .stderr
+            .contains("Missing: 1. Duplicate matches: 0")
+    );
     assert!(
         missing_result
             .stderr
@@ -810,7 +888,7 @@ fn refuses_missing_and_duplicate_exact_current_matches() {
     assert!(
         duplicate_result
             .stderr
-            .contains("0 missing and 1 duplicate")
+            .contains("Missing: 0. Duplicate matches: 1")
     );
     assert!(
         duplicate_result
@@ -861,7 +939,7 @@ fn bounds_mixed_missing_and_duplicate_failure_details() {
 
     assert_eq!(result.status, 1);
     assert!(result.stdout.is_empty());
-    assert!(result.stderr.contains("12 missing and 12 duplicate"));
+    assert!(result.stderr.contains("Missing: 12. Duplicate matches: 12"));
     assert_eq!(result.stderr.matches(" -> always_allow[").count(), 10);
     assert_eq!(result.stderr.matches("[missing]").count(), 5);
     assert_eq!(result.stderr.matches("[duplicate]").count(), 5);
@@ -980,6 +1058,564 @@ fn bounds_metadata_output_and_never_leaks_contents() {
 }
 
 #[test]
+fn materializes_exact_candidate_pattern_bytes_and_catalog_bindings() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^baseline$", true)], 1);
+    let captured = capture_standard(&fixture, "materialize-exact", &baseline, "baseline");
+    let mut candidate_value = baseline.clone();
+    replace_allow_scope(
+        &mut candidate_value,
+        json!([
+            pattern("ESCAPED_PATTERN_PLACEHOLDER", false),
+            pattern(r"^literal\\escape$", true)
+        ]),
+    );
+    let serialized = serde_json::to_string(&candidate_value).expect("Candidate must serialize");
+    let candidate_bytes =
+        serialized.replace("\"ESCAPED_PATTERN_PLACEHOLDER\"", r#""^line\n\u00e9猫$""#);
+    fs::write(&captured.candidate, candidate_bytes.as_bytes()).unwrap();
+    let selection_path = fixture.write_json(
+        "materialization-selection.json",
+        &materialization_selection(vec![
+            json!({"id": "escaped", "bucket": "always_allow", "index": 0}),
+            json!({"id": "literal", "bucket": "always_allow", "index": 1}),
+        ]),
+    );
+    let output = fixture.path("materialized");
+    let candidate_before = fs::read(&captured.candidate).unwrap();
+    let baseline_before = fs::read(captured.output.join("baseline-settings.json")).unwrap();
+    let state_before = fs::read(&captured.state).unwrap();
+
+    let result = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &output,
+    ));
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert!(result.stderr.is_empty());
+    assert!(result.stdout.contains("Materialized 2 patterns"));
+    assert!(result.stdout.contains("catalog -> artifact-catalog.json"));
+    assert!(!result.stdout.contains("^line"));
+    assert!(!result.stdout.contains("literal\\escape"));
+    let catalog = catalog_value(&output);
+    assert_eq!(catalog["version"], json!(1));
+    assert_eq!(
+        catalog["candidate_sha256"],
+        json!(helper::sha256_hex(&candidate_before))
+    );
+    assert_eq!(
+        catalog["state_sha256"],
+        json!(helper::sha256_hex(&state_before))
+    );
+    assert_eq!(catalog["patterns"][0]["id"], json!("escaped"));
+    assert_eq!(catalog["patterns"][0]["bucket"], json!("always_allow"));
+    assert_eq!(catalog["patterns"][0]["source_index"], json!(0));
+    assert_eq!(catalog["patterns"][0]["case_sensitive"], json!(false));
+    assert_eq!(catalog["patterns"][1]["source_index"], json!(1));
+    assert_eq!(catalog["patterns"][1]["case_sensitive"], json!(true));
+    let escaped_bytes = fs::read(materialized_pattern_file(&output, &catalog, 0)).unwrap();
+    let literal_bytes = fs::read(materialized_pattern_file(&output, &catalog, 1)).unwrap();
+    assert_eq!(escaped_bytes, "^line\né猫$".as_bytes());
+    assert_eq!(literal_bytes, br"^literal\\escape$");
+    assert_ne!(escaped_bytes.last(), Some(&b'\n'));
+    assert_ne!(literal_bytes.last(), Some(&b'\n'));
+    assert_eq!(
+        catalog["patterns"][0]["sha256"],
+        json!(helper::sha256_hex(&escaped_bytes))
+    );
+    assert_eq!(
+        catalog["patterns"][1]["sha256"],
+        json!(helper::sha256_hex(&literal_bytes))
+    );
+    assert_eq!(fs::read(&captured.candidate).unwrap(), candidate_before);
+    assert_eq!(
+        fs::read(captured.output.join("baseline-settings.json")).unwrap(),
+        baseline_before
+    );
+    assert_eq!(fs::read(&captured.state).unwrap(), state_before);
+    assert_eq!(fs::read(&captured.settings).unwrap(), baseline_before);
+}
+
+#[test]
+fn materializes_a_specific_index_when_candidate_pattern_identities_are_duplicate() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^baseline$", true)], 1);
+    let captured = capture_standard(&fixture, "duplicate-identity", &baseline, "baseline");
+    let duplicate = pattern("^duplicate-decoded-identity$", false);
+    let mut candidate_value = baseline.clone();
+    replace_allow_scope(&mut candidate_value, json!([duplicate.clone(), duplicate]));
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate_value).unwrap(),
+    )
+    .unwrap();
+    let selection_path = fixture.write_json(
+        "selection.json",
+        &materialization_selection(vec![json!({
+            "id": "second-duplicate",
+            "bucket": "always_allow",
+            "index": 1
+        })]),
+    );
+    let output = fixture.path("materialized");
+
+    let result = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &output,
+    ));
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    let catalog = catalog_value(&output);
+    assert_eq!(catalog["patterns"].as_array().unwrap().len(), 1);
+    assert_eq!(catalog["patterns"][0]["source_index"], json!(1));
+    assert_eq!(catalog["patterns"][0]["case_sensitive"], json!(false));
+    assert_eq!(
+        fs::read(materialized_pattern_file(&output, &catalog, 0)).unwrap(),
+        b"^duplicate-decoded-identity$"
+    );
+}
+
+#[test]
+fn rejects_invalid_materialization_selection_metadata_before_writing() {
+    let fixture = Fixture::new();
+    let baseline = settings(
+        vec![
+            pattern("^private-alpha$", true),
+            pattern("^private-beta$", false),
+        ],
+        1,
+    );
+    let captured = capture_standard(&fixture, "selection-errors", &baseline, "alpha");
+    let cases = [
+        (
+            "unknown",
+            json!({
+                "version": 1,
+                "patterns": [{"id": "alpha", "bucket": "always_allow", "index": 0}],
+                "private-unknown-field": true
+            }),
+            "does not match the required schema",
+        ),
+        (
+            "duplicate-id",
+            materialization_selection(vec![
+                json!({"id": "same", "bucket": "always_allow", "index": 0}),
+                json!({"id": "same", "bucket": "always_allow", "index": 1}),
+            ]),
+            "pattern IDs must be unique",
+        ),
+        (
+            "duplicate-locator",
+            materialization_selection(vec![
+                json!({"id": "first", "bucket": "always_allow", "index": 0}),
+                json!({"id": "second", "bucket": "always_allow", "index": 0}),
+            ]),
+            "bucket/index pairs must be unique",
+        ),
+        (
+            "outside-scope",
+            materialization_selection(vec![json!({
+                "id": "confirm",
+                "bucket": "always_confirm",
+                "index": 0
+            })]),
+            "outside every authorized scope",
+        ),
+    ];
+
+    for (name, selection, expected) in cases {
+        let selection_path = fixture.write_json(&format!("{name}.json"), &selection);
+        let output = fixture.path(&format!("{name}-output"));
+        let result = run(materialize_arguments(
+            &captured.candidate,
+            &captured.state,
+            &selection_path,
+            &output,
+        ));
+
+        assert_eq!(result.status, 2, "{name}: {}", result.stderr);
+        assert!(result.stdout.is_empty());
+        assert!(
+            result.stderr.contains(expected),
+            "{name}: {}",
+            result.stderr
+        );
+        assert!(!result.stderr.contains("private-alpha"));
+        assert!(!result.stderr.contains("private-beta"));
+        assert!(!result.stderr.contains("private-unknown-field"));
+        assert!(!output.exists());
+    }
+}
+
+#[test]
+fn rejects_missing_and_malformed_selected_candidate_objects_before_writing() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let captured = capture_standard(&fixture, "selected-object-errors", &baseline, "baseline");
+    let missing_selection = fixture.write_json(
+        "missing-selection.json",
+        &materialization_selection(vec![json!({
+            "id": "missing",
+            "bucket": "always_allow",
+            "index": 9
+        })]),
+    );
+    let missing_output = fixture.path("missing-output");
+
+    let missing = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &missing_selection,
+        &missing_output,
+    ));
+
+    assert_eq!(missing.status, 2);
+    assert!(missing.stdout.is_empty());
+    assert!(missing.stderr.contains("bucket/index does not exist"));
+    assert!(!missing.stderr.contains("private-baseline"));
+    assert!(!missing_output.exists());
+
+    let mut malformed_candidate = baseline.clone();
+    replace_allow_scope(
+        &mut malformed_candidate,
+        json!([{"pattern": 42, "case_sensitive": "private-invalid-case"}]),
+    );
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&malformed_candidate).unwrap(),
+    )
+    .unwrap();
+    let malformed_selection = fixture.write_json(
+        "malformed-selection.json",
+        &materialization_selection(vec![json!({
+            "id": "malformed",
+            "bucket": "always_allow",
+            "index": 0
+        })]),
+    );
+    let malformed_output = fixture.path("malformed-output");
+
+    let malformed = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &malformed_selection,
+        &malformed_output,
+    ));
+
+    assert_eq!(malformed.status, 2);
+    assert!(malformed.stdout.is_empty());
+    assert!(malformed.stderr.contains("string `pattern`"));
+    assert!(!malformed.stderr.contains("private-invalid-case"));
+    assert!(!malformed_output.exists());
+}
+
+#[test]
+fn distinguishes_candidate_authorization_refusal_from_malformed_data() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let captured = capture_standard(&fixture, "authorization", &baseline, "baseline");
+    let selection_path = fixture.write_json(
+        "selection.json",
+        &materialization_selection(vec![json!({
+            "id": "baseline",
+            "bucket": "always_allow",
+            "index": 0
+        })]),
+    );
+    let mut outside_candidate = baseline.clone();
+    outside_candidate["outside"]["generation"] = json!(987654321);
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&outside_candidate).unwrap(),
+    )
+    .unwrap();
+    let refused_output = fixture.path("refused-output");
+
+    let refused = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &refused_output,
+    ));
+
+    assert_eq!(refused.status, 1);
+    assert!(refused.stdout.is_empty());
+    assert!(refused.stderr.contains("Materialization refused"));
+    assert!(refused.stderr.contains("outside authorized scopes"));
+    assert!(!refused.stderr.contains("987654321"));
+    assert!(!refused.stderr.contains("private-baseline"));
+    assert!(!refused_output.exists());
+
+    fs::write(&captured.candidate, b"{private-malformed-candidate").unwrap();
+    let malformed_output = fixture.path("malformed-output");
+    let malformed = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &malformed_output,
+    ));
+
+    assert_eq!(malformed.status, 2);
+    assert!(malformed.stdout.is_empty());
+    assert!(malformed.stderr.contains("JSON syntax is invalid"));
+    assert!(!malformed.stderr.contains("private-malformed-candidate"));
+    assert!(!malformed_output.exists());
+}
+
+#[test]
+fn validates_complete_state_before_materializing_candidate_artifacts() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^private-state-pattern$", true)], 1);
+    let captured = capture_standard(&fixture, "materialization-state", &baseline, "state");
+    let selection_path = fixture.write_json(
+        "selection.json",
+        &materialization_selection(vec![json!({
+            "id": "state",
+            "bucket": "always_allow",
+            "index": 0
+        })]),
+    );
+    fs::write(&captured.pattern_file, b"private-tampered-state-artifact").unwrap();
+    let tampered_output = fixture.path("tampered-output");
+
+    let tampered = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &tampered_output,
+    ));
+
+    assert_eq!(tampered.status, 2);
+    assert!(tampered.stdout.is_empty());
+    assert!(tampered.stderr.contains("Pattern artifact SHA-256"));
+    assert!(!tampered.stderr.contains("private-tampered-state-artifact"));
+    assert!(!tampered.stderr.contains("private-state-pattern"));
+    assert!(!tampered_output.exists());
+
+    let mut malformed_state = state_value(&captured.state);
+    malformed_state["private-unknown-state-field"] = json!(true);
+    fs::write(
+        &captured.state,
+        serde_json::to_vec(&malformed_state).unwrap(),
+    )
+    .unwrap();
+    let malformed_output = fixture.path("malformed-output");
+    let malformed = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &malformed_output,
+    ));
+
+    assert_eq!(malformed.status, 2);
+    assert!(malformed.stdout.is_empty());
+    assert!(
+        malformed
+            .stderr
+            .contains("does not match the required schema")
+    );
+    assert!(!malformed.stderr.contains("private-unknown-state-field"));
+    assert!(!malformed_output.exists());
+}
+
+#[test]
+fn materialization_preflights_every_artifact_and_refuses_overwrites() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^private-preflight$", true)], 1);
+    let captured = capture_standard(&fixture, "materialization-preflight", &baseline, "baseline");
+    let selection_path = fixture.write_json(
+        "selection.json",
+        &materialization_selection(vec![json!({
+            "id": "private-id",
+            "bucket": "always_allow",
+            "index": 0
+        })]),
+    );
+    let output = fixture.create_dir("output");
+    let catalog_path = output.join("artifact-catalog.json");
+    fs::write(&catalog_path, b"sentinel").unwrap();
+
+    let result = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &output,
+    ));
+
+    assert_eq!(result.status, 2);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("already exists"));
+    assert!(result.stderr.contains("without existing artifacts"));
+    assert!(!result.stderr.contains("private-preflight"));
+    assert_eq!(fs::read(&catalog_path).unwrap(), b"sentinel");
+    assert!(
+        !output
+            .join(helper::generated_pattern_filename(1, "private-id"))
+            .exists()
+    );
+    assert_eq!(fs::read_dir(output).unwrap().count(), 1);
+}
+
+#[cfg(unix)]
+#[test]
+fn materialization_sanitizes_ids_and_refuses_symlinked_output_components() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^private-safe-output$", true)], 1);
+    let captured = capture_standard(
+        &fixture,
+        "materialization-safe-output",
+        &baseline,
+        "baseline",
+    );
+    let unsafe_id = "../../séc\nret";
+    let selection_path = fixture.write_json(
+        "selection.json",
+        &materialization_selection(vec![json!({
+            "id": unsafe_id,
+            "bucket": "always_allow",
+            "index": 0
+        })]),
+    );
+    let safe_output = fixture.path("safe-output");
+
+    let safe = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &safe_output,
+    ));
+
+    assert_eq!(safe.status, 0, "{}", safe.stderr);
+    let catalog = catalog_value(&safe_output);
+    let relative = catalog["patterns"][0]["pattern_file"].as_str().unwrap();
+    assert_eq!(relative, helper::generated_pattern_filename(1, unsafe_id));
+    assert_eq!(catalog["patterns"][0]["id"], json!(unsafe_id));
+    assert!(
+        Path::new(relative)
+            .components()
+            .all(|component| matches!(component, Component::Normal(_)))
+    );
+    assert!(!relative.contains(".."));
+
+    let real_parent = fixture.create_dir("real-parent");
+    fs::create_dir(real_parent.join("output")).unwrap();
+    let linked_parent = fixture.path("linked-parent");
+    symlink(&real_parent, &linked_parent).unwrap();
+    let linked_output = linked_parent.join("output");
+    let linked = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &linked_output,
+    ));
+
+    assert_eq!(linked.status, 2);
+    assert!(linked.stdout.is_empty());
+    assert!(linked.stderr.contains("symbolic link"));
+    assert!(!linked.stderr.contains("private-safe-output"));
+    assert_eq!(fs::read_dir(real_parent.join("output")).unwrap().count(), 0);
+}
+
+#[test]
+fn rolls_back_created_artifacts_after_a_later_write_failure() {
+    let fixture = Fixture::new();
+    let output = fixture.create_dir("rollback");
+    let artifacts = vec![
+        helper::PendingArtifact {
+            filename: "first.regex".to_owned(),
+            bytes: b"private-first-pattern".to_vec(),
+        },
+        helper::PendingArtifact {
+            filename: "artifact-catalog.json".to_owned(),
+            bytes: b"private-catalog".to_vec(),
+        },
+    ];
+    let mut writes = 0;
+
+    let result = helper::commit_artifacts_with_writer(
+        &output,
+        &artifacts,
+        helper::ArtifactOperation::Materialization,
+        |path, bytes| {
+            writes += 1;
+            if writes == 2 {
+                return Err("injected write failure".to_owned());
+            }
+            fs::write(path, bytes).map_err(|error| error.to_string())
+        },
+    );
+
+    assert_eq!(result, Err("injected write failure".to_owned()));
+    assert_eq!(writes, 2);
+    assert_eq!(fs::read_dir(output).unwrap().count(), 0);
+}
+
+#[test]
+fn bounds_materialization_output_and_never_leaks_patterns_settings_arrays_or_hashes() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let captured = capture_standard(&fixture, "materialization-output", &baseline, "baseline");
+    let candidate_patterns: Vec<Value> = (0..13)
+        .map(|index| pattern(&format!("^private-materialized-body-{index:03}$"), true))
+        .collect();
+    let mut candidate_value = baseline.clone();
+    replace_allow_scope(&mut candidate_value, Value::Array(candidate_patterns));
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate_value).unwrap(),
+    )
+    .unwrap();
+    let selections: Vec<Value> = (0..13)
+        .map(|index| {
+            json!({
+                "id": format!("id-{index:03}"),
+                "bucket": "always_allow",
+                "index": index
+            })
+        })
+        .collect();
+    let selection_path =
+        fixture.write_json("selection.json", &materialization_selection(selections));
+    let output = fixture.path("output");
+
+    let result = run(materialize_arguments(
+        &captured.candidate,
+        &captured.state,
+        &selection_path,
+        &output,
+    ));
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert_eq!(result.stdout.matches(" -> pattern-").count(), 10);
+    assert!(result.stdout.contains("id-000 -> pattern-001-id-000.regex"));
+    assert!(result.stdout.contains("id-009 -> pattern-010-id-009.regex"));
+    assert!(!result.stdout.contains("id-010 ->"));
+    assert!(!result.stdout.contains("id-011 ->"));
+    assert!(!result.stdout.contains("id-012 ->"));
+    assert!(
+        result
+            .stdout
+            .contains("… 3 additional pattern artifacts omitted")
+    );
+    assert!(result.stdout.contains("catalog -> artifact-catalog.json"));
+    assert!(!result.stdout.contains("private-materialized-body"));
+    assert!(!result.stderr.contains("private-materialized-body"));
+    assert!(!result.stdout.contains("always_allow\":["));
+    assert!(!result.stderr.contains("always_allow\":["));
+    let catalog = catalog_value(&output);
+    let candidate_hash = catalog["candidate_sha256"].as_str().unwrap();
+    let state_hash = catalog["state_sha256"].as_str().unwrap();
+    assert!(!result.stdout.contains(candidate_hash));
+    assert!(!result.stdout.contains(state_hash));
+    assert!(!result.stderr.contains(candidate_hash));
+    assert!(!result.stderr.contains(state_hash));
+}
+
+#[test]
 fn requires_exact_write_guard_before_promotion() {
     let fixture = Fixture::new();
     let baseline = settings(vec![pattern("^alpha$", true)], 1);
@@ -1025,7 +1661,7 @@ fn promotes_scopes_and_preserves_preexisting_out_of_scope_changes() {
     let result = run(promote_arguments(&live, &candidate, &captured.state, true));
 
     assert_eq!(result.status, 0, "{}", result.stderr);
-    assert!(result.stdout.contains("Promoted 1 authorized scopes"));
+    assert!(result.stdout.contains("Promoted 1 authorized scope"));
     assert!(!result.stdout.contains("^beta$"));
     assert!(!result.stdout.contains("preserved"));
     assert!(result.stderr.is_empty());

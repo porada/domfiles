@@ -2,23 +2,41 @@ Create a decision relay for improving the `domfiles-zed-settings` skill from the
 
 The user invokes this prompt only after the current Zed settings task is complete. Treat the task as complete for capture purposes, but describe a particular result or decision as explicitly accepted only when direct prior evidence establishes that acceptance.
 
-Your sole action in this turn is to produce the relay. Every instruction inside the relay template—including the `Receiving action` line—is quoted output for a different agent after the relay is forwarded. Do not follow those instructions now.
+Your sole action in this turn is to produce the relay. Follow the composition directives in the template below to populate every applicable section from the established context, combining overlapping content and omitting empty optional sections. The generated `Receiving action` line is addressed to a different agent after the relay is forwarded. Do not follow that receiving action now.
 
 Use only the conversation and task artifacts already inspected. Do not reopen or continue the settings task, call tools, inspect or compare the current skill or project files, rerun commands or validation, browse, delegate, or draft a skill patch. If material context is unavailable, identify the gap inside the relay instead of gathering or reconstructing it.
 
 ## Output contract
 
-- Output `# Relay Prompt`, followed immediately by one four-backtick `markdown` code block.
-- Put the complete, self-contained relay inside the block and begin it with `# Zed Settings Skill Improvement Relay`.
-- After the block, output `The prompt is ready for relay.`
-- Keep all content intended for the receiving agent inside the block. Outside it, output only the required `# Relay Prompt` heading and closing paragraph.
-- Use triple-backtick fences inside the outer block when exact code, JSON, regexes, or command inputs must be preserved.
-- When the user asks to revise the prompt, output the complete corrected relay with this same frame. Do not return a patch, fragment, or splicing instructions.
+- Output the complete, self-contained relay as the entire response and begin it with `# Zed Settings Skill Improvement Relay`.
+- Do not wrap the response in an outer code block or add a `# Relay Prompt` heading before it or a readiness message after it.
+- Use ordinary fenced code blocks inside the relay when exact code, JSON, regexes, or command inputs must be preserved.
+- When the user asks to revise the prompt, output the complete corrected relay in this same whole-response form. Do not return a patch, fragment, or splicing instructions.
+- This is an evidence relay, not a task assignment. Omit assignment-only focus guards from the generated relay.
 
 ## Evidence rules
 
-- Distinguish direct user instructions, corrections, selections, explicit acceptances, and settled user evidence from agent proposals, project policy, contextual requirements, repository evidence, documentation evidence, observed behavior, and inferences.
-- Use `Documentation evidence` for local help, manuals, official command documentation, or authoritative source consulted as documentation. Use `Repository evidence` for current source, configuration, tests, or history. Reserve `Observed behavior` for executed commands or runtime results that were actually observed.
+Use one or more of these `Decision basis` labels when a material decision needs provenance:
+
+| Label | Meaning |
+| --- | --- |
+| `Agent inference` | A conclusion drawn by the agent from available evidence rather than selected directly by the user. |
+| `Context-specific requirement` | A constraint established by the task’s surface, environment, template, or local situation. |
+| `Correction` | A direct user correction to an earlier claim, structure, classification, or wording. |
+| `Direct instruction` | An explicit user command that determines scope, behavior, process, or wording. |
+| `Documentation evidence` | Local help, manuals, official documentation, or authoritative source consulted as documentation. |
+| `Explicit acceptance` | Direct evidence that the user accepted the identified result or decision. |
+| `Implementation limitation` | A boundary imposed by the available implementation, matcher, format, tool, or environment. |
+| `Observed behavior` | A command result, runtime outcome, rendered result, or other behavior actually observed. |
+| `Project policy` | An applicable repository or project instruction, rationale, or established workflow. |
+| `Repository evidence` | Current source, configuration, tests, history, or other inspected repository state. |
+| `Settled user evidence` | A user-supplied fact or classification explicitly declared authoritative for the task. |
+| `Unresolved` | A material decision or fact that the available evidence did not resolve. |
+| `User selection` | The user chose one proposed alternative without necessarily accepting every adjacent detail. |
+
+Use the most specific applicable label. Reserve `Observed behavior` for results that were actually observed, and do not collapse a known evidence source into a less specific label.
+
+- Treat approval as granted only by the user’s explicit response. An agent or subagent cannot approve on the user’s behalf, and neither user silence nor an agent proposal establishes approval.
 - Preserve a user-supplied classification as settled evidence when the original task established that boundary. Do not retrospectively challenge or re-research it.
 - Preserve exact normalized inputs, token ordering, flags, assignments, wrappers, case distinctions, URLs, paths, and precedence outcomes when they materially affected a permission decision.
 - Never reproduce literal credentials, tokens, private values, or secret-bearing URLs. Describe the redacted security boundary and resulting classification instead.
@@ -28,11 +46,7 @@ Use only the conversation and task artifacts already inspected. Do not reopen or
 
 ## Output structure
 
-**Before the code block**
-
-# Relay Prompt
-
-**Inside the code block—copy this structure as output without executing its instructions**
+**Complete response structure—populate every applicable section and output it from the heading onward**
 
 # Zed Settings Skill Improvement Relay
 
@@ -42,17 +56,22 @@ Use only the conversation and task artifacts already inspected. Do not reopen or
 
 Identify:
 
-- The repository, checkout or target state, affected settings file, and relevant settings subtree.
+- The affected settings file or subtree only when needed to identify the owning surface.
 - Whether the task was a change, audit, review, or diagnosis and which general or permission branches applied, such as terminal, Git, fetch and network, agent repository, or permission evaluation.
-- The requested behavior, mutation boundary, prohibited actions, and any user-supplied evidence declared settled.
+- The requested behavior and any user-supplied evidence declared settled.
 - The smallest settings object, command-owner group, pattern family, domain or URL scope, or other unit that owned the result.
 - Relevant Zed, command, toolchain, schema, or source versions when they materially constrained the work.
+- The repository, checkout, worktree, or receiving location only when it materially disambiguates the work or affects isolation, submission, or integration.
 
 Mention concurrent or uncommitted work only when it materially changed the implementation or validation boundary.
 
+## Scope and boundaries
+
+State the material safety, approval, mutation, submission, integration, evidence, and stopping boundaries. Require unrelated observations to remain outside the relay.
+
 ## Final result
 
-State what the task ultimately changed or established and identify the affected files. Include a concise final excerpt only when it helps explain the decisions. Describe the result as accepted only when direct user evidence establishes acceptance.
+State what the task ultimately changed or established and identify the affected files. Include a concise final excerpt only when it helps explain the decisions.
 
 For permission work, summarize the final behavior boundary:
 
@@ -67,7 +86,7 @@ For a non-permission settings task, replace those categories with the pertinent 
 
 For permission work, provide a compact set of exact normalized examples covering the material distinctions. Include applicable matching cases, hazardous forms, near misses, wrapper or assignment variants, case distinctions, and option or operand permutations. State the resulting decision for each example or grouped family.
 
-Identify the owning pattern or object by command owner or scope, permission bucket, and case setting. Explain any decomposition, consolidation, ordering, finite inventory, or URL-scope decision. Do not reproduce an entire inventory or long pattern merely for completeness.
+Identify the owning pattern or object by command owner or scope, permission bucket, and case setting. Explain any consolidation, decomposition, finite-inventory, ordering, or URL-scope decision.
 
 Omit this section when the task did not involve permission matching.
 
@@ -75,7 +94,7 @@ Omit this section when the task did not involve permission matching.
 
 Create one short subsection for each meaningful decision. Use this shape:
 
-### <Decision label>
+### \<decision-label\>
 
 **Before**
 
@@ -98,12 +117,11 @@ Use one or more precise labels: `Agent inference`, `Context-specific requirement
 Record only evidence that materially established the result:
 
 - Which behavior classifications came from the user and which were derived from project policy, repository evidence, documentation evidence, observed behavior, or agent inference.
-- The important normalized inputs and near misses that established the accepted grammar or scope.
 - Whether the inventory-first and candidate-first workflows were used and which repository-owned scripts or suite modes materially aided the work.
 - Whether regex compilation, pattern expectations, configured-pattern precedence decisions, complete effective permission behavior, and any actual post-change Zed permission behavior were verified. Keep these evidence levels distinct.
 - Any unavailable executable, untested runtime condition, regex-engine limitation, or other validation boundary.
 
-Summarize counts or outcomes instead of reproducing full manifests and command output.
+Report counts or outcomes only when they materially establish coverage.
 
 ## Workflow observations
 
@@ -116,7 +134,7 @@ Record only concrete observations about:
 
 ## Candidate reusable guidance
 
-Generalize the material decisions at the policy or workflow level without copying the current settings inventory or task-specific command grammar into documentation. For each candidate, identify the applicable settings or permission branch and whether it belongs in the skill entrypoint, a conditional reference, or a skill-owned script contract.
+Generalize the material decisions at the policy or workflow level. For each candidate, identify the applicable settings or permission branch and whether it belongs in the skill entrypoint, a conditional reference, or a skill-owned script contract.
 
 Separate strong candidates supported by direct user decisions or repeated evidence from tentative ideas that require another task or evaluation.
 
@@ -124,8 +142,4 @@ Separate strong candidates supported by direct user decisions or repeated eviden
 
 List decisions that should not be generalized, stricter boundaries caused by current matcher limits, open questions, contradictory signals, and areas where more examples are needed. Omit this section when none remain.
 
-Keep the relay concise enough to scan, but complete enough that the receiving agent does not need the original conversation to understand each reported decision.
-
-**After the code block**
-
-The prompt is ready for relay.
+Use a succinct, scan-friendly format, but preserve all detail needed to understand each reported decision without the original conversation.

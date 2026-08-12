@@ -1,11 +1,12 @@
 # Terminal permissions
 
-Follow the shared [agent permission workflow](permissions.md) and this branch whenever terminal commands or terminal permission patterns are in scope. For Git commands or patterns, also read [Git permissions](git-permissions.md).
+This branch specializes the shared [agent permission workflow](permissions.md) for terminal commands.
 
 ## Apply the terminal permission policy
 
 - For `corepack`, `npm`, `npx`, `pnpm`, `pnpx`, `pnx`, `yarn`, or a delegated Node package binary, follow [Node package manager permissions](node-package-manager-permissions.md).
 - Allow Docker inspection operations without confirmation. Require confirmation for operations that execute workloads or create, modify, or remove Docker state.
+- Preserve `agent.tool_permissions.tools.terminal.default` as `confirm`.
 - Set `"case_sensitive": true` on every terminal command pattern unless a verified command-specific requirement justifies case-insensitive matching. Prefer a scoped inline case-insensitive group for an exceptional token instead of making the entire pattern case-insensitive.
 - Give every normalized command form one command-owner group.
     - Resolve the top-level executable after removing approved fixed assignments and wrappers from the normalized command.
@@ -22,8 +23,8 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
         - Limit `xargs`’s own options to bounded, noninteractive argument splitting and batching controls.
         - Require confirmation for the complete nested child-command owner group whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form. Do not narrow that override to individual nested syntax branches.
     - Keep each repeated wrapper grammar canonical and byte-identical across the command-owned patterns that use it.
-- Keep every decoded regex pattern under `1,000` characters, measuring the parsed `.pattern` value rather than its JSON-escaped source representation.
-    - Split a pattern when it spans multiple top-level executables, multiple direct Git subcommands, multiple `xargs` child commands, or unrelated syntax roles.
+- Keep every decoded regex pattern under `1,000` Unicode scalar values, measuring the parsed `.pattern` value rather than its JSON-escaped source representation.
+    - Split a pattern when the applicable ownership policy assigns its branches to different groups or when it combines unrelated syntax roles.
     - Do not split one coherent syntax role merely to pursue a smaller arbitrary threshold.
 - Group command-owned patterns alphabetically within each permission bucket.
     - Within one owner group, place discovery forms first, direct forms next, and wrapped forms alphabetically.
@@ -41,24 +42,20 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 
 ## Interpret commands that prompted for confirmation
 
-- When the user supplies commands because they prompted for confirmation and asks to make them automatic without explicitly limiting the request to literal invocations, treat each command as evidence of an operation they want made broadly frictionless. Seek the broadest currently established safe grammar, not an allowance for the exact normalized string.
-- Classify every supplied operation before editing. Generalize variable operand roles, verified aliases and equivalent forms, accepted option placement, and applicable wrappers only within the complete evidence-supported safety boundary. “Broadest” does not include experimental APIs unless explicitly requested, unknown future options, unrestricted operands, speculative aliases, or other unverified behavior unless a selected domain policy records an explicit user-approved namespace allowance. Keep such an exception bounded to that namespace’s established syntax and preserve higher-precedence hazard overrides.
-- Never use an exact allowance as an escape hatch when the natural operation family remains legitimately hazardous. If any supplied command should remain confirmable or denied, or cannot be generalized safely, stop before mutation and explain the concrete boundary. Do not add a literal exception, implement only the agreeable subset, or defer the unsafe explanation until after a partial edit.
-- Offer the defensible automatic family, when one exists, identify which part of the supplied invocation crosses it, and wait for the user to choose whether to keep confirmation or proceed with that boundary. An explicit request for one literal form does not override its safety classification.
+- When the user supplies commands because they prompted for confirmation and asks to make them automatic without explicitly limiting the request to literal invocations, treat each command as evidence of the intended operation, not as acceptance of an exact exception or a broader grammar.
+- Classify every supplied operation before editing. Derive the broadest currently established safe grammar as a proposal, including only evidence-supported variable operand roles, verified aliases and equivalent forms, accepted option placement, and applicable wrappers. “Broadest” does not include deprecated or experimental APIs unless explicitly requested, unknown future options, unrestricted operands, speculative aliases, or other unverified behavior unless a selected domain policy records an explicit user-approved namespace allowance. Keep such an exception bounded to that namespace’s established syntax and preserve higher-precedence hazard overrides.
+- Before candidate capture, require explicit user selection whenever the proposed grammar would automatically allow normalized forms beyond the supplied invocations or an already established user-approved family. Never use an exact allowance as an escape hatch when the natural operation family remains legitimately hazardous. If any supplied command should remain confirmable or denied, or cannot be generalized safely, stop before mutation, identify the concrete boundary and any defensible automatic family, then wait for the user to choose whether to keep confirmation or proceed with that boundary. Do not add a literal exception, implement only the agreeable subset, or defer the unsafe explanation until after a partial edit. An explicit request for one literal form does not override its safety classification.
 
 ## Investigate terminal behavior
 
 1. Select the evidence route before investigating behavior.
-    - When the current request explicitly identifies supplied classifications as verified or settled, treat them as authoritative semantic evidence. Do not rerun executable help, manuals, or online research to challenge them. Continue to inspect current settings, derive normalized inputs, translate the classifications, and validate the resulting regexes.
-    - Let supplied evidence own behavior classifications and required cases. Let the current skill and settings own pattern structure unless the request explicitly overrides that structure.
-2. Resolve each user-supplied command before translating it into a pattern.
-    - Treat a cited command that the request intends to run without confirmation as a required matching case. If its normalized permission input cannot be allowed within the requested safety boundary, leave it confirmable and report the limitation instead of silently substituting a stricter invocation.
-    - Unless the user explicitly limits the allowance to the exact invocation, treat the command as evidence of the intended operation rather than a literal pattern template. Separate invariant operation and safety tokens from variable paths, identifiers, and similar operands, then generalize only those variable roles within the requested boundary.
+    - When the current request explicitly identifies supplied classifications as verified or settled, let that evidence own behavior classifications and required cases. Do not rerun executable help, manuals, or online research to challenge them. Let the current skill and settings own pattern structure unless the request explicitly overrides it, then derive normalized inputs, translate the classifications, and validate the resulting regexes.
+2. Resolve each user-supplied command under the [confirmation-prompt interpretation policy](#interpret-commands-that-prompted-for-confirmation), recording its normalized required cases and variable operand roles before translating it into a pattern.
 3. When behavior classifications are not already settled, inspect the locally installed executable’s help or manual to resolve the complete bounded command family.
     - Record documented aliases and every accepted option or operand placement and ordering that preserves the operation and safety classification. Prefer a repeated grammar for order-independent tokens rather than enumerating permutations.
     - Record the forms that execute code, write data, alter state, or remove resources.
     - Record forms that block indefinitely, monitor continuously, produce unbounded output, or return a terminating snapshot. Treat duration and output boundedness as classification dimensions rather than assuming every non-mutating inspection form is equivalent.
-    - For a categorical allowance whose unknown future members must remain confirmable, record the complete finite set of currently allowed names. Never translate an open-ended semantic category into an open-ended allowance. A selected domain policy may define an explicit user-approved namespace exception, which must remain bounded to that namespace’s established syntax.
+    - For a categorical allowance whose unknown future members must remain confirmable, record the complete finite set of currently allowed names required by the [positive-branch policy](#translate-terminal-behavior-into-regex). A selected domain policy may instead define an explicit user-approved namespace exception.
     - Run each local help or manual inspection with a short, bounded timeout. Prefer `MANPAGER=cat PAGER=cat man <command> | col -b` when a manual is available.
     - If the executable is unavailable or local help remains interactive, consult current official documentation or source.
 4. When settled evidence supplies a semantic category without its finite current names, leave unenumerated members confirmable and report that stricter boundary. Do not research beyond the evidence when the request forbids it.
@@ -71,10 +68,10 @@ Follow the shared [agent permission workflow](permissions.md) and this branch wh
 
 - Anchor a pattern with `^`. Add `$` when trailing arguments would change the safety classification. In an allowance pattern that accepts trailing arguments, end each executable, subcommand, or option token with `(?: |$)`. The weaker `\b` is a lexical boundary, not a shell token boundary. Use it only when lexical matching is intentional, such as in a conservative confirmation override.
 - Use syntax supported by Zed’s Rust-compatible regex engine. It does not support lookarounds or backreferences.
-- Zed matches permission patterns case-insensitively by default. Follow the explicit case-sensitivity policy above for terminal commands, including patterns whose current tokens happen to be unambiguous.
 - Build positive branches from finite accepted grammar instead of trying to subtract cases with unsupported regex features. Keep unknown future names outside the allowance unless a selected domain policy explicitly defines a user-approved bounded namespace wildcard.
 - Test against Zed’s normalized permission input, not merely the original shell line.
     - Ordinary shell quotes do not remain in the normalized input. Preserve their enclosed text and normalized spaces, and encode quote characters only when current Zed parsing treats them as data rather than shell syntax.
+- When an allowance’s safety depends on a lexical path namespace, require every behavior-bearing path role in the normalized command to establish that namespace independently, including every accepted path-bearing option operand and each positional operand, whether it is a destination or source. One namespace-bounded path does not constrain another path role. Leave a form confirmable when any path role remains unconstrained or its namespace cannot be established from the normalized input.
 - Encode discovery and wrapper forms according to the command-owner policy above.
 - Do not execute a destructive command merely to test a permission pattern.
 
@@ -86,4 +83,5 @@ Validate every in-scope pattern against:
 - Representative blocking, continuous-monitoring, terminating-snapshot, and unbounded-output forms when duration or output boundedness affects the classification.
 - Hazardous forms that must match a confirmation or denial override or remain unmatched by an allowance.
 - Near misses involving global options, wrappers, assignments, combined short flags, accepted long-option abbreviations, or trailing operands that cross the intended boundary.
+- For namespace-bounded path grammar, each positional and option-bearing path role independently, including absolute paths, parent traversal, permitted-looking prefixes that escape the namespace, and supported permutations. Treat the check as lexical and do not infer the command’s working directory or resolve symlinks.
 - The command-owner, ordering, discovery, wrapper, finite-inventory, and decoded-length invariants above before promoting a candidate.

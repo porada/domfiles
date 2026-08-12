@@ -10,10 +10,17 @@
 
 - Always assume that others may be working concurrently in the same project.
 - Ignore untracked files named `TODO` or `TODO.*`. Do not read or modify them unless the user explicitly requests work on them.
-- Use subagents as context-isolation boundaries for evidence gathering whose source count or output size cannot be bounded safely before execution.
+- Treat a task relay to an external agent—an independently coordinated agent or conversation whose result does not automatically return to the current conversation—as a normal collaboration option alongside direct work and in-client subagents. Proactively use this option, without waiting for the user to suggest it, when a self-contained handoff is likely to be the most efficient overall approach after accounting for handoff, review, and integration costs.
+    - Favor external relays for long-running or parallel work when in-client subagent work would block the coordinating conversation and continued user steering is valuable. Also favor them when direct visibility into the receiving agent’s work is useful, when specialist or independent review would help, or when the work must run in a materially different execution environment such as a remote host, device, or authenticated session.
+    - Complete small, bounded, or tightly coupled work directly. Prefer an in-client subagent when automatic return to the coordinating conversation is more valuable than keeping that conversation available for steering.
+    - Give the receiving agent a clear, nonoverlapping owned scope. Avoid duplicated work, continue useful nonoverlapping work while the relay is active, and retain final synthesis, decisions, and integration in the coordinating conversation.
+    - A relay inherits the current task’s scope, mutation authority, approval requirements, and security boundaries. It cannot authorize scope expansion, provide user-only approval, transfer access, or circumvent an applicable boundary. The receiving agent must stop and ask the user directly when completion requires crossing one.
+    - Use a direct relay mechanism when one is available. When delivery requires user action, provide a short, copy-ready prompt and state the required handoff clearly. Never imply that the external agent has received, started, or completed the work unless that is known.
+- When in-client subagents are available, use them as context-isolation boundaries for evidence gathering whose source count or output size cannot be bounded safely before execution.
+    - End every initial or follow-up prompt sent to an in-client subagent with the exact standalone line `**Do not drift.**`. Define the bounded assignment, owned scope, exclusions, source constraints, stop conditions, and output contract before that guard. Apply it even when the subagent is asked only to gather evidence or review work because every subagent prompt assigns work.
     - Delegate exploratory online research before the first potentially unbounded search, fetch, or open-ended navigation. Treat searches across GitHub issues, pull requests, discussions, release histories, and similar collections as exploratory.
-    - For local investigation, first narrow the scope and use native pagination or output limits. Delegate broad command output, large Git ranges, or independent repository audit scopes when those controls are insufficient and the main thread needs only a concise result.
-    - Treat subagents’ extremely short context windows as a critical constraint. Give each one a narrow question, explicit source constraints and stop conditions, and a concise output contract. Default to the five strongest findings with URLs or project-relative evidence, and split independent questions across subagents instead of broadening one assignment.
+    - For local investigation, first narrow the scope and use available pagination or output limits. Delegate broad command output, large Git ranges, or independent repository audit scopes when those controls are insufficient and the main thread needs only a concise result.
+    - Treat each subagent’s context and output budgets as finite constraints. Give each one a narrow question, explicit source constraints and stop conditions, and a concise output contract. Default to the five strongest findings with URLs or project-relative evidence, and split independent questions across subagents instead of broadening one assignment.
     - Keep final synthesis and decisions in the main thread. Save substantial supporting evidence in the [task-specific temporary directory](#temporary-files) and read only targeted portions back into the main thread.
     - If a subagent fails or exhausts its context, continue in the original thread and start a new, narrower subagent rather than repeating the unbounded investigation in the main thread.
 - When online research depends on authenticated or otherwise nontransferable browser state, keep it in the main thread but define a narrow source count and stopping point before browsing.
@@ -38,6 +45,7 @@
     - The change is broad or high-risk enough to benefit materially from independent rollback, and there is a clear integration plan.
 - Do not create a worktree solely because the repository is dirty, concurrent activity is possible, or the task modifies repository files. Keep follow-up edits to the same uncommitted task in its existing checkout.
 - When a worktree is required, use a unique, filesystem-safe `<name>` containing a task slug and short unique suffix. Do not include path separators. Create the pair with `git worktree add -b agent/<name> .agent-<name> <start-point>`. Do not use `--detach`. Every agent worktree must retain its paired branch. When changing `<name>`, move the worktree and rename its branch together so the pair remains `.agent-<name>` and `agent/<name>`.
+- For Git commands intended to operate inside a registered `.agent-<name>` worktree, select that worktree explicitly with `git -C .agent-<name> …` rather than relying only on the process or tool working directory. Verify its registration with `git --no-pager worktree list --porcelain` before applying this rule. Do not treat an ordinary task-specific `.agent-<name>` directory as a Git worktree. Continue to run worktree-administration commands from the primary checkout unless the command’s contract requires another location.
 - Before moving or removing a worktree, or force-renaming or deleting its branch, inspect the affected worktree status and verify that its changes are integrated or explicitly abandoned.
     - Remove worktrees with `git worktree remove`. Use one or two exact `-f` or `--force` options only after the preceding verification when an unclean or locked worktree requires them. Afterward, verify that the corresponding `.agent-<name>` directory no longer exists. If it remains, inspect it rather than deleting it recursively.
     - After removing the worktree, first delete its branch with `git branch -d agent/<name>`. If Git refuses because the branch is unmerged, use `git branch -D agent/<name>` only when the preceding verification established that its changes are integrated or explicitly abandoned.
@@ -75,12 +83,16 @@
 
 ### Prompt relays
 
-- Put each complete prompt intended for another conversation in its own four-backtick `markdown` block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short paragraph stating that the prompt is ready for relay.
+- For an outgoing task relay, put each complete prompt intended for another conversation in its own four-backtick `markdown` block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short paragraph stating that the prompt is ready for relay.
+- When an entire response is a decision relay, evidence handoff, status return, completed-work report, or other response intended to be relayed back verbatim, make the relay the whole response. Do not wrap it in an outer code block or add a pre-response relay heading or post-response readiness message.
 - When asked to change a prompt, return each affected prompt in full with the change applied. Do not return a patch, replacement fragment, or instructions that require the user to splice edits into the previous prompt.
 - Do not add worktree instructions to a relayed prompt unless the user explicitly requests them or an already applicable policy requires them for that task.
 
 ## Dependencies
 
+- Before adding or updating any dependency, require explicit user approval for that exact dependency change. When the user has not already provided it, stop before dependency-premised implementation, mutation, installation, or mutating delegation and ask the user directly. Only an explicit user response grants approval.
+    - An agent or subagent cannot grant approval to itself, answer its own approval request, approve another agent on the user’s behalf, or infer approval from task intent, silence, an agent proposal, or permission to make adjacent changes.
+    - A coordinating agent may relay existing approval only when it can identify an explicit user response authorizing the exact dependency change. Otherwise, the agent that reaches the boundary must stop and surface the approval request to the user.
 - Add `--ignore-scripts` to `npm install`, `pnpm install`, and `yarn install` by default so package lifecycle scripts do not run.
     - Run an install without `--ignore-scripts` only when package lifecycle scripts are necessary for the current task, and state the reason before running it.
 - When adding or updating a dependency, select the newest stable release permitted by all applicable project and package manager policies, runtime and platform requirements, and dependency compatibility constraints.
@@ -121,15 +133,17 @@ Assume the following non-standard development commands are system-installed and 
 | `fish` | Fish shell and configuration checks | — |
 | `jq` | JSON querying and transformation | — |
 | `node` | JavaScript and TypeScript execution | Run `*.ts` files directly |
-| `plugins` | Agent plugin installation | Invoke directly—not through `npx` or `pnpm dlx` |
-| `pnpm` | JavaScript package management | Preferred. Use `run` for scripts, `exec` for local binaries, and `dlx` for undeclared one-offs |
+| `plugins` | Agent plugin installation | — |
+| `pnpm` | JavaScript package management | Preferred. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`. Use `exec` for local binaries and `dlx` for undeclared one-offs |
 | `rg` | File-content search | — |
 | `rustc` | Direct Rust compilation | Use for standalone source files |
 | `shellcheck` | Shell-script analysis | — |
-| `skills` | Agent skill management | Invoke directly—not through `npx` or `pnpm dlx` |
+| `skills` | Agent skill management | — |
 | `taplo` | TOML formatting and validation | — |
 | `yarn` | JavaScript package management | Use for Yarn-based projects |
 | `zizmor` | GitHub Actions security reviews | — |
+
+Invoke `plugins` and `skills` directly—not through `npx` or `pnpm dlx`.
 
 Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.
 
@@ -164,7 +178,7 @@ Command guidance applies to agent invocations and command examples, not reposito
 - Write every JSDoc comment as a multiline block with `/**` and `*/` on separate lines, including one-sentence comments.
 - Write suppression directives as `/* … */` block comments when both the language and relevant tool accept that form, including `/* oxlint-disable-next-line rule/name */`, `/* prettier-ignore */`, and `/* @ts-expect-error */`. Use the tool-required syntax otherwise. Do not add explanatory text unless applicable repository or linter policy requires it.
 - In prose, avoid semicolons, use typographic “quotation marks” and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it.
-- In prose, use the ellipsis character `…` for placeholders and ordinary ellipses. Preserve language-required spread and rest syntax, exact literals, and quoted source text.
+- In documentation, write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
 - For nonconsecutive numbered items, write each number explicitly in the item text instead of relying on Markdown’s ordered list numbering.
 - Wrap identifiers, paths, commands, and quoted code tokens in backticks.
 

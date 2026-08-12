@@ -8,19 +8,29 @@ use std::{
 };
 
 const HELP: &str = concat!(
-    "Usage: zed-regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
+    "Usage:\n",
+    "  regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
+    "  regex-dependency-audit --help\n",
     "\n",
-    "Audit the direct Zed-compatible `regex` dependency version\n",
+    "Audit the local root package’s pinned and resolved `regex` versions against Zed’s locked version\n",
     "\n",
     "Options:\n",
-    "  --help                         Print help\n",
+    "  --help                         Print help. Must be used alone\n",
     "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
     "  --upstream-lock <path>         Read the upstream locked `regex` version\n",
-    "  --upstream-revision <commit>   Identify the upstream Zed commit\n",
+    "  --upstream-revision <commit>   Label results with a 7- to 40-character lowercase\n",
+    "                                 hexadecimal Zed commit reference\n",
+    "\n",
+    "File behavior:\n",
+    "  Read local files only without modifying them\n",
+    "\n",
+    "Output:\n",
+    "  Help and matching-version results are printed to standard output\n",
+    "  Version-mismatch findings and errors are printed to standard error\n",
     "\n",
     "Exit statuses:\n",
     "  0  Versions matched or help displayed\n",
-    "  1  Versions differed\n",
+    "  1  Local and upstream `regex` versions differed\n",
     "  2  Invalid arguments or data, or an I/O failure\n",
 );
 
@@ -135,16 +145,18 @@ where
                 }
 
                 let Some(revision) = arguments.next() else {
-                    return Err("Option `--upstream-revision` requires a commit".to_owned());
+                    return Err(
+                        "Option `--upstream-revision` requires a commit reference".to_owned()
+                    );
                 };
                 let Some(revision) = revision.to_str() else {
-                    return Err("The upstream revision must be valid UTF-8".to_owned());
+                    return Err("Value for `--upstream-revision` must be valid UTF-8".to_owned());
                 };
                 upstream_revision = Some(revision.to_owned());
             }
             _ => {
                 return Err(format!(
-                    "Unknown option `{option}`. Run `zed-regex-dependency-audit --help` for usage"
+                    "Unknown option `{option}`. Run `regex-dependency-audit --help` for usage"
                 ));
             }
         }
@@ -160,7 +172,7 @@ where
     let revision_pattern = Regex::new(r"^[0-9a-f]{7,40}$").expect("Revision pattern must compile");
     if !revision_pattern.is_match(&upstream_revision) {
         return Err(
-            "The upstream revision must be a 7- to 40-character lowercase hexadecimal commit"
+            "Value for `--upstream-revision` must be a 7- to 40-character lowercase hexadecimal commit reference"
                 .to_owned(),
         );
     }
@@ -175,14 +187,14 @@ where
 fn read_utf8_file(path: &Path, description: &str) -> Result<String, String> {
     let bytes = fs::read(path).map_err(|error| {
         format!(
-            "Failed to read {description} file `{}`:\n\n{error}",
+            "Failed to read {description} `{}`:\n\n{error}",
             path.display()
         )
     })?;
 
     String::from_utf8(bytes).map_err(|error| {
         format!(
-            "Invalid UTF-8 in {description} file `{}`:\n\n{error}",
+            "Invalid UTF-8 in {description} `{}`:\n\n{error}",
             path.display()
         )
     })
@@ -190,7 +202,7 @@ fn read_utf8_file(path: &Path, description: &str) -> Result<String, String> {
 
 pub(crate) fn local_regex_version(manifest: &str) -> Result<String, String> {
     let document: toml::Value = toml::from_str(manifest)
-        .map_err(|error| format!("Local manifest is invalid TOML: {error}"))?;
+        .map_err(|error| format!("Local manifest contains invalid TOML:\n\n{error}"))?;
     let dependency = document
         .get("dependencies")
         .and_then(toml::Value::as_table)
@@ -293,7 +305,7 @@ fn parse_dependency_reference(value: &str) -> Result<DependencyReference, String
 
 fn parse_lock_packages(lockfile: &str, description: &str) -> Result<Vec<LockedPackage>, String> {
     let document: LockDocument = toml::from_str(lockfile)
-        .map_err(|error| format!("{description} lockfile is invalid TOML: {error}"))?;
+        .map_err(|error| format!("{description} lockfile contains invalid TOML:\n\n{error}"))?;
 
     document
         .package
@@ -343,11 +355,11 @@ fn resolve_dependency(
     match candidates.as_slice() {
         [index] => Ok(*index),
         [] => Err(format!(
-            "{description} lockfile cannot resolve dependency `{}` from `{} {}`",
+            "{description} lockfile has no package matching dependency `{}` from `{} {}`",
             dependency.name, parent.name, parent.version
         )),
         _ => Err(format!(
-            "{description} lockfile resolves dependency `{}` from `{} {}` ambiguously",
+            "{description} lockfile has multiple packages matching dependency `{}` from `{} {}`",
             dependency.name, parent.name, parent.version
         )),
     }
@@ -464,7 +476,7 @@ fn evaluate_versions(arguments: &VersionArguments) -> Result<VersionComparison, 
 }
 
 fn report_error(stderr: &mut dyn Write, message: &str) {
-    let _ = writeln!(stderr, "zed-regex-dependency-audit: {message}");
+    let _ = writeln!(stderr, "regex-dependency-audit: {message}");
 }
 
 fn run_version_audit(
@@ -499,7 +511,10 @@ fn run_version_audit(
         "Zed commit `{}` and `Cargo.toml` use `regex` `{}`",
         arguments.upstream_revision, comparison.local_version
     ) {
-        report_error(stderr, &format!("Failed to write result:\n\n{error}"));
+        report_error(
+            stderr,
+            &format!("Failed to write audit result to standard output:\n\n{error}"),
+        );
         return STATUS_ERROR;
     }
 
@@ -520,7 +535,10 @@ where
 
     let ParsedArguments::Run(arguments) = parsed_arguments else {
         if let Err(error) = stdout.write_all(HELP.as_bytes()) {
-            report_error(stderr, &format!("Failed to write help:\n\n{error}"));
+            report_error(
+                stderr,
+                &format!("Failed to write help to standard output:\n\n{error}"),
+            );
             return STATUS_ERROR;
         }
 

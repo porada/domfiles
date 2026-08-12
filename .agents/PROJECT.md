@@ -92,7 +92,7 @@ Every `rust-lldb` invocation containing `--local-lldbinit` is denied. Zed’s re
 
 Package-manager subcommand arguments are version-specific, so invocation tests rather than option-like spelling determine their behavior. pnpm 11 treats an option-looking first operand after `pnpm exec` as an executable name rather than a pnpm flag. Bare `--` remains a separator. Yarn Classic 1 treats unknown `dlx` as a package-script invocation and passes an option-looking first operand to that script. Those option-leading forms are denied so they cannot be approved by mistake. The supported discovery forms are `pnpm help exec` and `yarn help <name>`.
 
-The [Git prefix policy](skills/domfiles-zed-settings/references/git-permissions.md#apply-the-git-permission-policy) keeps approved fixed-value assignments, pager wrappers, and global options within command-owned root, subcommand, or compound-workflow groups. Reusing the settings-owned grammar across applicable allowances and confirmation overrides prevents the same assignment from receiving different permission treatment across Git owners. Fixed values that disable optional behavior or interaction avoid arbitrary environment-driven execution changes.
+Fixed Git prefix values are limited to disabling optional behavior or interaction because arbitrary environment values can select alternate repositories, configuration, executables, credentials, or network behavior. The [Git prefix policy](skills/domfiles-zed-settings/references/git-permissions.md#apply-the-git-permission-policy) owns their selection and synchronized application across command groups.
 
 Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations, alternate config paths or config injection, and arbitrary diff, editor, helper, pager, proxy, or SSH executables. It also includes author, committer, and reflog metadata, CA, certificate, credential, key, and proxy-path selection, and every value of `GIT_SSL_NO_VERIFY`, including `0`. Generated, internal, test-only, or unknown variables and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls remain confirmable as well.
 
@@ -102,17 +102,19 @@ Git subcommand discovery is restricted to compiled command names so aliases and 
 
 The global [agent instructions](../.config/zed/AGENTS.md#git-worktrees) pair the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
 
+Terminal permission matching evaluates normalized command inputs without exposing the invocation’s current working directory to configured regexes. Bare commands therefore cannot inherit agent-worktree trust from their execution directory. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) owns the resulting permission-pattern namespace requirement.
+
 Automatic task integration permits explicit staging, commit-time staging of tracked changes, and bounded noninteractive amendments inside agent worktrees, while merges from agent branches remain fast-forward-only. Because Zed strips ordinary shell quotes before permission matching, the commit grammar cannot distinguish normalized message words from non-option relative pathspec tokens. Both are trusted only inside agent worktrees, while option-looking tokens and broader operations remain confirmable. The allowed forms also trust repository-defined clean filters and commit or post-merge hooks within the user-managed repository.
 
 Permission patterns can require the worktree and branch namespaces independently but cannot compare their `<name>` suffixes, so pair equality remains an agent-level invariant. Forced operations remain namespace-bound. Non-forced branch deletion retains Git’s fully-merged check, while forced deletion bypasses it.
 
 Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Permission regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere inside an open worktree. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) leaves direct symbolic-link creation confirmable, so native path allowances treat existing worktree-internal symlinks as previously trusted repository state. Top-level worktree moves must also update Git’s administrative metadata, while Zed’s sensitive-settings and outside-worktree symlink-escape checks remain additional confirmation gates.
 
-Dry-run pruning can inspect stale worktree metadata without changing it. Actual pruning, complex or out-of-namespace inputs, and broader deletion mechanisms remain confirmable because they extend mutation beyond the bounded agent namespaces.
+Worktree pruning remains confirmable because it can mutate shared Git administrative state beyond the bounded agent namespaces. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) owns the dry-run exception.
 
 ### Zed xargs command ownership
 
-The terminal permission policy treats `xargs` as a per-command wrapper. `xargs` owns only its root and discovery forms, while each child command owns its bounded `xargs … <command>` form beside its direct patterns. This removes the pooled child-command inventory while keeping one canonical bounded `xargs` option grammar across repeated command-owned forms.
+Per-command `xargs` ownership avoids a second pooled child inventory whose membership could drift from direct command owners. The [terminal command-owner policy](skills/domfiles-zed-settings/references/terminal-permissions.md#apply-the-terminal-permission-policy) owns the exact partition and repeated wrapper grammar.
 
 Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Standard input can therefore activate hazardous child behavior after the shell segment has already been allowed. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
 
@@ -152,7 +154,7 @@ The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared b
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
 
-Repository-specific guidance instead belongs in the root `AGENTS.md` or applicable project skills.
+The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defines the repository-specific instruction surfaces.
 
 ### Zed project scan exclusions
 
@@ -240,7 +242,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 The corresponding scripts in `bin/` are the stable command interfaces. Their implementations are resolved from the domfiles pnpm workspace so `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
-The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization when Git-visible tracked files differ from `HEAD`, `domfiles-sync-update` overrides this behavior with `error` so commands can run only when dependencies are already current. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
+The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `error`, requiring dependencies to be current before commands run. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
 

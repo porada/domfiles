@@ -2,11 +2,13 @@
 #[path = "helpers/permission-patterns.rs"]
 mod permission_patterns;
 
-pub(crate) use permission_patterns::Bucket;
-use permission_patterns::{BoundedIssues, read_utf8_file};
+use permission_patterns::{
+    ARTIFACT_CATALOG_VERSION, ArtifactCatalog, ArtifactCatalogPattern, BoundedIssues,
+    is_valid_sha256, read_utf8_file, validate_artifact_catalog,
+};
+pub(crate) use permission_patterns::{Bucket, sha256_hex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use std::{
     collections::{HashMap, HashSet},
     env,
@@ -20,9 +22,12 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+const ARTIFACT_CATALOG_FILE: &str = "artifact-catalog.json";
 const BASELINE_FILE: &str = "baseline-settings.json";
 const CANDIDATE_FILE: &str = "candidate-settings.json";
+const MATERIALIZATION_SELECTION_VERSION: u64 = 1;
 const MAX_REPORTED_ITEMS: usize = 100;
+const MAX_REPORTED_MATERIALIZED_ITEMS: usize = 10;
 const MAX_REPORTED_VERIFY_ITEMS: usize = 10;
 const STATE_FILE: &str = "state.json";
 const STATUS_ERROR: u8 = 2;
@@ -34,43 +39,65 @@ static NEXT_TEMPORARY_ID: AtomicU64 = AtomicU64::new(0);
 
 const HELP: &str = concat!(
     "Usage:\n",
-    "  zed-permission-candidate capture --settings <path> --selection <selection.json> --output <directory>\n",
-    "  zed-permission-candidate verify --settings <path> --state <state.json>\n",
-    "  zed-permission-candidate promote --settings <live> --candidate <candidate> --state <state.json> --write\n",
+    "  permission-candidate capture --settings <path> --selection <selection-path> --output <directory>\n",
+    "  permission-candidate materialize --candidate <candidate-path> --state <state-path> --selection <selection-path> --output <directory>\n",
+    "  permission-candidate verify --settings <path> --state <state-path>\n",
+    "  permission-candidate promote --settings <live-settings-path> --candidate <candidate-path> --state <state-path> --write\n",
+    "  permission-candidate --help\n",
     "\n",
-    "Capture exact Zed terminal-permission candidates, verify current indexes, and promote authorized scopes\n",
+    "Capture exact Zed terminal-permission candidates, materialize authorized candidate patterns, verify current indexes, and promote authorized scopes\n",
     "\n",
     "Modes:\n",
-    "  capture  Read exact settings bytes, validate selected terminal pattern objects, and create artifacts\n",
-    "  verify   Validate every state artifact, then locate each pattern by bucket, exact UTF-8 bytes, and case setting\n",
-    "  promote  Validate every state artifact and guard, merge authorized candidate scopes into live settings, and atomically replace live settings\n",
+    "  capture      Read exact settings bytes, validate selected terminal pattern objects, and create capture artifacts\n",
+    "  materialize  Validate a captured state and authorized candidate, then create exact pattern artifacts and a bound catalog\n",
+    "  verify       Validate every state artifact, then locate each pattern by bucket, exact UTF-8 bytes, and case setting\n",
+    "  promote      Validate every state artifact and guard, merge authorized candidate scopes into live settings, and atomically replace live settings\n",
     "\n",
     "Options:\n",
-    "  --candidate <path>          Candidate JSON object used only by promote\n",
-    "  --help                      Print this complete help when used alone\n",
-    "  --output <directory>        Explicit capture artifact directory\n",
-    "  --selection <path>          Version-1 capture selection JSON\n",
-    "  --settings <path>           Baseline or current settings for capture and verify, or the live destination for promote\n",
-    "  --state <path>              Version-1 state manifest used by verify and promote\n",
-    "  --write                     Required exact mutation guard for promote\n",
+    "  --candidate <path>          Candidate JSON object used by `materialize` or `promote`\n",
+    "  --help                      Print help. Must be used alone\n",
+    "  --output <directory>        Explicit artifact directory used by `capture` or `materialize`\n",
+    "  --selection <path>          Version-1 capture or materialization selection JSON selected by the mode\n",
+    "  --settings <path>           Baseline or current settings for `capture` and `verify`, or the live destination for `promote`\n",
+    "  --state <path>              Version-1 state manifest used by `materialize`, `verify`, and `promote`\n",
+    "  --write                     Required exact mutation guard for `promote`\n",
     "\n",
-    "Selection JSON schema (unknown fields are rejected):\n",
+    "Capture selection JSON schema (unknown fields are rejected):\n",
     "  {\"version\":1,\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0}]}\n",
     "  `scopes` and `patterns` must be nonempty. Pattern IDs and bucket/index selections must be unique\n",
     "  Scopes must be existing, non-root RFC 6901 pointers with no duplicates or parent/child overlap\n",
     "  Every selected pattern object must lie within an authorized scope and contain string `pattern` and boolean `case_sensitive` fields\n",
+    "\n",
+    "Materialization selection JSON schema (unknown fields are rejected):\n",
+    "  {\"version\":1,\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0}]}\n",
+    "  `patterns` must be nonempty. Pattern IDs and bucket/index selections must be unique\n",
+    "  Each bucket/index is a transient locator into the exact candidate bound by the catalog\n",
     "\n",
     "State JSON schema (unknown fields are rejected):\n",
     "  {\"version\":1,\"baseline_file\":\"relative path\",\"baseline_sha256\":\"64 lowercase hex characters\",\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
     "  Relative baseline and pattern paths resolve from the state manifest’s parent\n",
     "  The manifest records hashes but does not authenticate itself\n",
     "\n",
+    "Artifact catalog JSON schema (unknown fields are rejected):\n",
+    "  {\"version\":1,\"candidate_sha256\":\"64 lowercase hex characters\",\"state_sha256\":\"64 lowercase hex characters\",\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
+    "  Relative pattern paths resolve from the catalog’s parent\n",
+    "  Candidate, state, and artifact hashes provide integrity and freshness but not authenticity\n",
+    "\n",
     "Capture contract:\n",
     "  Settings must parse as a JSON object and are retained byte-for-byte as immutable `baseline-settings.json`\n",
     "  An editable byte-identical `candidate-settings.json` is created beside the baseline\n",
     "  Pattern files contain exact decoded UTF-8 pattern bytes with no added newline\n",
     "  Generated pattern names use a sequence and sanitized ID. Raw IDs never become paths\n",
-    "  The output directory may already exist, but symlink traversal, non-directories, existing artifact paths, and overwrite are refused\n",
+    "  The output directory’s parent must exist. The output directory itself may already exist\n",
+    "  Symlink traversal, non-directory output paths, and existing artifact paths are refused\n",
+    "\n",
+    "Materialize contract:\n",
+    "  Every state artifact and recorded hash is validated before candidate authorization\n",
+    "  Candidate values outside authorized scopes must equal the captured baseline\n",
+    "  Every selected object must lie under an authorized scope and provide string `pattern` and boolean `case_sensitive` fields\n",
+    "  Pattern files contain exact decoded candidate UTF-8 bytes with no added newline or reserialization\n",
+    "  Create-new writes use complete preflight, symlink refusal, safe generated filenames, rollback, and overwrite refusal\n",
+    "  Candidate, baseline, state, and live settings remain untouched\n",
     "\n",
     "Verify contract:\n",
     "  Baseline and pattern hashes, JSON structure, scopes, UTF-8, and recorded baseline source identities are validated before reindexing\n",
@@ -89,11 +116,16 @@ const HELP: &str = concat!(
     "  Promotion rechecks live bytes immediately before rename on a best-effort basis. A writer can still race after that check\n",
     "  The live destination and every traversed component must not be a symlink\n",
     "\n",
-    "Output never includes pattern bodies or candidate/settings contents\n",
+    "Output:\n",
+    "  Successful capture, materialization, verification, and promotion results are written to standard output\n",
+    "  Help is written to standard output\n",
+    "  Materialization reports aggregate counts, the catalog path, and at most 10 `id -> artifact` metadata lines\n",
+    "  Refusals and errors are written to standard error\n",
+    "  Output never includes pattern bodies, settings contents, complete arrays, or hashes\n",
     "\n",
     "Exit statuses:\n",
-    "  0  Capture, verification, promotion, unchanged promotion, or help succeeded\n",
-    "  1  Current state could not be uniquely reindexed or a guarded promotion was refused\n",
+    "  0  Capture, materialization, verification, promotion, unchanged promotion, or help succeeded\n",
+    "  1  Current state could not be uniquely reindexed or candidate authorization or guarded promotion was refused\n",
     "  2  Arguments or data were invalid, or an I/O operation failed\n",
 );
 
@@ -111,6 +143,13 @@ struct SelectionPattern {
     id: String,
     bucket: Bucket,
     index: usize,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct MaterializationSelectionDocument {
+    version: u64,
+    patterns: Vec<SelectionPattern>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -140,6 +179,13 @@ struct CaptureArguments {
     output: PathBuf,
 }
 
+struct MaterializeArguments {
+    candidate: PathBuf,
+    state: PathBuf,
+    selection: PathBuf,
+    output: PathBuf,
+}
+
 struct VerifyArguments {
     settings: PathBuf,
     state: PathBuf,
@@ -153,6 +199,7 @@ struct PromoteArguments {
 
 enum Operation {
     Capture(CaptureArguments),
+    Materialize(MaterializeArguments),
     Verify(VerifyArguments),
     Promote(PromoteArguments),
 }
@@ -209,6 +256,38 @@ struct CapturedPattern {
     state: StatePattern,
 }
 
+struct MaterializedPattern {
+    bytes: Vec<u8>,
+    catalog: ArtifactCatalogPattern,
+}
+
+pub(crate) struct PendingArtifact {
+    pub(crate) filename: String,
+    pub(crate) bytes: Vec<u8>,
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum ArtifactOperation {
+    Capture,
+    Materialization,
+}
+
+impl ArtifactOperation {
+    fn label(self) -> &'static str {
+        match self {
+            Self::Capture => "Capture",
+            Self::Materialization => "Materialization",
+        }
+    }
+
+    fn lowercase_label(self) -> &'static str {
+        match self {
+            Self::Capture => "capture",
+            Self::Materialization => "materialization",
+        }
+    }
+}
+
 struct LoadedPattern {
     id: String,
     bucket: Bucket,
@@ -219,6 +298,7 @@ struct LoadedPattern {
 
 struct ValidatedState {
     baseline: Value,
+    bytes: Vec<u8>,
     document: StateDocument,
     patterns: Vec<LoadedPattern>,
     scopes: Vec<Vec<String>>,
@@ -276,23 +356,25 @@ where
 
     let Some(mode) = arguments.first() else {
         return Err(invalid(
-            "Missing mode `capture`, `verify`, or `promote`. Run `zed-permission-candidate --help` for usage",
+            "Missing mode. Specify `capture`, `materialize`, `verify`, or `promote`. Run `permission-candidate --help` for usage",
         ));
     };
     let Some(mode) = mode.to_str() else {
-        return Err(invalid("The mode must be valid UTF-8"));
+        return Err(invalid("Mode must be valid UTF-8"));
     };
     let options = &arguments[1..];
 
     match mode {
         "capture" => parse_capture_arguments(options)
             .map(|arguments| ParsedArguments::Run(Operation::Capture(arguments))),
+        "materialize" => parse_materialize_arguments(options)
+            .map(|arguments| ParsedArguments::Run(Operation::Materialize(arguments))),
         "verify" => parse_verify_arguments(options)
             .map(|arguments| ParsedArguments::Run(Operation::Verify(arguments))),
         "promote" => parse_promote_arguments(options)
             .map(|arguments| ParsedArguments::Run(Operation::Promote(arguments))),
         _ => Err(invalid(format!(
-            "Unknown mode `{mode}`. Run `zed-permission-candidate --help` for usage"
+            "Unknown mode `{mode}`. Run `permission-candidate --help` for usage"
         ))),
     }
 }
@@ -345,7 +427,7 @@ fn parse_capture_arguments(options: &[OsString]) -> Result<CaptureArguments, App
             }
             _ => {
                 return Err(invalid(format!(
-                    "Unknown capture option `{option}`. Run `zed-permission-candidate --help` for usage"
+                    "Unknown capture option `{option}`. Run `permission-candidate --help` for usage"
                 )));
             }
         }
@@ -356,6 +438,51 @@ fn parse_capture_arguments(options: &[OsString]) -> Result<CaptureArguments, App
         settings: settings.ok_or_else(|| invalid("Missing required option `--settings <path>`"))?,
         selection: selection
             .ok_or_else(|| invalid("Missing required option `--selection <path>`"))?,
+        output: output.ok_or_else(|| invalid("Missing required option `--output <directory>`"))?,
+    })
+}
+
+fn parse_materialize_arguments(options: &[OsString]) -> Result<MaterializeArguments, AppError> {
+    let mut candidate = None;
+    let mut output = None;
+    let mut selection = None;
+    let mut state = None;
+    let mut index = 0;
+
+    while index < options.len() {
+        let option = option_name(&options[index])?;
+        match option {
+            "--candidate" => {
+                let path = take_path(options, &mut index, option)?;
+                set_once(&mut candidate, path, option)?;
+            }
+            "--output" => {
+                let path = take_path(options, &mut index, option)?;
+                set_once(&mut output, path, option)?;
+            }
+            "--selection" => {
+                let path = take_path(options, &mut index, option)?;
+                set_once(&mut selection, path, option)?;
+            }
+            "--state" => {
+                let path = take_path(options, &mut index, option)?;
+                set_once(&mut state, path, option)?;
+            }
+            _ => {
+                return Err(invalid(format!(
+                    "Unknown materialize option `{option}`. Run `permission-candidate --help` for usage"
+                )));
+            }
+        }
+        index += 1;
+    }
+
+    Ok(MaterializeArguments {
+        candidate: candidate
+            .ok_or_else(|| invalid("Missing required option `--candidate <candidate-path>`"))?,
+        state: state.ok_or_else(|| invalid("Missing required option `--state <state-path>`"))?,
+        selection: selection
+            .ok_or_else(|| invalid("Missing required option `--selection <selection-path>`"))?,
         output: output.ok_or_else(|| invalid("Missing required option `--output <directory>`"))?,
     })
 }
@@ -378,7 +505,7 @@ fn parse_verify_arguments(options: &[OsString]) -> Result<VerifyArguments, AppEr
             }
             _ => {
                 return Err(invalid(format!(
-                    "Unknown verify option `{option}`. Run `zed-permission-candidate --help` for usage"
+                    "Unknown verify option `{option}`. Run `permission-candidate --help` for usage"
                 )));
             }
         }
@@ -421,7 +548,7 @@ fn parse_promote_arguments(options: &[OsString]) -> Result<PromoteArguments, App
             }
             _ => {
                 return Err(invalid(format!(
-                    "Unknown promote option `{option}`. Run `zed-permission-candidate --help` for usage"
+                    "Unknown promote option `{option}`. Run `permission-candidate --help` for usage"
                 )));
             }
         }
@@ -435,32 +562,33 @@ fn parse_promote_arguments(options: &[OsString]) -> Result<PromoteArguments, App
     }
 
     Ok(PromoteArguments {
-        settings: settings.ok_or_else(|| invalid("Missing required option `--settings <live>`"))?,
+        settings: settings
+            .ok_or_else(|| invalid("Missing required option `--settings <live-settings-path>`"))?,
         candidate: candidate
-            .ok_or_else(|| invalid("Missing required option `--candidate <candidate>`"))?,
-        state: state.ok_or_else(|| invalid("Missing required option `--state <state.json>`"))?,
+            .ok_or_else(|| invalid("Missing required option `--candidate <candidate-path>`"))?,
+        state: state.ok_or_else(|| invalid("Missing required option `--state <state-path>`"))?,
     })
 }
 
 fn read_bytes(path: &Path, description: &str) -> Result<Vec<u8>, AppError> {
     fs::read(path).map_err(|error| {
         invalid(format!(
-            "Failed to read {description} `{}`: {error}",
+            "Failed to read {description} `{}`:\n\n{error}",
             path.display()
         ))
     })
 }
 
 fn invalid_json(description: &str, path: &Path, error: serde_json::Error) -> AppError {
-    let category = match error.classify() {
-        serde_json::error::Category::Data => "does not match the required schema",
-        serde_json::error::Category::Eof => "ends before a complete JSON value",
-        serde_json::error::Category::Io => "could not be read as JSON",
-        serde_json::error::Category::Syntax => "contains invalid JSON syntax",
+    let summary = match error.classify() {
+        serde_json::error::Category::Data => "JSON data does not match the required schema",
+        serde_json::error::Category::Eof => "JSON input ends before a complete value",
+        serde_json::error::Category::Io => "Failed to read JSON input",
+        serde_json::error::Category::Syntax => "JSON syntax is invalid",
     };
 
     invalid(format!(
-        "Invalid {description} `{}` at line {}, column {}: {category}",
+        "Invalid {description} `{}` at line {}, column {}. {summary}",
         path.display(),
         error.line(),
         error.column()
@@ -487,10 +615,35 @@ fn read_json_object(path: &Path, description: &str) -> Result<(Vec<u8>, Value), 
     Ok((bytes, value))
 }
 
-fn read_utf8_json_object(path: &Path, description: &str) -> Result<Value, AppError> {
-    let contents = read_utf8_file(path, description).map_err(invalid)?;
+fn decode_utf8(
+    bytes: Vec<u8>,
+    path: &Path,
+    description: &str,
+) -> Result<(Vec<u8>, String), AppError> {
+    let contents = String::from_utf8(bytes).map_err(|error| {
+        invalid(format!(
+            "Invalid UTF-8 in {description} file `{}`:\n\n{error}",
+            path.display()
+        ))
+    })?;
+    let bytes = contents.as_bytes().to_vec();
 
-    parse_json_object(contents.as_bytes(), description, path)
+    Ok((bytes, contents))
+}
+
+fn read_utf8_json_object_with_bytes(
+    path: &Path,
+    description: &str,
+) -> Result<(Vec<u8>, Value), AppError> {
+    let bytes = read_bytes(path, description)?;
+    let (bytes, contents) = decode_utf8(bytes, path, description)?;
+    let value = parse_json_object(contents.as_bytes(), description, path)?;
+
+    Ok((bytes, value))
+}
+
+fn read_utf8_json_object(path: &Path, description: &str) -> Result<Value, AppError> {
+    read_utf8_json_object_with_bytes(path, description).map(|(_, value)| value)
 }
 
 fn decode_reference_token(token: &str) -> Result<String, String> {
@@ -677,26 +830,6 @@ pub(crate) fn terminal_pattern(
     Ok((pattern, case_sensitive))
 }
 
-pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-
-    let digest = Sha256::digest(bytes);
-    let mut output = String::with_capacity(digest.len() * 2);
-    for byte in digest {
-        output.push(HEX[usize::from(byte >> 4)] as char);
-        output.push(HEX[usize::from(byte & 0x0f)] as char);
-    }
-
-    output
-}
-
-fn valid_sha256(value: &str) -> bool {
-    value.len() == 64
-        && value
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-}
-
 fn sanitized_id(id: &str) -> String {
     let mut sanitized = String::new();
     let mut previous_separator = false;
@@ -769,7 +902,9 @@ fn path_as_absolute(path: &Path) -> Result<PathBuf, PathInspectionError> {
         env::current_dir()
             .map(|directory| directory.join(path))
             .map_err(|error| {
-                PathInspectionError::Io(format!("Failed to resolve the current directory: {error}"))
+                PathInspectionError::Io(format!(
+                    "Failed to resolve the current directory:\n\n{error}"
+                ))
             })
     }
 }
@@ -789,7 +924,7 @@ pub(crate) fn ensure_no_symlink_components(path: &Path) -> Result<(), PathInspec
 
         let metadata = fs::symlink_metadata(&current).map_err(|error| {
             PathInspectionError::Io(format!(
-                "Failed to inspect path component `{}`: {error}",
+                "Failed to inspect path component `{}`:\n\n{error}",
                 current.display()
             ))
         })?;
@@ -801,13 +936,14 @@ pub(crate) fn ensure_no_symlink_components(path: &Path) -> Result<(), PathInspec
     Ok(())
 }
 
-fn prepare_output_directory(output: &Path) -> Result<bool, AppError> {
+fn prepare_output_directory(output: &Path, operation: ArtifactOperation) -> Result<bool, AppError> {
     match fs::symlink_metadata(output) {
         Ok(metadata) => {
             ensure_no_symlink_components(output).map_err(|error| invalid(error.to_string()))?;
             if !metadata.is_dir() {
                 return Err(invalid(format!(
-                    "Capture output `{}` must be a real directory",
+                    "{} output `{}` must be a directory",
+                    operation.label(),
                     output.display()
                 )));
             }
@@ -818,7 +954,8 @@ fn prepare_output_directory(output: &Path) -> Result<bool, AppError> {
             ensure_no_symlink_components(parent).map_err(|error| invalid(error.to_string()))?;
             fs::create_dir(output).map_err(|error| {
                 invalid(format!(
-                    "Failed to create capture output directory `{}`: {error}",
+                    "Failed to create {} output directory `{}`:\n\n{error}",
+                    operation.lowercase_label(),
                     output.display()
                 ))
             })?;
@@ -826,13 +963,18 @@ fn prepare_output_directory(output: &Path) -> Result<bool, AppError> {
             Ok(true)
         }
         Err(error) => Err(invalid(format!(
-            "Failed to inspect capture output `{}`: {error}",
+            "Failed to inspect {} output `{}`:\n\n{error}",
+            operation.lowercase_label(),
             output.display()
         ))),
     }
 }
 
-fn preflight_artifacts(output: &Path, filenames: &[String]) -> Result<(), AppError> {
+fn preflight_artifacts(
+    output: &Path,
+    filenames: &[String],
+    operation: ArtifactOperation,
+) -> Result<(), AppError> {
     let mut unique = HashSet::new();
     for filename in filenames {
         validate_generated_filename(filename)?;
@@ -843,14 +985,16 @@ fn preflight_artifacts(output: &Path, filenames: &[String]) -> Result<(), AppErr
         match fs::symlink_metadata(&path) {
             Ok(_) => {
                 return Err(invalid(format!(
-                    "Refusing to overwrite existing capture artifact `{}`",
+                    "{} artifact `{}` already exists. Choose an output directory without existing artifacts",
+                    operation.label(),
                     path.display()
                 )));
             }
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
             Err(error) => {
                 return Err(invalid(format!(
-                    "Failed to inspect capture artifact `{}`: {error}",
+                    "Failed to inspect {} artifact `{}`:\n\n{error}",
+                    operation.lowercase_label(),
                     path.display()
                 )));
             }
@@ -860,14 +1004,15 @@ fn preflight_artifacts(output: &Path, filenames: &[String]) -> Result<(), AppErr
     Ok(())
 }
 
-fn write_new_file(path: &Path, bytes: &[u8]) -> Result<(), AppError> {
+fn write_new_file(path: &Path, bytes: &[u8], operation: ArtifactOperation) -> Result<(), AppError> {
     let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(path)
         .map_err(|error| {
             invalid(format!(
-                "Failed to create artifact `{}` without overwrite: {error}",
+                "Failed to create {} artifact `{}`:\n\n{error}",
+                operation.lowercase_label(),
                 path.display()
             ))
         })?;
@@ -876,12 +1021,64 @@ fn write_new_file(path: &Path, bytes: &[u8]) -> Result<(), AppError> {
         drop(file);
         let _ = fs::remove_file(path);
         return Err(invalid(format!(
-            "Failed to write artifact `{}`: {error}",
+            "Failed to write {} artifact `{}`:\n\n{error}",
+            operation.lowercase_label(),
             path.display()
         )));
     }
 
     Ok(())
+}
+
+pub(crate) fn commit_artifacts_with_writer<F>(
+    output: &Path,
+    artifacts: &[PendingArtifact],
+    operation: ArtifactOperation,
+    mut write_artifact: F,
+) -> Result<(), String>
+where
+    F: FnMut(&Path, &[u8]) -> Result<(), String>,
+{
+    let output_created =
+        prepare_output_directory(output, operation).map_err(|error| error.message().to_owned())?;
+    let filenames: Vec<String> = artifacts
+        .iter()
+        .map(|artifact| artifact.filename.clone())
+        .collect();
+    if let Err(error) = preflight_artifacts(output, &filenames, operation) {
+        if output_created {
+            let _ = fs::remove_dir(output);
+        }
+        return Err(error.message().to_owned());
+    }
+
+    let mut created = Vec::with_capacity(artifacts.len());
+    for artifact in artifacts {
+        let path = output.join(&artifact.filename);
+        if let Err(error) = write_artifact(&path, &artifact.bytes) {
+            for created_path in created.iter().rev() {
+                let _ = fs::remove_file(created_path);
+            }
+            if output_created {
+                let _ = fs::remove_dir(output);
+            }
+            return Err(error);
+        }
+        created.push(path);
+    }
+
+    Ok(())
+}
+
+fn commit_artifacts(
+    output: &Path,
+    artifacts: &[PendingArtifact],
+    operation: ArtifactOperation,
+) -> Result<(), AppError> {
+    commit_artifacts_with_writer(output, artifacts, operation, |path, bytes| {
+        write_new_file(path, bytes, operation).map_err(|error| error.message().to_owned())
+    })
+    .map_err(invalid)
 }
 
 pub(crate) fn serialize_pretty_json(value: &Value) -> Result<Vec<u8>, String> {
@@ -890,7 +1087,7 @@ pub(crate) fn serialize_pretty_json(value: &Value) -> Result<Vec<u8>, String> {
     let mut serializer = serde_json::Serializer::with_formatter(&mut bytes, formatter);
     value
         .serialize(&mut serializer)
-        .map_err(|error| format!("Failed to serialize JSON: {error}"))?;
+        .map_err(|error| format!("Failed to serialize JSON:\n\n{error}"))?;
     bytes.push(b'\n');
 
     Ok(bytes)
@@ -898,7 +1095,13 @@ pub(crate) fn serialize_pretty_json(value: &Value) -> Result<Vec<u8>, String> {
 
 fn serialize_state(state: &StateDocument) -> Result<Vec<u8>, AppError> {
     let value = serde_json::to_value(state)
-        .map_err(|error| invalid(format!("Failed to serialize state manifest: {error}")))?;
+        .map_err(|error| invalid(format!("Failed to serialize state manifest:\n\n{error}")))?;
+    serialize_pretty_json(&value).map_err(invalid)
+}
+
+fn serialize_artifact_catalog(catalog: &ArtifactCatalog) -> Result<Vec<u8>, AppError> {
+    let value = serde_json::to_value(catalog)
+        .map_err(|error| invalid(format!("Failed to serialize artifact catalog:\n\n{error}")))?;
     serialize_pretty_json(&value).map_err(invalid)
 }
 
@@ -909,7 +1112,10 @@ fn capture(arguments: &CaptureArguments, stdout: &mut dyn Write) -> Result<(), A
     let selection: SelectionDocument = serde_json::from_str(&selection_contents)
         .map_err(|error| invalid_json("selection JSON", &arguments.selection, error))?;
     if selection.version != VERSION {
-        return Err(invalid("Selection JSON must use schema version 1"));
+        return Err(invalid(format!(
+            "Unsupported selection JSON schema version. Expected `{VERSION}`, received `{}`",
+            selection.version
+        )));
     }
     if selection.patterns.is_empty() {
         return Err(invalid("Selection JSON must contain at least one pattern"));
@@ -968,67 +1174,51 @@ fn capture(arguments: &CaptureArguments, stdout: &mut dyn Write) -> Result<(), A
             .collect(),
     };
     let state_bytes = serialize_state(&state)?;
-    let output_created = prepare_output_directory(&arguments.output)?;
-    let mut filenames = Vec::with_capacity(captured.len() + 3);
-    filenames.push(BASELINE_FILE.to_owned());
-    filenames.push(CANDIDATE_FILE.to_owned());
-    filenames.extend(
-        captured
-            .iter()
-            .map(|pattern| pattern.state.pattern_file.clone()),
-    );
-    filenames.push(STATE_FILE.to_owned());
-
-    if let Err(error) = preflight_artifacts(&arguments.output, &filenames) {
-        if output_created {
-            let _ = fs::remove_dir(&arguments.output);
-        }
-        return Err(error);
-    }
-
-    let mut created = Vec::with_capacity(filenames.len());
-    let write_result = (|| {
-        let baseline_path = arguments.output.join(BASELINE_FILE);
-        write_new_file(&baseline_path, &settings_bytes)?;
-        created.push(baseline_path);
-
-        let candidate_path = arguments.output.join(CANDIDATE_FILE);
-        write_new_file(&candidate_path, &settings_bytes)?;
-        created.push(candidate_path);
-
-        for pattern in &captured {
-            let path = arguments.output.join(&pattern.state.pattern_file);
-            write_new_file(&path, &pattern.bytes)?;
-            created.push(path);
-        }
-
-        let state_path = arguments.output.join(STATE_FILE);
-        write_new_file(&state_path, &state_bytes)?;
-        created.push(state_path);
-        Ok(())
-    })();
-
-    if let Err(error) = write_result {
-        for path in created.iter().rev() {
-            let _ = fs::remove_file(path);
-        }
-        if output_created {
-            let _ = fs::remove_dir(&arguments.output);
-        }
-        return Err(error);
-    }
+    let mut artifacts = Vec::with_capacity(captured.len() + 3);
+    artifacts.push(PendingArtifact {
+        filename: BASELINE_FILE.to_owned(),
+        bytes: settings_bytes.clone(),
+    });
+    artifacts.push(PendingArtifact {
+        filename: CANDIDATE_FILE.to_owned(),
+        bytes: settings_bytes,
+    });
+    artifacts.extend(captured.iter().map(|pattern| PendingArtifact {
+        filename: pattern.state.pattern_file.clone(),
+        bytes: pattern.bytes.clone(),
+    }));
+    artifacts.push(PendingArtifact {
+        filename: STATE_FILE.to_owned(),
+        bytes: state_bytes,
+    });
+    commit_artifacts(&arguments.output, &artifacts, ArtifactOperation::Capture)?;
 
     writeln!(
         stdout,
-        "Captured {} patterns in `{}`",
+        "Captured {} {} in `{}`",
         captured.len(),
+        if captured.len() == 1 {
+            "pattern"
+        } else {
+            "patterns"
+        },
         arguments.output.display()
     )
-    .map_err(|error| invalid(format!("Failed to write capture result: {error}")))?;
-    writeln!(stdout, "  baseline -> {BASELINE_FILE}")
-        .map_err(|error| invalid(format!("Failed to write capture result: {error}")))?;
-    writeln!(stdout, "  candidate -> {CANDIDATE_FILE}")
-        .map_err(|error| invalid(format!("Failed to write capture result: {error}")))?;
+    .map_err(|error| {
+        invalid(format!(
+            "Failed to write capture result to standard output:\n\n{error}"
+        ))
+    })?;
+    writeln!(stdout, "  baseline -> {BASELINE_FILE}").map_err(|error| {
+        invalid(format!(
+            "Failed to write capture result to standard output:\n\n{error}"
+        ))
+    })?;
+    writeln!(stdout, "  candidate -> {CANDIDATE_FILE}").map_err(|error| {
+        invalid(format!(
+            "Failed to write capture result to standard output:\n\n{error}"
+        ))
+    })?;
     for pattern in captured.iter().take(MAX_REPORTED_ITEMS) {
         writeln!(
             stdout,
@@ -1036,15 +1226,175 @@ fn capture(arguments: &CaptureArguments, stdout: &mut dyn Write) -> Result<(), A
             display_id(&pattern.state.id),
             pattern.state.pattern_file
         )
-        .map_err(|error| invalid(format!("Failed to write capture result: {error}")))?;
+        .map_err(|error| {
+            invalid(format!(
+                "Failed to write capture result to standard output:\n\n{error}"
+            ))
+        })?;
     }
     let omitted = captured.len().saturating_sub(MAX_REPORTED_ITEMS);
     if omitted > 0 {
-        writeln!(stdout, "  … {omitted} additional pattern artifacts omitted")
-            .map_err(|error| invalid(format!("Failed to write capture result: {error}")))?;
+        writeln!(stdout, "  … {omitted} additional pattern artifacts omitted").map_err(
+            |error| {
+                invalid(format!(
+                    "Failed to write capture result to standard output:\n\n{error}"
+                ))
+            },
+        )?;
     }
-    writeln!(stdout, "  state -> {STATE_FILE}")
-        .map_err(|error| invalid(format!("Failed to write capture result: {error}")))?;
+    writeln!(stdout, "  state -> {STATE_FILE}").map_err(|error| {
+        invalid(format!(
+            "Failed to write capture result to standard output:\n\n{error}"
+        ))
+    })?;
+
+    Ok(())
+}
+
+fn materialize(arguments: &MaterializeArguments, stdout: &mut dyn Write) -> Result<(), AppError> {
+    let state = validate_state(&arguments.state)?;
+    let (candidate_bytes, candidate) =
+        read_utf8_json_object_with_bytes(&arguments.candidate, "candidate settings")?;
+    authorize_candidate(&candidate, &state, "Materialization")?;
+
+    let selection_contents =
+        read_utf8_file(&arguments.selection, "materialization selection JSON").map_err(invalid)?;
+    let selection: MaterializationSelectionDocument = serde_json::from_str(&selection_contents)
+        .map_err(|error| {
+            invalid_json(
+                "materialization selection JSON",
+                &arguments.selection,
+                error,
+            )
+        })?;
+    if selection.version != MATERIALIZATION_SELECTION_VERSION {
+        return Err(invalid(format!(
+            "Unsupported materialization selection JSON schema version. Expected `{MATERIALIZATION_SELECTION_VERSION}`, received `{}`",
+            selection.version
+        )));
+    }
+    if selection.patterns.is_empty() {
+        return Err(invalid(
+            "Materialization selection JSON must contain at least one pattern",
+        ));
+    }
+
+    let mut ids = HashSet::new();
+    let mut selections = HashSet::new();
+    let mut materialized = Vec::with_capacity(selection.patterns.len());
+    for (offset, selected) in selection.patterns.iter().enumerate() {
+        if selected.id.is_empty() {
+            return Err(invalid(
+                "Materialization selection pattern IDs must be nonempty",
+            ));
+        }
+        if !ids.insert(selected.id.as_str()) {
+            return Err(invalid(
+                "Materialization selection pattern IDs must be unique",
+            ));
+        }
+        if !selections.insert((selected.bucket, selected.index)) {
+            return Err(invalid(
+                "Materialization selection terminal bucket/index pairs must be unique",
+            ));
+        }
+
+        let pointer = pattern_pointer(selected.bucket, selected.index);
+        if !pattern_is_authorized(&pointer, &state.scopes) {
+            return Err(invalid(
+                "A materialization selection terminal pattern object lies outside every authorized scope",
+            ));
+        }
+        let (pattern, case_sensitive) =
+            terminal_pattern(&candidate, selected.bucket, selected.index).map_err(invalid)?;
+        let bytes = pattern.as_bytes().to_vec();
+        let pattern_file = generated_pattern_filename(offset + 1, &selected.id);
+        validate_generated_filename(&pattern_file)?;
+        materialized.push(MaterializedPattern {
+            catalog: ArtifactCatalogPattern {
+                id: selected.id.clone(),
+                bucket: selected.bucket,
+                source_index: selected.index,
+                case_sensitive,
+                sha256: sha256_hex(&bytes),
+                pattern_file,
+            },
+            bytes,
+        });
+    }
+
+    let catalog = ArtifactCatalog {
+        version: ARTIFACT_CATALOG_VERSION,
+        candidate_sha256: sha256_hex(&candidate_bytes),
+        state_sha256: sha256_hex(&state.bytes),
+        patterns: materialized
+            .iter()
+            .map(|pattern| pattern.catalog.clone())
+            .collect(),
+    };
+    validate_artifact_catalog(&catalog).map_err(invalid)?;
+    let catalog_bytes = serialize_artifact_catalog(&catalog)?;
+    let mut artifacts = Vec::with_capacity(materialized.len() + 1);
+    artifacts.extend(materialized.iter().map(|pattern| PendingArtifact {
+        filename: pattern.catalog.pattern_file.clone(),
+        bytes: pattern.bytes.clone(),
+    }));
+    artifacts.push(PendingArtifact {
+        filename: ARTIFACT_CATALOG_FILE.to_owned(),
+        bytes: catalog_bytes,
+    });
+    commit_artifacts(
+        &arguments.output,
+        &artifacts,
+        ArtifactOperation::Materialization,
+    )?;
+
+    writeln!(
+        stdout,
+        "Materialized {} {} in `{}`",
+        materialized.len(),
+        if materialized.len() == 1 {
+            "pattern"
+        } else {
+            "patterns"
+        },
+        arguments.output.display()
+    )
+    .map_err(|error| {
+        invalid(format!(
+            "Failed to write materialization result to standard output:\n\n{error}"
+        ))
+    })?;
+    for pattern in materialized.iter().take(MAX_REPORTED_MATERIALIZED_ITEMS) {
+        writeln!(
+            stdout,
+            "  {} -> {}",
+            display_id(&pattern.catalog.id),
+            pattern.catalog.pattern_file
+        )
+        .map_err(|error| {
+            invalid(format!(
+                "Failed to write materialization result to standard output:\n\n{error}"
+            ))
+        })?;
+    }
+    let omitted = materialized
+        .len()
+        .saturating_sub(MAX_REPORTED_MATERIALIZED_ITEMS);
+    if omitted > 0 {
+        writeln!(stdout, "  … {omitted} additional pattern artifacts omitted").map_err(
+            |error| {
+                invalid(format!(
+                    "Failed to write materialization result to standard output:\n\n{error}"
+                ))
+            },
+        )?;
+    }
+    writeln!(stdout, "  catalog -> {ARTIFACT_CATALOG_FILE}").map_err(|error| {
+        invalid(format!(
+            "Failed to write materialization result to standard output:\n\n{error}"
+        ))
+    })?;
 
     Ok(())
 }
@@ -1085,7 +1435,7 @@ fn read_state_artifact(
         current.push(component);
         let metadata = fs::symlink_metadata(&current).map_err(|error| {
             invalid(format!(
-                "Failed to inspect {description} artifact `{}`: {error}",
+                "Failed to inspect {description} artifact `{}`:\n\n{error}",
                 current.display()
             ))
         })?;
@@ -1112,38 +1462,42 @@ fn read_state_artifact(
     read_bytes(&current, &format!("{description} artifact"))
 }
 
-fn read_state_document(path: &Path) -> Result<StateDocument, AppError> {
+fn read_state_document(path: &Path) -> Result<(Vec<u8>, StateDocument), AppError> {
     ensure_no_symlink_components(path).map_err(|error| invalid(error.to_string()))?;
     let metadata = fs::symlink_metadata(path).map_err(|error| {
         invalid(format!(
-            "Failed to inspect state manifest `{}`: {error}",
+            "Failed to inspect state manifest `{}`:\n\n{error}",
             path.display()
         ))
     })?;
     if metadata.file_type().is_symlink() || !metadata.is_file() {
         return Err(invalid(format!(
-            "State manifest `{}` must be a real regular file",
+            "State manifest `{}` must be a regular file and not a symbolic link",
             path.display()
         )));
     }
-    let contents = read_utf8_file(path, "state manifest").map_err(invalid)?;
+    let bytes = read_bytes(path, "state manifest")?;
+    let (bytes, contents) = decode_utf8(bytes, path, "state manifest")?;
     let document: StateDocument = serde_json::from_str(&contents)
         .map_err(|error| invalid_json("state manifest JSON", path, error))?;
     if document.version != VERSION {
-        return Err(invalid("State manifest must use schema version 1"));
+        return Err(invalid(format!(
+            "Unsupported state manifest schema version. Expected `{VERSION}`, received `{}`",
+            document.version
+        )));
     }
 
-    Ok(document)
+    Ok((bytes, document))
 }
 
 fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
-    let document = read_state_document(path)?;
+    let (state_bytes, document) = read_state_document(path)?;
     if document.patterns.is_empty() {
         return Err(invalid(
             "State manifest must contain at least one captured pattern",
         ));
     }
-    if !valid_sha256(&document.baseline_sha256) {
+    if !is_valid_sha256(&document.baseline_sha256) {
         return Err(invalid(
             "State manifest baseline SHA-256 must be 64 lowercase hexadecimal characters",
         ));
@@ -1152,7 +1506,9 @@ fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
     let baseline_relative = validate_relative_artifact_path(&document.baseline_file)?;
     let baseline_bytes = read_state_artifact(path, &document.baseline_file, "baseline")?;
     if sha256_hex(&baseline_bytes) != document.baseline_sha256 {
-        return Err(invalid("Baseline artifact SHA-256 does not match state"));
+        return Err(invalid(
+            "Baseline artifact SHA-256 does not match the state manifest",
+        ));
     }
     let baseline = parse_json_object(&baseline_bytes, "baseline artifact", &baseline_relative)?;
     let scopes = validate_scopes(&baseline, &document.scopes).map_err(invalid)?;
@@ -1175,7 +1531,7 @@ fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
                 "State terminal bucket/source-index pairs must be unique",
             ));
         }
-        if !valid_sha256(&state_pattern.sha256) {
+        if !is_valid_sha256(&state_pattern.sha256) {
             return Err(invalid(
                 "State pattern SHA-256 values must be 64 lowercase hexadecimal characters",
             ));
@@ -1194,7 +1550,7 @@ fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
         let bytes = read_state_artifact(path, &state_pattern.pattern_file, "pattern")?;
         if sha256_hex(&bytes) != state_pattern.sha256 {
             return Err(invalid(format!(
-                "Pattern artifact SHA-256 does not match state for ID `{}`",
+                "Pattern artifact SHA-256 does not match the state manifest for ID `{}`",
                 display_id(&state_pattern.id)
             )));
         }
@@ -1233,6 +1589,7 @@ fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
 
     Ok(ValidatedState {
         baseline,
+        bytes: state_bytes,
         document,
         patterns,
         scopes,
@@ -1374,8 +1731,13 @@ fn verify(arguments: &VerifyArguments, stdout: &mut dyn Write) -> Result<(), App
 
     if failures.total_count() > 0 {
         let mut message = format!(
-            "Current settings could not uniquely reindex {} patterns: {missing} missing and {duplicate} duplicate",
-            state.patterns.len()
+            "Failed to uniquely reindex {} {} in current settings. Missing: {missing}. Duplicate matches: {duplicate}",
+            state.patterns.len(),
+            if state.patterns.len() == 1 {
+                "pattern"
+            } else {
+                "patterns"
+            }
         );
         for failure in failures.issues() {
             message.push_str(&format!(
@@ -1402,20 +1764,36 @@ fn verify(arguments: &VerifyArguments, stdout: &mut dyn Write) -> Result<(), App
             mapping.pattern.bucket.label(),
             mapping.index
         )
-        .map_err(|error| invalid(format!("Failed to write verification result: {error}")))?;
+        .map_err(|error| {
+            invalid(format!(
+                "Failed to write verification result to standard output:\n\n{error}"
+            ))
+        })?;
     }
     let omitted = moved.omitted_count();
     if omitted > 0 {
-        writeln!(stdout, "… {omitted} additional moved mappings omitted")
-            .map_err(|error| invalid(format!("Failed to write verification result: {error}")))?;
+        writeln!(stdout, "… {omitted} additional moved mappings omitted").map_err(|error| {
+            invalid(format!(
+                "Failed to write verification result to standard output:\n\n{error}"
+            ))
+        })?;
     }
     writeln!(
         stdout,
-        "Verified {} patterns: {unchanged} unchanged and {} moved",
+        "Verified {} {}: {unchanged} unchanged and {} moved",
         state.patterns.len(),
+        if state.patterns.len() == 1 {
+            "pattern"
+        } else {
+            "patterns"
+        },
         moved.total_count()
     )
-    .map_err(|error| invalid(format!("Failed to write verification result: {error}")))?;
+    .map_err(|error| {
+        invalid(format!(
+            "Failed to write verification result to standard output:\n\n{error}"
+        ))
+    })?;
 
     Ok(())
 }
@@ -1445,6 +1823,32 @@ pub(crate) fn semantic_json_equal(first: &Value, second: &Value) -> bool {
     }
 }
 
+fn authorize_candidate(
+    candidate: &Value,
+    state: &ValidatedState,
+    operation: &str,
+) -> Result<(), AppError> {
+    let mut normalized_candidate = candidate.clone();
+    for (index, tokens) in state.scopes.iter().enumerate() {
+        let baseline_value = pointer_value(&state.baseline, tokens)
+            .map_err(|_| invalid("Validated baseline scope became unavailable"))?
+            .clone();
+        replace_pointer_value(&mut normalized_candidate, tokens, baseline_value).map_err(|_| {
+            refused(format!(
+                "{operation} refused because candidate settings do not contain authorized scope {}",
+                index + 1
+            ))
+        })?;
+    }
+    if !semantic_json_equal(&normalized_candidate, &state.baseline) {
+        return Err(refused(format!(
+            "{operation} refused because candidate settings differ from the captured baseline outside authorized scopes"
+        )));
+    }
+
+    Ok(())
+}
+
 fn unique_temporary_sibling(destination: &Path) -> Result<(File, PathBuf), String> {
     let parent = destination.parent().unwrap_or_else(|| Path::new("."));
     destination
@@ -1452,13 +1856,13 @@ fn unique_temporary_sibling(destination: &Path) -> Result<(File, PathBuf), Strin
         .ok_or_else(|| "Live settings destination has no filename".to_owned())?;
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|error| format!("System clock is before the Unix epoch: {error}"))?
+        .map_err(|error| format!("System clock is before the Unix epoch:\n\n{error}"))?
         .as_nanos();
 
     for attempt in 0..100_u64 {
         let sequence = NEXT_TEMPORARY_ID.fetch_add(1, Ordering::Relaxed);
         let sibling_name = OsString::from(format!(
-            ".zed-permission-candidate-{}-{timestamp}-{sequence}-{attempt}.tmp",
+            ".permission-candidate-{}-{timestamp}-{sequence}-{attempt}.tmp",
             process::id()
         ));
         let path = parent.join(sibling_name);
@@ -1467,7 +1871,7 @@ fn unique_temporary_sibling(destination: &Path) -> Result<(File, PathBuf), Strin
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
             Err(error) => {
                 return Err(format!(
-                    "Failed to create atomic sibling `{}`: {error}",
+                    "Failed to create atomic sibling `{}`:\n\n{error}",
                     path.display()
                 ));
             }
@@ -1486,22 +1890,22 @@ where
     F: FnOnce(&Path) -> io::Result<()>,
 {
     let permissions = fs::metadata(destination)
-        .map_err(|error| format!("Failed to read live settings permissions: {error}"))?
+        .map_err(|error| format!("Failed to read live settings permissions:\n\n{error}"))?
         .permissions();
     let (mut file, temporary_path) = unique_temporary_sibling(destination)?;
     let temporary = TemporarySibling::new(temporary_path.clone());
 
     file.set_permissions(permissions)
-        .map_err(|error| format!("Failed to copy live settings permissions: {error}"))?;
+        .map_err(|error| format!("Failed to copy live settings permissions:\n\n{error}"))?;
     file.write_all(bytes)
-        .map_err(|error| format!("Failed to write atomic sibling: {error}"))?;
+        .map_err(|error| format!("Failed to write atomic sibling:\n\n{error}"))?;
     file.sync_all()
-        .map_err(|error| format!("Failed to sync atomic sibling: {error}"))?;
+        .map_err(|error| format!("Failed to sync atomic sibling:\n\n{error}"))?;
     drop(file);
     before_rename(&temporary_path)
-        .map_err(|error| format!("Atomic replacement was interrupted: {error}"))?;
+        .map_err(|error| format!("Failed to complete atomic replacement:\n\n{error}"))?;
     fs::rename(&temporary_path, destination)
-        .map_err(|error| format!("Failed to atomically replace live settings: {error}"))?;
+        .map_err(|error| format!("Failed to atomically replace live settings:\n\n{error}"))?;
     temporary.preserve();
 
     Ok(())
@@ -1554,13 +1958,13 @@ fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), A
     })?;
     let destination_metadata = fs::symlink_metadata(&arguments.settings).map_err(|error| {
         invalid(format!(
-            "Failed to inspect live settings destination `{}`: {error}",
+            "Failed to inspect live settings destination `{}`:\n\n{error}",
             arguments.settings.display()
         ))
     })?;
     if !destination_metadata.is_file() || destination_metadata.file_type().is_symlink() {
         return Err(refused(
-            "Live settings destination must be a real regular file",
+            "Live settings destination must be a regular file and not a symbolic link",
         ));
     }
 
@@ -1584,23 +1988,7 @@ fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), A
         }
     }
 
-    let mut normalized_candidate = candidate.clone();
-    for (index, tokens) in state.scopes.iter().enumerate() {
-        let baseline_value = pointer_value(&state.baseline, tokens)
-            .map_err(|_| invalid("Validated baseline scope became unavailable"))?
-            .clone();
-        replace_pointer_value(&mut normalized_candidate, tokens, baseline_value).map_err(|_| {
-            refused(format!(
-                "Promotion refused because candidate settings do not contain authorized scope {}",
-                index + 1
-            ))
-        })?;
-    }
-    if !semantic_json_equal(&normalized_candidate, &state.baseline) {
-        return Err(refused(
-            "Promotion refused because candidate settings differ from the captured baseline outside authorized scopes",
-        ));
-    }
+    authorize_candidate(&candidate, &state, "Promotion")?;
 
     let mut merged = live;
     for (index, tokens) in state.scopes.iter().enumerate() {
@@ -1627,7 +2015,11 @@ fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), A
             "Live settings unchanged at `{}`",
             arguments.settings.display()
         )
-        .map_err(|error| invalid(format!("Failed to write promotion result: {error}")))?;
+        .map_err(|error| {
+            invalid(format!(
+                "Failed to write promotion result to standard output:\n\n{error}"
+            ))
+        })?;
         return Ok(());
     }
 
@@ -1644,17 +2036,26 @@ fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), A
     }
     writeln!(
         stdout,
-        "Promoted {} authorized scopes into `{}`",
+        "Promoted {} authorized {} into `{}`",
         state.document.scopes.len(),
+        if state.document.scopes.len() == 1 {
+            "scope"
+        } else {
+            "scopes"
+        },
         arguments.settings.display()
     )
-    .map_err(|error| invalid(format!("Failed to write promotion result: {error}")))?;
+    .map_err(|error| {
+        invalid(format!(
+            "Failed to write promotion result to standard output:\n\n{error}"
+        ))
+    })?;
 
     Ok(())
 }
 
 fn report_error(stderr: &mut dyn Write, error: &AppError) {
-    let _ = writeln!(stderr, "zed-permission-candidate: {}", error.message());
+    let _ = writeln!(stderr, "permission-candidate: {}", error.message());
 }
 
 pub(crate) fn run<I>(arguments: I, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8
@@ -1672,12 +2073,15 @@ where
     let result = match parsed {
         ParsedArguments::Help => {
             if let Err(error) = stdout.write_all(HELP.as_bytes()) {
-                Err(invalid(format!("Failed to write help: {error}")))
+                Err(invalid(format!(
+                    "Failed to write help to standard output:\n\n{error}"
+                )))
             } else {
                 Ok(())
             }
         }
         ParsedArguments::Run(Operation::Capture(arguments)) => capture(&arguments, stdout),
+        ParsedArguments::Run(Operation::Materialize(arguments)) => materialize(&arguments, stdout),
         ParsedArguments::Run(Operation::Verify(arguments)) => verify(&arguments, stdout),
         ParsedArguments::Run(Operation::Promote(arguments)) => promote(&arguments, stdout),
     };

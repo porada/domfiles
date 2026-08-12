@@ -1,6 +1,8 @@
 ---
 name: domfiles-shell-scripts
 description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or evaluates whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
+metadata:
+    internal: true
 ---
 
 # Domfiles shell scripts
@@ -11,20 +13,19 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 - For an explicit change, including a request that also uses review or audit language, investigate the affected scripts and cross-file invariants, make the smallest applicable edit, and use the change-validation workflow below.
 - For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md) and apply the shell-specific checks below.
-- For a standalone review, keep the task read-only. Apply the policy below and use the read-only validation workflow without formatting or modifying files.
+- For a standalone review, keep the task read-only. Apply the policy below and use the read-only validation workflow.
 - For a standalone diagnosis, keep the task read-only. Reproduce the reported behavior when possible, trace the relevant execution path and cross-file invariants, and report the root cause with evidence using the read-only validation workflow below.
 
 ## Investigate the task
 
-1. Read every applicable `AGENTS.md` file, inspect the relevant shell code, and review the existing diff.
-2. Identify whether each in-scope file uses Fish or POSIX `sh` from its shebang and syntax rather than its extension alone.
-3. When `domlib` or `.config/fish/config.fish` is relevant, inspect both files before evaluating shared variables or functions.
-4. Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
-5. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
+1. Identify whether each in-scope file uses Fish or POSIX `sh` from its shebang and syntax rather than its extension alone.
+2. When `domlib` or `.config/fish/config.fish` is relevant, inspect both files before evaluating shared variables or functions.
+3. Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
+4. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
 
 ## Check supported-environment compatibility
 
-- Evaluate every in-scope `domfiles` shell script’s interpreter, external commands, options, `PATH`, architecture, and default-shell assumptions against the supported environment documented in `.agents/PROJECT.md`.
+- Evaluate every in-scope `domfiles` shell script’s interpreter, external commands, options, `PATH`, architecture, and default-shell assumptions against the [supported environment](../../PROJECT.md#supported-environment).
 - Judge each requirement at its intended lifecycle stage—fresh bootstrap, synchronization, post-sync runtime, or development—and account for prerequisites provisioned earlier by `domfiles sync`.
 
 ## Write concise shell prose
@@ -76,7 +77,6 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 - In POSIX `sh`, set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.
     - Exempt `printf` output piped into `while`.
-    - Exempt `domlib` command output piped into `while`.
 - In POSIX `sh` strict mode, when an optional command emits either a usable nonempty value or no output on failure, scope `|| true` inside the command substitution before testing the quoted result. This keeps the expected failure from triggering `set -e` while limiting suppression to that command:
 
 ```sh
@@ -97,11 +97,10 @@ After editing, use the narrowest applicable validation scope:
 1. Pass changed shell paths explicitly to the lint wrappers. Omit paths only when repository-wide validation is intended because no-argument discovery includes tracked and untracked non-ignored shell files. Fish discovery also includes `.config/fish/local.fish` when it exists.
 2. For Fish, run `pnpm run lint:fish <changed-fish-files>`. The wrapper already runs `fish --no-execute`, so do not repeat that check.
 3. For POSIX shell, run `sh -n <file>` for each changed file and `pnpm run lint:sh <changed-posix-files>`. The wrapper supplies the complementary ShellCheck analysis.
-4. Check formatting only for changed `.fish` files with `pnpm exec prettier --check <changed-fish-files>`. Do not pass POSIX or extensionless Fish files because the configured plugin registers only the `.fish` extension.
+4. Check formatting for changed `.fish` files and POSIX shell files, including extensionless POSIX scripts, with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-shell-files>`. Check each extensionless Fish script separately with `pnpm --config.verifyDepsBeforeRun=error exec prettier --parser fish --check <extensionless-fish-file>`.
 5. Verify every applicable policy invariant above, including `domlib` ordering, usage, and `$DOMFILES_*` parity when relevant. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned unstaged and staged diffs, inspect task-owned untracked files directly without staging them, and review the final status without altering concurrent changes.
 
 ## Validate a shell audit, review, or diagnosis
 
 1. Inspect every in-scope shell file and applicable cross-file invariant.
 2. Verify the policy above against the current contents.
-3. Identify anything that could not be verified.

@@ -2,9 +2,12 @@
 mod helper;
 
 use helper::{
-    BoundedIssues, Bucket, CompiledPattern, Decision, MatchState, PatternError, compile_pattern,
-    read_utf8_file, regex_error_summary,
+    ARTIFACT_CATALOG_VERSION, ArtifactCatalog, ArtifactCatalogPattern, BoundedIssues, Bucket,
+    CompiledPattern, Decision, MatchState, PatternError, compile_pattern, load_artifact_catalog,
+    parse_artifact_catalog, read_utf8_file, regex_error_summary, sha256_hex,
+    validate_artifact_catalog, verify_artifact_catalog_binding,
 };
+use serde_json::json;
 use std::{
     env,
     fmt::Debug,
@@ -15,6 +18,9 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
+
+#[cfg(unix)]
+use std::{os::unix::fs::symlink, sync::mpsc, thread, time::Duration};
 
 static NEXT_FIXTURE_ID: AtomicUsize = AtomicUsize::new(0);
 
@@ -27,9 +33,11 @@ impl Fixture {
         let fixture_id = NEXT_FIXTURE_ID.fetch_add(1, Ordering::Relaxed);
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("System clock must be after the Unix epoch")
+            .expect("System clock must be at or after the Unix epoch")
             .as_nanos();
-        let root = env::temp_dir().join(format!(
+        let temporary_root = fs::canonicalize(env::temp_dir())
+            .expect("Temporary directory must resolve to a real directory");
+        let root = temporary_root.join(format!(
             "domfiles-permission-patterns-{}-{timestamp}-{fixture_id}",
             process::id()
         ));
@@ -61,6 +69,27 @@ fn pattern(id: &str, bucket: Bucket, source: &str) -> CompiledPattern {
     }
 }
 
+fn catalog(
+    candidate_bytes: &[u8],
+    state_bytes: &[u8],
+    pattern_file: &str,
+    pattern_bytes: &[u8],
+) -> ArtifactCatalog {
+    ArtifactCatalog {
+        version: ARTIFACT_CATALOG_VERSION,
+        candidate_sha256: sha256_hex(candidate_bytes),
+        state_sha256: sha256_hex(state_bytes),
+        patterns: vec![ArtifactCatalogPattern {
+            id: "logical-id".to_owned(),
+            bucket: Bucket::Allow,
+            source_index: 7,
+            case_sensitive: false,
+            sha256: sha256_hex(pattern_bytes),
+            pattern_file: pattern_file.to_owned(),
+        }],
+    }
+}
+
 #[test]
 fn reads_exact_utf8_without_adding_or_normalizing_newlines() {
     let fixture = Fixture::new();
@@ -85,7 +114,168 @@ fn rejects_invalid_utf8_without_echoing_file_contents() {
 }
 
 #[test]
-fn rejects_empty_and_invalid_patterns_without_echoing_pattern_bodies() {
+fn parses_validates_and_loads_exact_bound_artifact_catalog_bytes() {
+    let fixture = Fixture::new();
+    let candidate_bytes = br#"{"candidate":true}"#;
+    let state_bytes = br#"{"state":true}"#;
+    let pattern_bytes = "^café\\n猫\r\n$".as_bytes();
+    let pattern_path = fixture.write("pattern.regex", pattern_bytes);
+    let catalog_document = catalog(candidate_bytes, state_bytes, "pattern.regex", pattern_bytes);
+    let catalog_bytes = serde_json::to_vec(&catalog_document).expect("Catalog must serialize");
+    let catalog_path = fixture.write("artifact-catalog.json", &catalog_bytes);
+
+    let parsed = parse_artifact_catalog(&catalog_bytes).expect("Catalog must parse");
+    validate_artifact_catalog(&parsed).expect("Catalog must validate");
+    verify_artifact_catalog_binding(&parsed, candidate_bytes, state_bytes)
+        .expect("Catalog source binding must validate");
+    let loaded = load_artifact_catalog(&catalog_path).expect("Catalog artifacts must load");
+
+    assert_eq!(loaded.document, catalog_document);
+    assert_eq!(loaded.patterns.len(), 1);
+    assert_eq!(loaded.patterns[0].definition.source_index, 7);
+    assert!(!loaded.patterns[0].definition.case_sensitive);
+    assert_eq!(loaded.patterns[0].pattern.as_bytes(), pattern_bytes);
+    assert_eq!(fs::read(pattern_path).unwrap(), pattern_bytes);
+    assert_ne!(loaded.patterns[0].pattern.as_bytes().last(), Some(&b'\n'));
+}
+
+#[test]
+fn rejects_malformed_duplicate_and_unbound_artifact_catalogs_without_leaking_bytes() {
+    let candidate_bytes = b"private-candidate-body";
+    let state_bytes = b"private-state-body";
+    let pattern_bytes = b"private-pattern-body";
+    let valid = catalog(candidate_bytes, state_bytes, "pattern.regex", pattern_bytes);
+    let mut unknown = serde_json::to_value(&valid).expect("Catalog must convert to JSON");
+    unknown["private-unknown-field"] = json!(true);
+    let unknown_error = parse_artifact_catalog(&serde_json::to_vec(&unknown).unwrap())
+        .expect_err("Unknown catalog fields must be rejected");
+    assert!(unknown_error.contains("does not match the required schema"));
+    assert!(!unknown_error.contains("private-unknown-field"));
+
+    let mut duplicate_ids = valid.clone();
+    let mut duplicate = duplicate_ids.patterns[0].clone();
+    duplicate.source_index = 8;
+    duplicate.pattern_file = "second.regex".to_owned();
+    duplicate_ids.patterns.push(duplicate);
+    assert!(
+        validate_artifact_catalog(&duplicate_ids)
+            .expect_err("Duplicate IDs must be rejected")
+            .contains("IDs must be unique")
+    );
+
+    let mut duplicate_sources = valid.clone();
+    let mut duplicate = duplicate_sources.patterns[0].clone();
+    duplicate.id = "second".to_owned();
+    duplicate.pattern_file = "second.regex".to_owned();
+    duplicate_sources.patterns.push(duplicate);
+    assert!(
+        validate_artifact_catalog(&duplicate_sources)
+            .expect_err("Duplicate source locators must be rejected")
+            .contains("bucket/source-index pairs must be unique")
+    );
+
+    let binding_error = verify_artifact_catalog_binding(&valid, b"changed", state_bytes)
+        .expect_err("Changed candidate bytes must be rejected");
+    assert!(binding_error.contains("Candidate SHA-256"));
+    assert!(!binding_error.contains("private-candidate-body"));
+    let state_error = verify_artifact_catalog_binding(&valid, candidate_bytes, b"changed")
+        .expect_err("Changed state bytes must be rejected");
+    assert!(state_error.contains("State SHA-256"));
+    assert!(!state_error.contains("private-state-body"));
+}
+
+#[test]
+fn rejects_tampered_invalid_utf8_and_unsafe_catalog_artifacts_without_leaking_bytes() {
+    let fixture = Fixture::new();
+    let candidate_bytes = b"candidate";
+    let state_bytes = b"state";
+    let original = b"private-original-pattern";
+    let catalog_document = catalog(candidate_bytes, state_bytes, "pattern.regex", original);
+    let catalog_path = fixture.write(
+        "artifact-catalog.json",
+        &serde_json::to_vec(&catalog_document).unwrap(),
+    );
+    fixture.write("pattern.regex", b"private-tampered-pattern");
+
+    let hash_error =
+        load_artifact_catalog(&catalog_path).expect_err("Tampered pattern bytes must be rejected");
+    assert!(hash_error.contains("SHA-256"));
+    assert!(!hash_error.contains("private-tampered-pattern"));
+    assert!(!hash_error.contains("private-original-pattern"));
+
+    let invalid_bytes = [0xff];
+    fixture.write("pattern.regex", &invalid_bytes);
+    let invalid_catalog = catalog(
+        candidate_bytes,
+        state_bytes,
+        "pattern.regex",
+        &invalid_bytes,
+    );
+    fs::write(&catalog_path, serde_json::to_vec(&invalid_catalog).unwrap()).unwrap();
+    let utf8_error = load_artifact_catalog(&catalog_path)
+        .expect_err("Invalid UTF-8 pattern bytes must be rejected");
+    assert!(utf8_error.contains("not valid UTF-8"));
+
+    let traversal = catalog(candidate_bytes, state_bytes, "../pattern.regex", original);
+    assert!(
+        validate_artifact_catalog(&traversal)
+            .expect_err("Traversal must be rejected")
+            .contains("must not contain root, parent, or current-directory components")
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn refuses_symlinked_catalog_artifact_paths() {
+    let fixture = Fixture::new();
+    let pattern_bytes = b"private-symlink-target";
+    let target = fixture.write("target.regex", pattern_bytes);
+    let link = fixture.root.join("pattern.regex");
+    symlink(&target, &link).expect("Failed to create pattern symlink");
+    let catalog_document = catalog(b"candidate", b"state", "pattern.regex", pattern_bytes);
+    let catalog_path = fixture.write(
+        "artifact-catalog.json",
+        &serde_json::to_vec(&catalog_document).unwrap(),
+    );
+
+    let error = load_artifact_catalog(&catalog_path)
+        .expect_err("Symlinked pattern artifacts must be rejected");
+
+    assert!(error.contains("symbolic link"));
+    assert!(!error.contains("private-symlink-target"));
+}
+
+#[cfg(unix)]
+#[test]
+fn rejects_fifo_catalogs_without_blocking() {
+    let fixture = Fixture::new();
+    let fifo_path = fixture.root.join("artifact-catalog.json");
+    let status = process::Command::new("mkfifo")
+        .arg(&fifo_path)
+        .status()
+        .expect("Failed to invoke `mkfifo`");
+    assert!(status.success(), "Failed to create fixture FIFO");
+    let (sender, receiver) = mpsc::channel();
+
+    let handle = thread::spawn(move || {
+        sender
+            .send(load_artifact_catalog(&fifo_path))
+            .expect("Failed to send special-file validation result");
+    });
+    let result = receiver
+        .recv_timeout(Duration::from_secs(1))
+        .expect("Special catalog validation must not block while opening a FIFO");
+    handle
+        .join()
+        .expect("Special-file validation thread must finish");
+    let error = result.expect_err("FIFO catalogs must be rejected as non-regular files");
+
+    assert!(error.contains("must be a regular file"));
+    assert!(!error.contains("Failed to open"));
+}
+
+#[test]
+fn classifies_empty_and_invalid_patterns_without_echoing_the_invalid_pattern_body() {
     assert!(matches!(
         compile_pattern("", false),
         Err(PatternError::Empty)
@@ -93,7 +283,7 @@ fn rejects_empty_and_invalid_patterns_without_echoing_pattern_bodies() {
 
     let error = match compile_pattern("private-regex-body(", true) {
         Err(PatternError::Invalid(error)) => error,
-        _ => panic!("Invalid test pattern must return PatternError::Invalid"),
+        _ => panic!("Compiling an invalid test pattern must return `PatternError::Invalid`"),
     };
     let summary = regex_error_summary(&error);
 
@@ -103,7 +293,7 @@ fn rejects_empty_and_invalid_patterns_without_echoing_pattern_bodies() {
 }
 
 #[test]
-fn applies_case_settings_and_preserves_unwrapped_regex_semantics() {
+fn honors_case_sensitivity_and_preserves_extended_mode_without_wrapping() {
     let case_insensitive =
         compile_pattern("^lowercase$", false).expect("Case-insensitive pattern must compile");
     let case_sensitive =
@@ -135,7 +325,7 @@ fn parses_and_labels_every_bucket() {
 }
 
 #[test]
-fn parses_labels_and_orders_every_decision_pair() {
+fn parses_and_labels_decisions_and_selects_the_most_restrictive_for_every_pair() {
     assert_value_traits::<Decision>();
 
     for (label, decision) in [
@@ -166,7 +356,7 @@ fn parses_labels_and_orders_every_decision_pair() {
 }
 
 #[test]
-fn resolves_every_match_precedence_combination_before_the_default() {
+fn resolves_every_match_state_with_precedence_and_default_fallback() {
     for allow in [false, true] {
         for confirm in [false, true] {
             for deny in [false, true] {
@@ -226,7 +416,7 @@ fn evaluates_and_exposes_matches_for_every_bucket() {
 struct NonCloneIssue(&'static str);
 
 #[test]
-fn stores_only_the_first_bounded_issues_and_tracks_counts() {
+fn stores_the_first_issues_up_to_the_limit_and_tracks_total_and_omitted_counts() {
     let mut issues = BoundedIssues::new(2);
 
     issues.push(NonCloneIssue("first"));
@@ -242,7 +432,7 @@ fn stores_only_the_first_bounded_issues_and_tracks_counts() {
 }
 
 #[test]
-fn tracks_all_issues_as_omitted_at_zero_capacity() {
+fn tracks_all_issues_as_omitted_when_the_limit_is_zero() {
     let mut issues = BoundedIssues::new(0);
 
     issues.push(NonCloneIssue("first"));

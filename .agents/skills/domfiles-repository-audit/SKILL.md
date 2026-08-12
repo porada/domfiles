@@ -1,30 +1,32 @@
 ---
 name: domfiles-repository-audit
 description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill for standalone audit requests—including the bare `Audit` command—for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
+metadata:
+    internal: true
 ---
 
 # Domfiles repository audit
-
-Audit the resolved reportable scope without modifying it.
 
 ## Resolve the scope
 
 | Priority | Rule |
 | --- | --- |
-| Absolute exclusions | Apply every applicable instruction that explicitly prohibits reading or analyzing content. Exclude symbolic links without reading or resolving their targets. Exclude untracked paths except `.config/fish/local.fish` when repository scope rules include it. Explicit user scope cannot override these exclusions. |
-| Explicit scope | When the user specifies paths, categories, inclusions, or exclusions, treat them as authoritative over default scope rules. Apply every other applicable `AGENTS.md` instruction within that scope. |
-| Default scope | Without explicit scope, start with Git-tracked paths and apply every default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
+| Absolute exclusions | Apply every applicable instruction that explicitly prohibits reading or analyzing content. Explicit user scope cannot override these exclusions. |
+| Explicit scope | When the user specifies paths, categories, inclusions, or exclusions, treat them as authoritative over default scope rules. Apply every other applicable `AGENTS.md` instruction within that scope. Include explicitly named untracked paths and symbolic links without dereferencing a link unless the request or applicable policy requires its target. |
+| Default scope | Without explicit scope, start with Git-tracked regular files, exclude symbolic links and untracked paths except `.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content.
 2. Apply the precedence table above to resolve the reportable scope.
-3. Treat `.config/zed/settings.json` and `.zed/settings.json` as a default exclusion that explicit scope may override by explicitly including either file or Zed settings. Repository-wide scope alone does not count as explicit inclusion.
+3. Treat these paths as exclusions from the bare `Audit` command and other default repository scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the absolute exclusions above:
+    - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed-settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
+    - `.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Absolute exclusions still apply, and supporting evidence does not become reportable.
 
 ## Partition a large audit
 
 - Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
-- Load only the domain skills relevant to a pass immediately before auditing it. When delegating a pass, have the delegate load those skills instead of accumulating their bodies in the coordinating context.
-- Give each delegate only the exact pass scope, applicable `AGENTS.md` files, this audit workflow, and relevant domain skills. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
+- Follow the [repository skill-loading rule](../../../AGENTS.md#skills) for each pass. When delegating a pass, have the delegate load those skills instead of accumulating their bodies in the coordinating context.
+- Give each delegate a bounded assignment with its exact pass scope, exclusions, source constraints, stop conditions, concise output contract, and the required standalone `**Do not drift.**` guard. Identify the applicable `AGENTS.md` files, this audit workflow, and relevant domain skills for the delegate to load rather than copying their bodies into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
 
 ## Audit the contents
 
@@ -50,13 +52,13 @@ For every path in the reportable scope:
 When a publication audit requires a clean copy of tracked `HEAD`:
 
 1. Create a tar archive with `git archive --format=tar --output=<temporary-path> HEAD`.
-2. Keep the archive and extraction destination beneath Zed agent terminal temporary directories.
+2. Keep the archive and extraction destination beneath a writable temporary directory supplied to shell commands by the active agent environment.
 3. Extract only with `tar -xf <temporary-archive> -C <temporary-directory>`.
 4. Do not use alternate archive formats, refs, paths, or broader extraction options.
 
 ## Report the result
 
-Follow the [global issue-reporting requirements](../../../.config/zed/AGENTS.md#documentation), then:
+Follow the global [communication](../../../.config/zed/AGENTS.md#communication) and [issue-reporting](../../../.config/zed/AGENTS.md#documentation) requirements, then:
 
 1. Lead with the findings. If there are none, state that the audit found no reportable issues.
-2. State the resolved reportable scope and identify anything within it that could not be verified.
+2. State the resolved reportable scope.

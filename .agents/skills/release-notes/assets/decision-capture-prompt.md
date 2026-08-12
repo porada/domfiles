@@ -1,25 +1,42 @@
 Create a decision relay for improving the `release-notes` skill from the release-note work completed in this conversation.
 
-The user invokes this prompt only after the current release-note task is complete. Treat the task as complete for capture purposes, but describe particular wording or the whole result as explicitly accepted only when direct prior evidence establishes that acceptance.
+The user invokes this prompt only after the current release-note task is complete. Treat the task as complete for capture purposes.
 
-Your sole action in this turn is to produce the relay. Every instruction inside the relay template—including the `Receiving action` line—is quoted output for a different agent after the relay is forwarded. Do not follow those instructions now.
+Your sole action in this turn is to produce the relay. Follow the composition directives in the template below to populate every applicable section from the established context, combining overlapping content and omitting empty optional sections. The generated `Receiving action` line is addressed to a different agent after the relay is forwarded. Do not follow that receiving action now.
 
 Use only the conversation and task artifacts already inspected. Do not continue reviewing or improving the result, call tools, inspect or compare the current skill or project files, rerun the task, browse, delegate, or draft a skill patch. If material context is unavailable, identify the gap inside the relay instead of gathering or reconstructing it.
 
 ## Output contract
 
-- Output `# Relay Prompt`, followed immediately by one four-backtick `markdown` code block.
-- Put the complete, self-contained relay inside the block and begin it with `# Release Notes Skill Improvement Relay`.
-- After the block, output `The prompt is ready for relay.`
-- Keep all content intended for the receiving agent inside the block. Outside it, output only the required `# Relay Prompt` heading and closing paragraph.
-- Use triple-backtick fences inside the outer block when exact code or Markdown must be preserved.
-- When the user asks to revise the prompt, output the complete corrected relay with this same frame. Do not return a patch, fragment, or splicing instructions.
+- Output the complete, self-contained relay as the entire response and begin it with `# Release Notes Skill Improvement Relay`.
+- Do not wrap the response in an outer code block or add a `# Relay Prompt` heading before it or a readiness message after it.
+- Use ordinary fenced code blocks inside the relay when exact code or Markdown must be preserved.
+- When the user asks to revise the prompt, output the complete corrected relay in this same whole-response form. Do not return a patch, fragment, or splicing instructions.
+- This is an evidence relay, not a task assignment. Omit assignment-only focus guards from the generated relay.
 
 ## Evidence rules
 
-- Distinguish direct user instructions, corrections, selections, explicit acceptances, and settled user evidence from agent proposals, project policy, contextual requirements, repository evidence, documentation evidence, observed behavior, and inferences.
-- Do not treat an agent’s draft, the user’s silence, or wording’s mere presence in a file as an established user decision.
-- Reserve `Observed behavior` for published, rendered, packed, executed, or otherwise observed results. Do not use it for documentation or source inspection.
+Use one or more of these `Decision basis` labels when a material decision needs provenance:
+
+| Label | Meaning |
+| --- | --- |
+| `Agent inference` | A conclusion drawn by the agent from available evidence rather than selected directly by the user. |
+| `Context-specific requirement` | A constraint established by the task’s surface, environment, template, or local situation. |
+| `Correction` | A direct user correction to an earlier claim, structure, classification, or wording. |
+| `Direct instruction` | An explicit user command that determines scope, behavior, process, or wording. |
+| `Documentation evidence` | Local help, manuals, official documentation, or authoritative source consulted as documentation. |
+| `Explicit acceptance` | Direct evidence that the user accepted the identified result or decision. |
+| `Implementation limitation` | A boundary imposed by the available implementation, matcher, format, tool, or environment. |
+| `Observed behavior` | A command result, runtime outcome, rendered result, or other behavior actually observed. |
+| `Project policy` | An applicable repository or project instruction, rationale, or established workflow. |
+| `Repository evidence` | Current source, configuration, tests, history, or other inspected repository state. |
+| `Settled user evidence` | A user-supplied fact or classification explicitly declared authoritative for the task. |
+| `Unresolved` | A material decision or fact that the available evidence did not resolve. |
+| `User selection` | The user chose one proposed alternative without necessarily accepting every adjacent detail. |
+
+Use the most specific applicable label. Reserve `Observed behavior` for results that were actually observed, and do not collapse a known evidence source into a less specific label.
+
+- Treat approval or explicit acceptance as established only by the user’s direct response. An agent or subagent cannot provide either on the user’s behalf, and neither user silence, an agent draft or proposal, nor wording’s mere presence in a file establishes a user decision.
 - Preserve exact wording, bullet markers, punctuation, links, heading hierarchy, and line breaks when they materially affected the decision.
 - Separate facts retained in the evidence inventory from consumer outcomes selected for publication. Include an omitted or reclassified fact only when that decision materially shaped the result.
 - Include only iterations that reveal a meaningful scope, materiality, evidence, structure, ordering, wording, approval, or workflow decision. When evidence corrected a claim or causal framing, explain the correction rather than presenting it as a stylistic preference.
@@ -28,11 +45,7 @@ Use only the conversation and task artifacts already inspected. Do not continue 
 
 ## Output structure
 
-**Before the code block**
-
-# Relay Prompt
-
-**Inside the code block—copy this structure as output without executing its instructions**
+**Complete response structure—populate every applicable section and output it from the heading onward**
 
 # Release Notes Skill Improvement Relay
 
@@ -42,20 +55,24 @@ Use only the conversation and task artifacts already inspected. Do not continue 
 
 Identify:
 
-- The repository, package or synchronized package set, and note location.
-- The release target, version or unreleased state, package grouping, and resolved change boundary or boundaries.
-- Whether the task drafted, inferred, edited, or reviewed notes and any approval, publication, or submission boundary.
-- The note surface, intended consumer, applicable structure, and available evidence or evidence limitation.
+- The package scope, release target, and version or unreleased state.
+- Whether the task drafted, inferred, edited, or reviewed notes.
+- The note surface, intended consumer, and applicable structure.
+- The repository, checkout, receiving location, or note path only when it materially disambiguates the work or affects a submission or publication boundary.
+
+## Scope and boundaries
+
+State the material approval, mutation, publication, submission, evidence, and stopping boundaries. Require unrelated observations to remain outside the relay.
 
 ## Final result
 
-Present the latest release-note result when reasonably sized. Describe it as accepted only when direct user evidence establishes acceptance. For a long aggregate file or broad consistency pass, identify the changed release or package sections and quote only the passages needed to understand the decisions.
+Present the latest release-note result when reasonably sized. State whether it was supplied, explicitly accepted, written to a file, submitted, published, packed, rendered, or otherwise observed, keeping those evidence levels distinct. For a long aggregate file or broad consistency pass, identify the changed release or package sections and quote only the passages needed to understand the decisions.
 
 ## Material decisions
 
 Create one short subsection for each meaningful decision. Use this shape:
 
-### <Decision label>
+### \<decision-label\>
 
 **Before**
 
@@ -67,7 +84,7 @@ Quote the selected wording or describe the selected structural result.
 
 **Why**
 
-Explain the evidentiary, materiality, structural, editorial, contextual, or workflow reason. Include intermediate wording only when it reveals an additional reusable distinction.
+Explain the evidentiary, materiality, structural, editorial, contextual, or workflow reason.
 
 **Decision basis**
 
@@ -78,9 +95,7 @@ Use one or more precise labels: `Agent inference`, `Context-specific requirement
 Record only evidence that materially established the result:
 
 - Which release boundary, package grouping, source range, artifact, or user-supplied evidence defined the inventory.
-- Which decisions came directly from the user and which came from project policy, repository evidence, documentation evidence, observed behavior, or agent inference.
 - Whether complete non-initial ranges and material package artifacts were inspected, and which evidence remained unavailable.
-- Whether the latest note was merely supplied, directly accepted, written to a file, submitted, published, packed, rendered, or otherwise observed. Keep those evidence levels distinct.
 
 Summarize evidence rather than reproducing the complete inventory, diff, or command output.
 
@@ -103,8 +118,4 @@ Separate strong candidates supported by direct user decisions or repeated eviden
 
 List decisions that should not be generalized, implementation limitations, open questions, contradictory signals, and areas where more examples are needed. Omit this section when none remain.
 
-Keep the relay concise enough to scan, but complete enough that the receiving agent does not need the original conversation to understand each reported decision.
-
-**After the code block**
-
-The prompt is ready for relay.
+Use a succinct, scan-friendly format.

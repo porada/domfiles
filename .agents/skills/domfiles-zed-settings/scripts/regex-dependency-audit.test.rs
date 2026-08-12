@@ -1,4 +1,4 @@
-#[path = "zed-regex-dependency-audit.rs"]
+#[path = "regex-dependency-audit.rs"]
 mod helper;
 
 use std::{
@@ -92,7 +92,7 @@ impl Fixture {
             .expect("System clock must be after the Unix epoch")
             .as_nanos();
         let root = env::temp_dir().join(format!(
-            "domfiles-zed-regex-dependency-audit-{}-{timestamp}-{fixture_id}",
+            "domfiles-regex-dependency-audit-{}-{timestamp}-{fixture_id}",
             process::id()
         ));
         fs::create_dir(&root).expect("Failed to create fixture directory");
@@ -162,7 +162,7 @@ fn rejects_removed_pattern_options() {
         assert_eq!(
             String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
             format!(
-                "zed-regex-dependency-audit: Unknown option `{option}`. Run `zed-regex-dependency-audit --help` for usage\n"
+                "regex-dependency-audit: Unknown option `{option}`. Run `regex-dependency-audit --help` for usage\n"
             )
         );
     }
@@ -209,7 +209,7 @@ fn rejects_malformed_upstream_lockfile() {
 
     assert_eq!(status, 2);
     assert!(stdout.is_empty());
-    assert!(stderr.contains("Upstream lockfile is invalid TOML"));
+    assert!(stderr.contains("Upstream lockfile contains invalid TOML:\n\n"));
 }
 
 #[test]
@@ -464,19 +464,29 @@ fn returns_success_for_help() {
     assert_eq!(
         String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
         concat!(
-            "Usage: zed-regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
+            "Usage:\n",
+            "  regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
+            "  regex-dependency-audit --help\n",
             "\n",
-            "Audit the direct Zed-compatible `regex` dependency version\n",
+            "Audit the local root package’s pinned and resolved `regex` versions against Zed’s locked version\n",
             "\n",
             "Options:\n",
-            "  --help                         Print help\n",
+            "  --help                         Print help. Must be used alone\n",
             "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
             "  --upstream-lock <path>         Read the upstream locked `regex` version\n",
-            "  --upstream-revision <commit>   Identify the upstream Zed commit\n",
+            "  --upstream-revision <commit>   Label results with a 7- to 40-character lowercase\n",
+            "                                 hexadecimal Zed commit reference\n",
+            "\n",
+            "File behavior:\n",
+            "  Read local files only without modifying them\n",
+            "\n",
+            "Output:\n",
+            "  Help and matching-version results are printed to standard output\n",
+            "  Version-mismatch findings and errors are printed to standard error\n",
             "\n",
             "Exit statuses:\n",
             "  0  Versions matched or help displayed\n",
-            "  1  Versions differed\n",
+            "  1  Local and upstream `regex` versions differed\n",
             "  2  Invalid arguments or data, or an I/O failure\n",
         )
     );

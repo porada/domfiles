@@ -1,4 +1,4 @@
-#[path = "zed-permission-owner-audit.rs"]
+#[path = "permission-owner-audit.rs"]
 mod helper;
 
 use serde_json::{Value, json};
@@ -26,7 +26,7 @@ impl Fixture {
             .expect("System clock must be after the Unix epoch")
             .as_nanos();
         let root = env::temp_dir().join(format!(
-            "domfiles-zed-permission-owner-audit-{}-{timestamp}-{fixture_id}",
+            "domfiles-permission-owner-audit-{}-{timestamp}-{fixture_id}",
             process::id()
         ));
         fs::create_dir(&root).expect("Failed to create fixture directory");
@@ -210,9 +210,9 @@ fn prints_help_only_for_exact_help() {
     let (status, stdout, stderr) = run(vec![OsString::from("--help")]);
 
     assert_eq!(status, 0);
-    assert!(stdout.starts_with("Usage: zed-permission-owner-audit"));
+    assert!(stdout.starts_with("Usage:\n  permission-owner-audit"));
     assert!(stdout.contains(
-        "zed-permission-owner-audit --settings <settings.json> --owner <top-level-executable>"
+        "permission-owner-audit --settings <settings-path> --owner <top-level-executable>"
     ));
     assert!(stdout.contains("Version-1 manifest schema"));
     assert!(stdout.contains("unknown fields are rejected"));
@@ -222,7 +222,14 @@ fn prints_help_only_for_exact_help() {
     assert!(stdout.contains("discovery_inputs"));
     assert!(stdout.contains("[A-Za-z0-9_.+-]+"));
     assert!(stdout.contains("Matches are inventory candidates"));
-    assert!(stdout.contains("not semantic owner proof"));
+    assert!(stdout.contains("not semantic ownership proof"));
+    assert!(stdout.contains("Each selected decoded pattern must contain at most 999"));
+    assert!(stdout.contains("independently inferred bucket, semantic owner, and Git repository"));
+    assert!(stdout.contains("exact top-level agent worktree"));
+    assert!(stdout.contains("`section_sort_key` participates in ordering"));
+    assert!(stdout.contains("(`owner_sort_key`, `section_sort_key`, role order"));
+    assert!(stdout.contains("written to standard output"));
+    assert!(stdout.contains("written to standard error"));
     assert!(stdout.contains("Exit statuses:"));
     assert!(stderr.is_empty());
 
@@ -340,7 +347,7 @@ fn inventories_lexical_owner_tokens_across_all_buckets() {
 
     assert_eq!(status, 0);
     assert!(stderr.is_empty());
-    assert!(stdout.contains("Inventory candidates only—not semantic owner proof"));
+    assert!(stdout.contains("Inventory results are candidates, not semantic ownership proof"));
     assert!(stdout.contains("always_allow[0] characters=15 case_sensitive=true"));
     assert!(stdout.contains("always_confirm[0] characters=11 case_sensitive=false"));
     assert!(stdout.contains("always_deny[0] characters=3 case_sensitive=true"));
@@ -435,7 +442,7 @@ fn succeeds_with_zero_inventory_hits() {
     assert_eq!(status, 0);
     assert_eq!(
         stdout,
-        "Inventory candidates only—not semantic owner proof\nTotal inventory candidates: 0\n"
+        "Inventory results are candidates, not semantic ownership proof\nTotal inventory candidates: 0\n"
     );
     assert!(stderr.is_empty());
 }
@@ -667,7 +674,7 @@ fn infers_xargs_child_ownership_for_documented_options() {
 
     for (witness, owner) in cases {
         let inferred = helper::infer_owner_role(witness, &[])
-            .expect("Documented xargs wrapper must be supported");
+            .expect("Documented `xargs` wrapper must be supported");
         assert_eq!(inferred.owner, owner);
         assert_eq!(inferred.role, helper::Role::Wrapped);
     }
@@ -810,7 +817,7 @@ fn reports_case_reason_on_case_sensitive_pattern() {
     let reasons = finding_reasons(&settings, &manifest);
 
     assert!(reasons.iter().any(|reason| {
-        reason.contains("case_insensitive_reason is declared for a case-sensitive pattern")
+        reason.contains("case-sensitive pattern must omit `case_insensitive_reason`")
     }));
 }
 
@@ -845,7 +852,10 @@ fn reports_witness_mismatch_case_setting_and_invalid_regex() {
         finding.id == "witness" && finding.reason.contains("does not match its witness")
     }));
     assert!(report.findings.iter().any(|finding| {
-        finding.id == "case" && finding.reason.contains("case_sensitive is not true")
+        finding.id == "case"
+            && finding
+                .reason
+                .contains("`case_sensitive` is `false` without `case_insensitive_reason`")
     }));
     let invalid = report
         .findings
@@ -888,11 +898,7 @@ fn measures_decoded_unicode_scalar_length_at_boundary() {
     )]);
 
     let reasons = finding_reasons(&rejected_settings, &rejected_manifest);
-    assert!(
-        reasons
-            .iter()
-            .any(|reason| reason.contains("not less than 1000"))
-    );
+    assert!(reasons.iter().any(|reason| reason.contains("Maximum: 999")));
 }
 
 #[test]
@@ -968,7 +974,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                     .insert("discovery_coverage".to_owned(), json!("complete_finite"));
                 manifest(vec![entry])
             },
-            "must declare discovery_inputs",
+            "must declare `discovery_inputs`",
         ),
         (
             manifest(vec![entry(
@@ -983,7 +989,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo --help",
                 None,
             )]),
-            "must declare discovery_coverage",
+            "must declare `discovery_coverage`",
         ),
         (
             manifest(vec![entry(
@@ -998,7 +1004,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo --help",
                 Some(&[]),
             )]),
-            "at least one discovery input",
+            "at least one `discovery_inputs` value",
         ),
         (
             manifest(vec![entry(
@@ -1013,7 +1019,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo --help",
                 Some(&["foo -h"]),
             )]),
-            "include its witness",
+            "include its `witness`",
         ),
         (
             manifest(vec![entry(
@@ -1028,14 +1034,14 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo run",
                 Some(&["foo run"]),
             )]),
-            "must omit discovery_coverage and discovery_inputs",
+            "must omit `discovery_coverage` and `discovery_inputs`",
         ),
         (
             manifest(vec![with_case_insensitive_reason(
                 direct_entry("empty-reason", "always_allow", 0, "foo", "foo run"),
                 "  ",
             )]),
-            "must declare a nonempty case_insensitive_reason",
+            "must declare a nonempty `case_insensitive_reason`",
         ),
     ];
 
@@ -1088,7 +1094,7 @@ fn rejects_duplicate_ids_indexes_and_sort_tuples() {
     for (manifest, expected) in [
         (empty_id, "IDs must be nonempty"),
         (duplicate_id, "Duplicate manifest entry ID"),
-        (duplicate_index, "select the same always_allow index"),
+        (duplicate_index, "select the same `always_allow` index"),
         (duplicate_tuple, "same sort tuple"),
     ] {
         let error = helper::audit_json(&settings, &manifest)
@@ -1115,7 +1121,7 @@ fn reports_owner_sort_order() {
 }
 
 #[test]
-fn reports_section_sort_order() {
+fn reports_bucket_order_that_violates_section_sort_keys() {
     let settings = settings(
         vec![
             pattern(r"^foo second$", true),
@@ -1229,7 +1235,339 @@ fn reports_discovery_direct_wrapped_phase_order() {
 }
 
 #[test]
-fn reports_noncontiguous_incomplete_owner_spans() {
+fn accepts_separated_sections_for_the_same_semantic_owner() {
+    let settings = settings(
+        vec![
+            pattern(r"^git status$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^git -C \.agent-task status$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "git-status-general",
+            "always_allow",
+            0,
+            "git:status",
+            "git",
+            "0-general",
+            "direct",
+            "a",
+            "git status",
+            None,
+        ),
+        entry(
+            "git-status-worktree",
+            "always_allow",
+            2,
+            "git:status",
+            "git",
+            "1-agent-worktree",
+            "direct",
+            "a",
+            "git -C .agent-task status",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(report.findings.is_empty());
+}
+
+#[test]
+fn arbitrary_section_sort_keys_do_not_hide_a_same_owner_role_gap() {
+    let settings = settings(
+        vec![
+            pattern(r"^foo one$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^foo two$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "foo-one",
+            "always_allow",
+            0,
+            "foo",
+            "foo",
+            "invented-a",
+            "direct",
+            "a",
+            "foo one",
+            None,
+        ),
+        entry(
+            "foo-two",
+            "always_allow",
+            2,
+            "foo",
+            "foo",
+            "invented-b",
+            "direct",
+            "b",
+            "foo two",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding
+            .reason
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
+    }));
+}
+
+#[test]
+fn discovery_and_direct_roles_do_not_hide_a_same_owner_gap() {
+    let settings = settings(
+        vec![
+            pattern(r"^foo --help$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^foo run$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "foo-discovery",
+            "always_allow",
+            0,
+            "foo",
+            "foo",
+            "0-discovery",
+            "discovery",
+            "a",
+            "foo --help",
+            Some(&["foo --help"]),
+        ),
+        entry(
+            "foo-direct",
+            "always_allow",
+            2,
+            "foo",
+            "foo",
+            "1-direct",
+            "direct",
+            "a",
+            "foo run",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding
+            .reason
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
+    }));
+}
+
+#[test]
+fn git_config_prefix_order_does_not_split_an_agent_worktree_span() {
+    let settings = settings(
+        vec![
+            pattern(
+                r"^git -c commit[.]gpgsign=false -C [.]agent-task commit -m one$",
+                true,
+            ),
+            pattern(r"^bar run$", true),
+            pattern(
+                r"^git -C [.]agent-other -c commit[.]gpgsign=false commit -m two$",
+                true,
+            ),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "config-before-worktree",
+            "always_allow",
+            0,
+            "git:root",
+            "git",
+            "0-before",
+            "direct",
+            "a",
+            "git -c commit.gpgsign=false -C .agent-task commit -m one",
+            None,
+        ),
+        entry(
+            "config-after-worktree",
+            "always_allow",
+            2,
+            "git:root",
+            "git",
+            "1-after",
+            "direct",
+            "b",
+            "git -C .agent-other -c commit.gpgsign=false commit -m two",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding
+            .reason
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
+    }));
+}
+
+#[test]
+fn dotted_agent_names_remain_in_the_agent_worktree_span() {
+    let settings = settings(
+        vec![
+            pattern(r"^git -C [.]agent-task status$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^git -C [.]agent-task[.]v1 status$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "plain-name",
+            "always_allow",
+            0,
+            "git:status",
+            "git",
+            "0-plain",
+            "direct",
+            "a",
+            "git -C .agent-task status",
+            None,
+        ),
+        entry(
+            "dotted-name",
+            "always_allow",
+            2,
+            "git:status",
+            "git",
+            "1-dotted",
+            "direct",
+            "b",
+            "git -C .agent-task.v1 status",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding
+            .reason
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
+    }));
+}
+
+#[test]
+fn accepts_inferred_agent_worktree_and_fixture_sections_for_one_owner() {
+    let settings = settings(
+        vec![
+            pattern(r"^git -C \.agent-task status$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^git -C \.agent-task/fixture status$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "worktree",
+            "always_allow",
+            0,
+            "git:status",
+            "git",
+            "0-worktree",
+            "direct",
+            "a",
+            "git -C .agent-task status",
+            None,
+        ),
+        entry(
+            "fixture",
+            "always_allow",
+            2,
+            "git:status",
+            "git",
+            "1-fixture",
+            "direct",
+            "a",
+            "git -C .agent-task/fixture status",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(report.findings.is_empty());
+}
+
+#[test]
+fn malformed_repository_paths_cannot_create_a_completeness_section() {
+    let settings = settings(
+        vec![
+            pattern(r"^git -C \.agent-task/\.\./outside status$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^git -C other status$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "traversal",
+            "always_allow",
+            0,
+            "git:status",
+            "git",
+            "invented-a",
+            "direct",
+            "a",
+            "git -C .agent-task/../outside status",
+            None,
+        ),
+        entry(
+            "general",
+            "always_allow",
+            2,
+            "git:status",
+            "git",
+            "invented-b",
+            "direct",
+            "b",
+            "git -C other status",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding
+            .reason
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
+    }));
+}
+
+#[test]
+fn reports_a_gap_inside_one_owner_section_span() {
     let settings = settings(
         vec![
             pattern(r"^foo one$", true),
@@ -1272,12 +1610,12 @@ fn reports_noncontiguous_incomplete_owner_spans() {
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("does not completely occupy always_allow index 1")
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
     }));
 }
 
 #[test]
-fn accepts_complete_contiguous_owner_spans() {
+fn accepts_same_owner_entries_in_one_contiguous_section() {
     let settings = settings(
         vec![pattern(r"^foo one$", true), pattern(r"^foo two$", true)],
         vec![],
@@ -1526,13 +1864,61 @@ fn does_not_treat_unapproved_executables_as_wrappers() {
 fn infers_xargs_own_discovery_without_a_child() {
     let discovery = vec!["xargs --help".to_owned()];
     let inferred = helper::infer_owner_role("xargs --help", &discovery)
-        .expect("xargs discovery witness must be supported");
+        .expect("`xargs` discovery witness must be supported");
 
     assert_eq!(inferred.owner, "xargs");
     assert_eq!(inferred.role, helper::Role::Discovery);
 
     let ambiguous = vec!["xargs --replace foo".to_owned()];
     assert!(helper::infer_owner_role("xargs --replace foo", &ambiguous).is_err());
+}
+
+#[test]
+fn xargs_discovery_participates_in_owner_span_completeness() {
+    let settings = settings(
+        vec![
+            pattern(r"^xargs --help$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^xargs$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "xargs-discovery",
+            "always_allow",
+            0,
+            "xargs",
+            "xargs",
+            "0-discovery",
+            "discovery",
+            "a",
+            "xargs --help",
+            Some(&["xargs --help"]),
+        ),
+        entry(
+            "xargs-direct",
+            "always_allow",
+            2,
+            "xargs",
+            "xargs",
+            "1-direct",
+            "direct",
+            "a",
+            "xargs",
+            None,
+        ),
+    ]);
+
+    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding
+            .reason
+            .contains("owner-section group does not completely occupy `always_allow` index 1")
+    }));
 }
 
 #[test]
@@ -1571,7 +1957,7 @@ fn bounds_finding_output_and_never_leaks_patterns_or_witnesses() {
     assert_eq!(stderr.matches("  `entry-").count(), 10);
     assert!(
         stderr
-            .contains("`entry-00`: case_sensitive is not true; pattern does not match its witness")
+            .contains("`entry-00`: `case_sensitive` is `false` without `case_insensitive_reason`; pattern does not match its witness")
     );
     assert!(stderr.contains("`entry-09`"));
     assert!(!stderr.contains("`entry-10`"));

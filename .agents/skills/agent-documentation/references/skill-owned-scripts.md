@@ -11,15 +11,30 @@ A skill-owned script is a small program that gathers recurring repository eviden
 
 A script with both read and write modes must require an explicit write selection such as `--write` or `--output`. A writer-only generator does not need a redundant mode flag when its name and help text make the mutation clear.
 
-Generating a declared artifact is not a repair. When evidence indicates that authoritative source, configuration, or documentation should change, the owning skill must define a separate repair branch and enter it only when the current request authorizes those changes. Findings alone do not authorize repair.
+Generating a declared artifact is not a repair. When evidence indicates that authoritative source, configuration, or documentation should change, the owning skill must define a separate repair branch and enter it only when the current request authorizes those changes.
 
 ## Keep ownership clear
 
-- Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Give every script and adjacent test the same filename stem, adding only the repository’s established test suffix to the test file. Rename the pair together so their stems never diverge. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`.
+- Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`. Follow the [filename contract](#resolve-file-names) for every pair.
 - Let the skill own the source, tests, purpose, invocation, operation routes, artifact contract, and repair workflow.
-- Let the repository root own toolchain configuration, dependencies, static validation, optional Cargo integration, and repository build-output policy.
+- Let the repository root own toolchain configuration, dependencies and host-language type packages, static validation, optional Cargo integration, and repository build-output policy.
 - Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
-- Keep multiple related executable scripts directly in the same scripts directory. Extract code into `scripts/helpers` only when it is genuine shared implementation rather than infrastructure around superficial duplication.
+- Extract code into `scripts/helpers` only when it is genuine shared implementation rather than infrastructure around superficial duplication.
+
+## Stage script changes
+
+- Create one task-specific `.agent-<name>` staging root at the current checkout’s root, outside `.agents/skills`. For every affected skill, preserve one immutable copy-time baseline and one editable copy of the complete `<skill>/scripts` directory beneath that root, using distinct baseline and editable subtrees that preserve the skill-relative layout. For a new scripts directory, preserve an explicit empty baseline and create the complete editable tree. Apply this rule in the primary checkout and dedicated Git worktrees alike. Do not treat the worktree itself as the staged scripts tree: its `.agents/skills` tree remains canonical and may be changed only during the bounded promotion below. Make all iterative changes to scripts, helpers, adjacent tests, and fixtures in the editable tree rather than editing canonical files in place.
+- Run every focused check that can operate on the editable tree. Before promotion, review its complete diff against the immutable copy-time baseline, then recheck the status and diff of the canonical scripts directory against that same baseline. If the canonical directory changed after it was copied, keep the original baseline unchanged, capture one immutable snapshot of the new canonical state, and reconcile the original-baseline-to-editable task delta onto that snapshot with three-way semantics. Stop and report any unresolved conflict. Only after successful reconciliation, adopt the snapshot as the refreshed staged baseline, retain the reconciled editable tree, and review their complete diff before continuing. If the canonical directory changes again before promotion, stop and report rather than restarting the cycle or overwriting user or concurrent changes.
+- Carry each affected skill’s finalized editable `scripts` tree back to its canonical `<skill>/scripts` destination with exact-tree semantics in one bounded final operation. The canonical result must match the intended editable tree, including intentional deletions. Do not use an additive merge that can retain stale files. Carry back only the intended source, tests, helpers, and durable fixtures—not scratch artifacts or build output.
+- Verify the promoted canonical tree against the reviewed editable result, then remove both staged source trees before repository-wide canonical validation so discovery cannot inspect duplicate script sources. Keep only non-source evidence needed for the task. If correction is permitted below, recreate one immutable baseline and one editable copy from the promoted canonical tree rather than retaining duplicate source trees through validation.
+- Run the complete authoritative check set against the canonical tree in non-mutating check, dry-run, or inspection modes. Do not run a canonical validation mode that writes into the scripts tree. If a required canonical-only check has no non-mutating mode, report the limitation rather than starting a write-and-promotion cycle. If validation discovers a staged duplicate, correct the validation setup and rerun once without treating that result as a script failure or starting the corrective pass.
+- Aggregate all canonical-only failures before correction. After the initial promotion, permit at most one corrective staged pass for canonical-only failures or path-dependent discrepancies, then perform one final promotion and rerun the complete authoritative check set. If validation still fails, the same discrepancy recurs, or another correction would be required, stop and report instead of cycling.
+
+## Apply human-facing copy policy
+
+- Treat every project-authored string that can reach a person—including CLI help, runtime output, prompts, generated human-readable artifacts, test titles, and failure-only assertion diagnostics—as human-facing. Apply the [`technical-copy` skill](../../technical-copy/SKILL.md) when implementation, review, or maintenance creates, changes, or evaluates that wording.
+- Keep related human-facing terminology and adjacent exact-string tests aligned in the same task. Agent-documentation policy owns behavior, interfaces, schemas, and machine contracts, while `technical-copy` owns potentially human-facing wording.
+- Do not rewrite machine-readable protocol records, serialized field names, exact syntax tokens, fixture payloads, or preserved upstream text merely for style. Review any surrounding project-authored explanation through `technical-copy`.
 
 ## Make the interface discoverable
 
@@ -41,30 +56,29 @@ Every filesystem write must remain within one of these authorized categories:
 
 Do not repurpose a location merely because it is ignored. Never modify `.gitignore` while running the script, and do not add an ignore rule solely to accommodate script-specific output. If repository-wide toolchain output exposes a missing ignore policy, handle that as a separate repository configuration change under the current task’s authorization.
 
-For ephemeral artifacts, follow the applicable temporary-file policy. Accept the resolved task-specific destination from the caller instead of establishing a separate temporary-output convention.
+For ephemeral artifacts, follow the global [temporary-file policy](../../../../.config/zed/AGENTS.md#temporary-files). Accept the resolved task-specific destination from the caller instead of establishing a separate temporary-output convention.
 
 Before writing:
 
 - Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
 - Do not write Git metadata or files unrelated to the declared artifact contract.
-- Inspect the status and diff of repository destinations, preserving user or concurrent changes.
+- Apply the global [concurrent-work preservation rule](../../../../.config/zed/AGENTS.md#git-worktrees) to repository destinations.
 - Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
 - Leave byte-identical output unchanged.
 
 ## Write artifacts safely
 
-- When atomic replacement requires a same-filesystem temporary file, use a short-lived sibling as an internal implementation detail and remove it after success or a handled failure. The applicable temporary-file policy continues to govern ephemeral task artifacts.
+- When atomic replacement requires a same-filesystem temporary file, use a short-lived sibling as an internal implementation detail and remove it after success or a handled failure.
 - Remove stale paths only when they belong to a declared script-owned output set and exact synchronization is part of the documented contract.
 - Do not provide a generic `--force` or `--fix` escape hatch that bypasses ownership or destination checks.
 - Report every artifact created, updated, unchanged, or removed.
 
 ## Test the contracts
 
-- Pair each script with an adjacent test file that documents its behavior and edge cases.
 - Use the language’s native test framework when it is sufficient. Use `node:test` for JavaScript or TypeScript and Rust’s built-in `#[test]` harness for Rust.
 - Keep command-line entrypoints testable through an injectable function such as `run(arguments, stdout, stderr)` so focused contract tests avoid spawning a process for every case.
 - Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
-- Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the applicable temporary-file policy.
+- Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](#bound-artifact-locations).
 - Run focused tests and the repository’s root static validation. Direct execution and focused tests do not replace root typechecking or compilation.
 
 Document focused script and test commands in the owning skill or its repair reference.
@@ -73,16 +87,15 @@ Document focused script and test commands in the owning skill or its repair refe
 
 - Prefer an existing repository dependency or standard-library capability when it directly provides the required behavior and keeps the implementation small, complete, and maintainable.
 - Do not reimplement a mature general-purpose capability merely to avoid adding a dependency or requesting approval. This includes cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior.
-- When the best implementation requires a new dependency whose addition needs approval, stop before implementation or mutating delegation. Tell the user:
+- When the best implementation requires a dependency change whose addition or update needs approval, follow the global [dependency approval policy](../../../../.config/zed/AGENTS.md#dependencies) before implementation or mutating delegation. Before asking for approval, tell the user:
     - Which dependency or smallest dependency set is proposed
     - What each dependency provides
     - Where it will be declared and which code will use it
     - Why existing dependencies or the standard library are insufficient
     - Why a custom implementation would be less correct, maintainable, proportionate, or secure
     - Any material feature, licensing, runtime, supply-chain, or version implications
-- Ask one focused approval question after presenting that information. Do not create source files premised on either choice until the dependency decision is settled.
-- Treat missing dependency approval as a decision boundary, not as authorization to substitute a lower-quality custom implementation. If approval is declined, propose the strongest constrained alternative and explain its limitations. Implement custom infrastructure only when the user explicitly selects it or project constraints make it necessary.
-- Enable only the dependency features required by the approved design. Declare approved dependencies and host-language types through the repository root rather than beside the skill-owned script.
+- If approval is declined, propose the strongest constrained alternative and explain its limitations. Implement custom infrastructure only when the user explicitly selects it or project constraints make it necessary.
+- Enable only the dependency features required by the approved design.
 
 ## Integrate root validation
 
@@ -93,20 +106,19 @@ For standard-library-only Rust scripts:
 - Compile the script directly with stable `rustc` and compile its adjacent test with `rustc --test`.
 - Pass the repository’s supported Rust edition explicitly. Pass an explicit valid crate name when the repository’s filename pattern contains characters that Rust crate names do not accept.
 - Keep testable behavior in functions that the adjacent test can load from the script instead of duplicating the implementation.
-- Resolve compiled binaries and other transient output through the applicable temporary-file policy.
+- Resolve compiled binaries and other transient output through the [ephemeral-artifact rule](#bound-artifact-locations).
 - Include both compile commands in root static validation. Do not register Cargo targets merely because the repository otherwise uses Cargo.
 
 When a Rust script requires a non-standard-library dependency:
 
 - Use Cargo through an existing repository-owned tooling package or, when the current task authorizes it, one shared tooling package for skill-owned scripts.
 - Let a root package own the targets in a package-root workspace. In a virtual workspace, let a package member own them because the virtual manifest cannot define targets.
-- Keep the script and its test under the owning skill. Do not create a manifest, package, or workspace member per skill or script.
 - Use repository-unique, skill-qualified target names and the repository’s normal shared Cargo target directory. Do not override `CARGO_TARGET_DIR` merely to isolate a script.
 - Keep target registration and applicable root manifests committed, follow the repository’s lockfile policy, and keep generated `target/` contents ignored and uncommitted.
 
 ## Resolve file names
 
-Resolve the filename stem and test suffix independently before considering language-native naming:
+Give every script and adjacent test the same filename stem, adding only the resolved test suffix, and rename the pair together so their stems never diverge. Resolve the stem and suffix independently before considering language-native naming:
 
 1. Preserve an explicit user-selected path or applicable project instruction for the current pair. Treat it as a broader convention only when the user or project policy says so.
 2. Follow an existing script-and-test pair in the same skill unless it is documented as exceptional.

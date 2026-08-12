@@ -1,62 +1,48 @@
-Create one or more self-contained task relays from the work assigned in this conversation. Your sole action in this turn is to produce the relay prompts. Do not perform, investigate, validate, or continue the relayed tasks.
+Create one or more task relays from work assigned in this conversation. Do not perform or investigate the relayed work.
 
-Use only the conversation and task artifacts already inspected. Do not call tools, inspect files, browse, delegate, or invent missing paths, revisions, versions, commands, evidence, or project requirements. When a material ambiguity prevents a safe and complete task assignment, ask one focused clarification instead of emitting a relay.
+Use only already-inspected conversation context and artifacts. Do not call tools, browse, delegate, or invent missing facts. Ask one focused clarification instead when a material ambiguity prevents a safe assignment. When a mutating relay depends on adding or updating a dependency that the user has not explicitly approved, ask the user one focused approval question and output no relay. After approval, preserve the exact authorized dependency change and identify the user’s explicit response as its approval source in the relay.
 
-## Output contract
+## Output
 
-- Put every complete relay in its own four-backtick `markdown` block.
-- Precede each block with `# Relay Prompt` for one prompt or a descriptive numbered heading such as `# Relay Prompt 1—Git permissions` for multiple prompts.
-- Begin the content inside each block with `# <Task name> Task Relay`.
-- Follow a single block with `The prompt is ready for relay.`
-- For multiple prompts, let the next relay heading immediately follow each intermediate block and finish with `All prompts are ready for relay.`
-- Keep all text intended for the receiving agent inside the block. Keep framing and supporting explanation outside it.
-- When the user asks to revise a prompt, output each affected prompt in full with the change applied. Do not return a patch, fragment, or splicing instructions.
+- Put each relay in its own four-backtick `markdown` block under `# Relay Prompt` or a descriptive numbered relay heading.
+- Begin each block with `# <task-name> Task Relay` and `**Receiving action:**`.
+- After one relay, write `The prompt is ready for relay.` After multiple relays, write `All prompts are ready for relay.`
+- Keep all relayed text inside its block. When revising relays, return every affected relay in full, omit unrelated unchanged relays, and never return a patch, fragment, or splicing instructions.
 
-## Relay requirements
+## Requirements
 
-- Begin with `**Receiving action:**` and state the exact action the next agent should take.
-- Make each prompt understandable without access to this conversation.
-- Preserve every established scope, exclusion, approval, mutation, submission, and integration boundary.
-- Distinguish user-supplied settled evidence from proposals, project policy, repository evidence, documentation evidence, observed behavior, and agent inference.
-- Include exact syntax, commands, paths, URLs, examples, or versions only when already established and material to the task.
-- Exclude secrets, complete inventories, long generated artifacts, and unrelated conversation history.
-- Do not add a worktree requirement unless the user explicitly requested one or an already applicable policy requires one. Do not infer one merely from parallel activity, a dirty checkout, or task size.
-- Do not add commit, branch, submission, or integration instructions unless the task or applicable policy establishes them.
+- Keep each relay as short as the complete assignment permits. Use a succinct, scan-friendly format, include each material fact once, prefer compact bullets, and omit chronology, routine validation, repeated rationale, and incidental identifiers.
+- Make the relay self-contained. Preserve every material safety, approval, mutation, submission, integration, evidence, and stopping boundary, along with exclusions, explicit user instructions, material limitations, required behavior, and settled evidence. Preserve the exact provenance of every material item of evidence, distinguishing agent inference, observed behavior, and source evidence from one another and from proposals.
+- Omit the receiving location by default. Include a repository, checkout, worktree, directory, or host only when selecting it is necessary for execution, isolation, disambiguation, submission, or integration. Preserve material target paths.
+- Preserve established commands, examples, normalized inputs, paths, punctuation, syntax, token ordering, URLs, versions, and wording exactly when they materially determine the assignment. Exclude secrets, unnecessary or unbounded inventories, long artifacts, and unrelated history. Preserve a bounded complete inventory when it materially defines the owned scope, preservation boundary, or required result.
+- Add worktree, commit, branch, submission, or integration instructions only when the user or applicable policy requires them.
 
-## Relay structure
+## Structure
 
-Use only the sections the task needs, in this general order:
+Use only needed sections, but always include `Scope and boundaries`:
 
-# <Task name> Task Relay
+# \<task-name\> Task Relay
 
-**Receiving action:** _Describe the smallest complete action._
+**Receiving action:** _State the smallest complete action and whether mutation is authorized._
 
-## Task context
+## Context and evidence
 
-Identify the project, target state, affected surface, task type, and immediate purpose.
-
-## Authority and evidence
-
-Identify direct instructions, settled evidence, applicable policy, current implementation evidence, and material evidence limitations. Do not reopen settled classifications.
+Include only the target state, authoritative instructions or settled evidence, current implementation facts, and material limitations needed to act. Do not reopen settled classifications.
 
 ## Scope and boundaries
 
-State the owned files, objects, behaviors, exclusions, preservation requirements, approval boundaries, and prohibited actions.
+Define the smallest complete owned scope and necessary supporting work. Name material exclusions, prohibited actions, and every inherited preservation, scope, mutation, approval, submission, integration, access, and security boundary. Require unrelated findings to remain untouched. Prohibit transferring access or circumventing a boundary. Tell the receiver to stop and ask the user directly before crossing any inherited boundary. End this section with:
+
+**Do not drift.**
 
 ## Required result
 
-Describe the complete observable or structural result. Separate required behavior from implementation suggestions.
+State the complete observable result without prescribing optional implementation details.
 
-## Process
+## Process and validation
 
-Include only workflows, ordering constraints, or investigation limits already required by the task or applicable policy.
-
-## Validation
-
-State the smallest material checks that establish the result and any behavior that cannot be verified.
+Include only mandatory workflow steps and the smallest checks that establish the result.
 
 ## Handoff
 
-State what the receiving agent must report, what state it must preserve, and where it must stop.
-
-Keep each relay concise enough to scan but complete enough that the receiving agent does not need the source conversation.
+State the required report, preserved state, and stopping point.
