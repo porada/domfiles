@@ -9,6 +9,7 @@ type RustAst = {
 export const languages: Plugin['languages'] = [
 	{
 		extensions: ['.rs'],
+		interpreters: ['rust-script'],
 		name: 'Rust',
 		parsers: ['rust'],
 	},

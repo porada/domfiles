@@ -1,5 +1,8 @@
 import type { Plugin } from 'prettier';
-import { format, formatWithCursor } from 'prettier';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { format, formatWithCursor, getFileInfo } from 'prettier';
 import { expect, expectTypeOf, test, vi } from 'vite-plus/test';
 import * as pluginFish from './index.ts';
 
@@ -31,6 +34,36 @@ test('formats Fish files', async () => {
 
 	expect(output).toMatchSnapshot();
 	await expect(format(output, options)).resolves.toBe(output);
+});
+
+test('infers Fish from the hashbang', async () => {
+	const directory = await mkdtemp(join(tmpdir(), 'prettier-plugin-fish-'));
+
+	const scriptPath = join(directory, 'script');
+	const plainTextPath = join(directory, 'plain-text');
+
+	const options = { plugins: [pluginFish] };
+
+	try {
+		await Promise.all([
+			writeFile(scriptPath, '#!/usr/bin/env fish\n'),
+			writeFile(plainTextPath, 'not Fish\n'),
+		]);
+
+		await expect(getFileInfo(scriptPath, options)).resolves.toMatchObject({
+			inferredParser: 'fish',
+		});
+		await expect(
+			getFileInfo(plainTextPath, options)
+		).resolves.not.toMatchObject({
+			inferredParser: 'fish',
+		});
+	} finally {
+		await rm(directory, {
+			force: true,
+			recursive: true,
+		});
+	}
 });
 
 test('preserves escaped trailing whitespace from `fish_indent`', async () => {

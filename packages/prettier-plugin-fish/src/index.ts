@@ -9,6 +9,7 @@ type FishAst = {
 export const languages: Plugin['languages'] = [
 	{
 		extensions: ['.fish'],
+		interpreters: ['fish'],
 		name: 'Fish',
 		parsers: ['fish'],
 	},

@@ -1,5 +1,8 @@
 import type { Plugin } from 'prettier';
-import { format, formatWithCursor } from 'prettier';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { format, formatWithCursor, getFileInfo } from 'prettier';
 import { expect, expectTypeOf, test } from 'vite-plus/test';
 import * as pluginRust from './index.ts';
 
@@ -27,6 +30,36 @@ test('formats Rust files', async () => {
 
 	expect(output).toMatchSnapshot();
 	await expect(format(output, options)).resolves.toBe(output);
+});
+
+test('infers Rust from the hashbang', async () => {
+	const directory = await mkdtemp(join(tmpdir(), 'prettier-plugin-rust-'));
+
+	const scriptPath = join(directory, 'script');
+	const plainTextPath = join(directory, 'plain-text');
+
+	const options = { plugins: [pluginRust] };
+
+	try {
+		await Promise.all([
+			writeFile(scriptPath, '#!/usr/bin/env rust-script\n'),
+			writeFile(plainTextPath, 'not Rust\n'),
+		]);
+
+		await expect(getFileInfo(scriptPath, options)).resolves.toMatchObject({
+			inferredParser: 'rust',
+		});
+		await expect(
+			getFileInfo(plainTextPath, options)
+		).resolves.not.toMatchObject({
+			inferredParser: 'rust',
+		});
+	} finally {
+		await rm(directory, {
+			force: true,
+			recursive: true,
+		});
+	}
 });
 
 test('preserves native formatter output with `tabWidth` and `useTabs`', async () => {
