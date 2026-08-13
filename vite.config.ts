@@ -18,9 +18,17 @@ export default defineConfig({
 	staged: {
 		'*': 'pnpm prettier --ignore-unknown --write',
 		'*.fish': 'pnpm lint:fish',
-		'*.rs': () => 'pnpm lint:rs:check',
+		'*.rs': [
+			/* prettier-ignore */
+			() => 'pnpm lint:rs:check',
+			() => 'pnpm test:rs',
+		],
 		'*.sh': 'pnpm lint:sh',
-		'*.ts': () => 'pnpm lint:ts:check',
+		'*.ts': [
+			/* prettier-ignore */
+			() => 'pnpm lint:ts:check',
+			() => 'pnpm test:ts',
+		],
 		'bin/!(domlib|git-diff-highlight)': [
 			/* prettier-ignore */
 			'chmod +x',
