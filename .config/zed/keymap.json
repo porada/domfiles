@@ -1,7 +1,19 @@
 [
 	{
 		"bindings": {
+			"cmd-shift-n": "agent::NewThread"
+		}
+	},
+	{
+		"context": "!FileFinder && !GitBranchSelector",
+		"bindings": {
 			"cmd-shift-i": "agent::Toggle"
+		}
+	},
+	{
+		"context": "!ProjectSearchBar && !ProjectSearchView",
+		"bindings": {
+			"cmd-shift-j": "multi_workspace::ToggleWorkspaceSidebar"
 		}
 	},
 	{
