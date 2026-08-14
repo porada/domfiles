@@ -2,7 +2,7 @@
 
 ## Conduct
 
-- Always remain within the scope of the current task.
+- Treat the resolved task scope as a hard boundary. Evidence gathering, root-cause work, validation, and the minimum adjacent integration needed to complete the request remain in scope. Do not expand into broader audits, cleanup, refactors, dependency changes, speculative research, or unrelated fixes without explicit authorization. When completion requires crossing the boundary, stop and ask one focused question.
 - Never override or alter the user’s input unless explicitly asked.
 - When user input appears inconsistent with the current task, accidentally pasted from another context, or mistyped, proceed only when the intended request can be inferred confidently from the conversation and project evidence without changing its material scope or outcome. Otherwise stop before acting and ask one focused clarification instead of following the input literally or silently choosing among plausible interpretations.
 
@@ -16,8 +16,8 @@
     - Give the receiving agent a clear, nonoverlapping owned scope. Avoid duplicated work, continue useful nonoverlapping work while the relay is active, and retain final synthesis, decisions, and integration in the coordinating conversation.
     - A relay inherits the current task’s scope, mutation authority, approval requirements, and security boundaries. It cannot authorize scope expansion, provide user-only approval, transfer access, or circumvent an applicable boundary. The receiving agent must stop and ask the user directly when completion requires crossing one.
     - Use a direct relay mechanism when one is available. When delivery requires user action, provide a short, copy-ready prompt and state the required handoff clearly. Never imply that the external agent has received, started, or completed the work unless that is known.
+- End every initial or follow-up delegated prompt—whether sent to an external agent or an in-client subagent—with the exact standalone line `**Do not drift.**`. Define the bounded assignment, owned scope, exclusions, source constraints, stop conditions, and output contract before that guard. Apply it even when the delegate is asked only to gather evidence or review work because every delegated prompt assigns work.
 - When in-client subagents are available, use them as context-isolation boundaries for evidence gathering whose source count or output size cannot be bounded safely before execution.
-    - End every initial or follow-up prompt sent to an in-client subagent with the exact standalone line `**Do not drift.**`. Define the bounded assignment, owned scope, exclusions, source constraints, stop conditions, and output contract before that guard. Apply it even when the subagent is asked only to gather evidence or review work because every subagent prompt assigns work.
     - Delegate exploratory online research before the first potentially unbounded search, fetch, or open-ended navigation. Treat searches across GitHub issues, pull requests, discussions, release histories, and similar collections as exploratory.
     - For local investigation, first narrow the scope and use available pagination or output limits. Delegate broad command output, large Git ranges, or independent repository audit scopes when those controls are insufficient and the main thread needs only a concise result.
     - Treat each subagent’s context and output budgets as finite constraints. Give each one a narrow question, explicit source constraints and stop conditions, and a concise output contract. Default to the five strongest findings with URLs or project-relative evidence, and split independent questions across subagents instead of broadening one assignment.
@@ -186,6 +186,14 @@ Command guidance applies to agent invocations and command examples, not reposito
 
 - Shorthand commands are task macros that define complete, standalone procedures.
 - Always execute shorthand commands exactly as defined.
+
+### Harmonize
+
+- Run a change-oriented cross-repository consistency pass across Git repositories within the explicitly supplied project scope or location. When neither is supplied, use `~/Projects`. Use the concept, policy, or documentation family named with the command. When invoked without a narrower content scope, compare project-authored agent documentation that expresses shared policies, workflows, or terminology. Start from Git-tracked files. Exclude generated, managed, vendored, third-party, task-staging `.agent-*`, and untracked files unless explicitly included.
+- Read every applicable `AGENTS.md` and repository-specific authority model before comparing content. Inventory homologous items by meaning and role, then classify each as semantically equivalent, intentionally repository-specific, or unresolved. Inspect implementation and tests only as bounded evidence needed to establish observable meaning.
+- For semantically equivalent items, select one canonical formulation and make their wording, terminology, ordering, placeholders, punctuation, and structure identical. Prefer explicit user-established wording, then the most authoritative applicable shared source, then the most accurate and complete existing formulation. Substitute only unavoidable repository-specific identifiers. Do not infer equivalence from similar names or create uniformity by weakening, broadening, or otherwise changing meaning, authority, behavior, or security boundaries.
+- Apply supported consistency edits directly while following each repository’s instructions, disclosure boundary, concurrent-work policy, protected-path workflow, and validation requirements. Do not transfer private facts or secret-bearing values between repositories. Do not edit consumer-facing `README` files, change dependencies, or commit unless separately authorized.
+- Validate every changed repository with its targeted documentation or copy checks and `git diff --check`. Reread the complete compared family and confirm that every semantically equivalent item now uses the canonical formulation. Report the canonical wording selected, repositories changed, intentional repository-specific variants, and unresolved meaning or authority decisions. Do not report discrepancies already resolved by the pass.
 
 ### Verify
 

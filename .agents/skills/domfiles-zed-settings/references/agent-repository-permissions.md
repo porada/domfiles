@@ -1,5 +1,13 @@
 # Agent repository permissions
 
+## Apply the agent-directory allowance policy
+
+- Treat the project-relative `.agent-<name>` namespace defined by the [global temporary-file policy](../../../../.config/zed/AGENTS.md#temporary-files) as a standing user-approved scope for operation-specific namespace-bounded terminal allowances. This approval establishes eligibility for a scoped variant, not authorization for the command family itself or blanket trust in every command or directory entry.
+- Keep each variant within the requested operation family. Treat it as eligible for automatic allowance only when every effect that makes the general form confirmable is a filesystem or repository mutation contained within the task-owned namespace and the normalized command exposes every behavior-bearing path for lexical validation. Require each such path to be an explicit traversal-free project-relative `.agent-<name>` root or descendant.
+- The agent-directory namespace alone does not relax confirmation or denial for effects that path scoping does not contain, including arbitrary code execution, ambient credential or configuration access, authentication and signing, external helper selection, network or remote activity, process or system state, direct symbolic-link creation, and paths that are absolute, traversal-bearing, unresolved, or outside the namespace. Only a more specific policy may explicitly accept such a residual effect. Zed’s sandbox, sensitive-path, and symlink-escape checks remain additional boundaries.
+- Classify plain task directories, top-level registered worktrees, and strict-descendant fixture repositories separately. Apply the more specific repository policies below when Git or worktree behavior is in scope.
+- Do not infer agent-directory scope from the terminal’s current working directory because permission matching does not expose it. When a safe grammar cannot carry every required path explicitly, leave the operation confirmable.
+
 ## Maintain agent worktree permissions
 
 - Allow `git worktree prune` automatically only in dry-run forms. Keep actual pruning, out-of-namespace paths or branches, remote operations, shell globs, path traversal, parent-removing `rmdir -p`, and broader deletion mechanisms confirmable.
@@ -15,10 +23,10 @@
 
 - Within the [documented fixture repository scope](../../../PROJECT.md#zed-fixture-repository-permissions), permit audited local Git forms for fixture setup, history construction, ref management, teardown, and working-tree changes.
 - Require an explicit traversal-free strict-descendant `-C` path and a positive command grammar. Leave blanket trailing-argument allowances confirmable.
-- Keep cross-boundary path options, explicit credential access, external-helper selection, network subcommands, signing requests, submodule-recursion options, and unrestricted configuration confirmable. Permit remote metadata changes only when the form does not contact a remote.
+- Keep cross-boundary path options, external-helper selection, network subcommands, signing requests, submodule-recursion options, and unrestricted configuration outside the scoped allowance. Preserve higher-precedence denials for credential-disclosing or authentication-capability forms, and leave other credential or configuration source selection confirmable. Permit remote metadata changes only when the form does not contact a remote.
 - Apply the [documented residual trust boundary](../../../PROJECT.md#zed-fixture-repository-permissions).
 - Keep commands whose `-C` operand is the top-level `.agent-<name>` worktree governed by the narrower worktree policy above. Descendant rules intentionally accept Git’s upward discovery as part of task-owned state.
 
 ## Validate agent repository permissions
 
-Validate in-scope patterns against intended namespace-bounded worktree and fixture operations plus near misses involving top-level or out-of-namespace paths, traversal, detached worktrees, remote operations, direct symbolic-link creation, and broader deletion or history-rewriting forms.
+Validate in-scope patterns against intended namespace-bounded task-directory, worktree, and fixture operations plus near misses involving ordinary, absolute, top-level, out-of-namespace, or traversal-bearing paths. Include effects not contained by path operands, detached worktrees, credential or configuration access, external helpers, network or remote operations, direct symbolic-link creation, and broader deletion or history-rewriting forms.

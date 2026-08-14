@@ -1,4 +1,4 @@
-#[path = "regex-dependency-audit.rs"]
+#[path = "regex_dependency_audit.rs"]
 mod helper;
 
 use std::{

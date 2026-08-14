@@ -5,6 +5,19 @@
 - This repository is the home of all my actively used dotfiles (also referred to as `domfiles`).
 - This project is public and open source.
 
+## Public repository boundary
+
+- Treat every tracked file, proposed repository artifact, patch, and task relay as publicly disclosed.
+- Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to those surfaces.
+- Before recommending or implementing a tool that uses authentication or private configuration, establish:
+    - Which secrets or private values it requires.
+    - How those values enter at runtime without appearing in command literals or repository files.
+    - Where the tool persists credentials and generated configuration.
+    - Whether any generated or modified file can enter the repository.
+- Treat a tool as feasible only when its public configuration can remain separate from secret material through an established machine-local source or external credential store.
+    - A Git-ignored file qualifies as an established machine-local source only when public repository provisioning creates or adopts it without embedding secret values, restricts it to user-only access, and tracked configuration refers only to its path. Ignore status alone is insufficient.
+- When no established public-safe route exists, report the tool as infeasible or ask the user to select a secret-storage boundary. Never request, inspect, echo, or invent the secret value.
+
 ## Agent documentation
 
 | Source | Authority and ownership |
@@ -27,7 +40,7 @@
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
 - Do not analyze the contents of `bin/git-diff-highlight` (it’s a symlink).
-- Do not read or analyze `.config/npm/user.npmrc` (it contains secrets).
+- Do not read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
 ## Reporting
 
@@ -40,6 +53,9 @@
 
 ## Skills
 
+- Write project-authored skill scripts in Rust by default and name Rust source stems in `snake_case`, retaining the established `.test.rs` suffix for adjacent contract tests. Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes the alternative materially more correct, maintainable, or proportionate than Rust.
+    - Record the exception and its durable reason in the owning skill before implementation. Avoiding migration, existing language use, familiarity, or shorter syntax alone does not justify an exception.
+    - Keep established Cargo target and CLI names unchanged when only source filenames change.
 - Load each applicable `domfiles-*` skill immediately before the task pass whose resolved scope intersects its declared file scope. Do not preload domain skills for later passes.
 - Treat every `domfiles-*` skill maintained in this repository as a living document.
     - After executing a task using a skill, suggest a concrete edit only when the execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.

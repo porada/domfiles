@@ -24,6 +24,12 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
 
+### Zed agent-directory allowance scope
+
+Project-relative task-owned `.agent-<name>` directories are a standing user-approved namespace for operation-specific terminal-allowance variants. A command family’s namespace-bounded variant is eligible for automatic allowance only when every behavior-bearing path is explicit, traversal-free, and lexically contained there. This lets permission work evaluate the scoped variant without asking the user to reapprove the namespace for each command family.
+
+The namespace neither authorizes a command family nor changes effective permissions on its own. The [agent-directory allowance policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#apply-the-agent-directory-allowance-policy) owns exact eligibility and preserves confirmation or denial for effects that path scope cannot contain, while [Zed settings](../.config/zed/settings.json) remain canonical for configured behavior.
+
 ### Zed automatic terminal denials
 
 Configured `terminal.always_deny` rules cover forms whose purpose or verified behavior exposes ambient credentials or authentication capabilities, transports literal credentials, disables agent or operating-system security boundaries, or loads authentication identities and providers. The exact command inventory remains canonical in [Zed settings](../.config/zed/settings.json). Configured denials cannot be approved manually.
@@ -44,7 +50,9 @@ Bulk value listings through `git config list`, its legacy `--list` and `-l` form
 
 ### Zed fetch and sandbox host scope
 
-URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname may intentionally omit that hostname from `agent.sandbox_permissions.network_hosts`. A `network_hosts` entry would persistently grant the entire host, broadening trust beyond the path-qualified fetch allowance.
+An explicit domain or hostname allowance authorizes the corresponding persistent `agent.sandbox_permissions.network_hosts` scope. Zed matches those grants by case-insensitive hostname without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port persistence is intentional. Terminal commands remain subject to their independent terminal permissions, while explicit-port fetch URLs remain outside the canonical hostname fetch pattern unless separately allowed at the fetch-tool layer.
+
+URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname intentionally omit that hostname from `network_hosts`. A hostname grant would broaden trust beyond the path-qualified fetch allowance.
 
 ### Zed fixture repository permissions
 
@@ -129,6 +137,12 @@ Portable skill documentation is maintained under the assumption that an installa
 Edits to an exposed portable skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a portable skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
 
 Every installation of the portable `agent-documentation` skill is assumed to use the tracked global `.config/zed/AGENTS.md`. The skill relies on that document’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
+
+### Protected skill staging
+
+At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so these canonical names remain unchanged.
+
+The [protected skill staging workflow](skills/agent-documentation/references/protected-skill-staging.md) keeps iterative edits in complete skill trees outside `.agents/skills`, then accepts native confirmation for one exact-tree promotion per affected skill. Keeping incomplete new skills outside the fixed discovery path also prevents concurrent agent sessions from loading them. The workflow intentionally does not use terminal mutation, ancestor-directory operations, symlink indirection, or renamed path components to bypass the sensitive-path boundary.
 
 ### Prompt relays
 

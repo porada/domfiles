@@ -1,9 +1,9 @@
-#[path = "permission-patterns.rs"]
+#[path = "permission_patterns.rs"]
 mod helper;
 
 use helper::{
-    ARTIFACT_CATALOG_VERSION, ArtifactCatalog, ArtifactCatalogPattern, BoundedIssues, Bucket,
-    CompiledPattern, Decision, MatchState, PatternError, compile_pattern, load_artifact_catalog,
+    ArtifactCatalog, ArtifactCatalogPattern, BoundedIssues, Bucket, CompiledPattern, Decision,
+    MatchState, PatternError, compile_pattern, load_artifact_catalog, load_bound_artifact_catalog,
     parse_artifact_catalog, read_utf8_file, regex_error_summary, sha256_hex,
     validate_artifact_catalog, verify_artifact_catalog_binding,
 };
@@ -76,7 +76,6 @@ fn catalog(
     pattern_bytes: &[u8],
 ) -> ArtifactCatalog {
     ArtifactCatalog {
-        version: ARTIFACT_CATALOG_VERSION,
         candidate_sha256: sha256_hex(candidate_bytes),
         state_sha256: sha256_hex(state_bytes),
         patterns: vec![ArtifactCatalogPattern {
@@ -84,6 +83,7 @@ fn catalog(
             bucket: Bucket::Allow,
             source_index: 7,
             case_sensitive: false,
+            owner_replacement: true,
             sha256: sha256_hex(pattern_bytes),
             pattern_file: pattern_file.to_owned(),
         }],
@@ -128,15 +128,123 @@ fn parses_validates_and_loads_exact_bound_artifact_catalog_bytes() {
     validate_artifact_catalog(&parsed).expect("Catalog must validate");
     verify_artifact_catalog_binding(&parsed, candidate_bytes, state_bytes)
         .expect("Catalog source binding must validate");
-    let loaded = load_artifact_catalog(&catalog_path).expect("Catalog artifacts must load");
+    let loaded = load_bound_artifact_catalog(&catalog_path, candidate_bytes, state_bytes)
+        .expect("Bound catalog artifacts must load");
 
     assert_eq!(loaded.document, catalog_document);
     assert_eq!(loaded.patterns.len(), 1);
     assert_eq!(loaded.patterns[0].definition.source_index, 7);
     assert!(!loaded.patterns[0].definition.case_sensitive);
+    assert!(loaded.patterns[0].definition.owner_replacement);
     assert_eq!(loaded.patterns[0].pattern.as_bytes(), pattern_bytes);
     assert_eq!(fs::read(pattern_path).unwrap(), pattern_bytes);
     assert_ne!(loaded.patterns[0].pattern.as_bytes().last(), Some(&b'\n'));
+}
+
+#[test]
+fn validates_source_binding_before_catalog_artifacts() {
+    let fixture = Fixture::new();
+    let candidate_bytes = b"candidate";
+    let state_bytes = b"state";
+    let pattern_bytes = b"private-pattern-body";
+    let document = catalog(candidate_bytes, state_bytes, "missing.regex", pattern_bytes);
+    let catalog_path = fixture.write(
+        "artifact-catalog.json",
+        &serde_json::to_vec(&document).expect("Catalog must serialize"),
+    );
+
+    let binding_error = load_bound_artifact_catalog(&catalog_path, b"stale", state_bytes)
+        .expect_err("Stale candidate bytes must fail before artifact loading");
+    assert!(binding_error.contains("Candidate SHA-256"));
+    assert!(!binding_error.contains("missing.regex"));
+    assert!(!binding_error.contains("private-pattern-body"));
+
+    let artifact_error = load_bound_artifact_catalog(&catalog_path, candidate_bytes, state_bytes)
+        .expect_err("Missing artifacts must fail after binding validation");
+    assert!(artifact_error.contains("catalog pattern 1"));
+    assert!(!artifact_error.contains("Candidate SHA-256"));
+    assert!(!artifact_error.contains("private-pattern-body"));
+}
+
+#[test]
+fn accepts_empty_artifact_catalogs() {
+    let candidate_bytes = b"candidate";
+    let state_bytes = b"state";
+    let catalog = ArtifactCatalog {
+        candidate_sha256: sha256_hex(candidate_bytes),
+        state_sha256: sha256_hex(state_bytes),
+        patterns: vec![],
+    };
+    let bytes = serde_json::to_vec(&catalog).expect("Catalog must serialize");
+
+    let parsed = parse_artifact_catalog(&bytes).expect("Empty catalog must parse");
+    verify_artifact_catalog_binding(&parsed, candidate_bytes, state_bytes)
+        .expect("Empty catalog source binding must validate");
+
+    assert!(parsed.patterns.is_empty());
+}
+
+#[test]
+fn rejects_artifact_catalog_version_fields_as_unknown() {
+    for version in [1, 2] {
+        let mut document =
+            serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
+                .expect("Catalog must convert to JSON");
+        document["version"] = json!(version);
+
+        let error = parse_artifact_catalog(&serde_json::to_vec(&document).unwrap())
+            .expect_err("Artifact catalog version fields must be rejected");
+
+        assert!(error.contains("does not match the required schema"));
+    }
+}
+
+#[test]
+fn requires_boolean_owner_replacement_on_every_artifact_catalog_pattern() {
+    let valid = serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
+        .expect("Catalog must convert to JSON");
+    let cases = [
+        ("missing", None),
+        ("nonboolean", Some(json!("private-owner-replacement"))),
+    ];
+
+    for (name, replacement) in cases {
+        let mut document = valid.clone();
+        let pattern = document["patterns"][0]
+            .as_object_mut()
+            .expect("Catalog pattern must be an object");
+        match replacement {
+            Some(value) => {
+                pattern.insert("owner_replacement".to_owned(), value);
+            }
+            None => {
+                pattern.remove("owner_replacement");
+            }
+        }
+
+        let error = parse_artifact_catalog(&serde_json::to_vec(&document).unwrap())
+            .expect_err("Invalid owner replacement metadata must be rejected");
+
+        assert!(
+            error.contains("does not match the required schema"),
+            "Unexpected error for `{name}`: {error}"
+        );
+        assert!(!error.contains("private-owner-replacement"));
+    }
+}
+
+#[test]
+fn propagates_exact_owner_replacement_values() {
+    for expected in [false, true] {
+        let mut document =
+            serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
+                .expect("Catalog must convert to JSON");
+        document["patterns"][0]["owner_replacement"] = json!(expected);
+        let parsed = parse_artifact_catalog(&serde_json::to_vec(&document).unwrap())
+            .expect("Boolean owner replacement metadata must parse");
+
+        assert_eq!(parsed.patterns[0].owner_replacement, expected);
+    }
 }
 
 #[test]

@@ -17,45 +17,55 @@ toml = { version = "1.1.4", default-features = false, features = [
 ] }
 
 [[bin]]
+name = "domfiles-zed-settings-fetch-permissions"
+path = ".agents/skills/domfiles-zed-settings/scripts/fetch_permissions.rs"
+bench = false
+test = false
+
+[[bin]]
 name = "domfiles-zed-settings-pattern-match"
-path = ".agents/skills/domfiles-zed-settings/scripts/pattern-match.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.rs"
 bench = false
 test = false
 
 [[bin]]
 name = "domfiles-zed-settings-permission-candidate"
-path = ".agents/skills/domfiles-zed-settings/scripts/permission-candidate.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/permission_candidate.rs"
 bench = false
 test = false
 
 [[bin]]
 name = "domfiles-zed-settings-permission-owner-audit"
-path = ".agents/skills/domfiles-zed-settings/scripts/permission-owner-audit.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/permission_owner_audit.rs"
 bench = false
 test = false
 
 [[bin]]
 name = "domfiles-zed-settings-regex-dependency-audit"
-path = ".agents/skills/domfiles-zed-settings/scripts/regex-dependency-audit.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.rs"
 bench = false
 test = false
 
 [[test]]
-name = "domfiles-zed-settings-permission-patterns-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/helpers/permission-patterns.test.rs"
+name = "domfiles-zed-settings-fetch-permissions-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/fetch_permissions.test.rs"
 
 [[test]]
 name = "domfiles-zed-settings-pattern-match-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/pattern-match.test.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.test.rs"
 
 [[test]]
 name = "domfiles-zed-settings-permission-candidate-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/permission-candidate.test.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/permission_candidate.test.rs"
 
 [[test]]
 name = "domfiles-zed-settings-permission-owner-audit-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/permission-owner-audit.test.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/permission_owner_audit.test.rs"
+
+[[test]]
+name = "domfiles-zed-settings-permission-patterns-test"
+path = ".agents/skills/domfiles-zed-settings/scripts/helpers/permission_patterns.test.rs"
 
 [[test]]
 name = "domfiles-zed-settings-regex-dependency-audit-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/regex-dependency-audit.test.rs"
+path = ".agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.test.rs"

@@ -115,12 +115,9 @@ pub(crate) fn read_utf8_file(path: &Path, description: &str) -> Result<String, S
     })
 }
 
-pub(crate) const ARTIFACT_CATALOG_VERSION: u64 = 1;
-
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ArtifactCatalog {
-    pub(crate) version: u64,
     pub(crate) candidate_sha256: String,
     pub(crate) state_sha256: String,
     pub(crate) patterns: Vec<ArtifactCatalogPattern>,
@@ -133,6 +130,7 @@ pub(crate) struct ArtifactCatalogPattern {
     pub(crate) bucket: Bucket,
     pub(crate) source_index: usize,
     pub(crate) case_sensitive: bool,
+    pub(crate) owner_replacement: bool,
     pub(crate) sha256: String,
     pub(crate) pattern_file: String,
 }
@@ -188,12 +186,6 @@ fn validate_catalog_artifact_path(path: &str) -> Result<PathBuf, String> {
 }
 
 pub(crate) fn validate_artifact_catalog(catalog: &ArtifactCatalog) -> Result<(), String> {
-    if catalog.version != ARTIFACT_CATALOG_VERSION {
-        return Err(format!(
-            "Unsupported artifact catalog schema version. Expected `{ARTIFACT_CATALOG_VERSION}`, received `{}`",
-            catalog.version
-        ));
-    }
     if !is_valid_sha256(&catalog.candidate_sha256) {
         return Err(
             "Artifact catalog candidate SHA-256 must be 64 lowercase hexadecimal characters"
@@ -204,9 +196,6 @@ pub(crate) fn validate_artifact_catalog(catalog: &ArtifactCatalog) -> Result<(),
         return Err(
             "Artifact catalog state SHA-256 must be 64 lowercase hexadecimal characters".to_owned(),
         );
-    }
-    if catalog.patterns.is_empty() {
-        return Err("Artifact catalog must contain at least one pattern".to_owned());
     }
 
     let mut ids = HashSet::new();
@@ -239,24 +228,25 @@ pub(crate) fn validate_artifact_catalog(catalog: &ArtifactCatalog) -> Result<(),
     Ok(())
 }
 
+fn artifact_catalog_json_error(error: &serde_json::Error) -> String {
+    let summary = match error.classify() {
+        serde_json::error::Category::Data => {
+            "Artifact catalog JSON data does not match the required schema"
+        }
+        serde_json::error::Category::Eof => "Artifact catalog JSON ends before a complete value",
+        serde_json::error::Category::Io => "Failed to read artifact catalog JSON",
+        serde_json::error::Category::Syntax => "Artifact catalog JSON syntax is invalid",
+    };
+    format!(
+        "{summary} at line {}, column {}",
+        error.line(),
+        error.column()
+    )
+}
+
 pub(crate) fn parse_artifact_catalog(bytes: &[u8]) -> Result<ArtifactCatalog, String> {
-    let catalog: ArtifactCatalog = serde_json::from_slice(bytes).map_err(|error| {
-        let summary = match error.classify() {
-            serde_json::error::Category::Data => {
-                "Artifact catalog JSON data does not match the required schema"
-            }
-            serde_json::error::Category::Eof => {
-                "Artifact catalog JSON ends before a complete value"
-            }
-            serde_json::error::Category::Io => "Failed to read artifact catalog JSON",
-            serde_json::error::Category::Syntax => "Artifact catalog JSON syntax is invalid",
-        };
-        format!(
-            "{summary} at line {}, column {}",
-            error.line(),
-            error.column()
-        )
-    })?;
+    let catalog: ArtifactCatalog =
+        serde_json::from_slice(bytes).map_err(|error| artifact_catalog_json_error(&error))?;
     validate_artifact_catalog(&catalog)?;
 
     Ok(catalog)
@@ -384,10 +374,18 @@ pub(crate) fn read_hashed_utf8_file(
     String::from_utf8(bytes).map_err(|_| format!("The {description} file is not valid UTF-8"))
 }
 
-pub(crate) fn load_artifact_catalog(path: &Path) -> Result<LoadedArtifactCatalog, String> {
+fn read_artifact_catalog_document(path: &Path) -> Result<(PathBuf, ArtifactCatalog), String> {
     let catalog_path = path_as_absolute(path)?;
     let bytes = read_regular_file_without_symlinks(&catalog_path, "artifact catalog")?;
     let document = parse_artifact_catalog(&bytes)?;
+
+    Ok((catalog_path, document))
+}
+
+fn load_artifact_catalog_patterns(
+    catalog_path: &Path,
+    document: &ArtifactCatalog,
+) -> Result<Vec<LoadedArtifactPattern>, String> {
     let base = catalog_path.parent().unwrap_or_else(|| Path::new("."));
     let mut patterns = Vec::with_capacity(document.patterns.len());
 
@@ -403,6 +401,25 @@ pub(crate) fn load_artifact_catalog(path: &Path) -> Result<LoadedArtifactCatalog
             pattern,
         });
     }
+
+    Ok(patterns)
+}
+
+pub(crate) fn load_artifact_catalog(path: &Path) -> Result<LoadedArtifactCatalog, String> {
+    let (catalog_path, document) = read_artifact_catalog_document(path)?;
+    let patterns = load_artifact_catalog_patterns(&catalog_path, &document)?;
+
+    Ok(LoadedArtifactCatalog { document, patterns })
+}
+
+pub(crate) fn load_bound_artifact_catalog(
+    path: &Path,
+    candidate_bytes: &[u8],
+    state_bytes: &[u8],
+) -> Result<LoadedArtifactCatalog, String> {
+    let (catalog_path, document) = read_artifact_catalog_document(path)?;
+    verify_artifact_catalog_binding(&document, candidate_bytes, state_bytes)?;
+    let patterns = load_artifact_catalog_patterns(&catalog_path, &document)?;
 
     Ok(LoadedArtifactCatalog { document, patterns })
 }

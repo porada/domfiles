@@ -26,8 +26,9 @@ This branch specializes the shared [agent permission workflow](permissions.md) f
 - Keep every decoded regex pattern under `1,000` Unicode scalar values, measuring the parsed `.pattern` value rather than its JSON-escaped source representation.
     - Split a pattern when the applicable ownership policy assigns its branches to different groups or when it combines unrelated syntax roles.
     - Do not split one coherent syntax role merely to pursue a smaller arbitrary threshold.
-- Group command-owned patterns alphabetically within each permission bucket.
-    - Within one owner group, place discovery forms first, direct forms next, and wrapped forms alphabetically.
+- Treat command-pattern ordering as part of every change, not as follow-up cleanup. After adding, splitting, moving, or replacing a pattern, verify the complete touched permission bucket and place every changed entry at its final ordered position instead of appending it or retaining a stale source index.
+    - Order command-owner groups alphabetically by semantic owner unless a selected domain policy defines an explicit section order.
+    - Within one owner group, place discovery entries first, direct entries next, and wrapped entries last. Alphabetize entries within each role by their stable semantic command or form key rather than by raw escaped regex text.
     - Alphabetize alternatives when their grammar permits.
 - When another serial task owns a shared or pooled pattern, keep that object byte-identical, record the exact alternatives deferred to its owner in task evidence, and do not report the pooled cleanup as resolved.
 - Keep command-specific prefixes and wrappers within the owning command group. Account for them in applicable allowances and confirmation overrides.
@@ -36,6 +37,7 @@ This branch specializes the shared [agent permission workflow](permissions.md) f
 - Prefer literal spaces over whitespace character classes.
 - Prefer explicit alternatives over optional fragments when one executable has distinct accepted forms.
 - Treat signaling explicit numeric process IDs as an intentional allowance for polling and stopping processes associated with the current task. Do not extend this allowance to process names or patterns.
+- For every command-allowance investigation, evaluate whether a separate project-relative task-owned `.agent-<name>` family is an applicable path-scoped variant of the requested operation under the [agent-directory permission policy](agent-repository-permissions.md#apply-the-agent-directory-allowance-policy). When that policy makes the variant eligible, include it in the resulting proposal and, when the task authorizes mutation, in the implementation without requiring a separate scope selection. Do not introduce unrelated command families.
 - For mixed-purpose utilities and interpreters, prefer positive allowlists of non-mutating forms. Use a broad allowance with `terminal.always_confirm` only when every hazardous form can be matched reliably. Otherwise, preserve default confirmation.
 - Use `terminal.always_confirm` to override broader `terminal.always_allow` entries for hazardous argument forms, including code-execution hooks, package runners, destructive operations, force flags, and commands that uninstall the invoked tool itself. Account for global options, combined short flags, and accepted long-option abbreviations.
 - Do not report overlaps between `terminal.always_allow` and `terminal.always_confirm` when `terminal.always_confirm` acts as a safety override.

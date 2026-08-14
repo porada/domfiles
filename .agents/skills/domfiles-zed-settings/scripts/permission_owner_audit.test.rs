@@ -1,4 +1,4 @@
-#[path = "permission-owner-audit.rs"]
+#[path = "permission_owner_audit.rs"]
 mod helper;
 
 use serde_json::{Value, json};
@@ -13,6 +13,7 @@ use std::{
 };
 
 static NEXT_FIXTURE_ID: AtomicUsize = AtomicUsize::new(0);
+const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
 struct Fixture {
     root: PathBuf,
@@ -125,12 +126,46 @@ fn with_case_insensitive_reason(mut entry: Value, reason: &str) -> Value {
     entry
 }
 
-fn manifest(entries: Vec<Value>) -> String {
+fn manifest_for(
+    inventory_owner: &str,
+    entries: Vec<Value>,
+    excluded_candidates: Vec<Value>,
+) -> String {
     json!({
-        "version": 1,
+        "settings_sha256": ZERO_SHA256,
+        "inventory_owner": inventory_owner,
         "entries": entries,
+        "excluded_candidates": excluded_candidates,
     })
     .to_string()
+}
+
+fn manifest(entries: Vec<Value>) -> String {
+    let inventory_owner = entries
+        .first()
+        .and_then(|entry| entry.get("owner"))
+        .and_then(Value::as_str)
+        .and_then(|owner| owner.split(':').next())
+        .expect("Manifest entries must identify an inventory owner")
+        .to_owned();
+
+    manifest_for(&inventory_owner, entries, vec![])
+}
+
+fn excluded_candidate(
+    bucket: &str,
+    index: usize,
+    owner: &str,
+    witness: &str,
+    reason: &str,
+) -> Value {
+    json!({
+        "bucket": bucket,
+        "index": index,
+        "owner": owner,
+        "witness": witness,
+        "reason": reason,
+    })
 }
 
 fn valid_settings_and_manifest() -> (String, String) {
@@ -167,13 +202,27 @@ fn run_files(settings_path: &Path, manifest_path: &Path) -> (u8, String, String)
     ])
 }
 
-fn run_inventory(settings_path: &Path, owner: &str) -> (u8, String, String) {
-    run(vec![
+fn run_inventory_after(
+    settings_path: &Path,
+    owner: &str,
+    after: Option<&str>,
+) -> (u8, String, String) {
+    let mut arguments = vec![
         OsString::from("--settings"),
         settings_path.as_os_str().to_owned(),
         OsString::from("--owner"),
         OsString::from(owner),
-    ])
+    ];
+    if let Some(after) = after {
+        arguments.push(OsString::from("--after"));
+        arguments.push(OsString::from(after));
+    }
+
+    run(arguments)
+}
+
+fn run_inventory(settings_path: &Path, owner: &str) -> (u8, String, String) {
+    run_inventory_after(settings_path, owner, None)
 }
 
 fn inventory_preview(stdout: &str, id: &str) -> String {
@@ -188,16 +237,42 @@ fn inventory_preview(stdout: &str, id: &str) -> String {
     serde_json::from_str(preview).expect("Inventory preview must be a JSON string")
 }
 
+fn inventory_cursor(stdout: &str) -> String {
+    stdout
+        .lines()
+        .find_map(|line| line.strip_prefix("Next inventory cursor: "))
+        .expect("Inventory page must contain a continuation cursor")
+        .to_owned()
+}
+
 fn write_valid_files(fixture: &Fixture) -> (PathBuf, PathBuf) {
     let (settings, manifest) = valid_settings_and_manifest();
+    let manifest = bind_manifest(&settings, &manifest);
     (
         fixture.write("settings.json", &settings),
         fixture.write("manifest.json", &manifest),
     )
 }
 
+fn bind_manifest(settings: &str, manifest: &str) -> String {
+    let mut manifest: Value =
+        serde_json::from_str(manifest).expect("Manifest fixture must be JSON");
+    manifest
+        .as_object_mut()
+        .expect("Manifest fixture must be an object")
+        .insert(
+            "settings_sha256".to_owned(),
+            json!(helper::settings_sha256(settings)),
+        );
+    manifest.to_string()
+}
+
+fn audit_json(settings: &str, manifest: &str) -> Result<helper::AuditReport, String> {
+    helper::audit_json(settings, &bind_manifest(settings, manifest))
+}
+
 fn finding_reasons(settings: &str, manifest: &str) -> Vec<String> {
-    helper::audit_json(settings, manifest)
+    audit_json(settings, manifest)
         .expect("Audit input must be structurally valid")
         .findings
         .into_iter()
@@ -211,25 +286,24 @@ fn prints_help_only_for_exact_help() {
 
     assert_eq!(status, 0);
     assert!(stdout.starts_with("Usage:\n  permission-owner-audit"));
-    assert!(stdout.contains(
-        "permission-owner-audit --settings <settings-path> --owner <top-level-executable>"
-    ));
-    assert!(stdout.contains("Version-1 manifest schema"));
+    assert!(stdout.contains("[--after <inventory-cursor>]"));
+    assert!(stdout.contains("Canonical manifest schema"));
+    assert!(!stdout.contains("manifest version"));
+    assert!(stdout.contains("settings_sha256"));
+    assert!(stdout.contains("inventory_owner"));
+    assert!(stdout.contains("excluded_candidates"));
     assert!(stdout.contains("unknown fields are rejected"));
     assert!(stdout.contains("case_insensitive_reason"));
-    assert!(stdout.contains("discovery_coverage"));
     assert!(stdout.contains("complete_finite|representative"));
-    assert!(stdout.contains("discovery_inputs"));
     assert!(stdout.contains("[A-Za-z0-9_.+-]+"));
     assert!(stdout.contains("Matches are inventory candidates"));
     assert!(stdout.contains("not semantic ownership proof"));
     assert!(stdout.contains("Each selected decoded pattern must contain at most 999"));
     assert!(stdout.contains("independently inferred bucket, semantic owner, and Git repository"));
-    assert!(stdout.contains("exact top-level agent worktree"));
-    assert!(stdout.contains("`section_sort_key` participates in ordering"));
-    assert!(stdout.contains("(`owner_sort_key`, `section_sort_key`, role order"));
-    assert!(stdout.contains("written to standard output"));
-    assert!(stdout.contains("written to standard error"));
+    assert!(stdout.contains("Declared roles and sort keys"));
+    assert!(stdout.contains("Git discovery-to-direct or discovery-to-wrapped gap"));
+    assert!(stdout.contains("exact total and"));
+    assert!(stdout.contains("opaque continuation cursor only when"));
     assert!(stdout.contains("Exit statuses:"));
     assert!(stderr.is_empty());
 
@@ -279,18 +353,95 @@ fn rejects_missing_unknown_and_duplicate_arguments() {
 fn rejects_malformed_and_unknown_field_manifests() {
     let (settings, _) = valid_settings_and_manifest();
     let malformed = "{not-json";
-    let unknown_root = json!({"version": 1, "entries": [], "extra": true}).to_string();
+    let unknown_root = json!({
+        "settings_sha256": ZERO_SHA256,
+        "inventory_owner": "foo",
+        "entries": [direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        "excluded_candidates": [],
+        "version": 1,
+    })
+    .to_string();
     let mut unknown_entry = direct_entry("foo", "always_allow", 0, "foo", "foo run");
     unknown_entry
         .as_object_mut()
         .expect("Entry must be an object")
         .insert("extra".to_owned(), json!(true));
     let unknown_entry = manifest(vec![unknown_entry]);
+    let unknown_exclusion = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![json!({
+            "bucket": "always_confirm",
+            "index": 0,
+            "owner": "bar",
+            "witness": "bar foo",
+            "reason": "owned elsewhere",
+            "extra": true,
+        })],
+    );
 
-    for manifest in [malformed.to_owned(), unknown_root, unknown_entry] {
+    for manifest in [
+        malformed.to_owned(),
+        unknown_root,
+        unknown_entry,
+        unknown_exclusion,
+    ] {
         let error = helper::audit_json(&settings, &manifest)
             .expect_err("Malformed manifest must be rejected");
-        assert!(error.contains("Invalid manifest JSON"));
+        assert!(
+            error.contains("Manifest JSON") && error.contains("line") && error.contains("column"),
+            "Unexpected error: {error}"
+        );
+        assert!(!error.contains("extra"));
+        assert!(!error.contains("version"));
+    }
+}
+
+#[test]
+fn rejects_duplicate_known_manifest_fields() {
+    let (settings, _) = valid_settings_and_manifest();
+    let duplicate_root = r#"{
+        "settings_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "inventory_owner": "foo",
+        "inventory_owner": "foo",
+        "entries": [{
+            "id": "foo",
+            "bucket": "always_allow",
+            "index": 0,
+            "owner": "foo",
+            "owner_sort_key": "foo",
+            "section_sort_key": "direct",
+            "role": "direct",
+            "pattern_sort_key": "foo",
+            "witness": "foo run"
+        }],
+        "excluded_candidates": []
+    }"#;
+    let duplicate_entry = r#"{
+        "settings_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "inventory_owner": "foo",
+        "entries": [{
+            "id": "foo",
+            "bucket": "always_allow",
+            "index": 0,
+            "index": 0,
+            "owner": "foo",
+            "owner_sort_key": "foo",
+            "section_sort_key": "direct",
+            "role": "direct",
+            "pattern_sort_key": "foo",
+            "witness": "foo run"
+        }],
+        "excluded_candidates": []
+    }"#;
+
+    for manifest in [duplicate_root, duplicate_entry] {
+        let error = helper::audit_json(&settings, manifest)
+            .expect_err("Duplicate known field must be rejected");
+        assert!(error.contains("Manifest JSON data does not match"));
+        assert!(error.contains("line") && error.contains("column"));
+        assert!(!error.contains("inventory_owner"));
+        assert!(!error.contains("index"));
     }
 }
 
@@ -305,8 +456,8 @@ fn rejects_missing_settings_file_and_settings_path() {
     assert!(stdout.is_empty());
     assert!(stderr.contains("Failed to read settings file"));
 
-    let error = helper::audit_json("{}", &manifest)
-        .expect_err("Missing terminal settings path must be rejected");
+    let error =
+        audit_json("{}", &manifest).expect_err("Missing terminal settings path must be rejected");
     assert!(error.contains(".agent.tool_permissions.tools.terminal"));
 }
 
@@ -324,6 +475,27 @@ fn reports_run_success_with_counts_only() {
     );
     assert!(stderr.is_empty());
     assert!(!stdout.contains("foo"));
+}
+
+#[test]
+fn rejects_manifest_bound_to_different_exact_settings_bytes() {
+    let (settings, manifest) = valid_settings_and_manifest();
+    let bound_manifest = bind_manifest(&settings, &manifest);
+    let reformatted_settings = format!("{settings}\n");
+
+    let error = helper::audit_json(&reformatted_settings, &bound_manifest)
+        .expect_err("Different exact settings bytes must invalidate the manifest");
+
+    assert!(error.contains("settings_sha256"));
+    assert!(error.contains("Rebuild the inventory and manifest"));
+    assert!(!error.contains(&helper::settings_sha256(&settings)));
+    assert!(!error.contains(&helper::settings_sha256(&reformatted_settings)));
+
+    let mut invalid: Value = serde_json::from_str(&manifest).unwrap();
+    invalid["settings_sha256"] = json!("not-a-sha256");
+    let error = helper::audit_json(&settings, &invalid.to_string())
+        .expect_err("Malformed settings digest must be rejected");
+    assert!(error.contains("64 lowercase hexadecimal characters"));
 }
 
 #[test]
@@ -401,6 +573,18 @@ fn excludes_manager_substrings_and_escapes_literal_owner_tokens() {
     assert!(stdout.contains("always_allow[6]"));
     assert!(!stdout.contains("always_allow[7]"));
     assert!(stdout.contains("Total inventory candidates: 1"));
+
+    let (status, stdout, stderr) = run_inventory(&settings_path, "foo");
+    assert_eq!(status, 0);
+    assert!(stderr.is_empty());
+    assert!(!stdout.contains("always_allow[4]"));
+    assert!(stdout.contains("Total inventory candidates: 0"));
+
+    let (status, stdout, stderr) = run_inventory(&settings_path, "git");
+    assert_eq!(status, 0);
+    assert!(stderr.is_empty());
+    assert!(!stdout.contains("always_allow[6]"));
+    assert!(stdout.contains("Total inventory candidates: 0"));
 }
 
 #[test]
@@ -440,15 +624,16 @@ fn succeeds_with_zero_inventory_hits() {
     let (status, stdout, stderr) = run_inventory(&settings_path, "git");
 
     assert_eq!(status, 0);
-    assert_eq!(
-        stdout,
-        "Inventory results are candidates, not semantic ownership proof\nTotal inventory candidates: 0\n"
-    );
+    assert!(stdout.starts_with(
+        "Inventory results are candidates, not semantic ownership proof\nInventory settings SHA-256: "
+    ));
+    assert!(stdout.contains("\nTotal inventory candidates: 0\n"));
+    assert!(stdout.ends_with("Inventory candidates remaining after this page: 0\n"));
     assert!(stderr.is_empty());
 }
 
 #[test]
-fn bounds_inventory_at_one_hundred_hits_with_exact_total() {
+fn paginates_one_hundred_three_candidates_without_duplicates_or_omissions() {
     let fixture = Fixture::new();
     let mut always_allow = Vec::new();
     let mut always_confirm = Vec::new();
@@ -471,15 +656,58 @@ fn bounds_inventory_at_one_hundred_hits_with_exact_total() {
         ));
     }
 
-    let first_pattern = always_allow[0]
-        .get("pattern")
-        .and_then(Value::as_str)
-        .expect("Fixture pattern must be a string")
-        .to_owned();
     let settings_path = fixture.write(
         "settings.json",
         &settings(always_allow, always_confirm, always_deny),
     );
+    let (first_status, first_stdout, first_stderr) =
+        run_inventory_after(&settings_path, "git", None);
+    let cursor = inventory_cursor(&first_stdout);
+    let (second_status, second_stdout, second_stderr) =
+        run_inventory_after(&settings_path, "git", Some(&cursor));
+
+    assert_eq!(first_status, 0);
+    assert_eq!(second_status, 0);
+    assert!(first_stderr.is_empty());
+    assert!(second_stderr.is_empty());
+    let mut ids = first_stdout
+        .lines()
+        .chain(second_stdout.lines())
+        .filter(|line| line.starts_with("always_"))
+        .map(|line| {
+            line.split_once(' ')
+                .expect("Candidate line must contain fields")
+                .0
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(ids.len(), 103);
+    ids.sort_unstable();
+    ids.dedup();
+    assert_eq!(ids.len(), 103);
+    assert!(first_stdout.contains("always_deny[31]"));
+    assert!(!first_stdout.contains("always_deny[32]"));
+    assert!(second_stdout.contains("always_deny[32]"));
+    assert!(second_stdout.contains("always_deny[33]"));
+    assert!(second_stdout.contains("always_deny[34]"));
+    assert!(first_stdout.contains("Total inventory candidates: 103"));
+    assert!(first_stdout.contains("Inventory candidates remaining after this page: 3"));
+    assert!(cursor.ends_with(":git:always_deny[31]"));
+    assert!(first_stdout.contains(&format!("Next inventory cursor: {cursor}")));
+    assert!(second_stdout.contains("Total inventory candidates: 103"));
+    assert!(second_stdout.contains("Inventory candidates remaining after this page: 0"));
+    assert!(!second_stdout.contains("Next inventory cursor:"));
+    assert!(!first_stdout.contains(r"^(?:git allow-00 private)$"));
+    assert!(!second_stdout.contains(r"^(?:git deny-32 private)$"));
+}
+
+#[test]
+fn reports_exactly_one_hundred_candidates_without_a_cursor() {
+    let fixture = Fixture::new();
+    let always_allow = (0..100)
+        .map(|index| pattern(&format!(r"^git item-{index:03}$"), true))
+        .collect();
+    let settings_path = fixture.write("settings.json", &settings(always_allow, vec![], vec![]));
+
     let (status, stdout, stderr) = run_inventory(&settings_path, "git");
 
     assert_eq!(status, 0);
@@ -491,11 +719,131 @@ fn bounds_inventory_at_one_hundred_hits_with_exact_total() {
             .count(),
         100
     );
-    assert!(stdout.contains("always_deny[31]"));
-    assert!(!stdout.contains("always_deny[32]"));
-    assert!(stdout.contains("… 3 additional inventory candidates omitted"));
-    assert!(stdout.contains("Total inventory candidates: 103"));
-    assert!(!stdout.contains(&first_pattern));
+    assert!(stdout.contains("Total inventory candidates: 100"));
+    assert!(stdout.contains("Inventory candidates remaining after this page: 0"));
+    assert!(!stdout.contains("Next inventory cursor:"));
+}
+
+#[test]
+fn rejects_malformed_missing_nonmatching_and_cross_owner_inventory_cursors() {
+    let fixture = Fixture::new();
+    let settings_contents = settings(
+        vec![
+            pattern(r"^git status$", true),
+            pattern(r"^npm --version$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let settings_path = fixture.write("settings.json", &settings_contents);
+    let settings_sha256 = helper::settings_sha256(&settings_contents);
+    let cursors = vec![
+        "always_allow[0]".to_owned(),
+        format!("{settings_sha256}:git:always_allow[01]"),
+        format!("{settings_sha256}:git:always_allow[-1]"),
+        format!("{settings_sha256}:git:always_allow[2"),
+        format!("{settings_sha256}:git:allow[0]"),
+        format!("{settings_sha256}:git:always_allow[99]"),
+        format!("{settings_sha256}:git:always_allow[1]"),
+        format!("{settings_sha256}:npm:always_allow[0]"),
+    ];
+
+    for cursor in cursors {
+        let (status, stdout, stderr) = run_inventory_after(&settings_path, "git", Some(&cursor));
+        assert_eq!(status, 2, "Cursor {cursor} must fail");
+        assert!(stdout.is_empty());
+        assert!(
+            stderr.contains("exact inventory cursor")
+                || stderr.contains("does not match the current settings snapshot and owner")
+                || stderr.contains("missing or no longer identifies a lexical candidate"),
+            "Unexpected error: {stderr}"
+        );
+    }
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--owner"),
+        OsString::from("git"),
+        OsString::from("--after"),
+    ]);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("requires a cursor"));
+}
+
+#[test]
+fn rejects_duplicate_after_and_after_with_manifest_mode() {
+    let fixture = Fixture::new();
+    let (settings_path, manifest_path) = write_valid_files(&fixture);
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--owner"),
+        OsString::from("foo"),
+        OsString::from("--after"),
+        OsString::from(format!("{ZERO_SHA256}:git:always_allow[0]")),
+        OsString::from("--after"),
+        OsString::from(format!("{ZERO_SHA256}:git:always_allow[0]")),
+    ]);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("may be specified only once"));
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--manifest"),
+        manifest_path.as_os_str().to_owned(),
+        OsString::from("--after"),
+        OsString::from(format!("{ZERO_SHA256}:foo:always_allow[0]")),
+    ]);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("valid only with"));
+}
+
+#[test]
+fn invalidates_inventory_cursors_after_any_settings_change() {
+    let fixture = Fixture::new();
+    let original_settings = settings(
+        (0..101)
+            .map(|index| pattern(&format!(r"^git item-{index:03}$"), true))
+            .collect(),
+        vec![],
+        vec![],
+    );
+    let original_path = fixture.write("original-settings.json", &original_settings);
+    let (status, stdout, stderr) = run_inventory(&original_path, "git");
+    assert_eq!(status, 0);
+    assert!(stderr.is_empty());
+    let cursor = inventory_cursor(&stdout);
+
+    let mut changed_pattern: Value = serde_json::from_str(&original_settings).unwrap();
+    changed_pattern["agent"]["tool_permissions"]["tools"]["terminal"]["always_allow"][100]["case_sensitive"] =
+        json!(false);
+    let mut inserted: Value = serde_json::from_str(&original_settings).unwrap();
+    inserted["agent"]["tool_permissions"]["tools"]["terminal"]["always_allow"]
+        .as_array_mut()
+        .unwrap()
+        .insert(0, pattern(r"^git inserted$", true));
+    let mut reordered: Value = serde_json::from_str(&original_settings).unwrap();
+    reordered["agent"]["tool_permissions"]["tools"]["terminal"]["always_allow"]
+        .as_array_mut()
+        .unwrap()
+        .swap(0, 1);
+
+    for (index, changed) in [changed_pattern, inserted, reordered]
+        .into_iter()
+        .enumerate()
+    {
+        let changed_path = fixture.write(&format!("changed-{index}.json"), &changed.to_string());
+        let (status, stdout, stderr) = run_inventory_after(&changed_path, "git", Some(&cursor));
+        assert_eq!(status, 2);
+        assert!(stdout.is_empty());
+        assert!(stderr.contains("does not match the current settings snapshot and owner"));
+    }
 }
 
 #[test]
@@ -503,7 +851,7 @@ fn rejects_invalid_inventory_settings_without_pattern_leakage() {
     let fixture = Fixture::new();
     let private_pattern = "private-pattern-without-owner";
     let cases = [
-        ("{not-json".to_owned(), "Invalid settings JSON"),
+        ("{not-json".to_owned(), "Settings JSON syntax is invalid"),
         ("{}".to_owned(), ".agent.tool_permissions.tools.terminal"),
         (
             json!({
@@ -630,7 +978,7 @@ fn audits_nohup_forms_as_wrapped() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
 }
@@ -695,10 +1043,14 @@ fn rejects_unsupported_xargs_options_and_values() {
 }
 
 #[test]
-fn infers_git_root_and_direct_owners() {
+fn infers_git_root_discovery_and_direct_owners() {
     let cases = [
         ("git", "git:root", helper::Role::Direct),
-        ("git --version", "git:root", helper::Role::Direct),
+        ("git --version", "git:root", helper::Role::Discovery),
+        ("git -h", "git:root", helper::Role::Discovery),
+        ("git -help", "git:root", helper::Role::Discovery),
+        ("git -v", "git:root", helper::Role::Discovery),
+        ("git -version", "git:root", helper::Role::Discovery),
         (
             "git -C repo --no-optional-locks --no-pager",
             "git:root",
@@ -722,12 +1074,59 @@ fn infers_git_root_and_direct_owners() {
         assert_eq!(inferred.owner, owner);
         assert_eq!(inferred.role, role);
     }
+}
 
-    let discovery = vec!["git --version".to_owned()];
-    let inferred = helper::infer_owner_role("git --version", &discovery)
-        .expect("Git discovery witness must be supported");
-    assert_eq!(inferred.owner, "git:root");
-    assert_eq!(inferred.role, helper::Role::Discovery);
+#[test]
+fn infers_exact_git_commit_prefixes_under_supported_wrappers() {
+    let cases = [
+        (
+            "git -c commit.gpgsign=false -C .agent-task commit -m one",
+            helper::Role::Direct,
+        ),
+        (
+            "git -C .agent-task -c commit.gpgsign=false commit -m two",
+            helper::Role::Direct,
+        ),
+        (
+            "nohup git -c commit.gpgsign=false -C .agent-task commit -m three",
+            helper::Role::Wrapped,
+        ),
+        (
+            "xargs git -C .agent-task -c commit.gpgsign=false commit -m four",
+            helper::Role::Wrapped,
+        ),
+    ];
+
+    for (witness, role) in cases {
+        let inferred =
+            helper::infer_owner_role(witness, &[]).expect("Approved Git prefix must be supported");
+        assert_eq!(inferred.owner, "git:commit");
+        assert_eq!(inferred.role, role);
+    }
+}
+
+#[test]
+fn leaves_unapproved_git_config_forms_outside_commit_prefix_inference() {
+    let cases = [
+        (
+            "git -c commit.gpgsign=true -C .agent-task commit",
+            "git:root",
+        ),
+        ("git -c core.foo=false -C .agent-task commit", "git:root"),
+        (
+            "git -ccommit.gpgsign=false -C .agent-task commit",
+            "git:root",
+        ),
+        ("git -c", "git:root"),
+        ("git --unknown -C .agent-task commit", "git:root"),
+        ("git commit -c commit.gpgsign=false", "git:commit"),
+    ];
+
+    for (witness, owner) in cases {
+        let inferred = helper::infer_owner_role(witness, &[])
+            .expect("Near-miss Git witness must remain classifiable");
+        assert_eq!(inferred.owner, owner, "Unexpected owner for {witness}");
+    }
 }
 
 #[test]
@@ -750,47 +1149,78 @@ fn rejects_ambiguous_or_unnormalized_witnesses() {
 fn reports_wrong_owner_and_wrong_role() {
     let settings = settings(
         vec![
-            pattern(r"^corepack npm --version$", true),
+            pattern(r"^foo --version$", true),
             pattern(r"^foo run$", true),
         ],
         vec![],
         vec![],
     );
-    let manifest = manifest(vec![
-        entry(
-            "wrong-owner",
-            "always_allow",
-            0,
-            "corepack",
-            "a",
-            "a",
-            "discovery",
-            "a",
-            "corepack npm --version",
-            Some(&["corepack npm --version"]),
-        ),
-        entry(
-            "wrong-role",
-            "always_allow",
-            1,
-            "foo",
-            "b",
-            "a",
-            "wrapped",
-            "a",
-            "foo run",
-            None,
-        ),
-    ]);
+    let manifest = manifest_for(
+        "foo",
+        vec![
+            entry(
+                "wrong-owner",
+                "always_allow",
+                0,
+                "corepack",
+                "a",
+                "a",
+                "discovery",
+                "a",
+                "foo --version",
+                Some(&["foo --version"]),
+            ),
+            entry(
+                "wrong-role",
+                "always_allow",
+                1,
+                "foo",
+                "b",
+                "a",
+                "wrapped",
+                "a",
+                "foo run",
+                None,
+            ),
+        ],
+        vec![],
+    );
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.iter().any(|finding| {
         finding.id == "wrong-owner" && finding.reason.contains("declared owner differs")
     }));
-    assert!(report.findings.iter().any(|finding| {
-        finding.id == "wrong-role" && finding.reason.contains("declared role `wrapped`")
-    }));
+    assert!(
+        report.findings.iter().any(|finding| {
+            finding.id == "wrong-role" && finding.reason.contains("declared role")
+        })
+    );
+}
+
+#[test]
+fn reports_entry_inferred_outside_inventory_owner() {
+    let settings = settings(vec![pattern(r"^bar foo$", true)], vec![], vec![]);
+    let manifest = manifest_for(
+        "foo",
+        vec![direct_entry(
+            "foreign-owner",
+            "always_allow",
+            0,
+            "bar",
+            "bar foo",
+        )],
+        vec![],
+    );
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 1);
+    assert!(
+        report.findings[0]
+            .reason
+            .contains("outside the manifest inventory owner")
+    );
 }
 
 #[test]
@@ -801,7 +1231,7 @@ fn accepts_verified_case_insensitive_exception() {
         "The command requires case-insensitive matching",
     )]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
 }
@@ -823,44 +1253,37 @@ fn reports_case_reason_on_case_sensitive_pattern() {
 
 #[test]
 fn reports_witness_mismatch_case_setting_and_invalid_regex() {
-    let private_pattern = "private-regex-body(";
-    let private_witness = "private-witness-input";
+    let private_pattern = "private-regex-body(foo(";
+    let private_witness = "foo private-witness-input";
     let settings = settings(
         vec![
             pattern(r"^foo$", true),
-            pattern(r"^bar run$", false),
+            pattern(r"^foo run$", false),
             pattern(private_pattern, true),
         ],
         vec![],
         vec![],
     );
     let manifest = manifest(vec![
-        direct_entry("witness", "always_allow", 0, "foo", "foo run"),
-        direct_entry("case", "always_allow", 1, "bar", "bar run"),
-        direct_entry(
-            "invalid",
-            "always_allow",
-            2,
-            private_witness,
-            private_witness,
-        ),
+        direct_entry("a-witness", "always_allow", 0, "foo", "foo run"),
+        direct_entry("b-case", "always_allow", 1, "foo", "foo run"),
+        direct_entry("c-invalid", "always_allow", 2, "foo", private_witness),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.iter().any(|finding| {
-        finding.id == "witness" && finding.reason.contains("does not match its witness")
+        finding.id == "a-witness" && finding.reason.contains("does not match its witness")
     }));
     assert!(report.findings.iter().any(|finding| {
-        finding.id == "case"
-            && finding
-                .reason
-                .contains("`case_sensitive` is `false` without `case_insensitive_reason`")
+        finding.id == "b-case"
+            && finding.reason.contains("case_sensitive")
+            && finding.reason.contains("case_insensitive_reason")
     }));
     let invalid = report
         .findings
         .iter()
-        .find(|finding| finding.id == "invalid")
+        .find(|finding| finding.id == "c-invalid")
         .expect("Invalid regex finding must exist");
     assert!(invalid.reason.contains("regex is invalid"));
     assert!(!invalid.reason.contains(private_pattern));
@@ -869,7 +1292,7 @@ fn reports_witness_mismatch_case_setting_and_invalid_regex() {
 
 #[test]
 fn measures_decoded_unicode_scalar_length_at_boundary() {
-    let accepted_witness = "💥".repeat(997);
+    let accepted_witness = format!("foo {}", "💥".repeat(993));
     let accepted_pattern = format!("^{accepted_witness}$");
     assert_eq!(accepted_pattern.chars().count(), 999);
     let accepted_settings = settings(vec![pattern(&accepted_pattern, true)], vec![], vec![]);
@@ -877,15 +1300,15 @@ fn measures_decoded_unicode_scalar_length_at_boundary() {
         "accepted",
         "always_allow",
         0,
-        &accepted_witness,
+        "foo",
         &accepted_witness,
     )]);
 
-    let accepted = helper::audit_json(&accepted_settings, &accepted_manifest)
+    let accepted = audit_json(&accepted_settings, &accepted_manifest)
         .expect("Boundary audit input must be valid");
     assert!(accepted.findings.is_empty());
 
-    let rejected_witness = "💥".repeat(998);
+    let rejected_witness = format!("foo {}", "💥".repeat(994));
     let rejected_pattern = format!("^{rejected_witness}$");
     assert_eq!(rejected_pattern.chars().count(), 1000);
     let rejected_settings = settings(vec![pattern(&rejected_pattern, true)], vec![], vec![]);
@@ -893,7 +1316,7 @@ fn measures_decoded_unicode_scalar_length_at_boundary() {
         "rejected",
         "always_allow",
         0,
-        &rejected_witness,
+        "foo",
         &rejected_witness,
     )]);
 
@@ -940,20 +1363,16 @@ fn rejects_invalid_selected_settings_entries() {
     ];
 
     for (settings, manifest, expected) in cases {
-        let error = helper::audit_json(&settings, &manifest)
+        let error = audit_json(&settings, &manifest)
             .expect_err("Invalid selected settings entry must fail");
         assert!(error.contains(expected), "Unexpected error: {error}");
     }
 }
 
 #[test]
-fn rejects_unsupported_version_and_invalid_discovery_shapes() {
+fn rejects_invalid_discovery_shapes() {
     let (settings, _) = valid_settings_and_manifest();
     let cases = [
-        (
-            json!({"version": 2, "entries": []}).to_string(),
-            "Unsupported manifest version",
-        ),
         (
             {
                 let mut entry = entry(
@@ -974,7 +1393,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                     .insert("discovery_coverage".to_owned(), json!("complete_finite"));
                 manifest(vec![entry])
             },
-            "must declare `discovery_inputs`",
+            "must declare discovery_inputs",
         ),
         (
             manifest(vec![entry(
@@ -989,7 +1408,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo --help",
                 None,
             )]),
-            "must declare `discovery_coverage`",
+            "must declare discovery_coverage",
         ),
         (
             manifest(vec![entry(
@@ -1004,7 +1423,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo --help",
                 Some(&[]),
             )]),
-            "at least one `discovery_inputs` value",
+            "at least one discovery_inputs value",
         ),
         (
             manifest(vec![entry(
@@ -1019,7 +1438,7 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo --help",
                 Some(&["foo -h"]),
             )]),
-            "include its `witness`",
+            "include its witness",
         ),
         (
             manifest(vec![entry(
@@ -1034,22 +1453,253 @@ fn rejects_unsupported_version_and_invalid_discovery_shapes() {
                 "foo run",
                 Some(&["foo run"]),
             )]),
-            "must omit `discovery_coverage` and `discovery_inputs`",
+            "must omit discovery_coverage and discovery_inputs",
         ),
         (
             manifest(vec![with_case_insensitive_reason(
                 direct_entry("empty-reason", "always_allow", 0, "foo", "foo run"),
                 "  ",
             )]),
-            "must declare a nonempty `case_insensitive_reason`",
+            "must declare a nonempty case_insensitive_reason",
         ),
     ];
 
-    for (manifest, expected) in cases {
-        let error =
-            helper::audit_json(&settings, &manifest).expect_err("Invalid manifest shape must fail");
-        assert!(error.contains(expected), "Unexpected error: {error}");
+    for (manifest, expected_words) in cases {
+        let error = audit_json(&settings, &manifest).expect_err("Invalid manifest shape must fail");
+        for word in expected_words.split(' ') {
+            assert!(error.contains(word), "Unexpected error: {error}");
+        }
     }
+}
+
+#[test]
+fn rejects_empty_manifest_and_invalid_inventory_owner() {
+    let (settings, _) = valid_settings_and_manifest();
+    for manifest in [
+        manifest_for("foo", vec![], vec![]),
+        manifest_for(
+            "",
+            vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+            vec![],
+        ),
+        manifest_for(
+            "foo bar",
+            vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+            vec![],
+        ),
+    ] {
+        let error = audit_json(&settings, &manifest).expect_err("Invalid manifest root must fail");
+        assert!(
+            error.contains("must be nonempty") || error.contains("inventory_owner"),
+            "Unexpected error: {error}"
+        );
+    }
+}
+
+#[test]
+fn rejects_omitted_first_and_last_lexical_candidates() {
+    let settings = settings(
+        vec![
+            pattern(r"^foo one$", true),
+            pattern(r"^foo two$", true),
+            pattern(r"^foo three$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let omitted_first = manifest(vec![
+        direct_entry("two", "always_allow", 1, "foo", "foo two"),
+        direct_entry("three", "always_allow", 2, "foo", "foo three"),
+    ]);
+    let omitted_last = manifest(vec![
+        direct_entry("one", "always_allow", 0, "foo", "foo one"),
+        direct_entry("two", "always_allow", 1, "foo", "foo two"),
+    ]);
+
+    let first_error =
+        audit_json(&settings, &omitted_first).expect_err("Omitted first candidate must fail");
+    assert!(first_error.contains("1 missing candidate position"));
+    assert!(first_error.contains("always_allow[0]"));
+    let last_error =
+        audit_json(&settings, &omitted_last).expect_err("Omitted last candidate must fail");
+    assert!(last_error.contains("1 missing candidate position"));
+    assert!(last_error.contains("always_allow[2]"));
+}
+
+#[test]
+fn rejects_duplicate_and_overlapping_excluded_positions() {
+    let (settings, _) = valid_settings_and_manifest();
+    let duplicate = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![
+            excluded_candidate("always_confirm", 0, "bar", "bar foo", "owned elsewhere"),
+            excluded_candidate("always_confirm", 0, "bar", "bar foo", "owned elsewhere"),
+        ],
+    );
+    let overlap = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_allow",
+            0,
+            "bar",
+            "foo run",
+            "owned elsewhere",
+        )],
+    );
+    let empty_reason = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_confirm",
+            0,
+            "bar",
+            "bar foo",
+            "  ",
+        )],
+    );
+
+    for (manifest, expected) in [
+        (duplicate, "Duplicate excluded candidate position"),
+        (overlap, "both classify"),
+        (empty_reason, "nonempty reason"),
+    ] {
+        let error = audit_json(&settings, &manifest)
+            .expect_err("Invalid exclusion classification must fail");
+        for word in expected.split(' ') {
+            assert!(error.contains(word), "Unexpected error: {error}");
+        }
+    }
+}
+
+#[test]
+fn bounds_overlapping_entry_ids_in_structural_errors() {
+    let settings = settings(vec![pattern(r"^foo run$", true)], vec![], vec![]);
+    let private_suffix = "private-id-suffix";
+    let long_id = format!("{}\n{}{private_suffix}", "x".repeat(40), "y".repeat(60));
+    let manifest = manifest_for(
+        "foo",
+        vec![direct_entry(&long_id, "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_allow",
+            0,
+            "bar",
+            "foo run",
+            "owned elsewhere",
+        )],
+    );
+
+    let error = audit_json(&settings, &manifest)
+        .expect_err("Overlapping entry and exclusion positions must fail");
+
+    let bounded_id = format!("{}?{}…", "x".repeat(40), "y".repeat(39));
+    assert!(error.contains(&bounded_id));
+    assert!(!error.contains(private_suffix));
+    assert!(!error.contains(&long_id));
+}
+
+#[test]
+fn verifies_excluded_candidates_belong_to_another_owner() {
+    let outside_owner_settings = settings(
+        vec![pattern(r"^foo run$", true), pattern(r"^bar foo$", true)],
+        vec![],
+        vec![],
+    );
+    let valid = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_allow",
+            1,
+            "bar",
+            "bar foo",
+            "the lexical `foo` token belongs to `bar`",
+        )],
+    );
+    let report =
+        audit_json(&outside_owner_settings, &valid).expect("Outside-owner exclusion must be valid");
+    assert!(report.findings.is_empty());
+
+    let same_owner = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_allow",
+            1,
+            "bar",
+            "foo run",
+            "invalid classification",
+        )],
+    );
+    let mismatch = audit_json(&outside_owner_settings, &same_owner)
+        .expect_err("Exclusion witness must match its selected pattern");
+    assert!(mismatch.contains("does not match its witness"));
+
+    let wrong_declared_owner = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_allow",
+            1,
+            "baz",
+            "bar foo",
+            "invalid classification",
+        )],
+    );
+    let mismatch = audit_json(&outside_owner_settings, &wrong_declared_owner)
+        .expect_err("Exclusion owner must match its inferred owner");
+    assert!(mismatch.contains("differs from its inferred owner"));
+
+    let hidden_same_owner_settings = settings(
+        vec![pattern(r"^foo run$", true), pattern(r"^foo hidden$", true)],
+        vec![],
+        vec![],
+    );
+    let hidden_same_owner = manifest_for(
+        "foo",
+        vec![direct_entry("foo", "always_allow", 0, "foo", "foo run")],
+        vec![excluded_candidate(
+            "always_allow",
+            1,
+            "foo",
+            "foo hidden",
+            "invalid classification",
+        )],
+    );
+    let error = audit_json(&hidden_same_owner_settings, &hidden_same_owner)
+        .expect_err("Inventory-owner candidate must not be excluded");
+    assert!(error.contains("infers to the manifest inventory owner"));
+}
+
+#[test]
+fn bounds_missing_and_unexpected_coverage_diagnostics() {
+    let mut patterns = Vec::new();
+    let mut entries = Vec::new();
+    for index in 0..15 {
+        patterns.push(pattern(&format!(r"^foo missing-{index:02}$"), true));
+    }
+    for index in 15..30 {
+        patterns.push(pattern(&format!(r"^bar unexpected-{index:02}$"), true));
+        entries.push(direct_entry(
+            &format!("bar-{index:02}"),
+            "always_allow",
+            index,
+            "bar",
+            &format!("bar unexpected-{index:02}"),
+        ));
+    }
+    let settings = settings(patterns, vec![], vec![]);
+    let manifest = manifest_for("foo", entries, vec![]);
+
+    let error =
+        audit_json(&settings, &manifest).expect_err("Incomplete lexical classification must fail");
+
+    assert!(error.contains("15 missing candidate positions"));
+    assert!(error.contains("15 unexpected classified positions"));
+    assert_eq!(error.matches("always_allow[").count(), 10);
+    assert!(!error.contains("missing-00"));
+    assert!(!error.contains("unexpected-15"));
 }
 
 #[test]
@@ -1097,8 +1747,8 @@ fn rejects_duplicate_ids_indexes_and_sort_tuples() {
         (duplicate_index, "select the same `always_allow` index"),
         (duplicate_tuple, "same sort tuple"),
     ] {
-        let error = helper::audit_json(&settings, &manifest)
-            .expect_err("Duplicate manifest contract must fail");
+        let error =
+            audit_json(&settings, &manifest).expect_err("Duplicate manifest contract must fail");
         assert!(error.contains(expected), "Unexpected error: {error}");
     }
 }
@@ -1106,13 +1756,13 @@ fn rejects_duplicate_ids_indexes_and_sort_tuples() {
 #[test]
 fn reports_owner_sort_order() {
     let settings = settings(
-        vec![pattern(r"^zeta run$", true), pattern(r"^alpha run$", true)],
+        vec![pattern(r"^git zeta$", true), pattern(r"^git alpha$", true)],
         vec![],
         vec![],
     );
     let manifest = manifest(vec![
-        direct_entry("zeta", "always_allow", 0, "zeta", "zeta run"),
-        direct_entry("alpha", "always_allow", 1, "alpha", "alpha run"),
+        direct_entry("zeta", "always_allow", 0, "git:zeta", "git zeta"),
+        direct_entry("alpha", "always_allow", 1, "git:alpha", "git alpha"),
     ]);
 
     let reasons = finding_reasons(&settings, &manifest);
@@ -1212,7 +1862,7 @@ fn reports_discovery_direct_wrapped_phase_order() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(
         report
@@ -1272,7 +1922,7 @@ fn accepts_separated_sections_for_the_same_semantic_owner() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
 }
@@ -1315,13 +1965,13 @@ fn arbitrary_section_sort_keys_do_not_hide_a_same_owner_role_gap() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.finding_count, 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy `always_allow` index 1")
     }));
 }
 
@@ -1363,18 +2013,18 @@ fn discovery_and_direct_roles_do_not_hide_a_same_owner_gap() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.finding_count, 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy `always_allow` index 1")
     }));
 }
 
 #[test]
-fn git_config_prefix_order_does_not_split_an_agent_worktree_span() {
+fn git_config_prefix_order_infers_commit_in_one_agent_worktree_span() {
     let settings = settings(
         vec![
             pattern(
@@ -1395,7 +2045,7 @@ fn git_config_prefix_order_does_not_split_an_agent_worktree_span() {
             "config-before-worktree",
             "always_allow",
             0,
-            "git:root",
+            "git:commit",
             "git",
             "0-before",
             "direct",
@@ -1407,7 +2057,7 @@ fn git_config_prefix_order_does_not_split_an_agent_worktree_span() {
             "config-after-worktree",
             "always_allow",
             2,
-            "git:root",
+            "git:commit",
             "git",
             "1-after",
             "direct",
@@ -1417,13 +2067,109 @@ fn git_config_prefix_order_does_not_split_an_agent_worktree_span() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding.reason.contains("does not completely occupy")
+            && !finding.reason.contains("inferred owner")
+    }));
+}
+
+#[test]
+fn separates_agent_worktree_and_fixture_repository_commit_scopes() {
+    let settings = settings(
+        vec![
+            pattern(
+                r"^git -c commit[.]gpgsign=false -C [.]agent-task commit -m one$",
+                true,
+            ),
+            pattern(r"^bar run$", true),
+            pattern(
+                r"^git -C [.]agent-task/fixture -c commit[.]gpgsign=false commit -m two$",
+                true,
+            ),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "worktree",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "0-worktree",
+            "direct",
+            "a",
+            "git -c commit.gpgsign=false -C .agent-task commit -m one",
+            None,
+        ),
+        entry(
+            "fixture",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "1-fixture",
+            "direct",
+            "a",
+            "git -C .agent-task/fixture -c commit.gpgsign=false commit -m two",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(report.findings.is_empty());
+}
+
+#[test]
+fn stops_repository_scope_inference_at_unapproved_git_config() {
+    let settings = settings(
+        vec![
+            pattern(r"^git -c core[.]foo=false -C [.]agent-task commit$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^git --no-pager$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "unapproved-config",
+            "always_allow",
+            0,
+            "git:root",
+            "git",
+            "a",
+            "direct",
+            "a",
+            "git -c core.foo=false -C .agent-task commit",
+            None,
+        ),
+        entry(
+            "general-root",
+            "always_allow",
+            2,
+            "git:root",
+            "git",
+            "c",
+            "direct",
+            "a",
+            "git --no-pager",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.finding_count, 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy")
     }));
 }
 
@@ -1465,13 +2211,13 @@ fn dotted_agent_names_remain_in_the_agent_worktree_span() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.finding_count, 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy `always_allow` index 1")
     }));
 }
 
@@ -1513,7 +2259,7 @@ fn accepts_inferred_agent_worktree_and_fixture_sections_for_one_owner() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
 }
@@ -1556,13 +2302,13 @@ fn malformed_repository_paths_cannot_create_a_completeness_section() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.finding_count, 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy `always_allow` index 1")
     }));
 }
 
@@ -1604,13 +2350,13 @@ fn reports_a_gap_inside_one_owner_section_span() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.findings.len(), 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy `always_allow` index 1")
     }));
 }
 
@@ -1648,7 +2394,7 @@ fn accepts_same_owner_entries_in_one_contiguous_section() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
 }
@@ -1720,9 +2466,421 @@ fn accepts_representative_variable_discovery_without_claiming_finite_redundancy(
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
+}
+
+#[test]
+fn permits_git_discovery_to_direct_separation_through_manifested_git_entries() {
+    let settings = settings(
+        vec![
+            pattern(r"^git commit --help$", true),
+            pattern(r"^git status$", true),
+            pattern(r"^git commit -m one$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "commit-discovery",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "a",
+            "discovery",
+            "a",
+            "git commit --help",
+            Some(&["git commit --help"]),
+        ),
+        entry(
+            "status-direct",
+            "always_allow",
+            1,
+            "git:status",
+            "git",
+            "b",
+            "direct",
+            "a",
+            "git status",
+            None,
+        ),
+        entry(
+            "commit-direct",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "c",
+            "direct",
+            "a",
+            "git commit -m one",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(report.findings.is_empty());
+}
+
+#[test]
+fn permits_git_discovery_to_wrapped_separation_through_manifested_git_entries() {
+    let settings = settings(
+        vec![
+            pattern(r"^git commit --help$", true),
+            pattern(r"^git status$", true),
+            pattern(r"^xargs git commit -m one$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "commit-discovery",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "a",
+            "discovery",
+            "a",
+            "git commit --help",
+            Some(&["git commit --help"]),
+        ),
+        entry(
+            "status-direct",
+            "always_allow",
+            1,
+            "git:status",
+            "git",
+            "b",
+            "direct",
+            "a",
+            "git status",
+            None,
+        ),
+        entry(
+            "commit-wrapped",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "c",
+            "wrapped",
+            "a",
+            "xargs git commit -m one",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(report.findings.is_empty());
+}
+
+#[test]
+fn rejects_git_direct_to_direct_and_discovery_to_discovery_gaps() {
+    let direct_settings = settings(
+        vec![
+            pattern(r"^git commit -m one$", true),
+            pattern(r"^git status$", true),
+            pattern(r"^git commit -m two$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let direct_manifest = manifest(vec![
+        entry(
+            "commit-one",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "a",
+            "direct",
+            "a",
+            "git commit -m one",
+            None,
+        ),
+        entry(
+            "status",
+            "always_allow",
+            1,
+            "git:status",
+            "git",
+            "b",
+            "direct",
+            "a",
+            "git status",
+            None,
+        ),
+        entry(
+            "commit-two",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "c",
+            "direct",
+            "a",
+            "git commit -m two",
+            None,
+        ),
+    ]);
+    let discovery_settings = settings(
+        vec![
+            pattern(r"^git commit --help$", true),
+            pattern(r"^git status$", true),
+            pattern(r"^git commit -h$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let discovery_manifest = manifest(vec![
+        entry(
+            "commit-help",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "a",
+            "discovery",
+            "a",
+            "git commit --help",
+            Some(&["git commit --help"]),
+        ),
+        entry(
+            "status",
+            "always_allow",
+            1,
+            "git:status",
+            "git",
+            "b",
+            "direct",
+            "a",
+            "git status",
+            None,
+        ),
+        entry(
+            "commit-h",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "c",
+            "discovery",
+            "a",
+            "git commit -h",
+            Some(&["git commit -h"]),
+        ),
+    ]);
+
+    for (settings, manifest) in [
+        (direct_settings, direct_manifest),
+        (discovery_settings, discovery_manifest),
+    ] {
+        let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+        assert_eq!(report.finding_count, 2);
+        assert!(
+            report
+                .findings
+                .iter()
+                .all(|finding| { finding.reason.contains("does not completely occupy") })
+        );
+    }
+}
+
+#[test]
+fn rejects_omitted_excluded_and_non_git_intervening_indexes() {
+    let git_settings = settings(
+        vec![
+            pattern(r"^git commit --help$", true),
+            pattern(r"^git status$", true),
+            pattern(r"^git commit -m one$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let endpoints = vec![
+        entry(
+            "commit-discovery",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "a",
+            "discovery",
+            "a",
+            "git commit --help",
+            Some(&["git commit --help"]),
+        ),
+        entry(
+            "commit-direct",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "c",
+            "direct",
+            "a",
+            "git commit -m one",
+            None,
+        ),
+    ];
+    let omitted = manifest_for("git", endpoints.clone(), vec![]);
+    let omitted_error =
+        audit_json(&git_settings, &omitted).expect_err("Omitted Git candidate must fail coverage");
+    assert!(omitted_error.contains("1 missing candidate position"));
+    assert!(omitted_error.contains("always_allow[1]"));
+
+    let excluded = manifest_for(
+        "git",
+        endpoints.clone(),
+        vec![excluded_candidate(
+            "always_allow",
+            1,
+            "git:status",
+            "git status",
+            "semantic owner intentionally excluded",
+        )],
+    );
+    let excluded_error = audit_json(&git_settings, &excluded)
+        .expect_err("Same-owner lexical candidate must not be excluded");
+    assert!(excluded_error.contains("infers to the manifest inventory owner"));
+
+    let non_git_settings = settings(
+        vec![
+            pattern(r"^git commit --help$", true),
+            pattern(r"^foo run$", true),
+            pattern(r"^git commit -m one$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let non_git = manifest_for("git", endpoints, vec![]);
+    let non_git_report = audit_json(&non_git_settings, &non_git)
+        .expect("Non-Git intervening entry is outside the lexical inventory");
+    assert_eq!(non_git_report.finding_count, 2);
+}
+
+#[test]
+fn rejects_declared_git_metadata_without_independent_git_inference() {
+    let settings = settings(
+        vec![
+            pattern(r"^git commit --help$", true),
+            pattern(r"^foo run git marker$", true),
+            pattern(r"^git commit -m one$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "commit-discovery",
+            "always_allow",
+            0,
+            "git:commit",
+            "git",
+            "a",
+            "discovery",
+            "a",
+            "git commit --help",
+            Some(&["git commit --help"]),
+        ),
+        entry(
+            "declared-git",
+            "always_allow",
+            1,
+            "git:status",
+            "git",
+            "b",
+            "direct",
+            "a",
+            "foo run git marker",
+            None,
+        ),
+        entry(
+            "commit-direct",
+            "always_allow",
+            2,
+            "git:commit",
+            "git",
+            "c",
+            "direct",
+            "a",
+            "git commit -m one",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(report.finding_count >= 3);
+    assert!(report.findings.iter().any(|finding| {
+        finding.id == "declared-git" && finding.reason.contains("declared owner differs")
+    }));
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|finding| { finding.reason.contains("does not completely occupy") })
+    );
+}
+
+#[test]
+fn groups_completeness_endpoints_by_independently_inferred_owner() {
+    let settings = settings(
+        vec![
+            pattern(r"^foo one$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^foo two$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest_for(
+        "foo",
+        vec![
+            entry(
+                "foo-one",
+                "always_allow",
+                0,
+                "wrong-one",
+                "a",
+                "direct",
+                "direct",
+                "a",
+                "foo one",
+                None,
+            ),
+            entry(
+                "foo-two",
+                "always_allow",
+                2,
+                "wrong-two",
+                "b",
+                "direct",
+                "direct",
+                "a",
+                "foo two",
+                None,
+            ),
+        ],
+        vec![],
+    );
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(report.finding_count, 2);
+    assert!(report.findings.iter().all(|finding| {
+        finding.reason.contains("declared owner differs")
+            && finding
+                .reason
+                .contains("owner-scope group does not completely occupy")
+    }));
 }
 
 #[test]
@@ -1775,7 +2933,7 @@ fn reports_redundant_allow_discovery_across_git_manager_group() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.findings.len(), 1);
     assert_eq!(report.findings[0].id, "git-root-discovery");
@@ -1791,13 +2949,13 @@ fn ignores_discovery_overlap_outside_always_allow() {
             pattern(r"^foo (?:--help|run)$", true),
         ],
         vec![
-            pattern(r"^bar --help$", true),
-            pattern(r"^bar (?:--help|run)$", true),
+            pattern(r"^foo --version$", true),
+            pattern(r"^foo (?:--version|deny)$", true),
         ],
     );
     let manifest = manifest(vec![
         entry(
-            "foo-discovery",
+            "confirm-discovery",
             "always_confirm",
             0,
             "foo",
@@ -1809,7 +2967,7 @@ fn ignores_discovery_overlap_outside_always_allow() {
             Some(&["foo --help"]),
         ),
         entry(
-            "foo-direct",
+            "confirm-direct",
             "always_confirm",
             1,
             "foo",
@@ -1821,32 +2979,32 @@ fn ignores_discovery_overlap_outside_always_allow() {
             None,
         ),
         entry(
-            "bar-discovery",
+            "deny-discovery",
             "always_deny",
             0,
-            "bar",
-            "bar",
+            "foo",
+            "foo",
             "section",
             "discovery",
             "a",
-            "bar --help",
-            Some(&["bar --help"]),
+            "foo --version",
+            Some(&["foo --version"]),
         ),
         entry(
-            "bar-direct",
+            "deny-direct",
             "always_deny",
             1,
-            "bar",
-            "bar",
+            "foo",
+            "foo",
             "section",
             "direct",
             "a",
-            "bar run",
+            "foo deny",
             None,
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert!(report.findings.is_empty());
 }
@@ -1911,13 +3069,13 @@ fn xargs_discovery_participates_in_owner_span_completeness() {
         ),
     ]);
 
-    let report = helper::audit_json(&settings, &manifest).expect("Audit input must be valid");
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
 
     assert_eq!(report.finding_count, 2);
     assert!(report.findings.iter().all(|finding| {
         finding
             .reason
-            .contains("owner-section group does not completely occupy `always_allow` index 1")
+            .contains("owner-scope group does not completely occupy `always_allow` index 1")
     }));
 }
 
@@ -1928,41 +3086,53 @@ fn bounds_finding_output_and_never_leaks_patterns_or_witnesses() {
     let mut entries = Vec::new();
 
     for index in 0..12 {
-        let owner = format!("secret-owner-{index:02}");
-        let witness = format!("{owner} private-witness-{index:02}");
-        let regex = format!("^private-regex-{index:02}$");
+        let witness = format!("foo private-witness-{index:02}");
+        let regex = format!("^foo private-regex-{index:02}$");
         let id = format!("entry-{index:02}");
         patterns.push(pattern(&regex, index != 0));
-        entries.push(entry(
-            &id,
-            "always_allow",
-            index,
-            &owner,
-            &owner,
-            "direct",
-            "direct",
-            "a",
-            &witness,
-            None,
-        ));
+        entries.push(direct_entry(&id, "always_allow", index, "foo", &witness));
     }
 
-    let settings_path = fixture.write("settings.json", &settings(patterns, vec![], vec![]));
-    let manifest_path = fixture.write("manifest.json", &manifest(entries));
+    let settings = settings(patterns, vec![], vec![]);
+    let manifest = bind_manifest(&settings, &manifest(entries));
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write("manifest.json", &manifest);
     let (status, stdout, stderr) = run_files(&settings_path, &manifest_path);
 
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
     assert!(stderr.contains("12 findings across 12 entries"));
-    assert_eq!(stderr.matches("  `entry-").count(), 10);
-    assert!(
-        stderr
-            .contains("`entry-00`: `case_sensitive` is `false` without `case_insensitive_reason`; pattern does not match its witness")
-    );
-    assert!(stderr.contains("`entry-09`"));
-    assert!(!stderr.contains("`entry-10`"));
-    assert!(stderr.contains("… 2 additional findings omitted"));
+    assert_eq!(stderr.matches("entry-").count(), 10);
+    assert!(stderr.contains("entry-00"));
+    assert!(stderr.contains("entry-09"));
+    assert!(!stderr.contains("entry-10"));
+    assert!(stderr.contains("2 additional findings omitted"));
     assert!(!stderr.contains("private-regex"));
     assert!(!stderr.contains("private-witness"));
-    assert!(!stderr.contains("secret-owner"));
+}
+
+#[test]
+fn bounds_finding_ids_before_writing_diagnostics() {
+    let fixture = Fixture::new();
+    let settings = settings(vec![pattern(r"^foo$", true)], vec![], vec![]);
+    let private_suffix = "private-id-suffix";
+    let long_id = format!("{}{private_suffix}", "x".repeat(100));
+    let manifest = manifest(vec![direct_entry(
+        &long_id,
+        "always_allow",
+        0,
+        "foo",
+        "foo run",
+    )]);
+    let manifest = bind_manifest(&settings, &manifest);
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write("manifest.json", &manifest);
+
+    let (status, stdout, stderr) = run_files(&settings_path, &manifest_path);
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("{}…", "x".repeat(80))));
+    assert!(!stderr.contains(private_suffix));
+    assert!(!stderr.contains(&long_id));
 }

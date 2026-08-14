@@ -1,4 +1,4 @@
-#[path = "pattern-match.rs"]
+#[path = "pattern_match.rs"]
 mod helper;
 
 use std::{
@@ -95,7 +95,6 @@ fn comparison_manifest(
     cases: Vec<serde_json::Value>,
 ) -> serde_json::Value {
     serde_json::json!({
-        "version": 1,
         "baseline": {
             "default": baseline_default,
             "patterns": baseline_patterns,
@@ -104,6 +103,7 @@ fn comparison_manifest(
             "default": candidate_default,
             "patterns": candidate_patterns,
         },
+        "catalogs": [],
         "cases": cases,
     })
 }
@@ -115,6 +115,7 @@ fn comparison_pattern(
     pattern_file: &str,
 ) -> serde_json::Value {
     serde_json::json!({
+        "type": "file",
         "id": id,
         "bucket": bucket,
         "case_sensitive": case_sensitive,
@@ -134,6 +135,7 @@ struct CatalogPatternFixture<'a> {
     case_sensitive: bool,
     contents: &'a [u8],
     id: &'a str,
+    owner_replacement: bool,
 }
 
 fn write_catalog_fixture(
@@ -164,6 +166,7 @@ fn write_catalog_fixture(
                 "bucket": pattern.bucket,
                 "source_index": index,
                 "case_sensitive": pattern.case_sensitive,
+                "owner_replacement": pattern.owner_replacement,
                 "sha256": helper::sha256_hex(pattern.contents),
                 "pattern_file": relative_file,
             })
@@ -172,7 +175,6 @@ fn write_catalog_fixture(
     fixture.write_json(
         &catalog_file,
         &serde_json::json!({
-            "version": 1,
             "candidate_sha256": helper::sha256_hex(&candidate_bytes),
             "state_sha256": helper::sha256_hex(&state_bytes),
             "patterns": catalog_patterns,
@@ -196,7 +198,7 @@ fn catalog_definition(id: &str, files: &CatalogFiles) -> serde_json::Value {
     })
 }
 
-fn comparison_case_file_v2(
+fn comparison_case_file_with_transition(
     input_file: &str,
     expected_transition: Option<serde_json::Value>,
 ) -> serde_json::Value {
@@ -211,7 +213,7 @@ fn comparison_case_file_v2(
     case
 }
 
-fn comparison_case_inline_v2(
+fn comparison_case_inline_with_transition(
     input: &str,
     expected_transition: Option<serde_json::Value>,
 ) -> serde_json::Value {
@@ -226,22 +228,7 @@ fn comparison_case_inline_v2(
     case
 }
 
-fn comparison_file_pattern_v2(
-    id: &str,
-    bucket: &str,
-    case_sensitive: bool,
-    pattern_file: &str,
-) -> serde_json::Value {
-    serde_json::json!({
-        "type": "file",
-        "id": id,
-        "bucket": bucket,
-        "case_sensitive": case_sensitive,
-        "pattern_file": pattern_file,
-    })
-}
-
-fn comparison_catalog_pattern_v2(catalog_id: &str, pattern_id: &str) -> serde_json::Value {
+fn comparison_catalog_pattern(catalog_id: &str, pattern_id: &str) -> serde_json::Value {
     serde_json::json!({
         "type": "catalog",
         "catalog_id": catalog_id,
@@ -273,7 +260,7 @@ fn expected_transition(
     })
 }
 
-fn comparison_manifest_v2(
+fn comparison_manifest_with_catalogs(
     baseline_default: &str,
     baseline_patterns: Vec<serde_json::Value>,
     candidate_default: &str,
@@ -282,7 +269,6 @@ fn comparison_manifest_v2(
     cases: Vec<serde_json::Value>,
 ) -> serde_json::Value {
     serde_json::json!({
-        "version": 2,
         "baseline": {
             "default": baseline_default,
             "patterns": baseline_patterns,
@@ -791,6 +777,90 @@ fn rejects_duplicate_suite_pattern_ids() {
 }
 
 #[test]
+fn bounds_suite_pattern_ids_in_diagnostics() {
+    let fixture = Fixture::new();
+    fixture.write("pattern", b"^never$");
+    let long_id = format!("{}private-tail", "x".repeat(80));
+    let duplicate_suite = fixture.write(
+        "duplicate-long-id-suite",
+        format!(
+            concat!(
+                "default\tallow\n",
+                "pattern\t{}\talways_allow\tcase-sensitive\tpattern\n",
+                "pattern\t{}\talways_deny\tcase-sensitive\tpattern\n",
+                "decision-case\tallow\tinput"
+            ),
+            long_id, long_id
+        )
+        .as_bytes(),
+    );
+    let (status, stdout, stderr) = run_with_suite(&duplicate_suite);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("`{}…`", "x".repeat(80))));
+    assert!(!stderr.contains("private-tail"));
+
+    let failing_suite = fixture.write(
+        "failing-long-id-suite",
+        format!(
+            concat!(
+                "default\tdeny\n",
+                "pattern\t{}\talways_allow\tcase-sensitive\tpattern\n",
+                "pattern-case\t{}\tmatch\tinput\n",
+                "decision-case\tdeny\tinput"
+            ),
+            long_id, long_id
+        )
+        .as_bytes(),
+    );
+    let (status, stdout, stderr) = run_with_suite(&failing_suite);
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("`{}…`", "x".repeat(80))));
+    assert!(!stderr.contains("private-tail"));
+
+    let unreadable_suite = fixture.write(
+        "unreadable-long-id-suite",
+        format!(
+            concat!(
+                "default\tallow\n",
+                "pattern\t{}\talways_allow\tcase-sensitive\tmissing-pattern\n",
+                "pattern-case\t{}\tmatch\tinput\n",
+                "decision-case\tallow\tinput"
+            ),
+            long_id, long_id
+        )
+        .as_bytes(),
+    );
+    let (status, stdout, stderr) = run_with_suite(&unreadable_suite);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("`{}…`", "x".repeat(80))));
+    assert!(!stderr.contains("private-tail"));
+
+    fixture.write("invalid-long-id-pattern", b"private-regex-body(");
+    let invalid_suite = fixture.write(
+        "invalid-long-id-suite",
+        format!(
+            concat!(
+                "default\tallow\n",
+                "pattern\t{}\talways_allow\tcase-sensitive\tinvalid-long-id-pattern\n",
+                "pattern-case\t{}\tmatch\tinput\n",
+                "decision-case\tallow\tinput"
+            ),
+            long_id, long_id
+        )
+        .as_bytes(),
+    );
+    let (status, stdout, stderr) = run_with_suite(&invalid_suite);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("`{}…`", "x".repeat(80))));
+    assert!(!stderr.contains("private-tail"));
+    assert!(!stderr.contains("private-regex-body"));
+}
+
+#[test]
 fn rejects_duplicate_suite_defaults() {
     let fixture = Fixture::new();
     fixture.write("pattern", b"foo");
@@ -1073,7 +1143,7 @@ fn rejects_invalid_utf8_suite_manifests() {
 }
 
 #[test]
-fn accepts_equivalent_configured_patterns_over_inline_corpus() {
+fn accepts_unversioned_equivalence_comparison_manifest() {
     let fixture = Fixture::new();
     fixture.write("baseline-pattern", b"^foo$");
     fixture.write("candidate-pattern", b"^foo$");
@@ -1101,9 +1171,43 @@ fn accepts_equivalent_configured_patterns_over_inline_corpus() {
     assert_eq!(status, 0);
     assert_eq!(
         stdout,
-        "Baseline and candidate configured pattern behavior matched across a representative corpus of 2 cases with 1 baseline pattern and 1 candidate pattern\n"
+        "Verified a representative comparison corpus with 2 equivalence cases, 0 matched transitions, 1 baseline pattern, and 1 candidate pattern\n"
     );
     assert!(stderr.is_empty());
+}
+
+#[test]
+fn rejects_legacy_untagged_comparison_manifests() {
+    let fixture = Fixture::new();
+    fixture.write("pattern", b"^input$");
+    let legacy = serde_json::json!({
+        "baseline": {
+            "default": "deny",
+            "patterns": [{
+                "id": "baseline",
+                "bucket": "always_allow",
+                "case_sensitive": true,
+                "pattern_file": "pattern",
+            }],
+        },
+        "candidate": {
+            "default": "deny",
+            "patterns": [{
+                "id": "candidate",
+                "bucket": "always_allow",
+                "case_sensitive": true,
+                "pattern_file": "pattern",
+            }],
+        },
+        "cases": [comparison_case_inline("input")],
+    });
+    let comparison_file = fixture.write_json("legacy-comparison.json", &legacy);
+
+    let (status, stdout, stderr) = run_with_comparison(&comparison_file);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("does not match the required comparison schema"));
 }
 
 #[test]
@@ -1136,7 +1240,7 @@ fn resolves_relative_comparison_paths_and_reads_file_backed_multiline_input() {
     assert_eq!(status, 0);
     assert_eq!(
         stdout,
-        "Baseline and candidate configured pattern behavior matched across a representative corpus of 1 case with 1 baseline pattern and 1 candidate pattern\n"
+        "Verified a representative comparison corpus with 1 equivalence case, 0 matched transitions, 1 baseline pattern, and 1 candidate pattern\n"
     );
     assert!(stderr.is_empty());
 }
@@ -1172,7 +1276,7 @@ fn reports_allow_bucket_difference_without_content_leakage() {
     assert_eq!(
         stderr,
         format!(
-            "pattern-match: 1 mismatch across 1 comparison case in `{}`\n  Case 1 differs in `always_allow` bucket\n",
+            "pattern-match: 1 mismatch across 1 comparison case in `{}`\n  Case 1 baseline/candidate differ in `always_allow` bucket\n",
             comparison_file.display()
         )
     );
@@ -1205,7 +1309,9 @@ fn reports_confirm_and_deny_bucket_differences() {
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
     assert!(stderr.contains("1 mismatch across 1 comparison case"));
-    assert!(stderr.contains("Case 1 differs in `always_confirm` bucket, `always_deny` bucket"));
+    assert!(stderr.contains(
+        "Case 1 baseline/candidate differ in `always_confirm` bucket, `always_deny` bucket"
+    ));
     assert!(!stderr.contains("final decision"));
 }
 
@@ -1236,7 +1342,7 @@ fn reports_default_only_final_decision_difference() {
 
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
-    assert!(stderr.contains("Case 1 differs in final decision"));
+    assert!(stderr.contains("Case 1 baseline/candidate differ in final decision"));
     assert!(!stderr.contains("`always_allow` bucket"));
     assert!(!stderr.contains("`always_confirm` bucket"));
     assert!(!stderr.contains("`always_deny` bucket"));
@@ -1272,7 +1378,7 @@ fn counts_multiple_bucket_and_final_decision_differences_once() {
     assert!(stderr.contains("1 mismatch across 1 comparison case"));
     assert_eq!(stderr.matches("  Case ").count(), 1);
     assert!(stderr.contains(
-        "Case 1 differs in `always_allow` bucket, `always_confirm` bucket, final decision"
+        "Case 1 baseline/candidate differ in `always_allow` bucket, `always_confirm` bucket, final decision"
     ));
 }
 
@@ -1307,8 +1413,8 @@ fn applies_comparison_pattern_case_settings() {
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
     assert!(stderr.contains("1 mismatch across 2 comparison cases"));
-    assert!(stderr.contains("Case 1 differs in `always_allow` bucket"));
-    assert!(!stderr.contains("Case 2 differs"));
+    assert!(stderr.contains("Case 1 baseline/candidate differ in `always_allow` bucket"));
+    assert!(!stderr.contains("Case 2 baseline/candidate differ"));
 }
 
 #[test]
@@ -1378,10 +1484,31 @@ fn rejects_duplicate_comparison_option_and_missing_path() {
 }
 
 #[test]
-fn rejects_comparison_schema_errors_versions_and_unknown_fields() {
+fn rejects_comparison_schema_errors_version_fields_and_unknown_fields() {
     let fixture = Fixture::new();
     fixture.write("pattern", b"foo");
     let valid_pattern = comparison_pattern("id", "always_allow", true, "pattern");
+    let valid = comparison_manifest(
+        "allow",
+        vec![valid_pattern.clone()],
+        "allow",
+        vec![valid_pattern],
+        vec![comparison_case_inline("input")],
+    );
+    let mut version_one = valid.clone();
+    version_one["version"] = serde_json::json!(1);
+    let mut version_two = valid.clone();
+    version_two["version"] = serde_json::json!(2);
+    let mut root_unknown = valid.clone();
+    root_unknown["private_unknown_root"] = serde_json::json!(true);
+    let mut set_unknown = valid.clone();
+    set_unknown["baseline"]["private_unknown_set"] = serde_json::json!(true);
+    let mut pattern_unknown = valid.clone();
+    pattern_unknown["baseline"]["patterns"][0]["private_unknown_pattern"] = serde_json::json!(true);
+    let mut case_unknown = valid.clone();
+    case_unknown["cases"][0]["private_unknown_case"] = serde_json::json!(true);
+    let mut invalid_default = valid;
+    invalid_default["baseline"]["default"] = serde_json::json!("private-default");
     let cases = [
         (
             "malformed-json",
@@ -1389,88 +1516,39 @@ fn rejects_comparison_schema_errors_versions_and_unknown_fields() {
             "Invalid comparison manifest",
         ),
         (
-            "wrong-version",
-            serde_json::to_vec(&serde_json::json!({
-                "version": 3,
-                "baseline": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "candidate": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "cases": [comparison_case_inline("input")],
-            }))
-            .expect("Test JSON must serialize"),
-            "Unsupported comparison manifest version",
+            "version-one",
+            serde_json::to_vec(&version_one).expect("Test JSON must serialize"),
+            "required comparison schema",
+        ),
+        (
+            "version-two",
+            serde_json::to_vec(&version_two).expect("Test JSON must serialize"),
+            "required comparison schema",
         ),
         (
             "root-unknown",
-            serde_json::to_vec(&serde_json::json!({
-                "version": 1,
-                "baseline": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "candidate": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "cases": [comparison_case_inline("input")],
-                "private_unknown_root": true,
-            }))
-            .expect("Test JSON must serialize"),
-            "version-1 comparison schema",
+            serde_json::to_vec(&root_unknown).expect("Test JSON must serialize"),
+            "required comparison schema",
         ),
         (
             "set-unknown",
-            serde_json::to_vec(&serde_json::json!({
-                "version": 1,
-                "baseline": {
-                    "default": "allow",
-                    "patterns": [valid_pattern.clone()],
-                    "private_unknown_set": true,
-                },
-                "candidate": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "cases": [comparison_case_inline("input")],
-            }))
-            .expect("Test JSON must serialize"),
-            "version-1 comparison schema",
+            serde_json::to_vec(&set_unknown).expect("Test JSON must serialize"),
+            "required comparison schema",
         ),
         (
             "pattern-unknown",
-            serde_json::to_vec(&serde_json::json!({
-                "version": 1,
-                "baseline": {
-                    "default": "allow",
-                    "patterns": [{
-                        "id": "id",
-                        "bucket": "always_allow",
-                        "case_sensitive": true,
-                        "pattern_file": "pattern",
-                        "private_unknown_pattern": true,
-                    }],
-                },
-                "candidate": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "cases": [comparison_case_inline("input")],
-            }))
-            .expect("Test JSON must serialize"),
-            "version-1 comparison schema",
+            serde_json::to_vec(&pattern_unknown).expect("Test JSON must serialize"),
+            "required comparison schema",
         ),
         (
             "case-unknown",
-            serde_json::to_vec(&serde_json::json!({
-                "version": 1,
-                "baseline": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "candidate": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "cases": [{
-                    "type": "inline",
-                    "input": "input",
-                    "private_unknown_case": true,
-                }],
-            }))
-            .expect("Test JSON must serialize"),
-            "version-1 comparison schema",
+            serde_json::to_vec(&case_unknown).expect("Test JSON must serialize"),
+            "required comparison schema",
         ),
         (
             "invalid-default",
-            serde_json::to_vec(&serde_json::json!({
-                "version": 1,
-                "baseline": { "default": "private-default", "patterns": [valid_pattern.clone()] },
-                "candidate": { "default": "allow", "patterns": [valid_pattern.clone()] },
-                "cases": [comparison_case_inline("input")],
-            }))
-            .expect("Test JSON must serialize"),
-            "version-1 comparison schema",
+            serde_json::to_vec(&invalid_default).expect("Test JSON must serialize"),
+            "required comparison schema",
         ),
     ];
 
@@ -1494,33 +1572,11 @@ fn rejects_comparison_schema_errors_versions_and_unknown_fields() {
 }
 
 #[test]
-fn rejects_empty_comparison_sets_cases_ids_and_paths() {
+fn rejects_empty_comparison_cases_ids_and_paths() {
     let fixture = Fixture::new();
     fixture.write("pattern", b"foo");
     let valid = comparison_pattern("id", "always_allow", true, "pattern");
     let cases = [
-        (
-            "empty-baseline",
-            comparison_manifest(
-                "allow",
-                vec![],
-                "allow",
-                vec![valid.clone()],
-                vec![comparison_case_inline("input")],
-            ),
-            "at least one baseline pattern",
-        ),
-        (
-            "empty-candidate",
-            comparison_manifest(
-                "allow",
-                vec![valid.clone()],
-                "allow",
-                vec![],
-                vec![comparison_case_inline("input")],
-            ),
-            "at least one candidate pattern",
-        ),
         (
             "empty-cases",
             comparison_manifest(
@@ -1625,6 +1681,63 @@ fn rejects_duplicate_comparison_pattern_ids_within_each_set() {
         assert!(stderr.contains("Duplicate pattern ID `duplicate`"));
         assert!(stderr.contains(set_label));
     }
+}
+
+#[test]
+fn bounds_comparison_pattern_ids_in_diagnostics() {
+    let fixture = Fixture::new();
+    fixture.write("pattern", b"foo");
+    let long_id = format!("{}private-tail", "x".repeat(80));
+    let duplicate = vec![
+        comparison_pattern(&long_id, "always_allow", true, "pattern"),
+        comparison_pattern(&long_id, "always_deny", false, "pattern"),
+    ];
+    let manifest = comparison_manifest(
+        "allow",
+        duplicate,
+        "allow",
+        vec![comparison_pattern(
+            "candidate",
+            "always_allow",
+            true,
+            "pattern",
+        )],
+        vec![comparison_case_inline("input")],
+    );
+    let comparison_file = fixture.write_json("long-id-comparison", &manifest);
+
+    let (status, stdout, stderr) = run_with_comparison(&comparison_file);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("`{}…`", "x".repeat(80))));
+    assert!(!stderr.contains("private-tail"));
+
+    fixture.write("invalid-long-id-pattern", b"private-regex-body(");
+    let invalid_manifest = comparison_manifest(
+        "allow",
+        vec![comparison_pattern(
+            &long_id,
+            "always_allow",
+            true,
+            "invalid-long-id-pattern",
+        )],
+        "allow",
+        vec![comparison_pattern(
+            "candidate",
+            "always_allow",
+            true,
+            "pattern",
+        )],
+        vec![comparison_case_inline("input")],
+    );
+    let invalid_file = fixture.write_json("invalid-long-id-comparison", &invalid_manifest);
+    let (status, stdout, stderr) = run_with_comparison(&invalid_file);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains(&format!("`{}…`", "x".repeat(80))));
+    assert!(!stderr.contains("private-tail"));
+    assert!(!stderr.contains("private-regex-body"));
 }
 
 #[test]
@@ -1765,9 +1878,15 @@ fn limits_comparison_mismatch_output_and_counts_every_case() {
     assert!(stdout.is_empty());
     assert!(stderr.contains("12 mismatches across 12 comparison cases"));
     assert_eq!(stderr.matches("  Case ").count(), 10);
-    assert!(stderr.contains("Case 1 differs in `always_allow` bucket, final decision"));
-    assert!(stderr.contains("Case 10 differs in `always_allow` bucket, final decision"));
-    assert!(!stderr.contains("Case 11 differs"));
+    assert!(
+        stderr
+            .contains("Case 1 baseline/candidate differ in `always_allow` bucket, final decision")
+    );
+    assert!(
+        stderr
+            .contains("Case 10 baseline/candidate differ in `always_allow` bucket, final decision")
+    );
+    assert!(!stderr.contains("Case 11 baseline/candidate differ"));
     assert!(stderr.contains("… 2 additional mismatches omitted"));
     assert!(!stderr.contains("private-input"));
     assert!(!stderr.contains("^other$"));
@@ -1810,20 +1929,20 @@ fn returns_error_when_comparison_output_cannot_be_written() {
 }
 
 #[test]
-fn accepts_version_2_confirm_to_allow_transition_with_equivalence_case() {
+fn accepts_confirm_to_allow_transition_with_equivalence_case() {
     let fixture = Fixture::new();
     fixture.write("baseline-pattern", b"^change$");
     fixture.write("candidate-pattern", b"^change$");
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "baseline",
             "always_confirm",
             true,
             "baseline-pattern",
         )],
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "candidate",
             "always_allow",
             true,
@@ -1831,51 +1950,117 @@ fn accepts_version_2_confirm_to_allow_transition_with_equivalence_case() {
         )],
         vec![],
         vec![
-            comparison_case_inline_v2(
+            comparison_case_inline_with_transition(
                 "change",
                 Some(expected_transition(
                     comparison_state(false, true, false, "confirm"),
                     comparison_state(true, false, false, "allow"),
                 )),
             ),
-            comparison_case_inline_v2("unchanged", None),
+            comparison_case_inline_with_transition("unchanged", None),
         ],
     );
-    let comparison_file = fixture.write_json("comparison-v2.json", &manifest);
+    let comparison_file = fixture.write_json("transition-comparison.json", &manifest);
 
     let (status, stdout, stderr) = run_with_comparison(&comparison_file);
 
     assert_eq!(status, 0);
     assert_eq!(
         stdout,
-        "Verified a representative version-2 comparison corpus with 1 equivalence case, 1 matched transition, 1 baseline pattern, and 1 candidate pattern\n"
+        "Verified a representative comparison corpus with 1 equivalence case, 1 matched transition, 1 baseline pattern, and 1 candidate pattern\n"
     );
     assert!(stderr.is_empty());
 }
 
 #[test]
-fn accepts_file_backed_version_2_transition() {
+fn accepts_one_to_zero_transition_using_the_candidate_default() {
     let fixture = Fixture::new();
-    fixture.write("baseline-pattern", b"(?s)^first\\nsecond$");
-    fixture.write("candidate-pattern", b"(?s)^first\\nsecond$");
-    fixture.write("multiline-input", b"first\nsecond");
-    let manifest = comparison_manifest_v2(
+    fixture.write("baseline-pattern", b"^change$");
+    let manifest = comparison_manifest_with_catalogs(
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "baseline",
             "always_confirm",
             true,
             "baseline-pattern",
         )],
+        "allow",
+        vec![],
+        vec![],
+        vec![comparison_case_inline_with_transition(
+            "change",
+            Some(expected_transition(
+                comparison_state(false, true, false, "confirm"),
+                comparison_state(false, false, false, "allow"),
+            )),
+        )],
+    );
+    let comparison_file = fixture.write_json("one-to-zero.json", &manifest);
+
+    let (status, stdout, stderr) = run_with_comparison(&comparison_file);
+
+    assert_eq!(status, 0);
+    assert!(stdout.contains("1 matched transition"));
+    assert!(stdout.contains("1 baseline pattern, and 0 candidate patterns"));
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn accepts_zero_to_one_transition_using_the_baseline_default() {
+    let fixture = Fixture::new();
+    fixture.write("candidate-pattern", b"^change$");
+    let manifest = comparison_manifest_with_catalogs(
+        "confirm",
+        vec![],
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "candidate",
             "always_allow",
             true,
             "candidate-pattern",
         )],
         vec![],
-        vec![comparison_case_file_v2(
+        vec![comparison_case_inline_with_transition(
+            "change",
+            Some(expected_transition(
+                comparison_state(false, false, false, "confirm"),
+                comparison_state(true, false, false, "allow"),
+            )),
+        )],
+    );
+    let comparison_file = fixture.write_json("zero-to-one.json", &manifest);
+
+    let (status, stdout, stderr) = run_with_comparison(&comparison_file);
+
+    assert_eq!(status, 0);
+    assert!(stdout.contains("1 matched transition"));
+    assert!(stdout.contains("0 baseline patterns, and 1 candidate pattern"));
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn accepts_file_backed_transition() {
+    let fixture = Fixture::new();
+    fixture.write("baseline-pattern", b"(?s)^first\\nsecond$");
+    fixture.write("candidate-pattern", b"(?s)^first\\nsecond$");
+    fixture.write("multiline-input", b"first\nsecond");
+    let manifest = comparison_manifest_with_catalogs(
+        "deny",
+        vec![comparison_pattern(
+            "baseline",
+            "always_confirm",
+            true,
+            "baseline-pattern",
+        )],
+        "deny",
+        vec![comparison_pattern(
+            "candidate",
+            "always_allow",
+            true,
+            "candidate-pattern",
+        )],
+        vec![],
+        vec![comparison_case_file_with_transition(
             "multiline-input",
             Some(expected_transition(
                 comparison_state(false, true, false, "confirm"),
@@ -1898,19 +2083,19 @@ fn accepts_declared_bucket_only_drift_masked_by_deny_precedence() {
     fixture.write("deny-pattern", b"^input$");
     fixture.write("allow-pattern", b"^input$");
     fixture.write("never-pattern", b"^never$");
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "confirm",
         vec![
-            comparison_file_pattern_v2("baseline-allow", "always_allow", true, "allow-pattern"),
-            comparison_file_pattern_v2("baseline-deny", "always_deny", true, "deny-pattern"),
+            comparison_pattern("baseline-allow", "always_allow", true, "allow-pattern"),
+            comparison_pattern("baseline-deny", "always_deny", true, "deny-pattern"),
         ],
         "confirm",
         vec![
-            comparison_file_pattern_v2("candidate-allow", "always_allow", true, "never-pattern"),
-            comparison_file_pattern_v2("candidate-deny", "always_deny", true, "deny-pattern"),
+            comparison_pattern("candidate-allow", "always_allow", true, "never-pattern"),
+            comparison_pattern("candidate-deny", "always_deny", true, "deny-pattern"),
         ],
         vec![],
-        vec![comparison_case_inline_v2(
+        vec![comparison_case_inline_with_transition(
             "input",
             Some(expected_transition(
                 comparison_state(true, false, true, "deny"),
@@ -1931,23 +2116,23 @@ fn accepts_declared_bucket_only_drift_masked_by_deny_precedence() {
 fn accepts_default_only_final_decision_transition() {
     let fixture = Fixture::new();
     fixture.write("never-pattern", b"^never$");
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "confirm",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "baseline",
             "always_allow",
             true,
             "never-pattern",
         )],
         "allow",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "candidate",
             "always_allow",
             true,
             "never-pattern",
         )],
         vec![],
-        vec![comparison_case_inline_v2(
+        vec![comparison_case_inline_with_transition(
             "input",
             Some(expected_transition(
                 comparison_state(false, false, false, "confirm"),
@@ -1965,10 +2150,10 @@ fn accepts_default_only_final_decision_transition() {
 }
 
 #[test]
-fn rejects_incomplete_contradictory_noop_and_unknown_version_2_transitions() {
+fn rejects_incomplete_contradictory_noop_and_unknown_transitions() {
     let fixture = Fixture::new();
     fixture.write("pattern", b"^input$");
-    let valid_pattern = comparison_file_pattern_v2("pattern", "always_allow", true, "pattern");
+    let valid_pattern = comparison_pattern("pattern", "always_allow", true, "pattern");
     let valid_baseline = comparison_state(false, false, false, "deny");
     let valid_candidate = comparison_state(true, false, false, "allow");
     let cases = [
@@ -1982,7 +2167,7 @@ fn rejects_incomplete_contradictory_noop_and_unknown_version_2_transitions() {
                 },
                 "candidate": valid_candidate.clone(),
             }),
-            "version-2 comparison schema",
+            "required comparison schema",
         ),
         (
             "contradictory",
@@ -2004,18 +2189,21 @@ fn rejects_incomplete_contradictory_noop_and_unknown_version_2_transitions() {
                 "candidate": valid_candidate,
                 "private_transition_body": true,
             }),
-            "version-2 comparison schema",
+            "required comparison schema",
         ),
     ];
 
     for (name, transition, expected_error) in cases {
-        let manifest = comparison_manifest_v2(
+        let manifest = comparison_manifest_with_catalogs(
             "deny",
             vec![valid_pattern.clone()],
             "deny",
             vec![valid_pattern.clone()],
             vec![],
-            vec![comparison_case_inline_v2("private-input", Some(transition))],
+            vec![comparison_case_inline_with_transition(
+                "private-input",
+                Some(transition),
+            )],
         );
         let comparison_file = fixture.write_json(name, &manifest);
         let (status, stdout, stderr) = run_with_comparison(&comparison_file);
@@ -2032,23 +2220,23 @@ fn rejects_incomplete_contradictory_noop_and_unknown_version_2_transitions() {
 }
 
 #[test]
-fn reports_version_2_baseline_and_candidate_transition_mismatches_by_side() {
+fn reports_baseline_and_candidate_transition_mismatches_by_side() {
     let fixture = Fixture::new();
     fixture.write("baseline-pattern", b"^input$");
     fixture.write("candidate-pattern", b"^input$");
     let baseline_observed = comparison_state(false, true, false, "confirm");
     let candidate_observed = comparison_state(true, false, false, "allow");
     let no_match = comparison_state(false, false, false, "deny");
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "baseline",
             "always_confirm",
             true,
             "baseline-pattern",
         )],
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "candidate",
             "always_allow",
             true,
@@ -2056,14 +2244,14 @@ fn reports_version_2_baseline_and_candidate_transition_mismatches_by_side() {
         )],
         vec![],
         vec![
-            comparison_case_inline_v2(
+            comparison_case_inline_with_transition(
                 "input",
                 Some(expected_transition(
                     no_match.clone(),
                     candidate_observed.clone(),
                 )),
             ),
-            comparison_case_inline_v2(
+            comparison_case_inline_with_transition(
                 "input",
                 Some(expected_transition(baseline_observed, no_match)),
             ),
@@ -2075,33 +2263,36 @@ fn reports_version_2_baseline_and_candidate_transition_mismatches_by_side() {
 
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
-    assert!(stderr.contains("2 mismatches across 2 version-2 comparison cases"));
+    assert!(stderr.contains("2 mismatches across 2 comparison cases"));
     assert!(stderr.contains("Case 1 baseline differs in `always_confirm` bucket, final decision"));
     assert!(stderr.contains("Case 2 candidate differs in `always_allow` bucket, final decision"));
     assert!(!stderr.contains("^input$"));
 }
 
 #[test]
-fn rejects_undeclared_version_2_bucket_and_decision_drift() {
+fn rejects_undeclared_bucket_and_decision_drift() {
     let fixture = Fixture::new();
     fixture.write("pattern", b"^private-input$");
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "baseline",
             "always_confirm",
             true,
             "pattern",
         )],
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "candidate",
             "always_allow",
             true,
             "pattern",
         )],
         vec![],
-        vec![comparison_case_inline_v2("private-input", None)],
+        vec![comparison_case_inline_with_transition(
+            "private-input",
+            None,
+        )],
     );
     let comparison_file = fixture.write_json("undeclared.json", &manifest);
 
@@ -2117,12 +2308,12 @@ fn rejects_undeclared_version_2_bucket_and_decision_drift() {
 }
 
 #[test]
-fn limits_version_2_mismatch_output_without_inputs_or_patterns() {
+fn limits_transition_mismatch_output_without_inputs_or_patterns() {
     let fixture = Fixture::new();
     fixture.write("never-pattern", b"^private-never-pattern$");
     let cases = (1..=12)
         .map(|index| {
-            comparison_case_inline_v2(
+            comparison_case_inline_with_transition(
                 &format!("private-input-{index}"),
                 Some(expected_transition(
                     comparison_state(true, false, false, "allow"),
@@ -2131,16 +2322,16 @@ fn limits_version_2_mismatch_output_without_inputs_or_patterns() {
             )
         })
         .collect();
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "baseline",
             "always_allow",
             true,
             "never-pattern",
         )],
         "deny",
-        vec![comparison_file_pattern_v2(
+        vec![comparison_pattern(
             "candidate",
             "always_confirm",
             true,
@@ -2149,13 +2340,13 @@ fn limits_version_2_mismatch_output_without_inputs_or_patterns() {
         vec![],
         cases,
     );
-    let comparison_file = fixture.write_json("bounded-v2.json", &manifest);
+    let comparison_file = fixture.write_json("bounded-transition.json", &manifest);
 
     let (status, stdout, stderr) = run_with_comparison(&comparison_file);
 
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
-    assert!(stderr.contains("12 mismatches across 12 version-2 comparison cases"));
+    assert!(stderr.contains("12 mismatches across 12 comparison cases"));
     assert_eq!(stderr.matches("  Case ").count(), 10);
     assert!(stderr.contains("… 2 additional mismatches omitted"));
     assert!(!stderr.contains("Case 11 "));
@@ -2175,6 +2366,7 @@ fn verifies_mixed_suite_patterns_with_catalog_metadata() {
             case_sensitive: false,
             contents: b"^lowercase$",
             id: "catalog-allow",
+            owner_replacement: true,
         }],
     );
     let suite_file = fixture.write(
@@ -2206,7 +2398,97 @@ fn verifies_mixed_suite_patterns_with_catalog_metadata() {
 }
 
 #[test]
-fn verifies_mixed_catalog_and_file_patterns_in_version_2_comparison() {
+fn loads_empty_catalogs_without_counting_declarations_as_suite_patterns() {
+    let fixture = Fixture::new();
+    fixture.write("ordinary", b"^input$");
+    let catalog = write_catalog_fixture(&fixture, "empty-suite-catalog", &[]);
+    let catalog_record = format!(
+        "pattern-catalog\tempty\t{}\t{}\t{}",
+        catalog.catalog_file, catalog.candidate_file, catalog.state_file
+    );
+    let suite_file = fixture.write(
+        "empty-catalog-suite",
+        format!(
+            concat!(
+                "default\tdeny\n",
+                "pattern\tordinary\talways_allow\tcase-sensitive\tordinary\n",
+                "pattern-case\tordinary\tmatch\tinput\n",
+                "decision-case\tallow\tinput\n",
+                "{}"
+            ),
+            catalog_record
+        )
+        .as_bytes(),
+    );
+
+    let (status, stdout, stderr) = run_with_suite(&suite_file);
+
+    assert_eq!(status, 0);
+    assert_eq!(
+        stdout,
+        "Verified 1 pattern case and 1 decision case across 1 pattern\n"
+    );
+    assert!(stderr.is_empty());
+
+    let declaration_only_suite = fixture.write(
+        "empty-catalog-declaration-only-suite",
+        format!("default\tdeny\ndecision-case\tdeny\tprivate-input\n{catalog_record}").as_bytes(),
+    );
+    let (status, stdout, stderr) = run_with_suite(&declaration_only_suite);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("must define at least one pattern"));
+    assert!(!stderr.contains("private-input"));
+}
+
+#[test]
+fn loads_empty_catalogs_without_adding_comparison_patterns() {
+    let fixture = Fixture::new();
+    fixture.write("ordinary", b"^input$");
+    let catalog = write_catalog_fixture(&fixture, "empty-comparison-catalog", &[]);
+    let ordinary = comparison_pattern("ordinary", "always_allow", true, "ordinary");
+    let manifest = comparison_manifest_with_catalogs(
+        "deny",
+        vec![ordinary.clone()],
+        "deny",
+        vec![ordinary.clone()],
+        vec![catalog_definition("empty", &catalog)],
+        vec![comparison_case_inline_with_transition("input", None)],
+    );
+    let comparison_file = fixture.write_json("empty-catalog-comparison.json", &manifest);
+
+    let (status, stdout, stderr) = run_with_comparison(&comparison_file);
+
+    assert_eq!(status, 0);
+    assert!(stdout.contains("1 baseline pattern, and 1 candidate pattern"));
+    assert!(stderr.is_empty());
+
+    let declaration_only = comparison_manifest_with_catalogs(
+        "deny",
+        vec![],
+        "deny",
+        vec![ordinary],
+        vec![catalog_definition("empty", &catalog)],
+        vec![comparison_case_inline_with_transition(
+            "private-input",
+            None,
+        )],
+    );
+    let declaration_only_file = fixture.write_json(
+        "empty-catalog-declaration-only-comparison.json",
+        &declaration_only,
+    );
+    let (status, stdout, stderr) = run_with_comparison(&declaration_only_file);
+
+    assert_eq!(status, 0);
+    assert!(stdout.contains("0 baseline patterns, and 1 candidate pattern"));
+    assert!(stderr.is_empty());
+    assert!(!stdout.contains("private-input"));
+}
+
+#[test]
+fn verifies_mixed_catalog_and_file_patterns_in_comparison() {
     let fixture = Fixture::new();
     fixture.write("baseline-change", b"^change$");
     fixture.write("shared", b"^shared$");
@@ -2218,34 +2500,35 @@ fn verifies_mixed_catalog_and_file_patterns_in_version_2_comparison() {
             case_sensitive: false,
             contents: b"^change$",
             id: "candidate-change",
+            owner_replacement: false,
         }],
     );
-    let manifest = comparison_manifest_v2(
+    let manifest = comparison_manifest_with_catalogs(
         "deny",
         vec![
-            comparison_file_pattern_v2(
+            comparison_pattern(
                 "baseline-change",
                 "always_confirm",
                 false,
                 "baseline-change",
             ),
-            comparison_file_pattern_v2("baseline-shared", "always_allow", true, "shared"),
+            comparison_pattern("baseline-shared", "always_allow", true, "shared"),
         ],
         "deny",
         vec![
-            comparison_catalog_pattern_v2("candidate", "candidate-change"),
-            comparison_file_pattern_v2("candidate-shared", "always_allow", true, "shared"),
+            comparison_catalog_pattern("candidate", "candidate-change"),
+            comparison_pattern("candidate-shared", "always_allow", true, "shared"),
         ],
         vec![catalog_definition("candidate", &catalog)],
         vec![
-            comparison_case_inline_v2(
+            comparison_case_inline_with_transition(
                 "CHANGE",
                 Some(expected_transition(
                     comparison_state(false, true, false, "confirm"),
                     comparison_state(true, false, false, "allow"),
                 )),
             ),
-            comparison_case_inline_v2("shared", None),
+            comparison_case_inline_with_transition("shared", None),
         ],
     );
     let comparison_file = fixture.write_json("mixed-catalog-comparison.json", &manifest);
@@ -2255,7 +2538,7 @@ fn verifies_mixed_catalog_and_file_patterns_in_version_2_comparison() {
     assert_eq!(status, 0);
     assert_eq!(
         stdout,
-        "Verified a representative version-2 comparison corpus with 1 equivalence case, 1 matched transition, 2 baseline patterns, and 2 candidate patterns\n"
+        "Verified a representative comparison corpus with 1 equivalence case, 1 matched transition, 2 baseline patterns, and 2 candidate patterns\n"
     );
     assert!(stderr.is_empty());
 }
@@ -2272,9 +2555,10 @@ fn rejects_unknown_duplicate_and_conflicting_comparison_catalog_ids() {
             case_sensitive: true,
             contents: b"^input$",
             id: "catalog-pattern",
+            owner_replacement: true,
         }],
     );
-    let ordinary = comparison_file_pattern_v2("ordinary", "always_allow", true, "ordinary");
+    let ordinary = comparison_pattern("ordinary", "always_allow", true, "ordinary");
     let cases = [
         (
             "duplicate-catalog",
@@ -2287,21 +2571,21 @@ fn rejects_unknown_duplicate_and_conflicting_comparison_catalog_ids() {
         ),
         (
             "unknown-catalog",
-            vec![comparison_catalog_pattern_v2("missing", "catalog-pattern")],
+            vec![comparison_catalog_pattern("missing", "catalog-pattern")],
             vec![],
             "Unknown pattern catalog ID `missing`",
         ),
         (
             "unknown-pattern",
-            vec![comparison_catalog_pattern_v2("known", "missing-pattern")],
+            vec![comparison_catalog_pattern("known", "missing-pattern")],
             vec![catalog_definition("known", &catalog)],
             "Unknown pattern ID `missing-pattern`",
         ),
         (
             "duplicate-pattern",
             vec![
-                comparison_file_pattern_v2("catalog-pattern", "always_allow", true, "ordinary"),
-                comparison_catalog_pattern_v2("known", "catalog-pattern"),
+                comparison_pattern("catalog-pattern", "always_allow", true, "ordinary"),
+                comparison_catalog_pattern("known", "catalog-pattern"),
             ],
             vec![catalog_definition("known", &catalog)],
             "Duplicate pattern ID `catalog-pattern`",
@@ -2309,13 +2593,16 @@ fn rejects_unknown_duplicate_and_conflicting_comparison_catalog_ids() {
     ];
 
     for (name, baseline_patterns, catalogs, expected_error) in cases {
-        let manifest = comparison_manifest_v2(
+        let manifest = comparison_manifest_with_catalogs(
             "deny",
             baseline_patterns,
             "deny",
             vec![ordinary.clone()],
             catalogs,
-            vec![comparison_case_inline_v2("private-input", None)],
+            vec![comparison_case_inline_with_transition(
+                "private-input",
+                None,
+            )],
         );
         let comparison_file = fixture.write_json(name, &manifest);
         let (status, stdout, stderr) = run_with_comparison(&comparison_file);
@@ -2342,6 +2629,7 @@ fn rejects_unknown_duplicate_and_conflicting_suite_catalog_ids() {
             case_sensitive: true,
             contents: b"^input$",
             id: "catalog-pattern",
+            owner_replacement: false,
         }],
     );
     let declarations = format!(
@@ -2435,6 +2723,7 @@ fn rejects_stale_catalog_candidate_and_state_bytes() {
                 case_sensitive: true,
                 contents: b"^private-pattern$",
                 id: "catalog-pattern",
+                owner_replacement: false,
             }],
         );
         let stale_file = if source == "candidate" {
@@ -2497,6 +2786,7 @@ fn rejects_tampered_newline_modified_missing_malformed_and_invalid_utf8_catalog_
                 case_sensitive: true,
                 contents,
                 id: "catalog-pattern",
+                owner_replacement: true,
             }],
         );
         match mutation {
@@ -2517,13 +2807,16 @@ fn rejects_tampered_newline_modified_missing_malformed_and_invalid_utf8_catalog_
             "invalid-utf8" => {}
             _ => unreachable!(),
         }
-        let manifest = comparison_manifest_v2(
+        let manifest = comparison_manifest_with_catalogs(
             "deny",
-            vec![comparison_catalog_pattern_v2("known", "catalog-pattern")],
+            vec![comparison_catalog_pattern("known", "catalog-pattern")],
             "deny",
-            vec![comparison_catalog_pattern_v2("known", "catalog-pattern")],
+            vec![comparison_catalog_pattern("known", "catalog-pattern")],
             vec![catalog_definition("known", &catalog)],
-            vec![comparison_case_inline_v2("private-input", None)],
+            vec![comparison_case_inline_with_transition(
+                "private-input",
+                None,
+            )],
         );
         let comparison_file = fixture.write_json(&format!("{name}-comparison.json"), &manifest);
 
@@ -2553,6 +2846,7 @@ fn rejects_catalog_backed_compile_errors_without_body_leakage() {
             case_sensitive: true,
             contents: b"private-catalog-regex(",
             id: "catalog-invalid",
+            owner_replacement: false,
         }],
     );
     let suite_file = fixture.write(
@@ -2600,13 +2894,22 @@ fn returns_success_for_help() {
     assert!(stdout.contains("decision-case<TAB>allow|confirm|deny<TAB><input>"));
     assert!(stdout.contains("decision-case-file<TAB>allow|confirm|deny<TAB><input-file>"));
     assert!(stdout.contains("Suite requirements:"));
+    assert!(stdout.contains("strict artifact catalog schema"));
+    assert!(stdout.contains("boolean `owner_replacement` metadata"));
+    assert!(stdout.contains("Catalog declarations do not count as patterns"));
     assert!(stdout.contains("at least one `decision-case` or `decision-case-file` record"));
     assert!(stdout.contains(
         "at least one `pattern-case` or `pattern-case-file` record for every pattern ID"
     ));
     assert!(stdout.contains("file-backed records for multiline inputs"));
     assert!(stdout.contains("does not reproduce full Zed permission evaluation"));
-    assert!(stdout.contains("Version-1 UTF-8 JSON comparison manifest:"));
+    assert!(stdout.contains("Strict UTF-8 JSON comparison manifest"));
+    assert!(stdout.contains("Root requires `catalogs`, which may be empty"));
+    assert!(stdout.contains("Either pattern set may be empty"));
+    assert!(stdout.contains(
+        "An empty set has no bucket matches and resolves each case from its configured default"
+    ));
+    assert!(stdout.contains("Define at least one case"));
     assert!(stdout.contains("Comparison covers only the representative corpus"));
     assert!(stdout.contains(
         "does not reproduce full Zed permission evaluation or establish formal language equivalence"

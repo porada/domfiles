@@ -1,10 +1,10 @@
 #[allow(dead_code)]
-#[path = "helpers/permission-patterns.rs"]
+#[path = "helpers/permission_patterns.rs"]
 mod permission_patterns;
 
 use permission_patterns::{
-    ARTIFACT_CATALOG_VERSION, ArtifactCatalog, ArtifactCatalogPattern, BoundedIssues,
-    is_valid_sha256, read_utf8_file, validate_artifact_catalog,
+    ArtifactCatalog, ArtifactCatalogPattern, BoundedIssues, LoadedArtifactCatalog, is_valid_sha256,
+    load_bound_artifact_catalog, read_utf8_file, validate_artifact_catalog,
 };
 pub(crate) use permission_patterns::{Bucket, sha256_hex};
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,6 @@ use std::{
 const ARTIFACT_CATALOG_FILE: &str = "artifact-catalog.json";
 const BASELINE_FILE: &str = "baseline-settings.json";
 const CANDIDATE_FILE: &str = "candidate-settings.json";
-const MATERIALIZATION_SELECTION_VERSION: u64 = 1;
 const MAX_REPORTED_ITEMS: usize = 100;
 const MAX_REPORTED_MATERIALIZED_ITEMS: usize = 10;
 const MAX_REPORTED_VERIFY_ITEMS: usize = 10;
@@ -33,7 +32,6 @@ const STATE_FILE: &str = "state.json";
 const STATUS_ERROR: u8 = 2;
 const STATUS_REFUSED: u8 = 1;
 const STATUS_SUCCESS: u8 = 0;
-const VERSION: u64 = 1;
 
 static NEXT_TEMPORARY_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -42,45 +40,48 @@ const HELP: &str = concat!(
     "  permission-candidate capture --settings <path> --selection <selection-path> --output <directory>\n",
     "  permission-candidate materialize --candidate <candidate-path> --state <state-path> --selection <selection-path> --output <directory>\n",
     "  permission-candidate verify --settings <path> --state <state-path>\n",
-    "  permission-candidate promote --settings <live-settings-path> --candidate <candidate-path> --state <state-path> --write\n",
+    "  permission-candidate promote --settings <live-settings-path> --candidate <candidate-path> --state <state-path> --catalog <artifact-catalog-path> --write\n",
     "  permission-candidate --help\n",
     "\n",
-    "Capture exact Zed terminal-permission candidates, materialize authorized candidate patterns, verify current indexes, and promote authorized scopes\n",
+    "Capture exact Zed permission candidates, materialize authorized terminal patterns, verify captured state, and promote catalog-bound scopes\n",
     "\n",
     "Modes:\n",
-    "  capture      Read exact settings bytes, validate selected terminal pattern objects, and create capture artifacts\n",
-    "  materialize  Validate a captured state and authorized candidate, then create exact pattern artifacts and a bound catalog\n",
-    "  verify       Validate every state artifact, then locate each pattern by bucket, exact UTF-8 bytes, and case setting\n",
-    "  promote      Validate every state artifact and guard, merge authorized candidate scopes into live settings, and atomically replace live settings\n",
+    "  capture      Read exact settings bytes, validate authorized scopes and selected terminal pattern objects, and create capture artifacts\n",
+    "  materialize  Validate a captured state and authorized candidate, then create exact selected pattern artifacts and a bound catalog\n",
+    "  verify       Validate every state artifact, then check captured scopes or uniquely locate captured terminal patterns\n",
+    "  promote      Bind the exact candidate and state to a validated catalog, authorize the complete owner replacement, and atomically replace live settings\n",
     "\n",
     "Options:\n",
     "  --candidate <path>          Candidate JSON object used by `materialize` or `promote`\n",
+    "  --catalog <path>            Artifact catalog required exactly once by `promote`\n",
     "  --help                      Print help. Must be used alone\n",
     "  --output <directory>        Explicit artifact directory used by `capture` or `materialize`\n",
-    "  --selection <path>          Version-1 capture or materialization selection JSON selected by the mode\n",
+    "  --selection <path>          Capture or materialization selection JSON selected by the mode\n",
     "  --settings <path>           Baseline or current settings for `capture` and `verify`, or the live destination for `promote`\n",
-    "  --state <path>              Version-1 state manifest used by `materialize`, `verify`, and `promote`\n",
+    "  --state <path>              State manifest used by `materialize`, `verify`, and `promote`\n",
     "  --write                     Required exact mutation guard for `promote`\n",
     "\n",
     "Capture selection JSON schema (unknown fields are rejected):\n",
-    "  {\"version\":1,\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0}]}\n",
-    "  `scopes` and `patterns` must be nonempty. Pattern IDs and bucket/index selections must be unique\n",
+    "  {\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0}]}\n",
+    "  `scopes` must be nonempty. `patterns` may be empty. Pattern IDs and bucket/index selections must be unique\n",
     "  Scopes must be existing, non-root RFC 6901 pointers with no duplicates or parent/child overlap\n",
     "  Every selected pattern object must lie within an authorized scope and contain string `pattern` and boolean `case_sensitive` fields\n",
     "\n",
     "Materialization selection JSON schema (unknown fields are rejected):\n",
-    "  {\"version\":1,\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0}]}\n",
-    "  `patterns` must be nonempty. Pattern IDs and bucket/index selections must be unique\n",
+    "  {\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0,\"owner_replacement\":true}]}\n",
+    "  `patterns` may be empty. Pattern IDs and bucket/index selections must be unique\n",
     "  Each bucket/index is a transient locator into the exact candidate bound by the catalog\n",
+    "  `owner_replacement` is required. `true` marks replacement-owner membership, while `false` keeps a validation-only overlap in the candidate remainder\n",
     "\n",
     "State JSON schema (unknown fields are rejected):\n",
-    "  {\"version\":1,\"baseline_file\":\"relative path\",\"baseline_sha256\":\"64 lowercase hex characters\",\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
+    "  {\"baseline_file\":\"relative path\",\"baseline_sha256\":\"64 lowercase hex characters\",\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
+    "  `patterns` may be empty. A patternless state can promote only when all terminal pattern arrays remain semantically unchanged\n",
     "  Relative baseline and pattern paths resolve from the state manifest’s parent\n",
     "  The manifest records hashes but does not authenticate itself\n",
     "\n",
     "Artifact catalog JSON schema (unknown fields are rejected):\n",
-    "  {\"version\":1,\"candidate_sha256\":\"64 lowercase hex characters\",\"state_sha256\":\"64 lowercase hex characters\",\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
-    "  Relative pattern paths resolve from the catalog’s parent\n",
+    "  {\"candidate_sha256\":\"64 lowercase hex characters\",\"state_sha256\":\"64 lowercase hex characters\",\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"owner_replacement\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
+    "  `patterns` may be empty. Every entry requires `owner_replacement`. Relative pattern paths resolve from the catalog’s parent\n",
     "  Candidate, state, and artifact hashes provide integrity and freshness but not authenticity\n",
     "\n",
     "Capture contract:\n",
@@ -95,6 +96,7 @@ const HELP: &str = concat!(
     "  Every state artifact and recorded hash is validated before candidate authorization\n",
     "  Candidate values outside authorized scopes must equal the captured baseline\n",
     "  Every selected object must lie under an authorized scope and provide string `pattern` and boolean `case_sensitive` fields\n",
+    "  The exact required `owner_replacement` value is copied into every catalog entry\n",
     "  Pattern files contain exact decoded candidate UTF-8 bytes with no added newline or reserialization\n",
     "  Create-new writes use complete preflight, symlink refusal, safe generated filenames, rollback, and overwrite refusal\n",
     "  Candidate, baseline, state, and live settings remain untouched\n",
@@ -102,11 +104,15 @@ const HELP: &str = concat!(
     "Verify contract:\n",
     "  Baseline and pattern hashes, JSON structure, scopes, UTF-8, and recorded baseline source identities are validated before reindexing\n",
     "  Missing or duplicate exact current matches are refused\n",
+    "  A state without terminal patterns instead requires every current authorized scope to equal its captured baseline scope\n",
     "  Successful output contains at most 10 moved `id -> bucket[index]` metadata lines, an omission summary when needed, and aggregate counts\n",
     "  Missing or duplicate refusal reports at most 10 exceptional IDs and counts every failure\n",
     "\n",
     "Promote contract:\n",
-    "  `--write` is mandatory. There is no force option\n",
+    "  `--catalog` and `--write` are mandatory. There is no force option\n",
+    "  The strict catalog must bind the exact candidate and state bytes, every artifact, and every candidate source identity\n",
+    "  When state patterns exist, removing all baseline owners and every candidate entry marked `owner_replacement: true` must leave semantically equal complete settings objects\n",
+    "  Without state patterns, candidate `always_allow`, `always_confirm`, and `always_deny` arrays must remain semantically equal to the captured baseline arrays\n",
     "  Live values at every authorized scope must equal the captured baseline values\n",
     "  Candidate changes outside authorized scopes are refused, and absent parents are never created\n",
     "  Candidate scope values are merged into the live object read for promotion, preserving its out-of-scope values\n",
@@ -121,7 +127,7 @@ const HELP: &str = concat!(
     "  Help is written to standard output\n",
     "  Materialization reports aggregate counts, the catalog path, and at most 10 `id -> artifact` metadata lines\n",
     "  Refusals and errors are written to standard error\n",
-    "  Output never includes pattern bodies, settings contents, complete arrays, or hashes\n",
+    "  Output never includes candidate or state hashes, pattern bodies, settings contents, complete arrays, or unbounded IDs\n",
     "\n",
     "Exit statuses:\n",
     "  0  Capture, materialization, verification, promotion, unchanged promotion, or help succeeded\n",
@@ -132,7 +138,6 @@ const HELP: &str = concat!(
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct SelectionDocument {
-    version: u64,
     scopes: Vec<String>,
     patterns: Vec<SelectionPattern>,
 }
@@ -148,14 +153,21 @@ struct SelectionPattern {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct MaterializationSelectionDocument {
-    version: u64,
-    patterns: Vec<SelectionPattern>,
+    patterns: Vec<MaterializationSelectionPattern>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct MaterializationSelectionPattern {
+    id: String,
+    bucket: Bucket,
+    index: usize,
+    owner_replacement: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct StateDocument {
-    version: u64,
     baseline_file: String,
     baseline_sha256: String,
     scopes: Vec<String>,
@@ -195,6 +207,7 @@ struct PromoteArguments {
     settings: PathBuf,
     candidate: PathBuf,
     state: PathBuf,
+    catalog: PathBuf,
 }
 
 enum Operation {
@@ -520,6 +533,7 @@ fn parse_verify_arguments(options: &[OsString]) -> Result<VerifyArguments, AppEr
 
 fn parse_promote_arguments(options: &[OsString]) -> Result<PromoteArguments, AppError> {
     let mut candidate = None;
+    let mut catalog = None;
     let mut settings = None;
     let mut state = None;
     let mut write = false;
@@ -531,6 +545,10 @@ fn parse_promote_arguments(options: &[OsString]) -> Result<PromoteArguments, App
             "--candidate" => {
                 let path = take_path(options, &mut index, option)?;
                 set_once(&mut candidate, path, option)?;
+            }
+            "--catalog" => {
+                let path = take_path(options, &mut index, option)?;
+                set_once(&mut catalog, path, option)?;
             }
             "--settings" => {
                 let path = take_path(options, &mut index, option)?;
@@ -567,6 +585,9 @@ fn parse_promote_arguments(options: &[OsString]) -> Result<PromoteArguments, App
         candidate: candidate
             .ok_or_else(|| invalid("Missing required option `--candidate <candidate-path>`"))?,
         state: state.ok_or_else(|| invalid("Missing required option `--state <state-path>`"))?,
+        catalog: catalog.ok_or_else(|| {
+            invalid("Missing required option `--catalog <artifact-catalog-path>`")
+        })?,
     })
 }
 
@@ -1111,16 +1132,6 @@ fn capture(arguments: &CaptureArguments, stdout: &mut dyn Write) -> Result<(), A
         read_utf8_file(&arguments.selection, "selection JSON").map_err(invalid)?;
     let selection: SelectionDocument = serde_json::from_str(&selection_contents)
         .map_err(|error| invalid_json("selection JSON", &arguments.selection, error))?;
-    if selection.version != VERSION {
-        return Err(invalid(format!(
-            "Unsupported selection JSON schema version. Expected `{VERSION}`, received `{}`",
-            selection.version
-        )));
-    }
-    if selection.patterns.is_empty() {
-        return Err(invalid("Selection JSON must contain at least one pattern"));
-    }
-
     let scopes = validate_scopes(&settings, &selection.scopes).map_err(invalid)?;
     let mut ids = HashSet::new();
     let mut selections = HashSet::new();
@@ -1164,7 +1175,6 @@ fn capture(arguments: &CaptureArguments, stdout: &mut dyn Write) -> Result<(), A
     }
 
     let state = StateDocument {
-        version: VERSION,
         baseline_file: BASELINE_FILE.to_owned(),
         baseline_sha256: sha256_hex(&settings_bytes),
         scopes: selection.scopes,
@@ -1267,18 +1277,6 @@ fn materialize(arguments: &MaterializeArguments, stdout: &mut dyn Write) -> Resu
                 error,
             )
         })?;
-    if selection.version != MATERIALIZATION_SELECTION_VERSION {
-        return Err(invalid(format!(
-            "Unsupported materialization selection JSON schema version. Expected `{MATERIALIZATION_SELECTION_VERSION}`, received `{}`",
-            selection.version
-        )));
-    }
-    if selection.patterns.is_empty() {
-        return Err(invalid(
-            "Materialization selection JSON must contain at least one pattern",
-        ));
-    }
-
     let mut ids = HashSet::new();
     let mut selections = HashSet::new();
     let mut materialized = Vec::with_capacity(selection.patterns.len());
@@ -1316,6 +1314,7 @@ fn materialize(arguments: &MaterializeArguments, stdout: &mut dyn Write) -> Resu
                 bucket: selected.bucket,
                 source_index: selected.index,
                 case_sensitive,
+                owner_replacement: selected.owner_replacement,
                 sha256: sha256_hex(&bytes),
                 pattern_file,
             },
@@ -1324,7 +1323,6 @@ fn materialize(arguments: &MaterializeArguments, stdout: &mut dyn Write) -> Resu
     }
 
     let catalog = ArtifactCatalog {
-        version: ARTIFACT_CATALOG_VERSION,
         candidate_sha256: sha256_hex(&candidate_bytes),
         state_sha256: sha256_hex(&state.bytes),
         patterns: materialized
@@ -1480,23 +1478,12 @@ fn read_state_document(path: &Path) -> Result<(Vec<u8>, StateDocument), AppError
     let (bytes, contents) = decode_utf8(bytes, path, "state manifest")?;
     let document: StateDocument = serde_json::from_str(&contents)
         .map_err(|error| invalid_json("state manifest JSON", path, error))?;
-    if document.version != VERSION {
-        return Err(invalid(format!(
-            "Unsupported state manifest schema version. Expected `{VERSION}`, received `{}`",
-            document.version
-        )));
-    }
 
     Ok((bytes, document))
 }
 
 fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
     let (state_bytes, document) = read_state_document(path)?;
-    if document.patterns.is_empty() {
-        return Err(invalid(
-            "State manifest must contain at least one captured pattern",
-        ));
-    }
     if !is_valid_sha256(&document.baseline_sha256) {
         return Err(invalid(
             "State manifest baseline SHA-256 must be 64 lowercase hexadecimal characters",
@@ -1607,6 +1594,19 @@ fn current_bucket(settings: &Value, bucket: Bucket) -> Option<&Vec<Value>> {
     pointer_value(settings, &tokens).ok()?.as_array()
 }
 
+fn required_terminal_pattern_array<'a>(
+    settings: &'a Value,
+    bucket: Bucket,
+    settings_label: &str,
+) -> Result<&'a Vec<Value>, AppError> {
+    current_bucket(settings, bucket).ok_or_else(|| {
+        invalid(format!(
+            "The {settings_label} terminal permission bucket `{}` must be an array",
+            bucket.label()
+        ))
+    })
+}
+
 type ExactPatternLookup<'settings> = HashMap<(Bucket, &'settings [u8], bool), Vec<usize>>;
 
 pub(crate) struct CurrentPatternIndex<'settings> {
@@ -1694,6 +1694,41 @@ struct MovedMapping<'a> {
 fn verify(arguments: &VerifyArguments, stdout: &mut dyn Write) -> Result<(), AppError> {
     let state = validate_state(&arguments.state)?;
     let settings = read_utf8_json_object(&arguments.settings, "current settings")?;
+    if state.patterns.is_empty() {
+        for (index, tokens) in state.scopes.iter().enumerate() {
+            let baseline_value = pointer_value(&state.baseline, tokens)
+                .map_err(|_| invalid("Validated baseline scope became unavailable"))?;
+            let current_value = pointer_value(&settings, tokens).map_err(|_| {
+                refused(format!(
+                    "Verification refused because current settings no longer contain authorized scope {}",
+                    index + 1
+                ))
+            })?;
+            if !semantic_json_equal(current_value, baseline_value) {
+                return Err(refused(format!(
+                    "Verification refused because current authorized scope {} drifted from the captured baseline",
+                    index + 1
+                )));
+            }
+        }
+        writeln!(
+            stdout,
+            "Verified {} authorized {} against the captured baseline",
+            state.scopes.len(),
+            if state.scopes.len() == 1 {
+                "scope"
+            } else {
+                "scopes"
+            }
+        )
+        .map_err(|error| {
+            invalid(format!(
+                "Failed to write verification result to standard output:\n\n{error}"
+            ))
+        })?;
+        return Ok(());
+    }
+
     let index = index_current_terminal_patterns(
         state.patterns.iter().map(|pattern| pattern.bucket),
         |bucket| current_bucket(&settings, bucket).map(Vec::as_slice),
@@ -1823,6 +1858,131 @@ pub(crate) fn semantic_json_equal(first: &Value, second: &Value) -> bool {
     }
 }
 
+fn validate_catalog_candidate_sources(
+    catalog: &LoadedArtifactCatalog,
+    candidate: &Value,
+    scopes: &[Vec<String>],
+) -> Result<(), AppError> {
+    for (index, pattern) in catalog.patterns.iter().enumerate() {
+        let definition = &pattern.definition;
+        let pointer = pattern_pointer(definition.bucket, definition.source_index);
+        if !pattern_is_authorized(&pointer, scopes) {
+            return Err(invalid(format!(
+                "Artifact catalog pattern {} lies outside every authorized scope",
+                index + 1
+            )));
+        }
+        let (candidate_pattern, candidate_case_sensitive) =
+            terminal_pattern(candidate, definition.bucket, definition.source_index).map_err(
+                |_| {
+                    invalid(format!(
+                        "Artifact catalog candidate source is missing or invalid for pattern {}",
+                        index + 1
+                    ))
+                },
+            )?;
+        if candidate_pattern.as_bytes() != pattern.pattern.as_bytes()
+            || candidate_case_sensitive != definition.case_sensitive
+        {
+            return Err(invalid(format!(
+                "Artifact catalog candidate source identity does not match pattern {}",
+                index + 1
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+fn remove_terminal_sources(
+    settings: &mut Value,
+    sources: &HashMap<Bucket, HashSet<usize>>,
+) -> Result<(), AppError> {
+    for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
+        let Some(indexes) = sources.get(&bucket) else {
+            continue;
+        };
+        if indexes.is_empty() {
+            continue;
+        }
+        let tokens = vec![
+            "agent".to_owned(),
+            "tool_permissions".to_owned(),
+            "tools".to_owned(),
+            "terminal".to_owned(),
+            bucket.label().to_owned(),
+        ];
+        let values = pointer_value_mut(settings, &tokens)
+            .map_err(|_| invalid("A validated terminal permission bucket became unavailable"))?
+            .as_array_mut()
+            .ok_or_else(|| invalid("A validated terminal permission bucket is not an array"))?;
+        let original = std::mem::take(values);
+        *values = original
+            .into_iter()
+            .enumerate()
+            .filter_map(|(index, value)| (!indexes.contains(&index)).then_some(value))
+            .collect();
+    }
+
+    Ok(())
+}
+
+fn authorize_owner_replacement(
+    candidate: &Value,
+    state: &ValidatedState,
+    catalog: &LoadedArtifactCatalog,
+) -> Result<(), AppError> {
+    if state.patterns.is_empty() {
+        for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
+            let baseline =
+                required_terminal_pattern_array(&state.baseline, bucket, "captured baseline")?;
+            let candidate = required_terminal_pattern_array(candidate, bucket, "candidate")?;
+            let unchanged = baseline.len() == candidate.len()
+                && baseline
+                    .iter()
+                    .zip(candidate)
+                    .all(|(baseline, candidate)| semantic_json_equal(baseline, candidate));
+            if !unchanged {
+                return Err(refused(format!(
+                    "Promotion refused because candidate terminal pattern array `{}` differs from the captured baseline without captured owner patterns",
+                    bucket.label()
+                )));
+            }
+        }
+
+        return Ok(());
+    }
+
+    let mut baseline_sources: HashMap<Bucket, HashSet<usize>> = HashMap::new();
+    for pattern in &state.patterns {
+        baseline_sources
+            .entry(pattern.bucket)
+            .or_default()
+            .insert(pattern.source_index);
+    }
+    let mut candidate_sources: HashMap<Bucket, HashSet<usize>> = HashMap::new();
+    for pattern in &catalog.document.patterns {
+        if pattern.owner_replacement {
+            candidate_sources
+                .entry(pattern.bucket)
+                .or_default()
+                .insert(pattern.source_index);
+        }
+    }
+
+    let mut baseline_remainder = state.baseline.clone();
+    remove_terminal_sources(&mut baseline_remainder, &baseline_sources)?;
+    let mut candidate_remainder = candidate.clone();
+    remove_terminal_sources(&mut candidate_remainder, &candidate_sources)?;
+    if !semantic_json_equal(&baseline_remainder, &candidate_remainder) {
+        return Err(refused(
+            "Promotion refused because the complete candidate owner remainder differs from the captured baseline remainder",
+        ));
+    }
+
+    Ok(())
+}
+
 fn authorize_candidate(
     candidate: &Value,
     state: &ValidatedState,
@@ -1926,6 +2086,26 @@ pub(crate) fn atomic_replace_with_best_effort_recheck<F>(
 where
     F: FnOnce(&Path) -> io::Result<()>,
 {
+    atomic_replace_with_best_effort_recheck_and_hook(
+        destination,
+        bytes,
+        expected_bytes,
+        before_recheck,
+        |_| Ok(()),
+    )
+}
+
+pub(crate) fn atomic_replace_with_best_effort_recheck_and_hook<F, G>(
+    destination: &Path,
+    bytes: &[u8],
+    expected_bytes: &[u8],
+    before_recheck: F,
+    after_recheck: G,
+) -> Result<(), BestEffortReplaceError>
+where
+    F: FnOnce(&Path) -> io::Result<()>,
+    G: FnOnce(&Path) -> io::Result<()>,
+{
     let mut changed = false;
     let result = atomic_replace_with(destination, bytes, |temporary_path| {
         before_recheck(temporary_path)?;
@@ -1937,7 +2117,7 @@ where
                 "live settings changed while promotion output was prepared",
             ));
         }
-        Ok(())
+        after_recheck(temporary_path)
     });
 
     match result {
@@ -1949,6 +2129,12 @@ where
 
 fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), AppError> {
     let state = validate_state(&arguments.state)?;
+    let (candidate_bytes, candidate) =
+        read_utf8_json_object_with_bytes(&arguments.candidate, "candidate settings")?;
+    let catalog = load_bound_artifact_catalog(&arguments.catalog, &candidate_bytes, &state.bytes)
+        .map_err(invalid)?;
+    validate_catalog_candidate_sources(&catalog, &candidate, &state.scopes)?;
+
     ensure_no_symlink_components(&arguments.settings).map_err(|error| {
         let message = error.to_string();
         match error {
@@ -1969,7 +2155,6 @@ fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), A
     }
 
     let (live_bytes, live) = read_json_object(&arguments.settings, "live settings")?;
-    let candidate = read_utf8_json_object(&arguments.candidate, "candidate settings")?;
 
     for (index, tokens) in state.scopes.iter().enumerate() {
         let baseline_value = pointer_value(&state.baseline, tokens)
@@ -1989,6 +2174,7 @@ fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), A
     }
 
     authorize_candidate(&candidate, &state, "Promotion")?;
+    authorize_owner_replacement(&candidate, &state, &catalog)?;
 
     let mut merged = live;
     for (index, tokens) in state.scopes.iter().enumerate() {

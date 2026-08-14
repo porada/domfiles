@@ -11,13 +11,15 @@ cargo run --locked --quiet \
     --owner '<top-level-executable>'
 ```
 
-The inventory reports only bucket and index IDs, decoded Unicode-scalar counts, required boolean case settings, and bounded source-text previews. Its token-aware source search produces candidate evidence, not semantic ownership proof. Classify each result through the applicable terminal and domain policy before including it in an owner group. Exclude lexical hits owned by another command, such as a manager name inside a Corepack denial.
+Each inventory page reports the exact settings SHA-256, at most 100 bucket and index IDs, decoded Unicode-scalar counts, required boolean case settings, and bounded source-text previews. Its token-aware source search produces candidate evidence, not semantic ownership proof. When another page remains, rerun the same command with the reported opaque `--after '<inventory-cursor>'`. The cursor is bound to the exact settings bytes and inventory owner. Any settings change or different owner invalidates it and requires restarting from the first page.
 
-Treat every reported bucket and index ID as transient. It expires when the relevant arrays change, including after an edit, rebase, integration, or concurrent permission task. Rerun inventory before using an expired ID. Once a candidate capture exists, use its exact pattern identities and guarded reindexing rather than relying on the original indexes.
+Classify each lexical candidate through the applicable terminal and domain policy. Include candidates owned by the inventory owner in its complete semantic owner groups. Classify lexical hits owned by another command, such as a manager name inside a Corepack denial, as explicit exclusions. Treat every reported bucket and index ID as transient. It expires after an edit, rebase, integration, concurrent permission task, or other relevant-array change. Once a candidate capture exists, use its exact pattern identities and guarded reindexing rather than relying on the original indexes.
 
 ## Audit permission ownership
 
-After identifying every entry in the complete semantic owner groups under review, run the owner-audit binary with exact `--help` and use the strict manifest schema it prints as the canonical field contract. Create that manifest under the task-specific temporary directory. Declare each entry’s unique ID, bucket and current index, semantic owner, owner and domain-section sort keys, role, stable role-local sort key, and one normalized witness. Declare `nohup` and `xargs` child witnesses as `wrapped`. When a selected pattern is case-insensitive under the terminal policy’s verified command-specific exception, also declare a nonempty `case_insensitive_reason`. Omit that field for case-sensitive patterns. Derive this audit manifest independently from the transformation that built the candidate. Do not let one unreviewed owner map both construct and certify its own order.
+After classifying every lexical candidate, run the owner-audit binary with exact `--help` and use its single strict manifest schema as the canonical field contract. Create that manifest under the task-specific temporary directory. Bind `settings_sha256` to the exact candidate settings bytes and set `inventory_owner` to the inventoried top-level executable. Declare each inventory-owned entry’s unique ID, bucket and current index, semantic owner, owner and domain-section sort keys, role, stable role-local sort key, and one normalized witness. Declare every excluded lexical candidate’s bucket, index, semantic owner outside `inventory_owner`, normalized matching witness, and nonempty semantic reason. The entry and exclusion positions must be disjoint and together classify the complete recomputed lexical inventory.
+
+Declare `nohup` and `xargs` child entry witnesses as `wrapped`. When a selected pattern is case-insensitive under the terminal policy’s verified command-specific exception, also declare a nonempty `case_insensitive_reason`. Omit that field for case-sensitive patterns. Derive the audit manifest independently from the transformation that built the candidate. Do not let one unreviewed owner map both construct and certify its own order.
 
 Resolve semantic ownership through the [terminal command-owner policy](terminal-permissions.md#apply-the-terminal-permission-policy) and each selected domain policy before encoding the manifest. Apply the [Git owner partition](git-permissions.md#apply-the-git-permission-policy) to Git owner and section sort keys, the [Node manager boundaries](node-package-manager-permissions.md#apply-manager-boundaries) to Corepack mediation, and the terminal policy’s wrapper ownership to `xargs`.
 
@@ -34,6 +36,8 @@ The audit requires complete occupancy for each `(bucket, independently inferred 
 - `agent worktree` for one exact traversal-free project-relative `-C .agent-<name>` path.
 - `fixture repository` for one traversal-free strict descendant `-C .agent-<name>/<path>`.
 
+One Git ordering exception permits a discovery entry to be separated from a later direct or wrapped entry when both have the same independently inferred Git owner and repository scope and every intervening manifest entry independently infers to a Git owner. Non-Git owner groups remain contiguous. This exception affects ordering separation only and does not partition completeness.
+
 Assignments, supported `nohup`, and supported `xargs` child syntax participate in owner and repository-scope inference. Childless and discovery-only `xargs` forms remain in the general `xargs` span. The declared discovery, direct, or wrapped role and `section_sort_key` participate in ordering but never partition completeness.
 
 Run the structural audit against the candidate settings:
@@ -45,13 +49,13 @@ cargo run --locked --quiet \
     --manifest '<owner-manifest-path>'
 ```
 
-The audit independently checks supported wrapper-aware owner inference, witness matches, case sensitivity or a declared verified exception, decoded lengths, owner-group contiguity, declared bucket order, and complete finite discovery redundancy. It does not verify the semantic basis of `case_insensitive_reason`, prove formal regex-language equivalence, infer safety classifications, or replace matcher coverage and complete effective-permission evaluation.
+The audit verifies the exact settings snapshot, complete lexical-candidate classification, outside-owner exclusion witnesses, supported wrapper-aware owner inference, witness matches, case sensitivity or a declared verified exception, decoded lengths, owner-group contiguity subject to the Git ordering exception above, declared bucket order, and complete finite discovery redundancy. It does not verify exclusion reasons or the semantic basis of `case_insensitive_reason`, prove formal regex-language equivalence, infer safety classifications, or replace matcher coverage and complete effective-permission evaluation.
 
 Before adding a finite discovery object, test its complete normalized input set against every retained pattern in the resolved owner group and add only uncovered forms. Before removing one as redundant, require every member of its complete finite grammar to remain covered. Do not use provisional owner metadata alone as evidence of duplicate coverage.
 
 ## Build and promote a permission candidate
 
-Run the candidate binary with exact `--help` and use its strict capture-selection schema as the canonical field contract. Write a selection document containing the authorized non-root JSON pointer scopes and every semantically owned pattern selected from the latest inventory. Capture from the latest live settings:
+Run the candidate binary with exact `--help` and use its strict schemas as the canonical field contracts. A capture selection must contain at least one authorized non-root JSON pointer scope. Its terminal pattern selection may be empty for a scope-only candidate. For a terminal owner replacement, select every source in the complete baseline owner group from the latest inventory. Capture from the latest live settings:
 
 ```sh
 cargo run --locked --quiet \
@@ -66,27 +70,29 @@ Capture creates these artifacts without overwriting existing paths:
 
 - Immutable exact-byte `baseline-settings.json`
 - Editable exact-byte `candidate-settings.json`
-- One exact decoded UTF-8 file for each selected pattern
+- One exact decoded UTF-8 file for each selected terminal pattern
 - `state.json`, which records authorized scopes, source identities, artifact paths, and SHA-256 integrity values
 
-Edit only `candidate-settings.json`, and only inside the authorized scopes. Do not modify the baseline, state, or captured pattern files.
+The state’s pattern array may be empty when authorized scopes are nonempty. Capture selections and state manifests reject unknown fields, including `version`. Edit only `candidate-settings.json`, and only inside the authorized scopes. Do not modify the baseline, state, or captured pattern files.
 
-After the candidate reaches its final validation form, write a strict version-1 materialization selection using transient candidate bucket/index locators and stable logical IDs:
+After the candidate reaches its final validation form, write a strict materialization selection using transient candidate bucket/index locators, stable logical IDs, and an explicit owner role:
 
 ```json
 {
-    "version": 1,
     "patterns": [
         {
             "id": "<logical-pattern-id>",
             "bucket": "always_allow",
-            "index": 0
+            "index": 0,
+            "owner_replacement": true
         }
     ]
 }
 ```
 
-Unknown fields, empty selections or IDs, duplicate IDs, and duplicate bucket/index pairs are invalid. Materialize every changed candidate pattern and unchanged participating overlap needed by matcher manifests:
+`owner_replacement: true` marks a candidate source as part of the complete replacement owner. `false` marks a validation-only overlap that must remain in the candidate remainder. The pattern array may be empty for a scope-only candidate or a delete-all owner replacement. Unknown fields, including `version`, are invalid, as are missing or nonboolean owner roles, empty IDs, duplicate IDs, and duplicate bucket/index pairs.
+
+Materialize every candidate replacement-owner source and every unchanged participating overlap needed by matcher manifests:
 
 ```sh
 cargo run --locked --quiet \
@@ -98,11 +104,10 @@ cargo run --locked --quiet \
     --output '<materialization-directory>'
 ```
 
-Materialization validates the complete captured state first, requires every candidate value outside the authorized scopes to equal the baseline, and derives each selected pattern’s bucket, source index, case setting, and exact decoded UTF-8 bytes from the candidate object. It writes exact pattern files without a newline, normalization, quoting, or reserialization plus `artifact-catalog.json`:
+Materialization validates the complete captured state first, requires every candidate value outside the authorized scopes to equal the baseline, and derives each selected pattern’s bucket, source index, case setting, exact decoded UTF-8 bytes, and owner role from the candidate and selection. It writes exact pattern files without a newline, normalization, quoting, or reserialization plus a strict `artifact-catalog.json`:
 
 ```json
 {
-    "version": 1,
     "candidate_sha256": "<64-lowercase-hex>",
     "state_sha256": "<64-lowercase-hex>",
     "patterns": [
@@ -111,6 +116,7 @@ Materialization validates the complete captured state first, requires every cand
             "bucket": "always_allow",
             "source_index": 0,
             "case_sensitive": true,
+            "owner_replacement": true,
             "sha256": "<64-lowercase-hex>",
             "pattern_file": "<safe-relative-path>"
         }
@@ -118,9 +124,11 @@ Materialization validates the complete captured state first, requires every cand
 }
 ```
 
-The catalog requires a nonempty pattern array, unique IDs, bucket/source-index pairs, and safe relative artifact paths, plus valid lowercase SHA-256 values. Candidate and state hashes bind the complete exact source bytes, while artifact hashes bind exact pattern files. These hashes establish integrity and freshness, not authenticity. Materialization preflights every output, refuses symlink traversal and overwrites, uses create-new writes with safe generated names, and rolls back created artifacts after a later failure. It leaves candidate, baseline, state, and live settings untouched.
+The catalog’s pattern array may be empty. Every entry requires `owner_replacement`, and unknown fields—including `version`—are rejected. IDs, bucket/source-index pairs, and safe relative artifact paths must be unique where required, and every hash must be lowercase SHA-256. Candidate and state hashes bind their complete exact source bytes, while artifact hashes bind exact pattern files. These hashes establish integrity and freshness, not authenticity. Use the same untouched catalog, candidate, and state for matcher validation and promotion. Accepting a catalog does not prove that matcher validation ran.
 
-Verify the captured identities against current live settings before validation and again immediately before promotion:
+Materialization preflights every output, refuses symlink traversal and overwrites, uses create-new writes with safe generated names, and rolls back created artifacts after a later failure. It leaves candidate, baseline, state, and live settings untouched.
+
+Verify the captured state against current live settings before validation and again immediately before promotion:
 
 ```sh
 cargo run --locked --quiet \
@@ -130,11 +138,11 @@ cargo run --locked --quiet \
     --state '<capture-path>/state.json'
 ```
 
-`verify` indexes each relevant bucket once and relocates a captured pattern only when its exact decoded bytes and case setting identify one unique current object. If a relevant rebase, integration, source-pattern edit, or same-scope concurrent change makes the candidate stale, rebuild it from the latest live settings and rerun every structural, matching, comparison, and effective-permission check. Do not reconcile stale arrays by transient index.
+When the state contains terminal patterns, `verify` indexes each relevant bucket once and relocates a captured pattern only when its exact decoded bytes and case setting identify one unique current object. A scope-only state instead requires every current authorized scope to equal its captured baseline scope. If a relevant rebase, integration, source-pattern edit, or same-scope concurrent change makes the candidate stale, rebuild it from the latest live settings and rerun every structural, matching, comparison, and effective-permission check. Do not reconcile stale arrays by transient index.
 
-When concurrent owner work changed the same permission buckets, reapply only the authorized owner transformation to a new capture. Compare semantic ownership by removing the exact old owned entries from the latest baseline and the exact replacement entries from the rebuilt candidate, then require the remaining bucket objects and every out-of-scope setting to be equal. This comparison supplements, rather than bypasses, candidate validation.
+For a terminal owner replacement, the state patterns define the complete baseline owner and the catalog entries marked `owner_replacement: true` define the complete candidate replacement owner. Promotion removes those exact sources in one pass per bucket, preserving every remaining object and its relative order, then requires the complete baseline and candidate remainders to be equal. Catalog entries marked `false` remain in the candidate remainder as validation-only overlaps. This contract supports one-to-many replacement, cross-bucket movement, duplicate decoded identities selected by exact source index, and delete-all replacement. It rejects undeclared additions, removals, object edits, reorders, and omitted retained-owner entries. When the state contains no terminal patterns, promotion instead requires the complete `always_allow`, `always_confirm`, and `always_deny` arrays to remain semantically unchanged from the captured baseline. A changed array refuses promotion, while a missing or malformed required array is invalid data.
 
-Promote only after every required check passes:
+Promote only after every required owner, matcher, comparison, effective-permission, and freshness check passes:
 
 ```sh
 cargo run --locked --quiet \
@@ -143,14 +151,19 @@ cargo run --locked --quiet \
     --settings .config/zed/settings.json \
     --candidate '<capture-path>/candidate-settings.json' \
     --state '<capture-path>/state.json' \
+    --catalog '<materialization-directory>/artifact-catalog.json' \
     --write
 ```
 
-Promotion refuses candidate changes outside authorized scopes and refuses when any live authorized scope differs from the captured baseline. It merges authorized candidate scope values into the live object read for promotion so that object’s out-of-scope values survive. Immediately before atomic pathname replacement, it rechecks the live bytes and refuses an observed change. This check is best-effort rather than synchronized compare-and-swap—a writer can still replace the destination after the recheck and before rename. Avoid concurrent writers during promotion. After promotion, confirm that each promoted scope equals the validated candidate.
+Promotion requires exactly one `--catalog` and the exact `--write` guard. Before inspecting live settings, it validates the complete state and its artifacts, reads and parses the exact candidate bytes once, verifies the strict catalog’s exact candidate and state hashes and artifacts, and verifies every catalog entry’s authorized candidate pointer, decoded bytes, and case setting. Catalog schema, binding, artifact, and source-identity failures are invalid data with status `2`.
+
+Promotion then validates the live destination and authorized-scope freshness, refuses candidate changes outside authorized scopes, and applies the mandatory terminal-array or owner-remainder comparison above. Live drift, candidate authorization, terminal-array drift without captured owner patterns, owner-remainder, and observed replacement-drift refusals use status `1`. Authorized candidate scope values are merged into the live object read for promotion so its out-of-scope values survive.
+
+Byte-identical output leaves live settings untouched. Changed output is written to a create-new same-directory sibling, assigned the live file’s permissions, synced, and atomically renamed. Immediately before rename, promotion rechecks the live bytes once and refuses an observed change. This remains a best-effort check rather than synchronized compare-and-swap: an uncooperative writer can still replace the destination after the recheck and before rename. Avoid concurrent writers during promotion. After promotion, confirm that every promoted scope equals the validated candidate.
 
 ## Compile and match permission patterns
 
-Use `.agents/skills/domfiles-zed-settings/scripts/pattern-match.rs` for Zed-compatible regex compilation and matching. Do not use the dependency-audit tool as a pattern compiler, and do not substitute `rg`, which changes anchor and byte-matching behavior and wraps configured patterns before parsing.
+Use `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` for Zed-compatible regex compilation and matching. Do not use the dependency-audit tool as a pattern compiler, and do not substitute `rg`, which changes anchor and byte-matching behavior and wraps configured patterns before parsing.
 
 For one pattern and input, write both as exact UTF-8 bytes under the task-specific temporary directory and run:
 
@@ -177,7 +190,7 @@ pattern-case<TAB><id><TAB>match|no-match<TAB><input>
 pattern-case-file<TAB><id><TAB>match|no-match<TAB><input-file>
 ```
 
-Records may appear in any order. A suite requires exactly one `default`, at least one ordinary or catalog-backed pattern, at least one decision case, and at least one pattern case for every pattern ID. Suite declaration, candidate, state, ordinary-pattern, and input paths resolve from the suite file’s parent. Catalog artifact paths resolve from the catalog’s parent. A catalog-backed pattern uses the catalog entry as the sole source of its bucket, case setting, exact artifact path, and logical pattern ID. Catalog IDs and pattern IDs must remain unique, including across ordinary and catalog-backed patterns. Catalog declarations alone do not count as patterns, and catalog-backed patterns retain the ordinary pattern-case coverage requirement. Suites may use catalogs without comparison mode or transitions.
+Records may appear in any order. A suite requires exactly one `default`, at least one ordinary or catalog-backed pattern, at least one decision case, and at least one pattern case for every pattern ID. Suite declaration, candidate, state, ordinary-pattern, and input paths resolve from the suite file’s parent. Catalog artifact paths resolve from the catalog’s parent. Pattern catalogs use the strict artifact catalog schema, every catalog entry requires boolean `owner_replacement`, and unknown fields—including `version`—are rejected. A catalog may contain no patterns, but its declaration does not count as a matcher pattern. A catalog-backed pattern uses the catalog entry as the sole source of its bucket, case setting, exact artifact path, and logical pattern ID. Catalog IDs and pattern IDs must remain unique, including across ordinary and catalog-backed patterns. Catalog-backed patterns retain the ordinary pattern-case coverage requirement. Suites may use catalogs without comparison mode or transitions.
 
 Use file-backed records for inputs containing line breaks. Declare every changed pattern and every unchanged pattern from participating effective settings layers and buckets that may match a decision input. Include at least one pattern case for every declared pattern. For every changed or audited pattern set, add representative intended inputs, hazardous forms, and near misses even when no narrower permission branch applies, plus the additional cases required by each selected branch and any precedence interactions.
 
@@ -201,13 +214,10 @@ cargo run --locked --quiet \
     --comparison-file '<comparison-path>'
 ```
 
-Version 1 remains the strict equivalence-only contract. Each set declares its resolved default and pattern records containing a unique ID, bucket, case setting, and manifest-relative exact-byte pattern file. Cases are inline single-line inputs or file-backed inputs. The matcher preserves version-1 parsing, statuses, diagnostics, mismatch rendering, and success output.
-
-Use strict version 2 when a corpus contains authorized behavior transitions or catalog-backed patterns. A minimal ordinary-pattern manifest has this shape:
+The strict comparison schema supports equivalence cases, authorized transitions, catalog-backed patterns, and separate defaults for each side. Either pattern set may be empty, but at least one comparison case is mandatory. An empty side has no matches in `always_allow`, `always_confirm`, or `always_deny`, so its final decision comes from that side’s configured default. A minimal ordinary-pattern manifest has this shape:
 
 ```json
 {
-    "version": 2,
     "catalogs": [],
     "baseline": {
         "default": "deny",
@@ -253,7 +263,7 @@ Use strict version 2 when a corpus contains authorized behavior transitions or c
 }
 ```
 
-Version-2 patterns are explicitly tagged. Ordinary patterns declare matcher-owned metadata:
+Patterns are explicitly tagged. Ordinary patterns declare matcher-owned metadata:
 
 ```json
 {
@@ -275,7 +285,7 @@ Catalog-backed patterns declare only stable references because the catalog suppl
 }
 ```
 
-A version-2 inline or file-backed case without `expected_transition` requires complete baseline/candidate equivalence across all three buckets and the final configured decision. An intentional change must declare both complete states:
+An inline or file-backed case without `expected_transition` requires complete baseline/candidate equivalence across all three buckets and the final configured decision. An intentional change must declare both complete states:
 
 ```json
 {
@@ -300,13 +310,11 @@ A version-2 inline or file-backed case without `expected_transition` requires co
 
 All eight state fields are mandatory. The matcher recomputes each declared `final_decision` from that side’s bucket booleans and configured default using deny, confirm, allow, then default precedence. Incomplete or contradictory declarations, no-op transitions, malformed or stale catalogs, and artifact failures are invalid data with status `2`. Observed mismatches, undeclared drift, and transition-side mismatches use status `1`. Bucket drift remains visible even when precedence preserves the final decision.
 
-Version-2 declarations and ordinary paths resolve from the comparison manifest’s parent, while artifact paths resolve from the catalog’s parent. Before compilation, the matcher loads each catalog once, verifies its candidate and state hashes, verifies every artifact hash and exact UTF-8 file, and then compiles with catalog-owned metadata. It never extracts settings or interprets candidate authorization.
+Comparison declarations and ordinary paths resolve from the comparison manifest’s parent, while artifact paths resolve from the catalog’s parent. Before compilation, the matcher loads each strict catalog once, verifies its candidate and state hashes, verifies every artifact hash and exact UTF-8 file, and then compiles with catalog-owned metadata. Empty catalog declarations add no patterns to either set. Unknown fields—including `version`—and the former untagged equivalence-only shape are invalid. The matcher never extracts settings, interprets candidate authorization, or proves that a later promotion used the validated catalog.
 
-Failure output retains at most 10 case details and reports only the case ordinal, affected side, and differing bucket or final-decision dimensions, without inputs or pattern bodies. A successful version-2 summary distinguishes equivalence cases from matched transitions and describes only a representative corpus.
+Failure output retains at most 10 case details and reports only the case ordinal, affected side, and differing bucket or final-decision dimensions, without inputs or pattern bodies. A successful summary distinguishes equivalence cases from matched transitions and describes only a representative corpus.
 
-For mechanical ordinary-pattern migration from version 1, change `version` to `2`, add `"catalogs": []`, add `"type": "file"` to each pattern, and leave unchanged cases without `expected_transition`.
-
-For every version, comparison checks the matched state of `always_allow`, `always_confirm`, and `always_deny` separately before resolving the configured decision. A successful representative corpus comparison is not formal regex-language equivalence or complete Zed permission evaluation.
+Every comparison checks the matched state of `always_allow`, `always_confirm`, and `always_deny` separately before resolving the configured decision. A successful representative corpus comparison is not formal regex-language equivalence or complete Zed permission evaluation.
 
 When factoring, consolidating, or reordering a finite pattern language, supplement representative comparison with the strongest bounded structural proof available. Examples include unchanged prefixes and suffixes with exact alternative-set equality, exact branch-set equality, or an unchanged pattern multiset. Compare match unions rather than pattern objects when ownership decomposition changes object counts.
 
@@ -314,7 +322,7 @@ When factoring, consolidating, or reordering a finite pattern language, suppleme
 
 During a documentation audit that includes [Zed permission regex compatibility](../../../PROJECT.md#zed-permission-regex-compatibility), obtain Zed’s current `main` `Cargo.lock` and short commit reference through one bounded official-source retrieval. Do not search Zed’s dependency changelog, release notes, or repository history. If the source cannot be retrieved, report the verification limitation instead of inferring compatibility.
 
-Use `.agents/skills/domfiles-zed-settings/scripts/regex-dependency-audit.rs` only to compare the exact root `Cargo.toml` pin, the version resolved for the local root package through its adjacent `Cargo.lock`, and the direct `regex` version in the retrieved upstream lockfile:
+Use `.agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.rs` only to compare the exact root `Cargo.toml` pin, the version resolved for the local root package through its adjacent `Cargo.lock`, and the direct `regex` version in the retrieved upstream lockfile:
 
 ```sh
 cargo run --locked --quiet \

@@ -19,7 +19,7 @@ Use only already-inspected conversation context and artifacts. Do not call tools
 
 ## Structure
 
-Use only needed sections, but always include `Scope and boundaries`:
+Use only needed sections, but always include `Scope and boundaries` and end the complete relay with the exact standalone guard shown below:
 
 # \<task-name\> Task Relay
 
@@ -31,9 +31,7 @@ Include only the target state, authoritative instructions or settled evidence, c
 
 ## Scope and boundaries
 
-Define the smallest complete owned scope and necessary supporting work. Name material exclusions, prohibited actions, and every inherited preservation, scope, mutation, approval, submission, integration, access, and security boundary. Require unrelated findings to remain untouched. Prohibit transferring access or circumventing a boundary. Tell the receiver to stop and ask the user directly before crossing any inherited boundary. End this section with:
-
-**Do not drift.**
+Define the smallest complete owned scope and necessary supporting work. Name material exclusions, prohibited actions, and every inherited preservation, scope, mutation, approval, submission, integration, access, and security boundary. Require unrelated findings to remain untouched. Prohibit transferring access or circumventing a boundary. Tell the receiver to stop and ask the user directly before crossing any inherited boundary.
 
 ## Required result
 
@@ -46,3 +44,5 @@ Include only mandatory workflow steps and the smallest checks that establish the
 ## Handoff
 
 State the required report, preserved state, and stopping point.
+
+**Do not drift.**

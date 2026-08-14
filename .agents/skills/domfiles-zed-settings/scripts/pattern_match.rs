@@ -1,14 +1,14 @@
 #[allow(dead_code)]
-#[path = "helpers/permission-patterns.rs"]
+#[path = "helpers/permission_patterns.rs"]
 mod permission_patterns;
 
+use permission_patterns::load_bound_artifact_catalog;
 #[cfg(test)]
 pub(crate) use permission_patterns::sha256_hex;
 pub(crate) use permission_patterns::{
     BoundedIssues, Bucket, CompiledPattern, Decision, MatchState, PatternError, compile_pattern,
     read_utf8_file, regex_error_summary,
 };
-use permission_patterns::{load_artifact_catalog, verify_artifact_catalog_binding};
 use serde::{Deserialize, Deserializer, de};
 use std::{
     collections::{HashMap, HashSet},
@@ -31,7 +31,7 @@ const HELP: &str = concat!(
     "Options:\n",
     "  --case-sensitive          Match case-sensitively (default: case-insensitive)\n",
     "  --cases-file <path>       Read LF-delimited `match<TAB><input>` and `no-match<TAB><input>` cases\n",
-    "  --comparison-file <path>  Compare baseline and candidate pattern sets over a representative corpus from a version-1 or version-2 JSON manifest. Mutually exclusive with every other option\n",
+    "  --comparison-file <path>  Compare baseline and candidate pattern sets over a representative corpus from a strict JSON manifest. Mutually exclusive with every other option\n",
     "  --help                    Print help. Must be used alone\n",
     "  --input-file <path>       Read one complete UTF-8 input from this file\n",
     "  --pattern-file <path>     Read the complete UTF-8 pattern from this file\n",
@@ -47,31 +47,29 @@ const HELP: &str = concat!(
     "  pattern-case<TAB><id><TAB>match|no-match<TAB><input>\n",
     "  pattern-case-file<TAB><id><TAB>match|no-match<TAB><input-file>\n",
     "  Relative suite paths resolve from the suite file’s parent. Catalog artifact paths resolve from the catalog’s parent\n",
+    "  Pattern catalogs use the strict artifact catalog schema. Every catalog entry requires boolean `owner_replacement` metadata\n",
     "\n",
     "Suite requirements:\n",
-    "  Define exactly one `default` record, at least one ordinary or catalog-backed pattern, and at least one `decision-case` or `decision-case-file` record\n",
+    "  Define exactly one `default` record, at least one ordinary or catalog-backed pattern, and at least one `decision-case` or `decision-case-file` record. Catalog declarations do not count as patterns\n",
     "  Define at least one `pattern-case` or `pattern-case-file` record for every pattern ID\n",
     "  Keep inline inputs single-line. Use file-backed records for multiline inputs\n",
     "  Each decision case applies configured pattern precedence to one input\n",
     "  Suite verification does not reproduce full Zed permission evaluation\n",
     "\n",
-    "Version-1 UTF-8 JSON comparison manifest:\n",
-    "  Root: {\"version\":1,\"baseline\":<set>,\"candidate\":<set>,\"cases\":[<case>,...]}\n",
+    "Strict UTF-8 JSON comparison manifest (unknown fields are rejected):\n",
+    "  Root: {\"catalogs\":[<catalog>,...],\"baseline\":<set>,\"candidate\":<set>,\"cases\":[<case>,...]}\n",
     "  Set: {\"default\":\"allow|confirm|deny\",\"patterns\":[<pattern>,...]}\n",
-    "  Pattern: {\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"case_sensitive\":true|false,\"pattern_file\":\"path\"}\n",
-    "  Inline case: {\"type\":\"inline\",\"input\":\"single line\"}\n",
-    "  File case: {\"type\":\"file\",\"input_file\":\"path\"}\n",
-    "\n",
-    "Version-2 UTF-8 JSON comparison manifest:\n",
-    "  Root adds strict `catalogs` declarations and uses explicitly tagged `file` or `catalog` patterns\n",
+    "  Root requires `catalogs`, which may be empty, and uses explicitly tagged `file` or `catalog` patterns\n",
     "  File pattern: {\"type\":\"file\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"case_sensitive\":true|false,\"pattern_file\":\"path\"}\n",
     "  Catalog pattern: {\"type\":\"catalog\",\"catalog_id\":\"...\",\"pattern_id\":\"...\"}\n",
     "  Catalog: {\"id\":\"...\",\"catalog_file\":\"path\",\"candidate_file\":\"path\",\"state_file\":\"path\"}\n",
     "  Cases may add a complete `expected_transition` with baseline and candidate bucket booleans plus `final_decision`\n",
+    "  Either pattern set may be empty. An empty set has no bucket matches and resolves each case from its configured default\n",
+    "  Catalog declarations bind sources but do not add patterns to either set\n",
     "  Relative manifest paths resolve from the comparison file’s parent. Catalog artifact paths resolve from the catalog’s parent\n",
     "\n",
     "Comparison requirements:\n",
-    "  Define at least one pattern in each set and at least one case\n",
+    "  Define at least one case\n",
     "  Keep pattern IDs nonempty and unique within each set\n",
     "  Keep inline inputs single-line. Use file cases for multiline inputs\n",
     "  For each case, comparison checks whether each bucket matched and compares the configured final decision\n",
@@ -94,8 +92,6 @@ const HELP: &str = concat!(
     "  2  Invalid arguments or data, or an I/O failure\n",
 );
 
-const COMPARISON_VERSION_1: u64 = 1;
-const COMPARISON_VERSION_2: u64 = 2;
 const MAX_REPORTED_FAILURES: usize = 10;
 const STATUS_ERROR: u8 = 2;
 const STATUS_MATCH: u8 = 0;
@@ -124,44 +120,6 @@ struct BatchResult {
     total: usize,
 }
 
-#[derive(Deserialize)]
-struct ComparisonVersion {
-    version: u64,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ComparisonManifestDefinition {
-    baseline: ComparisonPatternSetDefinition,
-    candidate: ComparisonPatternSetDefinition,
-    cases: Vec<ComparisonCaseDefinition>,
-    version: u64,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ComparisonPatternSetDefinition {
-    #[serde(deserialize_with = "deserialize_decision")]
-    default: Decision,
-    patterns: Vec<ComparisonPatternDefinition>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ComparisonPatternDefinition {
-    bucket: Bucket,
-    case_sensitive: bool,
-    id: String,
-    pattern_file: String,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum ComparisonCaseDefinition {
-    File { input_file: String },
-    Inline { input: String },
-}
-
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CatalogDefinition {
@@ -173,25 +131,24 @@ struct CatalogDefinition {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ComparisonManifestV2 {
-    baseline: ComparisonPatternSetV2,
-    candidate: ComparisonPatternSetV2,
-    cases: Vec<ComparisonCaseV2>,
+struct ComparisonManifestDefinition {
+    baseline: ComparisonPatternSetDefinition,
+    candidate: ComparisonPatternSetDefinition,
+    cases: Vec<ComparisonCaseDefinition>,
     catalogs: Vec<CatalogDefinition>,
-    version: u64,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ComparisonPatternSetV2 {
+struct ComparisonPatternSetDefinition {
     #[serde(deserialize_with = "deserialize_decision")]
     default: Decision,
-    patterns: Vec<ComparisonPatternV2>,
+    patterns: Vec<ComparisonPatternDefinition>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum ComparisonPatternV2 {
+enum ComparisonPatternDefinition {
     Catalog {
         catalog_id: String,
         pattern_id: String,
@@ -206,7 +163,7 @@ enum ComparisonPatternV2 {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum ComparisonCaseV2 {
+enum ComparisonCaseDefinition {
     File {
         input_file: String,
         #[serde(default, deserialize_with = "deserialize_expected_transition")]
@@ -294,20 +251,7 @@ impl ComparisonDifferences {
     }
 }
 
-struct ComparisonMismatch {
-    case_position: usize,
-    differences: ComparisonDifferences,
-}
-
-struct ComparisonResult {
-    baseline_pattern_count: usize,
-    candidate_pattern_count: usize,
-    case_count: usize,
-    comparison_file: PathBuf,
-    mismatches: BoundedIssues<ComparisonMismatch>,
-}
-
-enum ComparisonMismatchV2 {
+enum ComparisonMismatch {
     Equivalence {
         case_position: usize,
         differences: ComparisonDifferences,
@@ -319,13 +263,13 @@ enum ComparisonMismatchV2 {
     },
 }
 
-struct ComparisonResultV2 {
+struct ComparisonResult {
     baseline_pattern_count: usize,
     candidate_pattern_count: usize,
     case_count: usize,
     comparison_file: PathBuf,
     equivalence_case_count: usize,
-    mismatches: BoundedIssues<ComparisonMismatchV2>,
+    mismatches: BoundedIssues<ComparisonMismatch>,
     transition_case_count: usize,
 }
 
@@ -450,16 +394,6 @@ enum ParsedArguments {
     Help,
     Run(Arguments),
     Suite(PathBuf),
-}
-
-enum ComparisonEvaluation {
-    Version1(ComparisonResult),
-    Version2(ComparisonResultV2),
-}
-
-enum ParsedComparisonManifest {
-    Version1(ComparisonManifestDefinition),
-    Version2(ComparisonManifestV2),
 }
 
 fn parse_arguments<I>(arguments: I) -> Result<ParsedArguments, String>
@@ -726,21 +660,14 @@ fn read_catalog_source(
             state_file.display()
         )
     })?;
-    let loaded = load_artifact_catalog(&catalog_file).map_err(|error| {
-        format!(
-            "Invalid pattern catalog `{}` at `{}`. {error}",
-            display_id(&catalog.id),
-            catalog_file.display()
-        )
-    })?;
-    verify_artifact_catalog_binding(&loaded.document, &candidate_bytes, &state_bytes).map_err(
-        |error| {
+    let loaded = load_bound_artifact_catalog(&catalog_file, &candidate_bytes, &state_bytes)
+        .map_err(|error| {
             format!(
-                "Invalid pattern catalog `{}` source binding. {error}",
-                display_id(&catalog.id)
+                "Invalid pattern catalog `{}` at `{}`. {error}",
+                display_id(&catalog.id),
+                catalog_file.display()
             )
-        },
-    )?;
+        })?;
     let patterns = loaded
         .patterns
         .into_iter()
@@ -866,7 +793,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                 if !declared_pattern_ids.insert(fields[1].to_owned()) {
                     return Err(format!(
                         "Duplicate pattern ID `{}` in suite manifest `{}` at line {line_number}",
-                        fields[1],
+                        display_id(fields[1]),
                         path.display()
                     ));
                 }
@@ -1009,7 +936,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                 PatternDefinition {
                     bucket,
                     case_sensitive,
-                    reported_id: id.clone(),
+                    reported_id: display_id(&id),
                     id,
                     source: PatternSource::File(pattern_file),
                 },
@@ -1021,7 +948,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
         {
             return Err(format!(
                 "Duplicate pattern ID `{}` in suite manifest `{}` at line {line_number}",
-                pattern.reported_id,
+                display_id(&pattern.reported_id),
                 path.display()
             ));
         }
@@ -1043,7 +970,8 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
         };
         let Some(pattern_index) = pattern_indices.get(pattern_id) else {
             return Err(format!(
-                "Unknown pattern ID `{pattern_id}` in suite manifest `{}` at line {line_number}",
+                "Unknown pattern ID `{}` in suite manifest `{}` at line {line_number}",
+                display_id(pattern_id),
                 path.display()
             ));
         };
@@ -1065,7 +993,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
             return Err(format!(
                 "Suite manifest `{}` must include at least one `pattern-case` or `pattern-case-file` record for pattern `{}`",
                 path.display(),
-                pattern.reported_id
+                display_id(&pattern.reported_id)
             ));
         }
     }
@@ -1084,102 +1012,10 @@ fn validate_comparison_pattern_set(
     label: &str,
     definition: &ComparisonPatternSetDefinition,
 ) -> Result<(), String> {
-    if definition.patterns.is_empty() {
-        return Err(format!(
-            "Comparison manifest `{}` must define at least one {label} pattern",
-            comparison_file.display()
-        ));
-    }
-
-    let mut ids = HashSet::with_capacity(definition.patterns.len());
-    for pattern in &definition.patterns {
-        if pattern.id.is_empty() {
-            return Err(format!(
-                "Comparison manifest `{}` contains an empty {label} pattern ID",
-                comparison_file.display()
-            ));
-        }
-        if pattern.pattern_file.is_empty() {
-            return Err(format!(
-                "Comparison pattern `{}` in the {label} set of comparison manifest `{}` must define a nonempty `pattern_file`",
-                pattern.id,
-                comparison_file.display()
-            ));
-        }
-        if !ids.insert(pattern.id.as_str()) {
-            return Err(format!(
-                "Duplicate pattern ID `{}` in the {label} set of comparison manifest `{}`",
-                pattern.id,
-                comparison_file.display()
-            ));
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_comparison_manifest(
-    comparison_file: &Path,
-    definition: &ComparisonManifestDefinition,
-) -> Result<(), String> {
-    if definition.version != COMPARISON_VERSION_1 {
-        return Err(format!(
-            "Unsupported comparison manifest version in `{}`. Expected `{COMPARISON_VERSION_1}`, received `{}`",
-            comparison_file.display(),
-            definition.version
-        ));
-    }
-
-    validate_comparison_pattern_set(comparison_file, "baseline", &definition.baseline)?;
-    validate_comparison_pattern_set(comparison_file, "candidate", &definition.candidate)?;
-
-    if definition.cases.is_empty() {
-        return Err(format!(
-            "Comparison manifest `{}` must define at least one case",
-            comparison_file.display()
-        ));
-    }
-
-    for (index, case) in definition.cases.iter().enumerate() {
-        let case_position = index + 1;
-        match case {
-            ComparisonCaseDefinition::File { input_file } if input_file.is_empty() => {
-                return Err(format!(
-                    "File comparison case {case_position} in `{}` must define a nonempty `input_file`",
-                    comparison_file.display()
-                ));
-            }
-            ComparisonCaseDefinition::Inline { input }
-                if input.contains('\r') || input.contains('\n') =>
-            {
-                return Err(format!(
-                    "Inline comparison case {case_position} in `{}` must not contain CR or LF. Use a file case for multiline input",
-                    comparison_file.display()
-                ));
-            }
-            _ => {}
-        }
-    }
-
-    Ok(())
-}
-
-fn validate_comparison_pattern_set_v2(
-    comparison_file: &Path,
-    label: &str,
-    definition: &ComparisonPatternSetV2,
-) -> Result<(), String> {
-    if definition.patterns.is_empty() {
-        return Err(format!(
-            "Comparison manifest `{}` must define at least one {label} pattern",
-            comparison_file.display()
-        ));
-    }
-
     let mut ids = HashSet::with_capacity(definition.patterns.len());
     for pattern in &definition.patterns {
         let id = match pattern {
-            ComparisonPatternV2::Catalog {
+            ComparisonPatternDefinition::Catalog {
                 catalog_id,
                 pattern_id,
             } => {
@@ -1191,7 +1027,7 @@ fn validate_comparison_pattern_set_v2(
                 }
                 pattern_id
             }
-            ComparisonPatternV2::File {
+            ComparisonPatternDefinition::File {
                 id, pattern_file, ..
             } => {
                 if id.is_empty() {
@@ -1276,20 +1112,12 @@ fn validate_declared_transition(
     Ok(())
 }
 
-fn validate_comparison_manifest_v2(
+fn validate_comparison_manifest(
     comparison_file: &Path,
-    definition: &ComparisonManifestV2,
+    definition: &ComparisonManifestDefinition,
 ) -> Result<(), String> {
-    if definition.version != COMPARISON_VERSION_2 {
-        return Err(format!(
-            "Unsupported comparison manifest version in `{}`. Expected `{COMPARISON_VERSION_2}`, received `{}`",
-            comparison_file.display(),
-            definition.version
-        ));
-    }
-
-    validate_comparison_pattern_set_v2(comparison_file, "baseline", &definition.baseline)?;
-    validate_comparison_pattern_set_v2(comparison_file, "candidate", &definition.candidate)?;
+    validate_comparison_pattern_set(comparison_file, "baseline", &definition.baseline)?;
+    validate_comparison_pattern_set(comparison_file, "candidate", &definition.candidate)?;
     let owner = format!("comparison manifest `{}`", comparison_file.display());
     validate_catalog_definitions(&definition.catalogs, &owner)?;
 
@@ -1303,11 +1131,11 @@ fn validate_comparison_manifest_v2(
     for (index, case) in definition.cases.iter().enumerate() {
         let case_position = index + 1;
         let (input_file, input, transition) = match case {
-            ComparisonCaseV2::File {
+            ComparisonCaseDefinition::File {
                 input_file,
                 expected_transition,
             } => (Some(input_file), None, *expected_transition),
-            ComparisonCaseV2::Inline {
+            ComparisonCaseDefinition::Inline {
                 input,
                 expected_transition,
             } => (None, Some(input), *expected_transition),
@@ -1341,36 +1169,17 @@ fn validate_comparison_manifest_v2(
 fn resolve_pattern_definitions(
     comparison_file: &Path,
     definitions: Vec<ComparisonPatternDefinition>,
-) -> Vec<PatternDefinition> {
-    definitions
-        .into_iter()
-        .map(|definition| PatternDefinition {
-            bucket: definition.bucket,
-            case_sensitive: definition.case_sensitive,
-            reported_id: definition.id.clone(),
-            id: definition.id,
-            source: PatternSource::File(resolve_manifest_path(
-                comparison_file,
-                &definition.pattern_file,
-            )),
-        })
-        .collect()
-}
-
-fn resolve_pattern_definitions_v2(
-    comparison_file: &Path,
-    definitions: Vec<ComparisonPatternV2>,
     catalogs: &HashMap<String, LoadedCatalogBinding>,
     owner: &str,
 ) -> Result<Vec<PatternDefinition>, String> {
     definitions
         .into_iter()
         .map(|definition| match definition {
-            ComparisonPatternV2::Catalog {
+            ComparisonPatternDefinition::Catalog {
                 catalog_id,
                 pattern_id,
             } => catalog_pattern_definition(catalogs, &catalog_id, &pattern_id, owner),
-            ComparisonPatternV2::File {
+            ComparisonPatternDefinition::File {
                 bucket,
                 case_sensitive,
                 id,
@@ -1451,22 +1260,29 @@ fn read_comparison_input(
     comparison_file: &Path,
     case_position: usize,
     case: ComparisonCaseDefinition,
-) -> Result<String, String> {
+) -> Result<(String, Option<ExpectedTransition>), String> {
     match case {
-        ComparisonCaseDefinition::File { input_file } => {
+        ComparisonCaseDefinition::File {
+            input_file,
+            expected_transition,
+        } => {
             let input_file = resolve_manifest_path(comparison_file, &input_file);
             let description = format!("comparison case {case_position} input");
+            let input = read_utf8_file(&input_file, &description)?;
 
-            read_utf8_file(&input_file, &description)
+            Ok((input, expected_transition))
         }
-        ComparisonCaseDefinition::Inline { input } => Ok(input),
+        ComparisonCaseDefinition::Inline {
+            input,
+            expected_transition,
+        } => Ok((input, expected_transition)),
     }
 }
 
 fn comparison_json_error(error: &serde_json::Error) -> String {
     let summary = match error.classify() {
         serde_json::error::Category::Data => {
-            "JSON data does not match the version-1 comparison schema"
+            "JSON data does not match the required comparison schema"
         }
         serde_json::error::Category::Eof => "JSON input ended before the manifest was complete",
         serde_json::error::Category::Io => "Failed to read JSON input",
@@ -1480,33 +1296,8 @@ fn comparison_json_error(error: &serde_json::Error) -> String {
     )
 }
 
-fn comparison_json_error_v2(error: &serde_json::Error) -> String {
-    let summary = match error.classify() {
-        serde_json::error::Category::Data => {
-            "JSON data does not match the version-2 comparison schema"
-        }
-        serde_json::error::Category::Eof => "JSON input ended before the manifest was complete",
-        serde_json::error::Category::Io => "Failed to read JSON input",
-        serde_json::error::Category::Syntax => "JSON syntax is invalid",
-    };
-
-    format!(
-        "{summary} at line {} column {}",
-        error.line(),
-        error.column()
-    )
-}
-
-fn invalid_comparison_json(
-    comparison_file: &Path,
-    error: &serde_json::Error,
-    version: Option<u64>,
-) -> String {
-    let summary = if version == Some(COMPARISON_VERSION_2) {
-        comparison_json_error_v2(error)
-    } else {
-        comparison_json_error(error)
-    };
+fn invalid_comparison_json(comparison_file: &Path, error: &serde_json::Error) -> String {
+    let summary = comparison_json_error(error);
 
     format!(
         "Invalid comparison manifest `{}`. {summary}",
@@ -1517,35 +1308,15 @@ fn invalid_comparison_json(
 fn parse_comparison_manifest(
     comparison_file: &Path,
     manifest: &str,
-) -> Result<ParsedComparisonManifest, String> {
-    let version: ComparisonVersion = serde_json::from_str(manifest)
-        .map_err(|error| invalid_comparison_json(comparison_file, &error, None))?;
+) -> Result<ComparisonManifestDefinition, String> {
+    let definition: ComparisonManifestDefinition = serde_json::from_str(manifest)
+        .map_err(|error| invalid_comparison_json(comparison_file, &error))?;
+    validate_comparison_manifest(comparison_file, &definition)?;
 
-    match version.version {
-        COMPARISON_VERSION_1 => {
-            let definition: ComparisonManifestDefinition =
-                serde_json::from_str(manifest).map_err(|error| {
-                    invalid_comparison_json(comparison_file, &error, Some(COMPARISON_VERSION_1))
-                })?;
-            validate_comparison_manifest(comparison_file, &definition)?;
-            Ok(ParsedComparisonManifest::Version1(definition))
-        }
-        COMPARISON_VERSION_2 => {
-            let definition: ComparisonManifestV2 =
-                serde_json::from_str(manifest).map_err(|error| {
-                    invalid_comparison_json(comparison_file, &error, Some(COMPARISON_VERSION_2))
-                })?;
-            validate_comparison_manifest_v2(comparison_file, &definition)?;
-            Ok(ParsedComparisonManifest::Version2(definition))
-        }
-        received => Err(format!(
-            "Unsupported comparison manifest version in `{}`. Expected `1` or `2`, received `{received}`",
-            comparison_file.display()
-        )),
-    }
+    Ok(definition)
 }
 
-fn evaluate_comparison_v1(
+fn evaluate_comparison_manifest(
     comparison_file: &Path,
     definition: ComparisonManifestDefinition,
 ) -> Result<ComparisonResult, String> {
@@ -1553,95 +1324,18 @@ fn evaluate_comparison_v1(
         baseline,
         candidate,
         cases,
-        version: _,
-    } = definition;
-    let baseline_default = baseline.default;
-    let candidate_default = candidate.default;
-    let baseline_patterns = compile_patterns(
-        resolve_pattern_definitions(comparison_file, baseline.patterns),
-        PatternCollection::BaselineComparison,
-    )?;
-    let candidate_patterns = compile_patterns(
-        resolve_pattern_definitions(comparison_file, candidate.patterns),
-        PatternCollection::CandidateComparison,
-    )?;
-    let baseline_pattern_count = baseline_patterns.len();
-    let candidate_pattern_count = candidate_patterns.len();
-    let case_count = cases.len();
-    let mut mismatches = BoundedIssues::new(MAX_REPORTED_FAILURES);
-
-    for (index, case) in cases.into_iter().enumerate() {
-        let case_position = index + 1;
-        let input = read_comparison_input(comparison_file, case_position, case)?;
-        let baseline_state = MatchState::evaluate(&input, &baseline_patterns);
-        let candidate_state = MatchState::evaluate(&input, &candidate_patterns);
-        let differences = ComparisonDifferences::between(
-            baseline_state,
-            baseline_default,
-            candidate_state,
-            candidate_default,
-        );
-        if !differences.is_empty() {
-            mismatches.push(ComparisonMismatch {
-                case_position,
-                differences,
-            });
-        }
-    }
-
-    Ok(ComparisonResult {
-        baseline_pattern_count,
-        candidate_pattern_count,
-        case_count,
-        comparison_file: comparison_file.to_owned(),
-        mismatches,
-    })
-}
-
-fn read_comparison_input_v2(
-    comparison_file: &Path,
-    case_position: usize,
-    case: ComparisonCaseV2,
-) -> Result<(String, Option<ExpectedTransition>), String> {
-    match case {
-        ComparisonCaseV2::File {
-            input_file,
-            expected_transition,
-        } => {
-            let input_file = resolve_manifest_path(comparison_file, &input_file);
-            let description = format!("comparison case {case_position} input");
-            let input = read_utf8_file(&input_file, &description)?;
-
-            Ok((input, expected_transition))
-        }
-        ComparisonCaseV2::Inline {
-            input,
-            expected_transition,
-        } => Ok((input, expected_transition)),
-    }
-}
-
-fn evaluate_comparison_v2(
-    comparison_file: &Path,
-    definition: ComparisonManifestV2,
-) -> Result<ComparisonResultV2, String> {
-    let ComparisonManifestV2 {
-        baseline,
-        candidate,
-        cases,
         catalogs,
-        version: _,
     } = definition;
     let baseline_default = baseline.default;
     let candidate_default = candidate.default;
     let owner = format!("comparison manifest `{}`", comparison_file.display());
     let catalogs = load_catalogs(comparison_file, catalogs, &owner)?;
     let baseline_patterns = compile_patterns(
-        resolve_pattern_definitions_v2(comparison_file, baseline.patterns, &catalogs, &owner)?,
+        resolve_pattern_definitions(comparison_file, baseline.patterns, &catalogs, &owner)?,
         PatternCollection::BaselineComparison,
     )?;
     let candidate_patterns = compile_patterns(
-        resolve_pattern_definitions_v2(comparison_file, candidate.patterns, &catalogs, &owner)?,
+        resolve_pattern_definitions(comparison_file, candidate.patterns, &catalogs, &owner)?,
         PatternCollection::CandidateComparison,
     )?;
     let baseline_pattern_count = baseline_patterns.len();
@@ -1654,7 +1348,7 @@ fn evaluate_comparison_v2(
     for (index, case) in cases.into_iter().enumerate() {
         let case_position = index + 1;
         let (input, expected_transition) =
-            read_comparison_input_v2(comparison_file, case_position, case)?;
+            read_comparison_input(comparison_file, case_position, case)?;
         let baseline_state = MatchState::evaluate(&input, &baseline_patterns);
         let candidate_state = MatchState::evaluate(&input, &candidate_patterns);
 
@@ -1669,7 +1363,7 @@ fn evaluate_comparison_v2(
             let candidate_differences =
                 ComparisonDifferences::from_declared(candidate_observed, expected.candidate);
             if !baseline_differences.is_empty() || !candidate_differences.is_empty() {
-                mismatches.push(ComparisonMismatchV2::Transition {
+                mismatches.push(ComparisonMismatch::Transition {
                     baseline_differences,
                     candidate_differences,
                     case_position,
@@ -1684,7 +1378,7 @@ fn evaluate_comparison_v2(
                 candidate_default,
             );
             if !differences.is_empty() {
-                mismatches.push(ComparisonMismatchV2::Equivalence {
+                mismatches.push(ComparisonMismatch::Equivalence {
                     case_position,
                     differences,
                 });
@@ -1692,7 +1386,7 @@ fn evaluate_comparison_v2(
         }
     }
 
-    Ok(ComparisonResultV2 {
+    Ok(ComparisonResult {
         baseline_pattern_count,
         candidate_pattern_count,
         case_count,
@@ -1703,17 +1397,11 @@ fn evaluate_comparison_v2(
     })
 }
 
-fn evaluate_comparison(comparison_file: &Path) -> Result<ComparisonEvaluation, String> {
+fn evaluate_comparison(comparison_file: &Path) -> Result<ComparisonResult, String> {
     let manifest = read_utf8_file(comparison_file, "comparison manifest")?;
+    let definition = parse_comparison_manifest(comparison_file, &manifest)?;
 
-    match parse_comparison_manifest(comparison_file, &manifest)? {
-        ParsedComparisonManifest::Version1(definition) => {
-            evaluate_comparison_v1(comparison_file, definition).map(ComparisonEvaluation::Version1)
-        }
-        ParsedComparisonManifest::Version2(definition) => {
-            evaluate_comparison_v2(comparison_file, definition).map(ComparisonEvaluation::Version2)
-        }
-    }
+    evaluate_comparison_manifest(comparison_file, definition)
 }
 
 fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
@@ -1914,8 +1602,9 @@ fn report_suite_failures(stderr: &mut dyn Write, result: &SuiteResult) -> io::Re
                 };
                 writeln!(
                     stderr,
-                    "  Line {} pattern `{pattern_id}` expected {expectation}",
-                    failure.line_number
+                    "  Line {} pattern `{}` expected {expectation}",
+                    failure.line_number,
+                    display_id(pattern_id)
                 )?;
             }
         }
@@ -1965,42 +1654,8 @@ fn report_comparison_mismatches(
         result.comparison_file.display()
     )?;
     for mismatch in result.mismatches.issues() {
-        let dimensions = comparison_dimension_labels(&mismatch.differences).join(", ");
-        writeln!(
-            stderr,
-            "  Case {} differs in {dimensions}",
-            mismatch.case_position
-        )?;
-    }
-
-    let omitted = result.mismatches.omitted_count();
-    if omitted > 0 {
-        writeln!(
-            stderr,
-            "  … {omitted} additional {} omitted",
-            mismatch_label(omitted)
-        )?;
-    }
-
-    Ok(())
-}
-
-fn report_comparison_mismatches_v2(
-    stderr: &mut dyn Write,
-    result: &ComparisonResultV2,
-) -> io::Result<()> {
-    writeln!(
-        stderr,
-        "pattern-match: {} {} across {} version-2 comparison {} in `{}`",
-        result.mismatches.total_count(),
-        mismatch_label(result.mismatches.total_count()),
-        result.case_count,
-        case_label(result.case_count),
-        result.comparison_file.display()
-    )?;
-    for mismatch in result.mismatches.issues() {
         match mismatch {
-            ComparisonMismatchV2::Equivalence {
+            ComparisonMismatch::Equivalence {
                 case_position,
                 differences,
             } => {
@@ -2010,7 +1665,7 @@ fn report_comparison_mismatches_v2(
                     "  Case {case_position} baseline/candidate differ in {dimensions}"
                 )?;
             }
-            ComparisonMismatchV2::Transition {
+            ComparisonMismatch::Transition {
                 baseline_differences,
                 candidate_differences,
                 case_position,
@@ -2052,30 +1707,13 @@ fn report_error(stderr: &mut dyn Write, message: &str) {
     let _ = writeln!(stderr, "pattern-match: {message}");
 }
 
-fn report_equivalent_comparison(
+fn report_verified_comparison(
     stdout: &mut dyn Write,
     result: &ComparisonResult,
 ) -> Result<(), String> {
     writeln!(
         stdout,
-        "Baseline and candidate configured pattern behavior matched across a representative corpus of {} {} with {} baseline {} and {} candidate {}",
-        result.case_count,
-        case_label(result.case_count),
-        result.baseline_pattern_count,
-        pattern_label(result.baseline_pattern_count),
-        result.candidate_pattern_count,
-        pattern_label(result.candidate_pattern_count)
-    )
-    .map_err(|error| format!("Failed to write comparison result to standard output:\n\n{error}"))
-}
-
-fn report_verified_comparison_v2(
-    stdout: &mut dyn Write,
-    result: &ComparisonResultV2,
-) -> Result<(), String> {
-    writeln!(
-        stdout,
-        "Verified a representative version-2 comparison corpus with {} equivalence {}, {} matched {}, {} baseline {}, and {} candidate {}",
+        "Verified a representative comparison corpus with {} equivalence {}, {} matched {}, {} baseline {}, and {} candidate {}",
         result.equivalence_case_count,
         case_label(result.equivalence_case_count),
         result.transition_case_count,
@@ -2127,31 +1765,16 @@ where
     match parsed_arguments {
         ParsedArguments::Comparison(comparison_file) => match evaluate_comparison(&comparison_file)
         {
-            Ok(ComparisonEvaluation::Version1(result)) if result.mismatches.total_count() == 0 => {
-                if let Err(error) = report_equivalent_comparison(stdout, &result) {
+            Ok(result) if result.mismatches.total_count() == 0 => {
+                if let Err(error) = report_verified_comparison(stdout, &result) {
                     report_error(stderr, &error);
                     return STATUS_ERROR;
                 }
 
                 STATUS_MATCH
             }
-            Ok(ComparisonEvaluation::Version1(result)) => {
+            Ok(result) => {
                 if report_comparison_mismatches(stderr, &result).is_err() {
-                    return STATUS_ERROR;
-                }
-
-                STATUS_NO_MATCH
-            }
-            Ok(ComparisonEvaluation::Version2(result)) if result.mismatches.total_count() == 0 => {
-                if let Err(error) = report_verified_comparison_v2(stdout, &result) {
-                    report_error(stderr, &error);
-                    return STATUS_ERROR;
-                }
-
-                STATUS_MATCH
-            }
-            Ok(ComparisonEvaluation::Version2(result)) => {
-                if report_comparison_mismatches_v2(stderr, &result).is_err() {
                     return STATUS_ERROR;
                 }
 

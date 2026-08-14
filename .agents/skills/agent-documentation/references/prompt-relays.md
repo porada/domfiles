@@ -31,18 +31,19 @@ When one requested change affects a coordinated prompt set, apply the global [co
 
 - Omit the receiving location by default. Include a repository path, checkout, worktree, directory, host, or other execution location only when selecting that location is necessary to find the task inputs, distinguish among possible targets, preserve isolation, or satisfy an established submission or integration boundary. Do not add an absolute repository path merely for orientation. Material target paths may still be required even when the receiving location is not.
 - Before emitting a dependency-premised mutating relay, apply the global [dependency approval boundary](../../../../.config/zed/AGENTS.md#dependencies).
-- Because a task relay assigns work, include an explicit `Do not drift` focus guard at the end of its scope and boundaries section. Define the smallest complete owned scope and supporting work first, name material exclusions, and require unrelated findings to remain untouched. Preserve every inherited scope, mutation, approval, submission, integration, access, and security boundary. Explicitly prohibit transferring access or circumventing a boundary, and tell the receiving agent to stop and ask the user directly before crossing one. Do not use the guard to exclude supporting edits or validation already required for the stated result.
+- Because a task relay assigns work, end its complete prompt with the exact standalone line `**Do not drift.**`. Define the smallest complete owned scope and supporting work first, name material exclusions, and require unrelated findings to remain untouched. Preserve every inherited scope, mutation, approval, submission, integration, access, and security boundary. Explicitly prohibit transferring access or circumventing a boundary, and tell the receiving agent to stop and ask the user directly before crossing one. Place every required result, process, validation, and handoff instruction before the guard. Do not use the guard to exclude supporting edits or validation already required for the stated result.
 - Use the guard only in a task relay whose primary purpose is to assign future work. Never include it in decision relays, evidence handoffs, status returns, completed-work reports, or other relays whose primary purpose is to transfer established data. Receiving-action guidance for later evidence consumption does not turn that transfer into a task relay.
 
 Include the applicable parts of this sequence:
 
 1. Title and receiving action.
 2. Task context and authoritative evidence.
-3. Scope, anti-drift guard, exclusions, mutation boundary, and approval boundary.
+3. Scope, exclusions, mutation boundary, and approval boundary.
 4. Required result and behavior-preservation requirements.
 5. Process constraints and applicable project workflows.
 6. Validation requirements and known limitations.
 7. Handoff contents and the receiving agent’s stopping point.
+8. Exact final anti-drift guard.
 
 Follow the global [worktree-instruction default](../../../../.config/zed/AGENTS.md#prompt-relays). Execution remains governed by the [worktree policy](../../../../.config/zed/AGENTS.md#git-worktrees).
 
