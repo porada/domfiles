@@ -26,7 +26,7 @@ if __is_callable git; then
     elif __ git -C "$DOMFILES" ls-remote "$updated" HEAD > /dev/null; then
       __ git -C "$DOMFILES" remote set-url origin "$updated"
     else
-      __print_error "Failed to verify SSH access to \`$updated\`; retaining \`origin\` as \`$current\`"
+      __print_error "Failed to verify SSH access to \`$updated\`. Leaving \`origin\` as \`$current\`"
     fi
   fi
 

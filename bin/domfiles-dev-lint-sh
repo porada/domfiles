@@ -8,11 +8,7 @@
 __domfiles_cd_root
 
 if [ $# -eq 0 ]; then
-  files="$("$DOMFILES_BIN_DIR/domfiles-dev-list-sh")"
-  __ifs_set
-  # shellcheck disable=SC2086
-  set -- $files
-  __ifs_restore
+  set -- .hooks/* bin/*
 fi
 
 if [ $# -eq 1 ]; then
@@ -21,4 +17,14 @@ else
   __print_heading 'Linting POSIX shell scripts'
 fi
 
-__ shellcheck --external-sources "$@"
+__ifs_set
+
+for file in "$@"; do
+  if [ ! -f "$file" ] || [ -L "$file" ]; then
+    continue
+  fi
+
+  __ shellcheck --external-sources -- "$file"
+done
+
+__ifs_restore

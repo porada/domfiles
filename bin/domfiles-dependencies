@@ -12,11 +12,12 @@ check() {
   fi
 
   dependency_exec 'brew' '__is_brew_installed'
-
   dependency_bin 'fish'
+  dependency_exec 'fisher' '__is_fisher_installed'
   dependency_bin 'git'
   dependency_bin 'node'
   dependency_bin 'pnpm'
+  dependency_exec 'rust' '__is_callable cargo && __is_callable rustc'
 }
 
 dependency_bin() {

@@ -148,28 +148,23 @@ __domfiles_ls_bin() {
 
   (
     __domfiles_cd_bin
-    find . -maxdepth 1 -type f -name "$pattern" -perm -u+x -exec basename {} \; \
-      | sort \
-      | xargs ls
+    set --
+    __ifs_set
+
+    # shellcheck disable=SC2086
+    for file in $pattern; do
+      if [ -f "$file" ] && [ ! -L "$file" ] && [ -x "$file" ]; then
+        set -- "$@" "$file"
+      fi
+    done
+
+    __ifs_restore
+    [ $# -eq 0 ] || ls -- "$@"
   )
 }
 
 __domfiles_revision() {
   git -C "$DOMFILES" rev-parse HEAD
-}
-
-__find() {
-  if [ $# -ne 2 ]; then
-    __print_error_and_exit '`__find` requires two arguments'
-  fi
-
-  files="$(find "$1" -maxdepth 1 -name "$2" -type f -print | sort)"
-
-  if [ -n "$files" ]; then
-    printf '%s\n' "$files"
-  else
-    printf ''
-  fi
 }
 
 __git_cd_root() {
@@ -206,9 +201,11 @@ __git_default_log_params() {
 
 __git_diff_excluded_files() {
   if [ "${1-}" = '--related' ]; then
+    echo 'Cargo.toml'
     echo 'package.json'
   fi
 
+  echo 'Cargo.lock'
   echo 'package-lock.json'
   echo 'pnpm-lock.yaml'
   echo 'yarn.lock'
@@ -233,27 +230,32 @@ __git_diff_excluded_paths() {
     __print_error_and_exit '`__git_diff_excluded_paths` received an invalid mode'
   fi
 
-  __git_diff_excluded_files "$@" \
-    | while IFS= read -r file; do
-      if [ "$mode" = '--commit' ]; then
-        if __git_is_file_in_commit "$reference" "$file"; then
-          echo "$file"
-        else
-          status="$?"
-          [ "$status" -eq 1 ] || exit "$status"
-        fi
-      elif git diff-files --quiet -- "$file"; then
-        continue
+  files="$(__git_diff_excluded_files "$@")"
+  __ifs_set
+
+  # shellcheck disable=SC2086
+  for file in $files; do
+    if [ "$mode" = '--commit' ]; then
+      if __git_is_file_in_commit "$reference" "$file"; then
+        echo "$file"
       else
         status="$?"
-
-        if [ "$status" -eq 1 ]; then
-          echo "$file"
-        else
-          exit "$status"
-        fi
+        [ "$status" -eq 1 ] || exit "$status"
       fi
-    done
+    elif git diff-files --quiet -- "$file"; then
+      continue
+    else
+      status="$?"
+
+      if [ "$status" -eq 1 ]; then
+        echo "$file"
+      else
+        exit "$status"
+      fi
+    fi
+  done
+
+  __ifs_restore
 }
 
 __git_diff_exclude_params() {
@@ -268,9 +270,12 @@ __git_diff_exclude_params() {
 }
 
 __git_diff_page() {
-  if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-    __print_error_and_exit '`__git_diff_page` requires two arguments and an optional `--leading-newline`'
+  if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+    __print_error_and_exit '`__git_diff_page` requires a pager name, two arguments, and an optional `--leading-newline`'
   fi
+
+  pager_name="$1"
+  shift
 
   if [ $# -eq 3 ] && [ "$3" != '--leading-newline' ]; then
     __print_error_and_exit '`__git_diff_page` received an invalid option'
@@ -284,7 +289,7 @@ __git_diff_page() {
     printf '%s\n' "$1"
     echo
     printf '%s\n' "$2"
-  } | __pager
+  } | __pager "$pager_name"
 }
 
 __git_is_commit_reference() {
@@ -300,7 +305,7 @@ __git_is_file_in_commit() {
     __print_error_and_exit '`__git_is_file_in_commit` requires two arguments'
   fi
 
-  changed_files="$(git diff-tree --no-commit-id --name-only --root -r "$1" -- "$2")" \
+  changed_files="$(git diff-tree --no-commit-id --name-only --root -m -r "$1" -- "$2")" \
     || return $?
 
   [ -n "$changed_files" ]
@@ -339,12 +344,8 @@ __ifs_set() {
     __print_error_and_exit '`IFS` is already being overridden'
   fi
 
-  if [ $# -eq 1 ]; then
-    IFS="$1"
-  else
-    IFS='
+  IFS='
 '
-  fi
 }
 
 __is_brew_installed() {
@@ -416,7 +417,32 @@ __mkdir() {
 }
 
 __pager() {
-  if [ -n "${PAGER-}" ]; then
+  if [ $# -gt 1 ]; then
+    __print_error_and_exit '`__pager` accepts at most one pager name'
+  fi
+
+  pager=''
+  pager_boolean=''
+
+  if [ $# -eq 1 ]; then
+    if pager="$(git config --get "pager.$1")"; then
+      pager_boolean="$(git config --file /dev/null --type=bool --default "$pager" \
+        --get domfiles.pager 2> /dev/null || true)"
+    fi
+  fi
+
+  case "$pager_boolean" in
+    false)
+      pager='cat'
+      ;;
+    true)
+      pager=''
+      ;;
+  esac
+
+  if [ -n "$pager" ]; then
+    sh -c "$pager"
+  elif [ -n "${PAGER-}" ]; then
     sh -c "$PAGER"
   elif __is_callable less; then
     less

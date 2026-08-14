@@ -24,47 +24,59 @@ if [ -z "$preset" ]; then
 fi
 
 if [ "$preset" = 'instagram' ]; then
-  __find . '*.wav' \
-    | while IFS= read -r audio; do
-      base="${audio%.wav}"
-      image="$base.png"
-      video="$base.mov"
+  __ifs_set
 
-      if [ ! -f "$image" ]; then
-        __print_error_and_exit "Missing image for \`$audio\`"
-      fi
+  for audio in ./*.wav; do
+    if [ ! -f "$audio" ] || [ -L "$audio" ]; then
+      continue
+    fi
 
-      __print_heading "Generating \`$video\` for Instagram"
+    base="${audio%.wav}"
+    image="$base.png"
+    video="$base.mov"
 
-      # Limit Instagram clips to 60 seconds
-      __ ffmpeg -nostdin -y -framerate 1 -loop 1 -i "$image" -i "$audio" -r 1 \
-        -vf "format=rgb24,scale=in_range=full:out_range=tv" \
-        -c:v prores_ks -profile:v 3 -pix_fmt yuv444p10le -color_range 1 \
-        -c:a copy -t 60 -shortest "$video"
-    done
+    if [ ! -f "$image" ]; then
+      __print_error_and_exit "Missing image for \`$audio\`"
+    fi
 
+    __print_heading "Generating \`$video\` for Instagram"
+
+    # Limit Instagram clips to 60 seconds
+    __ ffmpeg -nostdin -y -framerate 1 -loop 1 -i "$image" -i "$audio" -r 1 \
+      -vf "format=rgb24,scale=in_range=full:out_range=tv" \
+      -c:v prores_ks -profile:v 3 -pix_fmt yuv444p10le -color_range 1 \
+      -c:a copy -t 60 -shortest "$video"
+  done
+
+  __ifs_restore
   exit 0
 fi
 
 if [ "$preset" = 'youtube' ]; then
-  __find . '*.wav' \
-    | while IFS= read -r audio; do
-      base="${audio%.wav}"
-      image="$base.png"
-      video="$base.mkv"
+  __ifs_set
 
-      if [ ! -f "$image" ]; then
-        __print_error_and_exit "Missing image for \`$audio\`"
-      fi
+  for audio in ./*.wav; do
+    if [ ! -f "$audio" ] || [ -L "$audio" ]; then
+      continue
+    fi
 
-      __print_heading "Generating \`$video\` for YouTube"
-      __ ffmpeg -nostdin -loop 1 -framerate 1 -i "$image" -i "$audio" \
-        -vf "format=yuv420p,eq=gamma=1.18,scale=out_color_matrix=bt709" \
-        -c:v libx264 -crf 0 -preset veryslow -pix_fmt yuv420p \
-        -color_range 1 -colorspace 1 -color_primaries 1 -color_trc 1 \
-        -c:a copy -shortest -y "$video"
-    done
+    base="${audio%.wav}"
+    image="$base.png"
+    video="$base.mkv"
 
+    if [ ! -f "$image" ]; then
+      __print_error_and_exit "Missing image for \`$audio\`"
+    fi
+
+    __print_heading "Generating \`$video\` for YouTube"
+    __ ffmpeg -nostdin -loop 1 -framerate 1 -i "$image" -i "$audio" \
+      -vf "format=yuv420p,eq=gamma=1.18,scale=out_color_matrix=bt709" \
+      -c:v libx264 -crf 0 -preset veryslow -pix_fmt yuv420p \
+      -color_range 1 -colorspace 1 -color_primaries 1 -color_trc 1 \
+      -c:a copy -shortest -y "$video"
+  done
+
+  __ifs_restore
   exit 0
 fi
 

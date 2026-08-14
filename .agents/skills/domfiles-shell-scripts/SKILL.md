@@ -27,6 +27,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 - Evaluate every in-scope `domfiles` shell script’s interpreter, external commands, options, `PATH`, architecture, and default-shell assumptions against the [supported environment](../../PROJECT.md#supported-environment).
 - Judge each requirement at its intended lifecycle stage—fresh bootstrap, synchronization, post-sync runtime, or development—and account for prerequisites provisioned earlier by `domfiles sync`.
+- Treat `domfiles dependencies` as the user-facing readiness check defined by [dependency status labels](../../PROJECT.md#dependency-status-labels). Add a row only for an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone does not qualify a dependency.
 
 ## Write concise shell prose
 
@@ -68,7 +69,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 ## Evaluate duplication and reuse
 
-- Keep the Fish and POSIX discovery and lint wrappers separate. Do not report their shared traversal, argument handling, or heading setup as duplication. See [shell wrapper duplication](../../PROJECT.md#shell-wrapper-duplication) for rationale.
+- Keep the Fish and POSIX lint wrappers separate. Do not report their fixed-scope traversal, argument handling, or heading setup as duplication. See [shell wrapper duplication](../../PROJECT.md#shell-wrapper-duplication) for rationale.
 - Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned.
 - Do not report `__string_*` helpers or equivalent inline string operations as reimplementations. See [string helper reuse](../../PROJECT.md#string-helper-reuse) for rationale.
 
@@ -94,7 +95,7 @@ value="$(optional-command || true)"
 
 After editing, use the narrowest applicable validation scope:
 
-1. Pass changed shell paths explicitly to the lint wrappers. Omit paths only when repository-wide validation is intended because no-argument discovery includes tracked and untracked non-ignored shell files. Fish discovery also includes `.config/fish/local.fish` when it exists.
+1. Pass changed shell paths explicitly to the lint wrappers. Omit paths only when repository-wide validation is intended. Explicit paths are honored regardless of the default scopes. With no paths, `domfiles-dev-lint-sh` checks regular non-symlink matches from `.hooks/*` and `bin/*`. `domfiles-dev-lint-fish` checks regular non-symlink matches from `.config/fish/*.fish` and `.config/fish/functions/fish_*.fish`, skipping Git-ignored matches except `.config/fish/local.fish`.
 2. For Fish, run `pnpm run lint:fish <changed-fish-files>`. The wrapper already runs `fish --no-execute`, so do not repeat that check.
 3. For POSIX shell, run `sh -n <file>` for each changed file and `pnpm run lint:sh <changed-posix-files>`. The wrapper supplies the complementary ShellCheck analysis.
 4. Check formatting for changed `.fish` and `.sh` files and extensionless Fish and POSIX shell scripts with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-shell-files>`. The configured Fish plugin infers extensionless Fish scripts from their `fish` hashbang, so do not force `--parser fish`.

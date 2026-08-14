@@ -208,7 +208,13 @@ The npm package adds a large platform-specific native package to every environme
 
 ### Dependency status labels
 
+`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. Add a row only when the dependency participates in an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone does not qualify.
+
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
+
+The `rust` row reports whether both `cargo` and `rustc` are available, matching the managed Homebrew formula rather than either executable name.
+
+`mole` and `vim` are intentionally omitted from the checklist even though synchronization installs them as primary Homebrew dependencies. Their availability does not affect the command’s output or exit status.
 
 ### FFmpeg media preset compatibility
 
@@ -262,9 +268,11 @@ Projects that require a project-specific command version are expected to declare
 
 ### Shell wrapper duplication
 
-The Fish and POSIX discovery and lint wrappers are short, language-specific entrypoints. Parameterizing them would add indirection solely to remove surface similarities.
+The Fish and POSIX lint wrappers are short, language-specific entrypoints with fixed repository scopes. Keeping those scopes in the wrappers provides one interface for pnpm, staged linting, shell-only CI, and targeted agent validation without retaining separate Git-backed discovery commands. Fish’s no-argument scope intentionally includes the [machine-local configuration](#fish-local-configuration) while excluding other ignored matches. Parameterizing the wrappers would add indirection solely to remove surface similarities.
 
 The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
+
+`git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
 
 ### String helper reuse
 

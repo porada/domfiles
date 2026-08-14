@@ -26,7 +26,7 @@ if [ $# -eq 0 ]; then
     # shellcheck disable=SC2086
     patch_output="$(git diff --patch --color=always -- . $exclude_params)" || exit $?
 
-    __git_diff_page "$stat_output" "$patch_output" --leading-newline
+    __git_diff_page diff "$stat_output" "$patch_output" --leading-newline
     exit $?
   fi
 fi

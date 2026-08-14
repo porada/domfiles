@@ -8,11 +8,14 @@
 __domfiles_cd_root
 
 if [ $# -eq 0 ]; then
-  files="$("$DOMFILES_BIN_DIR/domfiles-dev-list-fish")"
-  __ifs_set
-  # shellcheck disable=SC2086
-  set -- $files
-  __ifs_restore
+  set --
+  for file in .config/fish/*.fish .config/fish/functions/fish_*.fish; do
+    if [ "$file" != '.config/fish/local.fish' ] && git check-ignore --quiet -- "$file"; then
+      continue
+    fi
+
+    set -- "$@" "$file"
+  done
 fi
 
 if [ $# -eq 1 ]; then
@@ -24,6 +27,10 @@ fi
 __ifs_set
 
 for file in "$@"; do
+  if [ ! -f "$file" ] || [ -L "$file" ]; then
+    continue
+  fi
+
   __ fish --no-execute -- "$file"
 done
 

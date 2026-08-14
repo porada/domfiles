@@ -9,4 +9,10 @@ addresses="$(printf '%s\n' "$interfaces" | awk '/inet/ {print $2}')"
 printf '%s\n' "$addresses" | __grep -Fvx -- '127.0.0.1'
 
 # Show the public IP address
-dig +short myip.opendns.com @resolver1.opendns.com
+ip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+
+if [ -z "$ip" ]; then
+  __print_error_and_exit 'No public IP address was returned'
+fi
+
+printf '%s\n' "$ip"

@@ -13,6 +13,12 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
   excluded_paths="$(__git_diff_excluded_paths --commit "$1")"
 
   if [ -n "$excluded_paths" ]; then
+    if git rev-parse --verify "$1^2" > /dev/null 2>&1; then
+      # Preserve Git’s parent-qualified merge sections instead of splitting lockfile output
+      git show --show-signature -m "$1"
+      exit $?
+    fi
+
     exclude_params="$(__git_diff_exclude_params "$excluded_paths")"
     excluded_paths="$(__git_diff_excluded_paths --commit "$1" --related)"
 
@@ -32,7 +38,7 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
     patch_output="$(git show --pretty=format: --color=always "$1" -- . $exclude_params)" \
       || exit $?
 
-    __git_diff_page "$stat_output" "$patch_output"
+    __git_diff_page show "$stat_output" "$patch_output"
     exit $?
   fi
 fi
