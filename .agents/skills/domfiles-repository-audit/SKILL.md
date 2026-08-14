@@ -15,7 +15,7 @@ metadata:
 | Explicit scope | When the user specifies paths, categories, inclusions, or exclusions, treat them as authoritative over default scope rules. Apply every other applicable `AGENTS.md` instruction within that scope. Include explicitly named untracked paths and symbolic links without dereferencing a link unless the request or applicable policy requires its target. |
 | Default scope | Without explicit scope, start with Git-tracked regular files, exclude symbolic links and untracked paths except `.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
-1. Read every applicable `AGENTS.md` file before reviewing any other repository content.
+1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.
 3. Treat these paths as exclusions from the bare `Audit` command and other default repository scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the absolute exclusions above:
     - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed-settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.

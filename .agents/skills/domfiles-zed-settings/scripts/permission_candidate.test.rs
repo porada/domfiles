@@ -1996,6 +1996,78 @@ fn supports_scope_only_capture_verification_materialization_and_promotion() {
 }
 
 #[test]
+fn promotes_catalog_bound_owner_insertion_from_an_empty_capture() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^retained$", true)], 1);
+    let mut candidate = baseline.clone();
+    replace_allow_scope(
+        &mut candidate,
+        json!([pattern("^new-allow$", true), pattern("^retained$", true)]),
+    );
+    replace_scope(
+        &mut candidate,
+        CONFIRM_SCOPE,
+        json!([pattern("^new-confirm$", true), pattern("^confirm$", true)]),
+    );
+    replace_scope(
+        &mut candidate,
+        DENY_SCOPE,
+        json!([pattern("^new-deny$", true), pattern("^deny$", true)]),
+    );
+
+    let (result, live) = promote_owner_candidate(
+        &fixture,
+        "insertion-only-owner",
+        &baseline,
+        vec![ALLOW_SCOPE, CONFIRM_SCOPE, DENY_SCOPE],
+        vec![],
+        &candidate,
+        vec![
+            replacement_pattern("new-allow", "always_allow", 0),
+            replacement_pattern("new-confirm", "always_confirm", 0),
+            replacement_pattern("new-deny", "always_deny", 0),
+        ],
+    );
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    let promoted: Value = serde_json::from_slice(&fs::read(live).unwrap()).unwrap();
+    assert_eq!(promoted, candidate);
+}
+
+#[test]
+fn refuses_undeclared_remainder_changes_during_insertion_only_promotion() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^retained$", true)], 1);
+    let mut candidate = baseline.clone();
+    replace_allow_scope(
+        &mut candidate,
+        json!([
+            pattern("^new-owner$", true),
+            pattern("^private-undeclared$", true),
+            pattern("^retained$", true)
+        ]),
+    );
+    let expected_live = helper::serialize_pretty_json(&baseline).unwrap();
+
+    let (result, live) = promote_owner_candidate(
+        &fixture,
+        "insertion-only-remainder",
+        &baseline,
+        vec![ALLOW_SCOPE],
+        vec![],
+        &candidate,
+        vec![replacement_pattern("new-owner", "always_allow", 0)],
+    );
+
+    assert_eq!(result.status, 1, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("insertion-only candidate"));
+    assert!(!result.stderr.contains("private-undeclared"));
+    assert!(!result.stderr.contains("new-owner"));
+    assert_eq!(fs::read(live).unwrap(), expected_live);
+}
+
+#[test]
 fn refuses_terminal_pattern_array_changes_from_an_empty_capture_without_touching_live_bytes() {
     let fixture = Fixture::new();
     let baseline = settings(vec![pattern("^private-baseline$", true)], 1);

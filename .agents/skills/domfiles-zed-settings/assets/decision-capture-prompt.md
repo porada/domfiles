@@ -4,7 +4,7 @@ The user invokes this prompt only after the current Zed settings task is complet
 
 Your sole action in this turn is to produce the relay. Follow the composition directives in the template below to populate every applicable section from the established context, combining overlapping content and omitting empty optional sections. The generated `Receiving action` line is addressed to a different agent after the relay is forwarded. Do not follow that receiving action now.
 
-Use only the conversation and task artifacts already inspected. Do not reopen or continue the settings task, call tools, inspect or compare the current skill or project files, rerun commands or validation, browse, delegate, or draft a skill patch. If material context is unavailable, identify the gap inside the relay instead of gathering or reconstructing it.
+A decision-capture prompt operates only on context and artifacts already available in the completed task. It does not continue the task, call tools, reopen files, rerun validation, browse, delegate, or draft a receiving-task patch. When material context is unavailable, record the gap instead of gathering or reconstructing it.
 
 ## Output contract
 
@@ -36,7 +36,8 @@ Use one or more of these `Decision basis` labels when a material decision needs 
 
 Use the most specific applicable label. Reserve `Observed behavior` for results that were actually observed, and do not collapse a known evidence source into a less specific label.
 
-- Treat approval as granted only by the user’s explicit response. An agent or subagent cannot approve on the user’s behalf, and neither user silence nor an agent proposal establishes approval.
+- Preserve direct user instructions, corrections, selections, explicit acceptances, settled evidence, and permission boundaries. Do not promote agent proposals, user silence, or a value’s mere presence in a file into accepted decisions.
+- Treat approval as granted only by the user’s explicit response. An agent or subagent cannot approve on the user’s behalf.
 - Preserve a user-supplied classification as settled evidence when the original task established that boundary. Do not retrospectively challenge or re-research it.
 - Preserve exact normalized inputs, token ordering, flags, assignments, wrappers, case distinctions, URLs, paths, and precedence outcomes when they materially affected a permission decision.
 - Never reproduce literal credentials, tokens, private values, or secret-bearing URLs. Describe the redacted security boundary and resulting classification instead.

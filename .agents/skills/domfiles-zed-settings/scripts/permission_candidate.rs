@@ -75,7 +75,7 @@ const HELP: &str = concat!(
     "\n",
     "State JSON schema (unknown fields are rejected):\n",
     "  {\"baseline_file\":\"relative path\",\"baseline_sha256\":\"64 lowercase hex characters\",\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
-    "  `patterns` may be empty. A patternless state can promote only when all terminal pattern arrays remain semantically unchanged\n",
+    "  `patterns` may be empty. A patternless state can promote scope-only changes or catalog-bound insertion-only owners\n",
     "  Relative baseline and pattern paths resolve from the state manifest’s parent\n",
     "  The manifest records hashes but does not authenticate itself\n",
     "\n",
@@ -112,7 +112,8 @@ const HELP: &str = concat!(
     "  `--catalog` and `--write` are mandatory. There is no force option\n",
     "  The strict catalog must bind the exact candidate and state bytes, every artifact, and every candidate source identity\n",
     "  When state patterns exist, removing all baseline owners and every candidate entry marked `owner_replacement: true` must leave semantically equal complete settings objects\n",
-    "  Without state patterns, candidate `always_allow`, `always_confirm`, and `always_deny` arrays must remain semantically equal to the captured baseline arrays\n",
+    "  Without state patterns, removing every candidate entry marked `owner_replacement: true` must restore each terminal pattern array to its captured baseline\n",
+    "  An empty insertion catalog instead requires all terminal pattern arrays to remain semantically unchanged\n",
     "  Live values at every authorized scope must equal the captured baseline values\n",
     "  Candidate changes outside authorized scopes are refused, and absent parents are never created\n",
     "  Candidate scope values are merged into the live object read for promotion, preserving its out-of-scope values\n",
@@ -1932,11 +1933,53 @@ fn authorize_owner_replacement(
     state: &ValidatedState,
     catalog: &LoadedArtifactCatalog,
 ) -> Result<(), AppError> {
+    let mut candidate_sources: HashMap<Bucket, HashSet<usize>> = HashMap::new();
+    for pattern in &catalog.document.patterns {
+        if pattern.owner_replacement {
+            candidate_sources
+                .entry(pattern.bucket)
+                .or_default()
+                .insert(pattern.source_index);
+        }
+    }
+
     if state.patterns.is_empty() {
+        for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
+            required_terminal_pattern_array(&state.baseline, bucket, "captured baseline")?;
+            required_terminal_pattern_array(candidate, bucket, "candidate")?;
+        }
+
+        if candidate_sources.is_empty() {
+            for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
+                let baseline =
+                    required_terminal_pattern_array(&state.baseline, bucket, "captured baseline")?;
+                let candidate = required_terminal_pattern_array(candidate, bucket, "candidate")?;
+                let unchanged = baseline.len() == candidate.len()
+                    && baseline
+                        .iter()
+                        .zip(candidate)
+                        .all(|(baseline, candidate)| semantic_json_equal(baseline, candidate));
+                if !unchanged {
+                    return Err(refused(format!(
+                        "Promotion refused because candidate terminal pattern array `{}` differs from the captured baseline without captured owner patterns",
+                        bucket.label()
+                    )));
+                }
+            }
+
+            return Ok(());
+        }
+
+        let mut candidate_remainder = candidate.clone();
+        remove_terminal_sources(&mut candidate_remainder, &candidate_sources)?;
         for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
             let baseline =
                 required_terminal_pattern_array(&state.baseline, bucket, "captured baseline")?;
-            let candidate = required_terminal_pattern_array(candidate, bucket, "candidate")?;
+            let candidate = required_terminal_pattern_array(
+                &candidate_remainder,
+                bucket,
+                "candidate remainder",
+            )?;
             let unchanged = baseline.len() == candidate.len()
                 && baseline
                     .iter()
@@ -1944,7 +1987,7 @@ fn authorize_owner_replacement(
                     .all(|(baseline, candidate)| semantic_json_equal(baseline, candidate));
             if !unchanged {
                 return Err(refused(format!(
-                    "Promotion refused because candidate terminal pattern array `{}` differs from the captured baseline without captured owner patterns",
+                    "Promotion refused because insertion-only candidate terminal pattern array `{}` does not reduce to the captured baseline",
                     bucket.label()
                 )));
             }
@@ -1959,15 +2002,6 @@ fn authorize_owner_replacement(
             .entry(pattern.bucket)
             .or_default()
             .insert(pattern.source_index);
-    }
-    let mut candidate_sources: HashMap<Bucket, HashSet<usize>> = HashMap::new();
-    for pattern in &catalog.document.patterns {
-        if pattern.owner_replacement {
-            candidate_sources
-                .entry(pattern.bucket)
-                .or_default()
-                .insert(pattern.source_index);
-        }
     }
 
     let mut baseline_remainder = state.baseline.clone();

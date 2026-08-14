@@ -23,7 +23,7 @@
 | Source | Authority and ownership |
 | --- | --- |
 | `.config/zed/AGENTS.md` | Defines global defaults. Applicable project agent instructions override it. |
-| `AGENTS.md` | Defines repository-wide instructions, scope, documentation authority, and skill routing. |
+| `AGENTS.md` | Defines project instructions, scope, documentation authority, and skill routing. Applicable project instructions override global defaults. |
 | `.agents/skills/*/` | Each skill directory defines delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is its entrypoint and may route to canonical references in the same directory. `domfiles-*` skills are repository-scoped. Other skills are [portable global skills](.agents/PROJECT.md#global-agent-skills). |
 | `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |
@@ -40,6 +40,7 @@
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
 - Do not analyze the contents of `bin/git-diff-highlight` (it’s a symlink).
+- During commit review, do not analyze or validate changes to permission patterns in `.config/zed/settings.json` unless the user explicitly includes that analysis. Review surrounding non-pattern changes normally. If evaluating the patterns is necessary to complete the review, stop before that analysis and ask for permission.
 - Do not read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
 ## Reporting

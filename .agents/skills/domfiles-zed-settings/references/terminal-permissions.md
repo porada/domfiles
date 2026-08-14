@@ -18,6 +18,7 @@ This branch specializes the shared [agent permission workflow](permissions.md) f
 - Let each command-owner group own its discovery, direct, and wrapped forms.
     - Do not maintain general allowances or shared discovery patterns.
     - Keep every discovery form exact and end-anchored. Include `--help`, `--version`, or another discovery spelling only after positive command-specific evidence establishes that the exact invocation exits without entering an interactive mode, mutating state, reading input, or starting normal execution. Omit every form that crosses this boundary. A verified unsupported form that terminates without prompting qualifies. See [Zed command discovery defaults](../../../PROJECT.md#zed-command-discovery-defaults) for rationale.
+    - For every inventoried subcommand, include its exact `--help` form in `terminal.always_allow` whenever that invocation meets this boundary, even when the subcommand’s execution forms require confirmation or denial. Scope broader `terminal.always_confirm` and `terminal.always_deny` patterns so they do not match the verified-safe help input.
     - Keep distinct command-owned discovery grammars separate but adjacent when that is clearer than consolidation. Never combine them merely because their total decoded length fits one pattern.
     - Treat `nohup`, `xargs`, and comparable wrappers as per-command forms. `xargs` owns only its own root and discovery forms, while each child command owns its bounded `xargs … <command>` form. Do not maintain a pooled child-command inventory. See [Zed xargs command ownership](../../../PROJECT.md#zed-xargs-command-ownership) for rationale.
         - Limit `xargs`’s own options to bounded, noninteractive argument splitting and batching controls.
@@ -82,6 +83,7 @@ This branch specializes the shared [agent permission workflow](permissions.md) f
 Validate every in-scope pattern against:
 
 - Each required matching example in normalized form, boundary values for every generalized operand role, and representative permutations that establish the accepted option and operand placement grammar.
+- Every verified-safe exact subcommand `--help` form, including those whose execution forms are confirmable or denied, plus configured-precedence cases proving that broader confirmation or denial patterns do not capture it.
 - Representative blocking, continuous-monitoring, terminating-snapshot, and unbounded-output forms when duration or output boundedness affects the classification.
 - Hazardous forms that must match a confirmation or denial override or remain unmatched by an allowance.
 - Near misses involving global options, wrappers, assignments, combined short flags, accepted long-option abbreviations, or trailing operands that cross the intended boundary.
