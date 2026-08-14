@@ -2134,6 +2134,66 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^just (?:--changelog|--completions (?:bash|elvish|fish|nushell|powershell|zsh)|-h|--help|--man|-V|--version)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:(?:-f|--justfile) [^-][^ ]* )?(?:--check|--check --fmt|--fmt --check)|(?:--check|--check --fmt|--fmt --check) (?:-f|--justfile) [^-][^ ]*)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:--dump-format (?:json|just)|--indentation [^-][^ ]*|(?:-f|--justfile) [^-][^ ]*) )*--dump$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:-f|--justfile) (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))* (?:--fmt|--init)|(?:--fmt|--init) (?:-f|--justfile) (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:-f|--justfile) [^-][^ ]* )?(?:--groups|--json|--variables)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:--alias-style (?:left|right|separate)|--color (?:always|auto|never)|--group [^-][^ ]*|(?:-f|--justfile) [^-][^ ]*|--list-heading [^-][^ ]*|--list-prefix [^-][^ ]*|--list-submodules|--no-aliases|-u|--unsorted) )*(?:-l|--list)(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just(?: (?:--allow-missing|--ceiling [^-][^ ]*|--clear-shell-args|--color (?:always|auto|never)|--command-color (?:black|blue|cyan|green|purple|red|yellow)|--default-list|-n|--dry-run|--explain|--highlight|--jobs [1-9][0-9]*|--justfile-name [^-][^ ]*|--no-cache|--no-deps|--no-dotenv|--no-highlight|--one|-q|--quiet|--set [A-Za-z_][A-Za-z0-9_-]* [^ ]+|--tempdir (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--time|--timestamp|--timestamp-format [^ ]+|-u|--unsorted|-v|--verbose|[A-Za-z_][A-Za-z0-9_-]*=[^ ]+))*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:-f|--justfile) [^-][^ ]*(?: (?:--allow-missing|--ceiling [^-][^ ]*|--clear-shell-args|--color (?:always|auto|never)|--command-color (?:black|blue|cyan|green|purple|red|yellow)|--default-list|-n|--dry-run|--explain|--highlight|--jobs [1-9][0-9]*|--justfile-name [^-][^ ]*|--no-cache|--no-deps|--no-dotenv|--no-highlight|--one|-q|--quiet|--set [A-Za-z_][A-Za-z0-9_-]* [^ ]+|--tempdir (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--time|--timestamp|--timestamp-format [^ ]+|-u|--unsorted|-v|--verbose|[A-Za-z_][A-Za-z0-9_-]*=[^ ]+))*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:-d|--working-directory) [^-][^ ]* (?:-f|--justfile) [^-][^ ]*|(?:-f|--justfile) [^-][^ ]* (?:-d|--working-directory) [^-][^ ]*)(?: (?:--allow-missing|--ceiling [^-][^ ]*|--clear-shell-args|--color (?:always|auto|never)|--command-color (?:black|blue|cyan|green|purple|red|yellow)|--default-list|-n|--dry-run|--explain|--highlight|--jobs [1-9][0-9]*|--justfile-name [^-][^ ]*|--no-cache|--no-deps|--no-dotenv|--no-highlight|--one|-q|--quiet|--set [A-Za-z_][A-Za-z0-9_-]* [^ ]+|--tempdir (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--time|--timestamp|--timestamp-format [^ ]+|-u|--unsorted|-v|--verbose|[A-Za-z_][A-Za-z0-9_-]*=[^ ]+))*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:-f|--justfile) [^-][^ ]* )?(?:(?:-s|--show) [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*)*|--usage [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*)*)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^just (?:(?:(?:-f|--justfile) [^-][^ ]*|-u|--unsorted) )*--summary$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^nohup just(?: (?:--allow-missing|--ceiling [^-][^ ]*|--clear-shell-args|--color (?:always|auto|never)|--command-color (?:black|blue|cyan|green|purple|red|yellow)|--default-list|-n|--dry-run|--explain|--highlight|--jobs [1-9][0-9]*|--justfile-name [^-][^ ]*|--no-cache|--no-deps|--no-dotenv|--no-highlight|--one|-q|--quiet|--set [A-Za-z_][A-Za-z0-9_-]* [^ ]+|--tempdir (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--time|--timestamp|--timestamp-format [^ ]+|-u|--unsorted|-v|--verbose|[A-Za-z_][A-Za-z0-9_-]*=[^ ]+))*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^nohup just (?:-f|--justfile) [^-][^ ]*(?: (?:--allow-missing|--ceiling [^-][^ ]*|--clear-shell-args|--color (?:always|auto|never)|--command-color (?:black|blue|cyan|green|purple|red|yellow)|--default-list|-n|--dry-run|--explain|--highlight|--jobs [1-9][0-9]*|--justfile-name [^-][^ ]*|--no-cache|--no-deps|--no-dotenv|--no-highlight|--one|-q|--quiet|--set [A-Za-z_][A-Za-z0-9_-]* [^ ]+|--tempdir (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--time|--timestamp|--timestamp-format [^ ]+|-u|--unsorted|-v|--verbose|[A-Za-z_][A-Za-z0-9_-]*=[^ ]+))*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^nohup just (?:(?:-d|--working-directory) [^-][^ ]* (?:-f|--justfile) [^-][^ ]*|(?:-f|--justfile) [^-][^ ]* (?:-d|--working-directory) [^-][^ ]*)(?: (?:--allow-missing|--ceiling [^-][^ ]*|--clear-shell-args|--color (?:always|auto|never)|--command-color (?:black|blue|cyan|green|purple|red|yellow)|--default-list|-n|--dry-run|--explain|--highlight|--jobs [1-9][0-9]*|--justfile-name [^-][^ ]*|--no-cache|--no-deps|--no-dotenv|--no-highlight|--one|-q|--quiet|--set [A-Za-z_][A-Za-z0-9_-]* [^ ]+|--tempdir (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--time|--timestamp|--timestamp-format [^ ]+|-u|--unsorted|-v|--verbose|[A-Za-z_][A-Za-z0-9_-]*=[^ ]+))*(?: [A-Za-z_][A-Za-z0-9_-]*(?:::[A-Za-z_][A-Za-z0-9_-]*)*(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* just(?: |$)",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*kill (?:--help|--version|-h|-help|-v|-version)$",
 							"case_sensitive": true
 						},
@@ -3341,6 +3401,10 @@
 						},
 						{
 							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* jq(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* just(?: |$)",
 							"case_sensitive": true
 						},
 						{
