@@ -706,35 +706,35 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo(?:$| (?:-h|-help|--help|-V|-version|--version|--list|-v --list|-Z help|--explain [A-Za-z][A-Za-z0-9_-]*|version(?: [^ ]+)*|help (?:add|b|bench|build|c|check|clean|clippy|config|d|doc|fetch|fix|fmt|generate-lockfile|git-checkout|help|info|init|install|locate-project|login|logout|metadata|new|owner|package|pkgid|publish|r|read-manifest|remove|report|rm|run|rustc|rustdoc|search|t|test|tree|uninstall|update|vendor|verify-project|version|yank))$)",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo(?:$| (?:-h|-help|--help|-V|-version|--version|--list|-v --list|-Z help|--explain [A-Za-z][A-Za-z0-9_-]*|clean --help|version(?: [^ ]+)*|help (?:add|b|bench|build|c|check|clean|clippy|config|d|doc|fetch|fix|fmt|generate-lockfile|git-checkout|help|info|init|install|locate-project|login|logout|metadata|new|owner|package|pkgid|publish|r|read-manifest|remove|report|rm|run|rustc|rustdoc|search|t|test|tree|uninstall|update|vendor|verify-project|version|yank))$)",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:add|b|build|c|check|clean|d|doc|fetch|fix|generate-lockfile|git-checkout|info|init|install|locate-project|logout|metadata|new|owner|package|pkgid|publish|read-manifest|remove|rm|rustc|rustdoc|search|tree|uninstall|update|verify-project)(?: |$)",
+							"pattern": "^(?:(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:add|b|build|c|check|clean|d|doc|fetch|fix|generate-lockfile|git-checkout|info|init|install|locate-project|logout|metadata|new|owner|package|pkgid|publish|read-manifest|remove|rm|rustc|rustdoc|search|tree|uninstall|update|verify-project)(?: |$)|CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target (?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:add|b|build|c|check|d|doc|fetch|fix|generate-lockfile|git-checkout|info|init|install|locate-project|logout|metadata|new|owner|package|pkgid|publish|read-manifest|remove|rm|rustc|rustdoc|search|tree|uninstall|update|verify-project)(?: |$))",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*bench(?: (?:-h|-q|-r|--all-features|--all-targets|--benches|--bins|--examples|--frozen|--future-incompat-report|--help|--ignore-rust-version|--keep-going|--lib|--locked|--no-default-features|--no-fail-fast|--no-run|--offline|--quiet|--release|--tests|--workspace|--color(?:=| )(?:always|auto|never)|--(?:bin|example|exclude|features|manifest-path|message-format|package|profile|target|target-dir|test)(?:=| )[^ ]+|--timings(?:=[^ ]+)?|-[jp](?:[^ ]+| [^ ]+)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*bench(?: (?:-h|-q|-r|--all-features|--all-targets|--benches|--bins|--examples|--frozen|--future-incompat-report|--help|--ignore-rust-version|--keep-going|--lib|--locked|--no-default-features|--no-fail-fast|--no-run|--offline|--quiet|--release|--tests|--workspace|--color(?:=| )(?:always|auto|never)|--(?:bin|example|exclude|features|manifest-path|message-format|package|profile|target|target-dir|test)(?:=| )[^ ]+|--timings(?:=[^ ]+)?|-[jp](?:[^ ]+| [^ ]+)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*config get [A-Za-z0-9_-]+(?:[.][A-Za-z0-9_-]+)*$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*clippy(?:(?: (?:-[qrv]|--(?:all-features|all-targets|benches|bins|examples|fix|frozen|future-incompat-report|help|keep-going|lib|locked|no-default-features|no-deps|offline|quiet|release|tests|verbose|workspace)|--color(?:=| )(?:always|auto|never)|--(?:features|jobs|manifest-path|message-format|package|profile|target|target-dir)(?:=| )[^ ]+))*| -- --explain [A-Za-z0-9_:-]+)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*clippy(?: (?:-[qrv]|--(?:all-features|all-targets|benches|bins|examples|fix|frozen|future-incompat-report|help|keep-going|lib|locked|no-default-features|no-deps|offline|quiet|release|tests|verbose|workspace)|--color(?:=| )(?:always|auto|never)|--(?:features|jobs|manifest-path|message-format|package|profile|target|target-dir)(?:=| )[^ ]+))*(?: --(?: (?:(?:-[ADFW](?: ?)[A-Za-z0-9_:-]+|--(?:allow|deny|force-warn|forbid|warn)(?:=| )[A-Za-z0-9_:-]+)|-C(?: ?)(?:code-model|codegen-units|debuginfo|debug-assertions|incremental|lto|opt-level|overflow-checks|panic|relocation-model|strip|target-cpu|target-feature)(?:=| )[^ ]+|--(?:cfg|check-cfg|crate-type|edition|error-format|json|out-dir|target)(?:=| )[^ ]+|--emit(?:=| )(?:asm|dep-info|link|llvm-(?:bc|ir)|metadata|mir|obj)(?:,(?:asm|dep-info|link|llvm-(?:bc|ir)|metadata|mir|obj))*))*)?$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MAN)?PAGER=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-[qv]|--(?:color[= ](?:always|auto|never)|frozen|locked|offline|quiet|verbose)) )*clippy(?: (?:-[qrv]|--(?:all-features|all-targets|benches|bins|examples|fix|frozen|future-incompat-report|help|keep-going|lib|locked|no-default-features|no-deps|offline|quiet|release|tests|verbose|workspace)|--color[= ](?:always|auto|never)|--(?:features|jobs|manifest-path|message-format|package|profile|target|target-dir)[= ][^ ]+))* --(?: (?:(?:-[ADFW] ?|--(?:allow|deny|force-warn|forbid|warn)[= ])[A-Za-z0-9_:-]+|(?:-C ?(?:code-model|codegen-units|debug(?:-assertions|info)|incremental|lto|opt-level|overflow-checks|panic|relocation-model|strip|target-(?:cpu|feature))|--(?:cfg|check-cfg|crate-type|edition|error-format|json|out-dir|target))[= ][^ ]+|--emit[= ](?:asm|dep-info|link|llvm-(?:bc|ir)|metadata|mir|obj)(?:,(?:asm|dep-info|link|llvm-(?:bc|ir)|metadata|mir|obj))*))*$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*clippy -- --explain [A-Za-z0-9_:-]+$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*config get [A-Za-z0-9_-]+(?:[.][A-Za-z0-9_-]+)*$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*fmt(?: (?:-h|-q|-v|--all|--check|--help|--quiet|--verbose|--version|--workspace|--manifest-path(?:=| )[^ ]+|--message-format(?:=| )[^ ]+|--package(?:=| )[^ ]+|-p(?:[^ ]+| [^ ]+)))*(?: --(?: (?:-l|-q|-v|--backup|--check|--files-with-diff|--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--config(?:=| )[^ ]+|--config-path(?:=| )[^ ]+|--edition(?:=| )(?:2015|2018|2021|2024)|--emit(?:=| )(?:files|stdout)|--print-config current [^-][^ ]*|--style-edition(?:=| )(?:2015|2018|2021|2024)|(?:-|[^- ][^ ]*)))*)?$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*fmt(?: (?:-h|-q|-v|--all|--check|--help|--quiet|--verbose|--version|--workspace|--manifest-path(?:=| )[^ ]+|--message-format(?:=| )[^ ]+|--package(?:=| )[^ ]+|-p(?:[^ ]+| [^ ]+)))*(?: --(?: (?:-l|-q|-v|--backup|--check|--files-with-diff|--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--config(?:=| )[^ ]+|--config-path(?:=| )[^ ]+|--edition(?:=| )(?:2015|2018|2021|2024)|--emit(?:=| )(?:files|stdout)|--print-config current [^-][^ ]*|--style-edition(?:=| )(?:2015|2018|2021|2024)|(?:-|[^- ][^ ]*)))*)?$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*login(?: (?:--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--registry(?:=| )[^ ]+))*$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*login(?: (?:--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--registry(?:=| )[^ ]+))*$",
 							"case_sensitive": true
 						},
 						{
@@ -742,11 +742,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*report (?:future-incompatibilities|rebuilds|sessions|timings)(?: |$)",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*report (?:future-incompatibilities|rebuilds|sessions|timings)(?: |$)",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:r|run)(?: (?:-h|-q|-r|--all-features|--all-targets|--benches|--bins|--examples|--frozen|--future-incompat-report|--help|--ignore-rust-version|--keep-going|--lib|--locked|--no-default-features|--no-fail-fast|--offline|--quiet|--release|--tests|--workspace|--color(?:=| )(?:always|auto|never)|--(?:bin|example|exclude|features|manifest-path|message-format|package|profile|target|target-dir|test)(?:=| )[^ ]+|--timings(?:=[^ ]+)?|-[jp](?:[^ ]+| [^ ]+)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:--manifest-path(?:=| )[^ ]+ (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*)?(?:r|run)(?: (?:-h|-q|-r|--all-features|--all-targets|--benches|--bins|--examples|--frozen|--future-incompat-report|--help|--ignore-rust-version|--keep-going|--lib|--locked|--no-default-features|--no-fail-fast|--offline|--quiet|--release|--tests|--workspace|--color(?:=| )(?:always|auto|never)|--(?:bin|example|exclude|features|manifest-path|message-format|package|profile|target|target-dir|test)(?:=| )[^ ]+|--timings(?:=[^ ]+)?|-[jp](?:[^ ]+| [^ ]+)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
 							"case_sensitive": true
 						},
 						{
@@ -754,15 +754,15 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:t|test)(?: (?:-h|-q|-r|--all-features|--all-targets|--benches|--bins|--examples|--frozen|--future-incompat-report|--help|--ignore-rust-version|--keep-going|--lib|--locked|--no-default-features|--no-fail-fast|--no-run|--offline|--quiet|--release|--tests|--workspace|--color(?:=| )(?:always|auto|never)|--(?:bin|example|exclude|features|manifest-path|message-format|package|profile|target|target-dir|test)(?:=| )[^ ]+|--timings(?:=[^ ]+)?|-[jp](?:[^ ]+| [^ ]+)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:t|test)(?: (?:-h|-q|-r|--all-features|--all-targets|--benches|--bins|--examples|--frozen|--future-incompat-report|--help|--ignore-rust-version|--keep-going|--lib|--locked|--no-default-features|--no-fail-fast|--no-run|--offline|--quiet|--release|--tests|--workspace|--color(?:=| )(?:always|auto|never)|--(?:bin|example|exclude|features|manifest-path|message-format|package|profile|target|target-dir|test)(?:=| )[^ ]+|--timings(?:=[^ ]+)?|-[jp](?:[^ ]+| [^ ]+)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*vendor(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+))*$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*vendor(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+))*$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*vendor(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+))* --no-delete(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+)))*(?: (?:-- )?[^-][^ ]*)?|(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+)))*(?: (?:-- )?[^-][^ ]*) --no-delete(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+)))*)$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*vendor(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+))* --no-delete(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+)))*(?: (?:-- )?[^-][^ ]*)?|(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+)))*(?: (?:-- )?[^-][^ ]*) --no-delete(?:(?: (?:--locked|--offline|--respect-source-config|--versioned-dirs|--manifest-path(?:=| )[^ ]+|--sync(?:=| )[^ ]+)))*)$",
 							"case_sensitive": true
 						},
 						{
@@ -1022,11 +1022,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fd(?: |$)",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fd (?:-h|--help|-V|--version)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* fd(?: |$)",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fd(?: (?:--(?:absolute-path|case-sensitive|dereference|fixed-strings|follow|full-path|glob|has-results|hidden|ignore(?:|-case|-vcs)|literal|mount|no-follow|no-global-ignore-file|no-hidden|no-ignore(?:|-parent|-vcs)|no-require-git|one-file-system|print0|prune|quiet|regex|relative-path|require-git|show-errors|unrestricted|xdev)|--(?:hyper|hyperlink)(?:=(?:always|auto|never))?|--strip-cwd-prefix(?:=(?:always|auto|never))?|--(?:and|size)(?:=[^ ]+| (?:-|-[^- ][^ ]*|--[^ ]+|[^- ][^ ]*))|--(?:base-directory|change(?:-newer-than|-older-than|d-(?:after|before|within))|color|exact-depth|exclude|extension|format|ignore-(?:contain|file)|max(?:-buffer-time|-depth|-results|depth)|min(?:-depth|depth)|newer|older|owner|path-separator|search-path|threads|type)(?:=[^ ]+| [^- ][^ ]*)|-[01FHILagipqsu]+|-[01FHILagipqsu]*(?:C|E|c|d|e|j|o|t)(?:[^ ]+| [^- ][^ ]*)|-[01FHILagipqsu]*S(?:[^ ]+| (?:-|-[^- ][^ ]*|--[^ ]+|[^- ][^ ]*))|-|[^- ][^ ]*))*(?: --(?: [^ ]+)*)?$",
 							"case_sensitive": true
 						},
 						{
@@ -1782,6 +1782,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*archive --format=tar --output=/(?:private/)?var/folders/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})/T/zed-agent-terminal-[A-Za-z0-9]+/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,}))* HEAD$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*blame(?: |$)",
 							"case_sensitive": true
 						},
@@ -1790,7 +1794,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*branch (?:--list(?: [^-][^ ]*)*|[^-][^ ]*(?: [^-][^ ]*)?)$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*branch (?:(?:(?:-[ailrv]+|--abbrev(?:=[0-9]+)?|--all|--color(?:=(?:always|auto|never))?|--column(?:=[^ ]+)?|--contains(?: [^-][^ ]*)?|--format=[^ ]+|--ignore-case|--merged(?: [^-][^ ]*)?|--no-abbrev|--no-color|--no-column|--no-contains(?: [^-][^ ]*)?|--no-ignore-case|--no-merged(?: [^-][^ ]*)?|--no-omit-empty|--no-show-current|--no-verbose|--omit-empty|--points-at [^-][^ ]*|--remotes|--show-current|--sort=[^ ]+|--verbose) )+--list(?: [^-][^ ]*)+|--list(?: [^-][^ ]*)*|[^-][^ ]*(?: [^-][^ ]*)?)$",
 							"case_sensitive": true
 						},
 						{
@@ -1822,7 +1826,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|-c color[.]status=(?:always|auto|never)|--no-optional-locks|--no-pager) )*config (?:(?:-h|--help)$|(?:get|list)(?: |$)|(?:(?:(?:-f|--(?:blob|file)) [^-][^ ]*|-z|--(?:global|local|name-only|null|path|show-names|show-origin|show-scope|system|worktree)) )*(?:--get-colorbool [^-][^ ]*(?: (?:false|true))?|(?:--list|--(?:get|get-all|get-regexp) [^-][^ ]*(?: [^-][^ ]*)?)(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*)$)",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|-c color[.]status=(?:always|auto|false|never)|-c pager[.]diff=(?:git-diff-highlight [|] less --chop-long-lines|off|yes)|--no-optional-locks|--no-pager) )*config (?:(?:-h|--help)$|(?:(?:(?:-f|--(?:blob|file)) [^-][^ ]*|-z|--(?:global|local|name-only|null|path|show-names|show-origin|show-scope|system|type=bool|worktree)) )*(?:--get [^-][^ ]*(?: [^-][^ ]*)?(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*|--get-all [^-][^ ]*(?: [^-][^ ]*)?(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*|--get-colorbool [^-][^ ]*(?: (?:false|true))?|--get-regexp [^-][^ ]*(?: [^-][^ ]*)?(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*|--list(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*)$|(?:get|list)(?: |$))",
 							"case_sensitive": true
 						},
 						{
@@ -1830,7 +1834,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*diff(?: |$)",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*diff (?:--no-index --output(?:=| )(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|--output(?:=| )(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))* --no-index)(?: --)? (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))* (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*diff(?: (?:--(?:[^o ][^ ]*|o(?:[^u ][^ ]*|u(?:[^t ][^ ]*|t(?:[^p ][^ ]*|p(?:[^u ][^ ]*|u(?:[^t ][^ ]*|t[^= ][^ ]*)?)?)?)?)?)?|-(?:[^- ][^ ]*)?|[^- ][^ ]*))*$",
 							"case_sensitive": true
 						},
 						{
@@ -1942,7 +1950,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*tag (?:(?:-l|--list)(?: .*)?|(?:--(?:merged|no-merged)(?: [^-][^ ]*)?|--points-at [^-][^ ]*|--sort=[^ ]+)(?: (?:-l|--list|--(?:merged|no-merged)(?: [^-][^ ]*)?|--points-at [^-][^ ]*|--sort=[^ ]+))*)$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*tag (?:(?:-l|--list)(?: .*)?|(?:--contains(?: [^-][^ ]*)?|--(?:merged|no-merged)(?: [^-][^ ]*)?|--points-at [^-][^ ]*|--sort=[^ ]+)(?: (?:--contains(?: [^-][^ ]*)?|(?:-l|--list)|--(?:merged|no-merged)(?: [^-][^ ]*)?|--points-at [^-][^ ]*|--sort=[^ ]+))*)$",
 							"case_sensitive": true
 						},
 						{
@@ -1974,6 +1982,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*cherry-pick --no-commit [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*clean -(?:fd|fdx)$",
 							"case_sensitive": true
 						},
@@ -1987,6 +1999,10 @@
 						},
 						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*merge --ff-only agent/[A-Za-z0-9_-][A-Za-z0-9_.-]*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/? (?:(?:--no-optional-locks|--no-pager) )*rebase --abort$",
 							"case_sensitive": true
 						},
 						{
@@ -2074,7 +2090,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*init --quiet --initial-branch=[A-Za-z0-9_-][A-Za-z0-9_.-]* (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-c commit[.]gpgsign=false|--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/? (?:(?:-c commit[.]gpgsign=false|--no-optional-locks|--no-pager) )*config (?:set )?(?:--local )?pager[.](?:diff(?: )|show off)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*init (?:--quiet )?--initial-branch=[A-Za-z0-9_-][A-Za-z0-9_.-]* (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*$",
 							"case_sensitive": true
 						},
 						{
@@ -2119,10 +2139,6 @@
 						},
 						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-c commit[.]gpgsign=false|--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*/? (?:(?:-c commit[.]gpgsign=false|--no-optional-locks|--no-pager) )*tag (?:-d|--delete) [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*(?: [A-Za-z0-9@_+~./:^][A-Za-z0-9.@_+~/:=^-]*)*$",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*archive --format=tar --output=/(?:private/)?var/folders/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})/T/zed-agent-terminal-[A-Za-z0-9]+/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,}))* HEAD$",
 							"case_sensitive": true
 						},
 						{
@@ -2230,11 +2246,15 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*jq(?: |$)",
+							"pattern": "^(?:(?:HOME=/dev/null|MANPAGER=cat|PAGER=cat) )*jq (?:--build-configuration|--help|--version|-V|-h)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* jq(?: |$)",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*HOME=/dev/null (?:(?:MANPAGER|PAGER)=cat )*jq (?:(?:--(?:arg [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|argjson [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|ascii-output|binary|color-output|compact-output|exit-status|indent (?:-1|[0-7])|join-output|monochrome-output|raw-(?:input|output|output0)|seq|slurp|sort-keys|stream|stream-errors|tab|unbuffered)|-[CMRSabcejrs]+) )*(?:--null-input|-[CMRSabcejrs]*n[CMRSabcejnrs]*)(?: (?:--(?:arg [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|argjson [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|ascii-output|binary|color-output|compact-output|exit-status|indent (?:-1|[0-7])|join-output|monochrome-output|null-input|raw-(?:input|output|output0)|seq|slurp|sort-keys|stream|stream-errors|tab|unbuffered)|-[CMRSabcejnrs]+))* (?:false|keys|keys_unsorted|length|null|-?(?:0|[1-9][0-9]*)(?:[.][0-9]+)?(?:[eE][+-]?[0-9]+)?|[.](?:[A-Za-z_][A-Za-z0-9_]*)?|true|type|type==\"object\"|\\$[a-z_][A-Za-z0-9_]*)(?:[.][A-Za-z_][A-Za-z0-9_]*)*(?: --)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*HOME=/dev/null (?:(?:MANPAGER|PAGER)=cat )*jq (?:(?:--(?:arg [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|argjson [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|ascii-output|binary|color-output|compact-output|exit-status|indent (?:-1|[0-7])|join-output|monochrome-output|raw-(?:input|output|output0)|seq|slurp|sort-keys|stream|stream-errors|tab|unbuffered)|-[CMRSabcejrs]+) )*(?:--null-input|-[CMRSabcejrs]*n[CMRSabcejnrs]*)(?: (?:--(?:arg [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|argjson [a-z_][A-Za-z0-9_]* [A-Za-z0-9_./,:@%+=~-]+|ascii-output|binary|color-output|compact-output|exit-status|indent (?:-1|[0-7])|join-output|monochrome-output|null-input|raw-(?:input|output|output0)|seq|slurp|sort-keys|stream|stream-errors|tab|unbuffered)|-[CMRSabcejnrs]+))* -- (?:false|keys|keys_unsorted|length|null|-?(?:0|[1-9][0-9]*)(?:[.][0-9]+)?(?:[eE][+-]?[0-9]+)?|[.](?:[A-Za-z_][A-Za-z0-9_]*)?|true|type|type==\"object\"|\\$[a-z_][A-Za-z0-9_]*)(?:[.][A-Za-z_][A-Za-z0-9_]*)*$",
 							"case_sensitive": true
 						},
 						{
@@ -3074,7 +3094,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*tee(?: -[ai]+)*(?: /dev/(?:null|stderr|stdout))*$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*tee(?: -[ai]+)*(?: (?:(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*|/dev/(?:null|stderr|stdout)))*$",
 							"case_sensitive": true
 						},
 						{
@@ -3166,11 +3186,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*unzip (?:--help|--version|-help|-version)$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*unzip (?:--help|--version|-h|-help|-hh|-v|-version)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^unzip (?:-l|-p|-t)(?: --)? [^-][^ ]*(?: [^-][^ ]*)*$",
+							"pattern": "^unzip (?:-[CLUVWabclpqtvz]+ )*-[CLUVWabclpqtvz]*[clptvz][CLUVWabclpqtvz]*(?: -[CLUVWabclpqtvz]+)*(?: --)? [^- ][^ ]*(?: [^- ][^ ]*)*(?: -x(?: [^- ][^ ]*)+)?$",
 							"case_sensitive": true
 						},
 						{
@@ -3362,6 +3382,14 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^zipgrep(?:$| (?:--help|--version|-V|-h)$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^zipgrep (?:(?:(?:-|-(?:[^ ]{2,}|[^ef ])) )*-(?:e|f) [^ ]+(?: (?:-|-(?:[^ ]{2,}|[^ef ])))* [^- ][^ ]*(?: [^- ][^ ]*)*(?: -x(?: [^- ][^ ]*)+)?|(?:(?:-|-(?:[^ ]{2,}|[^ef ])) )*[^- ][^ ]* [^- ][^ ]*(?: [^- ][^ ]*)*(?: -x(?: [^- ][^ ]*)+)?)$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zipinfo(?: |$)",
 							"case_sensitive": true
 						},
@@ -3384,23 +3412,19 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:\\+[^ ]+)(?: |$)|(?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:add|b|build|c|check|clean|d|doc|fetch|fix|generate-lockfile|git-checkout|info|init|install|locate-project|logout|metadata|new|owner|package|pkgid|publish|read-manifest|remove|rm|rustc|rustdoc|search|tree|uninstall|update|verify-project)(?: .*)? (?:--config|-Z)(?:[ =]|$))",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:\\+[^ ]+)(?: |$)|(?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:add|b|build|c|check|clean|d|doc|fetch|fix|generate-lockfile|git-checkout|info|init|install|locate-project|logout|metadata|new|owner|package|pkgid|publish|read-manifest|remove|rm|rustc|rustdoc|search|tree|uninstall|update|verify-project)(?: .*)? (?:--config|-Z)(?:[ =]|$))",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:clean(?: .*)? --target-dir(?:[ =]|$)|fix(?: .*)? --(?:allow-dirty|allow-no-vcs|allow-staged|broken-code)(?:[ =]|$)|install(?: .*)? --(?:force|no-track)(?:[ =]|$)|(?:package|publish)(?: .*)? --(?:allow-dirty|no-verify)(?:[ =]|$)|(?:remove|rm|uninstall)(?: .*)? (?:--package(?:=| )cargo|cargo)(?: |$))",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:clean(?: .*)? --target-dir(?:[ =]|$)|fix(?: .*)? --(?:allow-dirty|allow-no-vcs|allow-staged|broken-code)(?:[ =]|$)|install(?: .*)? --(?:force|no-track)(?:[ =]|$)|(?:package|publish)(?: .*)? --(?:allow-dirty|no-verify)(?:[ =]|$)|(?:remove|rm|uninstall)(?: .*)? (?:--package(?:=| )cargo|cargo)(?: |$))",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:rustc|rustdoc)(?: .*)? (?:--(?: |$)|@[^ ]+|-L(?:[^ ]+| [^ ]+)|-l(?:[^ ]+| [^ ]+)|--extern(?:=| )[^ ]+|--sysroot(?:=| )[^ ]+|(?:-C|--codegen)(?: ?)(?:dlltool|link-arg|link-args|linker|llvm-args|passes|unsafe-allow-abi-mismatch)(?:=| )[^ ]+)(?: |$)",
+							"pattern": "^(?:CARGO_TARGET_DIR=[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/target )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*(?:rustc|rustdoc)(?: .*)? (?:--(?: |$)|@[^ ]+|-L(?:[^ ]+| [^ ]+)|-l(?:[^ ]+| [^ ]+)|--extern(?:=| )[^ ]+|--sysroot(?:=| )[^ ]+|(?:-C|--codegen)(?: ?)(?:dlltool|link-arg|link-args|linker|llvm-args|passes|unsafe-allow-abi-mismatch)(?:=| )[^ ]+)(?: |$)",
 							"case_sensitive": true
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:nohup )?docker (?:(?:.* )?--config(?:[ =]|$)|(?:(?:(?:--(?:config|context|host|log-level|tlscacert|tlscert|tlskey)(?:=| )[^ ]+|-[cHl](?:[^ ]+| [^ ]+)|--(?:debug|tls|tlsverify)(?:=[^ ]+)?|-D) )*)compose (?:(?:(?:--(?:ansi|env-file|file|parallel|profile|progress|project-directory|project-name)(?:=| )[^ ]+|-[fp](?:[^ ]+| [^ ]+)|--(?:all-resources|compatibility|dry-run)(?:=[^ ]+)?) )*)(?:config (?:.* )?(?:--lock-image-digests(?:[ =]|$)|--output(?:[ =]|$)|-[A-Za-z]*o[^ ]*(?: |$))|wait (?:.* )?--down-project(?:[ =]|$)))",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fd (?:(?:--[^ ]+|-(?:[^- ][^ ]*)?|[^- ][^ ]*) )*(?:--exec(?:-batch)?|-[^- ]*[xX][^- ]*)(?:[ =]|$)",
 							"case_sensitive": true
 						},
 						{
@@ -3464,7 +3488,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*config (?:.* )?(?:-l|--list|list)(?: |$)",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|-c color[.]status=(?:always|auto|false|never)|-c pager[.]diff=(?:git-diff-highlight [|] less --chop-long-lines|off|yes)|--no-optional-locks|--no-pager) )*config (?:.* )?(?:-l|--list|list)(?: |$)",
 							"case_sensitive": true
 						},
 						{
@@ -3472,7 +3496,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*diff (?:(?:--[^ ]+|-(?:[^- ][^ ]*)?|[^- ][^ ]*) )*(?:--(?:ext(?:-(?:d(?:i(?:f(?:f)?)?)?)?)?|filters|show-s(?:i(?:g(?:n(?:a(?:t(?:u(?:r(?:e)?)?)?)?)?)?)?)?|t(?:e(?:x(?:t(?:c(?:o(?:n(?:v)?)?)?)?)?)?)?)(?: |$)|--op[^ ]*(?:[ =]|$)|--(?:output|u(?:p(?:l(?:o(?:a(?:d(?:-(?:p(?:a(?:c(?:k)?)?)?)?)?)?)?)?)?)?)(?:=| [^ ]+)|-[^- ]*O[^ ]*(?: |$))",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*diff (?:(?:--[^ ]+|-(?:[^- ][^ ]*)?|[^- ][^ ]*) )*(?:--(?:ext(?:-(?:d(?:i(?:f(?:f)?)?)?)?)?|filters|show-s(?:i(?:g(?:n(?:a(?:t(?:u(?:r(?:e)?)?)?)?)?)?)?)?|t(?:e(?:x(?:t(?:c(?:o(?:n(?:v)?)?)?)?)?)?)?)(?: |$)|--op[^ ]*(?:[ =]|$)|--u(?:p(?:l(?:o(?:a(?:d(?:-(?:p(?:a(?:c(?:k)?)?)?)?)?)?)?)?)?)?(?:=| [^ ]+)|-[^- ]*O[^ ]*(?: |$))",
 							"case_sensitive": true
 						},
 						{
@@ -3718,11 +3742,11 @@
 					],
 					"always_deny": [
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:.* )?--token(?:=| )[^ ]+|(?:.* )?--config(?:=| )[^ ]*(?i:(?:registry|registries)[^ ]*token)[^ ]*|(?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*config get (?:registry[.]token|registries[.][^. ]+[.]token)(?: |$)|.* (?:(?i:[a-z][a-z0-9+.-]*)://[^ /@]*@|(?i:[a-z][a-z0-9+.-]*)://[^ ]*[?&](?i:access[_-]?token|api[_-]?key|auth|password|secret|token)=[^&# ]+|[^ ]+:[^ ]+@[^ ]+))",
+							"pattern": "^(?:CARGO_TARGET_DIR=[^ ]* )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:.* )?--token(?:=| )[^ ]+|(?:.* )?--config(?:=| )[^ ]*(?i:(?:registry|registries)[^ ]*token)[^ ]*|(?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*config get (?:registry[.]token|registries[.][^. ]+[.]token)(?: |$)|.* (?:(?i:[a-z][a-z0-9+.-]*)://[^ /@]*@|(?i:[a-z][a-z0-9+.-]*)://[^ ]*[?&](?i:access[_-]?token|api[_-]?key|auth|password|secret|token)=[^&# ]+|[^ ]+:[^ ]+@[^ ]+))",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*login(?:(?: (?:--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--registry(?:=| )[^ ]+))* [^-][^ ]*(?: (?:--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--registry(?:=| )[^ ]+))*)$",
+							"pattern": "^(?:CARGO_TARGET_DIR=[^ ]* )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*login(?:(?: (?:--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--registry(?:=| )[^ ]+))* [^-][^ ]*(?: (?:--quiet|--verbose|--color(?:=| )(?:always|auto|never)|--registry(?:=| )[^ ]+))*)$",
 							"case_sensitive": true
 						},
 						{
@@ -3758,7 +3782,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*jq (?:.*\\$ENV(?:[^A-Za-z0-9_]|$)|(?:env|.*[^.A-Za-z0-9_$]env)(?:[^A-Za-z0-9_]|$))",
+							"pattern": "^(?:[A-Za-z_][A-Za-z0-9_]*=[^ ]* )*jq (?:.*\\$ENV(?:[^A-Za-z0-9_]|$)|(?:env|.*[^.A-Za-z0-9_$]env)(?:[^A-Za-z0-9_]|$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* jq (?:.*\\$ENV(?:[^A-Za-z0-9_]|$)|(?:env|.*[^.A-Za-z0-9_$]env)(?:[^A-Za-z0-9_]|$))",
 							"case_sensitive": true
 						},
 						{

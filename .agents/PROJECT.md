@@ -54,6 +54,12 @@ These forms are denied rather than left confirmable so a discovery-looking comma
 
 Bulk value listings through `git config list`, its legacy `--list` and `-l` forms, `git var -l`, and `yarn config list` remain user-confirmable because configuration can contain credentials. Their higher-precedence confirmation overrides intentionally cover display options, including name-only output, rather than relying on a brittle complement expression. Targeted configuration reads retain their existing permission treatment.
 
+### Zed Cargo target directory
+
+`CARGO_TARGET_DIR` has an automatic terminal allowance only when it names the exact project-relative `.agent-<name>/target` directory and precedes an otherwise allowed Cargo form. This operation-specific use of the [agent-directory allowance scope](#zed-agent-directory-allowance-scope) confines generated artifacts to task-owned state without authorizing a Cargo command family or broadening its accepted options.
+
+Operational `cargo clean` and nightly or experimental execution remain confirmable when prefixed by the assignment. Credential-denial patterns intentionally accept any literal no-space `CARGO_TARGET_DIR` value so an unsupported target cannot turn a denied Cargo form into an approvable one. [Zed settings](../.config/zed/settings.json) remain canonical for exact command grammar.
+
 ### Zed fetch and sandbox host scope
 
 An explicit domain or hostname allowance authorizes the corresponding persistent `agent.sandbox_permissions.network_hosts` scope. Zed matches those grants by case-insensitive hostname without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port persistence is intentional. Terminal commands remain subject to their independent terminal permissions, while explicit-port fetch URLs remain outside the canonical hostname fetch pattern unless separately allowed at the fetch-tool layer.
