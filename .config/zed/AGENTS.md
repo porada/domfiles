@@ -129,6 +129,7 @@ Assume the following non-standard development commands are system-installed and 
 | Command | Purpose | Guidance |
 | --- | --- | --- |
 | `actionlint` | GitHub Actions correctness | — |
+| `ast-grep` | Structural code search and transformation | — |
 | `cargo` | Rust package management and workspace workflows | — |
 | `fd` | Filesystem path search | Prefer over `find` for ad hoc terminal path discovery |
 | `fish` | Fish shell and configuration checks | — |
