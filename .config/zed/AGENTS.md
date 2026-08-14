@@ -137,6 +137,7 @@ Assume the following non-standard development commands are system-installed and 
 | `jq` | JSON querying and transformation | — |
 | `just` | Command runner | — |
 | `node` | JavaScript and TypeScript execution | Run `*.ts` files directly |
+| `pandoc` | Document format conversion | — |
 | `plugins` | Agent plugin installation | — |
 | `pnpm` | JavaScript package management | Preferred. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`. Use `exec` for local binaries and `dlx` for undeclared one-offs |
 | `rg` | File-content search | — |

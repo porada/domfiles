@@ -2542,6 +2542,46 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^pandoc (?:--help|--list-extensions|--list-highlight-languages|--list-highlight-styles|--list-input-formats|--list-output-formats|--version|-h|-v)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc --list-extensions=(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:-o |--output=)(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:(?:-t|-w) |--(?:to|write)=)(?:ansi|asciidoc(?:_legacy|tor)?|bbcode(?:_fluxbb|_hubzilla|_phpbb|_steam|_xenforo)?|beamer|bib(?:latex|tex)|chunkedhtml|commonmark(?:_x)?|context|csljson|djot|docbook[45]?|docx|dokuwiki|dzslides|epub[23]?|fb2|gfm|haddock|html[45]?) (?:-o |--output=)(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:(?:-t|-w) |--(?:to|write)=)(?:icml|ipynb|jats(?:_archiving|_articleauthoring|_publishing)?|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|markua|mediawiki|ms|muse) (?:-o |--output=)(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:(?:-t|-w) |--(?:to|write)=)(?:native|odt|opendocument|opml|org|plain|pptx|revealjs|rst|rtf|s5|slideous|slidy|t2t|tei|texinfo|textile|typst|vimdoc|xml|xwiki|zimwiki) (?:-o |--output=)(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))?(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:(?:-t|-w) |--(?:to|write)=)(?:ansi|asciidoc(?:_legacy|tor)?|bbcode(?:_fluxbb|_hubzilla|_phpbb|_steam|_xenforo)?|beamer|bib(?:latex|tex)|chunkedhtml|commonmark(?:_x)?|context|csljson|djot|docbook[45]?|docx|dokuwiki|dzslides|epub[23]?|fb2|gfm|haddock|html[45]?)(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:(?:-t|-w) |--(?:to|write)=)(?:icml|ipynb|jats(?:_archiving|_articleauthoring|_publishing)?|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|markua|mediawiki|ms|muse)(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:--sandbox|--sandbox=true)(?: (?:(?:-f|-r) |--(?:from|read)=)(?:asciidoc|bib(?:latex|tex)|bits|commonmark(?:_x)?|creole|csljson|csv|djot|docbook|docx|dokuwiki|endnotexml|epub|fb2|gfm|haddock|html|ipynb|jats|jira|json|latex|man|markdown(?:_github|_mmd|_phpextra|_strict)?|mdoc|mediawiki|muse|native|odt|opml|org|pod|pptx|ris|rst|rtf|t2t|textile|tikiwiki|tsv|twiki|typst|vimwiki|xlsx|xml))? (?:(?:-t|-w) |--(?:to|write)=)(?:native|odt|opendocument|opml|org|plain|pptx|revealjs|rst|rtf|s5|slideous|slidy|t2t|tei|texinfo|textile|typst|vimdoc|xml|xwiki|zimwiki)(?: --)? [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*(?: [A-Za-z0-9_@+~./=^][A-Za-z0-9_@+~./=^-]*)*$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*paste(?: |$)",
 							"case_sensitive": true
 						},
@@ -3557,6 +3597,14 @@
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?npm (?:(?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global) (?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global) (?:.* )?npm(?:@[^ ]+)?(?: |$)|(?:.* )?(?:r|rem(?:o(?:v(?:e)?)?)?|rm|un|uni(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?|unl(?:i(?:n(?:k)?)?)?) (?:.* )?npm(?:@[^ ]+)? (?:.* )?(?:--global|--loca(?:t(?:i(?:o(?:n)?)?)?)?(?:=| )global|-[^- ]*(?:g[^- ]*|Lglobal)|-[^- ]*L[^- ]*(?:=| )global)(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^pandoc (?:.* )?(?:(?:-o |--output(?:=| ))[^ ]*(?i:[.]pdf)|(?:-t|-w) pdf|--(?:to|write)=pdf)(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* pandoc(?: |$)",
 							"case_sensitive": true
 						},
 						{
