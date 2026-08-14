@@ -6,6 +6,7 @@
 .config/fish/functions/fisher.fish
 .config/fish/local.fish
 .config/fish/themes
+.config/gh
 .config/git/allowed_signers
 .config/npm/user.npmrc
 .config/zed/prompts

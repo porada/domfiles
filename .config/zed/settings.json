@@ -1066,6 +1066,78 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^gh (?:(?:--help|--version|help(?: --help)?)|help (?:accessibility|actions|environment|exit-codes|formatting|mintty|reference|telemetry))$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:agent-task|agent-task create|alias|alias delete|alias import|alias list|alias set|api|attestation|attestation download|attestation trusted-root|attestation verify|auth|auth login|auth logout|auth refresh|auth setup-git|auth switch|auth token|browse|cache|cache delete|codespace|codespace code|codespace cp|codespace create|codespace delete|codespace edit|codespace jupyter|codespace ports|codespace ports forward|codespace ports visibility|codespace rebuild|codespace ssh|codespace stop|completion|config|config clear-cache|config get|config list|config set|copilot|discussion|discussion comment|discussion create|discussion edit|extension|extension browse|extension create|extension install|extension list|extension remove|extension search|extension upgrade|gist|gist clone|gist create|gist delete|gist edit|gist rename|gpg-key|gpg-key add|gpg-key delete|issue) --help$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:issue close|issue comment|issue create|issue delete|issue develop|issue edit|issue lock|issue pin|issue reopen|issue transfer|issue unlock|issue unpin|label|label clone|label create|label delete|label edit|licenses|org|pr|pr checkout|pr close|pr comment|pr create|pr edit|pr lock|pr merge|pr ready|pr reopen|pr revert|pr review|pr unlock|pr update-branch|preview|preview prompter|project|project close|project copy|project create|project delete|project edit|project field-create|project field-delete|project item-add|project item-archive|project item-create|project item-delete|project item-edit|project link|project mark-template|project unlink|release|release create|release delete|release delete-asset|release download|release edit|release upload|release verify-asset|repo|repo archive|repo autolink|repo autolink create|repo autolink delete|repo clone|repo create|repo delete) --help$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:repo deploy-key|repo deploy-key add|repo deploy-key delete|repo edit|repo fork|repo gitignore|repo license|repo rename|repo set-default|repo sync|repo unarchive|ruleset|run|run cancel|run delete|run download|run rerun|run watch|search|secret|secret delete|secret set|skill|skill install|skill list|skill preview|skill publish|skill update|ssh-key|ssh-key add|ssh-key delete|variable|variable delete|variable set|workflow|workflow disable|workflow enable|workflow run) --help$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh help (?:agent-task(?: (?:create|list|view))?|alias(?: (?:delete|import|list|set))?|api|attestation(?: (?:download|trusted-root|verify))?|auth(?: (?:login|logout|refresh|setup-git|status|switch|token))?|browse|cache(?: (?:delete|list))?|codespace(?: (?:code|cp|create|delete|edit|jupyter|list|logs|ports(?: (?:forward|visibility))?|rebuild|ssh|stop|view))?|completion|config(?: (?:clear-cache|get|list|set))?|copilot|discussion(?: (?:comment|create|edit|list|view))?|extension(?: (?:browse|create|exec|install|list|remove|search|upgrade))?|gist(?: (?:clone|create|delete|edit|list|rename|view))?|gpg-key(?: (?:add|delete|list))?)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh help (?:issue(?: (?:close|comment|create|delete|develop|edit|list|lock|pin|reopen|status|transfer|unlock|unpin|view))?|label(?: (?:clone|create|delete|edit|list))?|licenses|org(?: list)?|pr(?: (?:checkout|checks|close|comment|create|diff|edit|list|lock|merge|ready|reopen|revert|review|status|unlock|update-branch|view))?)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh help (?:preview(?: prompter)?|project(?: (?:close|copy|create|delete|edit|field-create|field-delete|field-list|item-add|item-archive|item-create|item-delete|item-edit|item-list|link|list|mark-template|unlink|view))?)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh help (?:release(?: (?:create|delete|delete-asset|download|edit|list|upload|verify|verify-asset|view))?|repo(?: (?:archive|autolink(?: (?:create|delete|list|view))?|clone|create|delete|deploy-key(?: (?:add|delete|list))?|edit|fork|gitignore(?: (?:list|view))?|license(?: (?:list|view))?|list|read-dir|read-file|rename|set-default|sync|unarchive|view))?)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh help (?:ruleset(?: (?:check|list|view))?|run(?: (?:cancel|delete|download|list|rerun|view|watch))?|search(?: (?:code|commits|issues|prs|repos))?|secret(?: (?:delete|list|set))?|skill(?: (?:install|list|preview|publish|search|update))?|ssh-key(?: (?:add|delete|list))?|status|variable(?: (?:delete|get|list|set))?|workflow(?: (?:disable|enable|list|run|view))?)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:agent-task (?:list|view)|auth status|cache (?:list|ls)|codespace (?:list|logs|ls|view)|discussion (?:list|ls|view)|gist (?:list|ls|view)|gpg-key (?:list|ls))(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh codespace ports(?:(?: (?:-c|--codespace|-q|--jq|--json|-R|--repo|--repo-owner|-t|--template)(?:=| )[^ ]+))*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:completion (?:(?:-s|--shell) (?:bash|fish|powershell|zsh)|--shell=(?:bash|fish|powershell|zsh))|licenses)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh gist clone (?:[0-9A-Fa-f]+|https://gist[.]github[.]com/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*/)?[0-9A-Fa-f]+) [.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,}))*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:issue (?:list|ls|status|view)|label (?:list|ls)|org (?:list|ls)|pr (?:checks|diff|list|ls|status|view)|project (?:field-list|item-list|list|ls|view))(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:release (?:list|ls|verify|view)|repo (?:autolink (?:list|ls|view)|deploy-key (?:list|ls)|gitignore (?:list|ls|view)|license (?:list|ls|view)|list|ls|read-dir|read-file|view)|ruleset (?:check|list|ls|view)|run (?:list|ls|view))(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh repo clone (?:(?:--no-upstream )?(?:(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)|https://github[.]com/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)(?:[.]git)?) [.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,}))*|(?:(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)|https://github[.]com/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)/(?:[.]*[A-Za-z0-9_][A-Za-z0-9_.-]*)(?:[.]git)?) [.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9_-][A-Za-z0-9_.-]*|[.]{3,}))* --no-upstream)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh repo set-default (?:-v|--view)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:search (?:code|commits|issues|prs|repos)|secret (?:list|ls)|skill search|ssh-key (?:list|ls)|status|variable (?:get|list|ls)|workflow (?:list|ls|view))(?: |$)",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*--(?:help|list-cmds=(?:builtins|parseopt)|man-path|version)$",
 							"case_sensitive": true
 						},
@@ -3268,6 +3340,18 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^gh (?:(?:.* )--web(?:[ =]|$)|(?:agent-task (?:list|view)|codespace (?:list|ls)|discussion (?:list|ls|view)|gist view|issue (?:list|ls|view)|label (?:list|ls)|pr (?:checks|diff|list|ls|view)|project (?:list|ls|view)|release view|repo (?:autolink (?:list|ls)|license view|view)|ruleset (?:check|list|ls|view)|run view|search (?:code|commits|issues|prs|repos)|workflow view)(?: [^ ]+)* -[^- ]*w[^ ]*(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:(?:agent-task view(?: [^ ]+)* --follow(?:[ =]|$))|(?:codespace logs(?: [^ ]+)* (?:--follow(?:[ =]|$)|-[^- ]*f[^ ]*(?: |$)))|(?:pr checks(?: [^ ]+)* (?:--fail-fast(?:[ =]|$)|--interval(?:[ =]|$)|--watch(?:[ =]|$)|-[^- ]*i[^ ]*(?: |$))))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh (?:(?:gist view|pr diff|repo read-file)(?: [^ ]+)* --allow-escape-sequences(?:[ =]|$)|repo read-file(?: [^ ]+)* (?:--clobber(?:[ =]|$)|--output(?:[ =]|$)|-[^- ]*o[^ ]*(?: |$))|run view(?: [^ ]+)* --log(?:-failed)?(?:[ =]|$))",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|--no-optional-locks|--no-pager) )*blame (?:(?:--[^ ]+|-(?:[^- ][^ ]*)?|[^- ][^ ]*) )*(?:--(?:ext(?:-(?:d(?:i(?:f(?:f)?)?)?)?)?|filters|show-s(?:i(?:g(?:n(?:a(?:t(?:u(?:r(?:e)?)?)?)?)?)?)?)?|t(?:e(?:x(?:t(?:c(?:o(?:n(?:v)?)?)?)?)?)?)?)(?: |$)|--op[^ ]*(?:[ =]|$)|--(?:output|u(?:p(?:l(?:o(?:a(?:d(?:-(?:p(?:a(?:c(?:k)?)?)?)?)?)?)?)?)?)?)(?:=| [^ ]+)|-[^- ]*O[^ ]*(?: |$))",
 							"case_sensitive": true
 						},
@@ -3551,6 +3635,10 @@
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*env(?: -| -(?:[0iv]+|[0iv]*u(?:[^ =]+| [^ =]+)))*(?: --)?(?: [^ =]+=[^ ]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^gh auth (?:status(?: [^ ]+)* (?:--show-token(?:[ =]|$)|-[^- ]*t[^ ]*(?: |$))|token(?:$| --$| --help[ =]| (?:-[hu](?:[^ ]+| [^ ]+)|--(?:hostname|user)(?:=| )[^ ]+)(?: |$)))",
 							"case_sensitive": true
 						},
 						{

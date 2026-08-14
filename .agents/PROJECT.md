@@ -20,6 +20,12 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
+### GitHub CLI authentication boundary
+
+`gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store. `domfiles` does not run `gh auth`, provide token environment variables, broaden authentication scopes, or track generated authentication state.
+
+GitHub CLI can fall back to storing a token in plaintext when secure credential storage is unavailable. That fallback is outside the supported boundary for agent use.
+
 ### Zed agent permission model
 
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
@@ -147,6 +153,14 @@ The [protected skill staging workflow](skills/agent-documentation/references/pro
 ### Prompt relays
 
 The [global agent instructions](../.config/zed/AGENTS.md#prompt-relays) define prompt relay delivery and complete-revision defaults. The portable [`agent-documentation` skill](skills/agent-documentation/SKILL.md) owns the complementary [relay composition and evidence standard](skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](skills/agent-documentation/assets/task-relay-prompt.md). The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+
+### GitHub CLI agent integration
+
+The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) owns agent behavior for `gh`.
+
+`gh agent-task` is intentionally unsupported because its preview flags and side effects can change without notice. External task relays remain governed by the global collaboration policy and use a separately selected delivery mechanism.
+
+[Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The global [permission and policy layering rule](../.config/zed/AGENTS.md#permission-and-policy-layering) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
 ### Global system-available tooling
 

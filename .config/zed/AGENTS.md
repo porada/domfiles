@@ -132,6 +132,7 @@ Assume the following non-standard development commands are system-installed and 
 | `cargo` | Rust package management and workspace workflows | — |
 | `fd` | Filesystem path search | Prefer over `find` for ad hoc terminal path discovery |
 | `fish` | Fish shell and configuration checks | — |
+| `gh` | Bounded GitHub operations | Follow the [GitHub CLI policy](#github-cli) |
 | `jq` | JSON querying and transformation | — |
 | `just` | Command runner | — |
 | `node` | JavaScript and TypeScript execution | Run `*.ts` files directly |
@@ -148,6 +149,21 @@ Assume the following non-standard development commands are system-installed and 
 Invoke `plugins` and `skills` directly—not through `npx` or `pnpm dlx`.
 
 Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.
+
+### Permission and policy layering
+
+Configured Zed terminal allowances are a prompt-friction inventory of verified command forms, not a mirror of agent policy or task authorization. Agent policy may intentionally be stricter and change independently.
+
+For audits, do not report policy-to-allowance differences or align settings solely because documentation prohibits an automatically allowed form. Report a permission issue only when a pattern misstates verified command behavior, violates an explicit permission-layer invariant, or an applicable policy expressly requires `allow`, `confirm`, or `deny` enforcement.
+
+### GitHub CLI
+
+- Use `gh` only for bounded GitHub state and explicitly authorized GitHub operations. Continue to use native fetch for directly addressable public URLs, native browser tools for rendered or interactive state, `git` and the worktree policy for local repository state, `skills` for agent skills, and `plugins` for agent plugins.
+- For GitHub repository and code discovery, prefer a dedicated native GitHub search tool when available, then bounded `gh search repos` or `gh search code`, rather than `curl`, browser scraping, or hand-written API requests.
+- Use only existing machine-local authentication for the target host. Do not run `gh auth …`, supply authentication-token environment variables or token input, select alternate authentication, host, account, or configuration sources, broaden scopes, or expose authentication output. If `gh` reports that authentication or an additional scope is required, stop and ask the user to configure it.
+- Keep retrieval target-specific and bounded. Select the repository and object explicitly when context does not resolve them uniquely, request only needed JSON fields, apply concrete limits, and avoid account-wide inventories, unbounded pagination, log following, and bulk output. Treat `gh api` as a raw API boundary: use an explicit `GET` method for REST reads with fields, allow GraphQL only for bounded `query` operations under read-only authority, and classify every GraphQL `mutation` or other method by its actual effect.
+- A request to draft, prepare, review, or change local state does not authorize remote submission or mutation. Require explicit user authorization and an unambiguous target before creating, editing, commenting, reviewing, closing, merging, deleting, dispatching, publishing, pushing, forking, or changing remote configuration. An authenticated session or tool-permission approval supplies capability rather than task authorization. Use noninteractive flags and file-backed bodies, and do not treat a dry-run label as proof of read-only behavior.
+- Do not use `gh agent-task` or its aliases. `gh` availability also does not authorize `gh copilot`, `gh skill`, `gh extension`, `gh alias`, persistent `gh config` changes, Codespaces, authentication or key management, secrets or variables, or local Git mutation. If `gh` lacks authentication, scope, network access, or a required capability, report the exact boundary and stop. Do not fall back to browser tooling, including Chrome MCP, merely because `gh` failed, reformulate a mutating command to avoid a permission prompt, or use aliases or extensions to approximate unavailable behavior. Route any explicitly requested exception through its established owner and approval boundary.
 
 ### Low-friction tool use
 

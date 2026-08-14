@@ -5,7 +5,7 @@ description: Draft, edit, review, and refine accurate package release notes and 
 
 # Package release notes
 
-Do not publish a release, create a tag, or bump a version unless the user explicitly requests that mutation.
+Follow the global [GitHub CLI policy](../../../.config/zed/AGENTS.md#github-cli) when a release uses GitHub. Do not publish a release, create a tag, or bump a version unless the user explicitly requests that mutation.
 
 ## Apply the `Changelog` shorthand
 
