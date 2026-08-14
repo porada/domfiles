@@ -3262,6 +3262,26 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^yq (?:--help|--version|-V|-h|completion --help|e --help|ea --help|eval --help|eval-all --help|help|shell-completion --help)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^yq (?:(?:e|ea|eval|eval-all) )?--security-disable-env-ops --security-disable-file-ops --expression=[^ ]+ (?:--inplace|-i)(?: (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)+$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^yq (?:(?:e|ea|eval|eval-all) )?--security-disable-env-ops --security-disable-file-ops --from-file=(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))* (?:--inplace|-i)(?: (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~-][A-Za-z0-9.@_+~:=^-]*|[.]{3,}))*)+$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^yq (?:completion|shell-completion) (?:bash|fish|powershell|zsh)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^yq (?:(?:e|ea|eval|eval-all) )?--security-disable-env-ops(?: (?:-|-[0CMNPVcehnrv]+|-[0CMNPVcehnrv]*[Ifop](?:[^ ]+| [^- ][^ ]*)|--(?:colors|csv-auto-parse|debug-node-info|exit-status|header-preprocess|help|ini-preserve-quotes|lua-(?:globals|unquoted)|no-(?:colors|doc)|nul-output|null-input|prettyPrint|properties-array-brackets|security-disable-file-ops|string-interpolation|tsv-auto-parse|unwrapScalar|verbose|version|xml-(?:keep-namespace|raw-token|skip-directives|skip-proc-inst|strict-mode)|yaml-(?:compact-seq-indent|fix-merge-anchor-to-spec))(?:=[^ ]*)?|--(?:csv-separator|expression|from-file|front-matter|indent|input-format|lua-(?:prefix|suffix)|output-format|properties-separator|shell-key-separator|xml-(?:attribute-prefix|content-name|directive-name|proc-inst-prefix))(?:=[^ ]*| [^- ][^ ]*)|[^- ][^ ]*))*(?: --(?: .*)?)?$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*zed (?:--help|--version|-help|-version)$",
 							"case_sensitive": true
 						},

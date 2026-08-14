@@ -144,6 +144,7 @@ Assume the following non-standard development commands are system-installed and 
 | `skills` | Agent skill management | — |
 | `taplo` | TOML formatting and validation | — |
 | `yarn` | JavaScript package management | Use for Yarn-based projects |
+| `yq` | YAML querying and transformation | — |
 | `zizmor` | GitHub Actions security reviews | — |
 
 Invoke `plugins` and `skills` directly—not through `npx` or `pnpm dlx`.
