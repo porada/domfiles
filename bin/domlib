@@ -15,7 +15,7 @@ DOMFILES="$(dirname "$DOMFILES_BIN_DIR")"
 # shellcheck disable=SC2034
 DOMFILES_PROJECTS_DIR="$HOME/Projects"
 # shellcheck disable=SC2034
-DOMFILES_SKILLS_DIR="$DOMFILES/.agents/skills"
+DOMFILES_SKILLS_DIR="$DOMFILES/skills"
 
 # Resolve config paths
 DOMFILES_CONFIG_DIR="$DOMFILES/.config"

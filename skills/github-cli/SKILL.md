@@ -1,6 +1,8 @@
 ---
 name: github-cli
 description: Use GitHub CLI for bounded discovery, retrieval, and explicitly authorized GitHub operations. Use whenever a task calls for `gh`, GitHub CLI, `gh search`, `gh api`, or reading or changing GitHub state through the CLI. Covers interface selection, read bounds, API method classification, unsupported command families, and failure handling. Do not use for local Git state, directly addressable public URLs, rendered or interactive browser state, agent skills, or agent plugins.
+metadata:
+    internal: true
 ---
 
 # GitHub CLI

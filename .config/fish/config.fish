@@ -9,7 +9,7 @@ set -g DOMFILES_ZED_CONFIG_DIR "$DOMFILES_CONFIG_DIR/zed"
 set -g DOMFILES (path dirname "$DOMFILES_CONFIG_DIR")
 set -g DOMFILES_BIN_DIR "$DOMFILES/bin"
 set -g DOMFILES_PROJECTS_DIR "$HOME/Projects"
-set -g DOMFILES_SKILLS_DIR "$DOMFILES/.agents/skills"
+set -g DOMFILES_SKILLS_DIR "$DOMFILES/skills"
 
 # Set the default editor
 set -x EDITOR vim -c startinsert

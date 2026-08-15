@@ -38,33 +38,33 @@ static NEXT_TEMPORARY_ID: AtomicU64 = AtomicU64::new(0);
 
 const HELP: &str = concat!(
     "Usage:\n",
-    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --scope exact-hostname --hostname <hostname> --write\n",
-    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --scope subdomains-only --hostname <hostname> --write\n",
-    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --scope exact-hostname-plus-subdomains --hostname <hostname> --write\n",
-    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --scope path-qualified-url --url-prefix <https-url-prefix> --write\n",
+    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --coverage exact-hostname --hostname <hostname> --write\n",
+    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --coverage subdomains-only --hostname <hostname> --write\n",
+    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --coverage exact-hostname-plus-subdomains --hostname <hostname> --write\n",
+    "  fetch-permissions apply --baseline <path> --candidate <path> --state <path> --output <directory> --coverage path-qualified-url --url-prefix <https-url-prefix> --write\n",
     "  fetch-permissions validate --baseline <path> --candidate <path> --state <path> --bundle <path>\n",
     "  fetch-permissions --help\n",
     "\n",
     "Prepare and validate one bounded Zed fetch-permission candidate without making a network request\n",
     "\n",
-    "Hostname scopes add persistent `network_hosts` grants. Each grant covers every port and becomes part of the sandbox network floor for later sandboxed terminal processes. Terminal commands still require their independent terminal permission\n",
+    "Hostname coverage adds persistent `network_hosts` grants. Each grant covers every port and becomes part of the sandbox network floor for later sandboxed terminal processes. Terminal commands still require their independent terminal permission\n",
     "\n",
     "Modes:\n",
     "  apply     Require a byte-identical captured candidate, add one canonical fetch allowance and its authorized sandbox hosts, validate the standard corpus, write bound artifacts, and atomically replace the candidate\n",
     "  validate  Rebuild the expected candidate from the captured baseline and verify the candidate, state binding, exact artifacts, ordering, alignment, and standard corpus\n",
     "\n",
-    "Scope inputs:\n",
-    "  --hostname <hostname>              Lowercase ASCII is canonical. Case variants are normalized. IP literals, ports, userinfo, wildcards, and URL syntax are rejected\n",
-    "  --scope <scope>                     One of `exact-hostname`, `subdomains-only`, `exact-hostname-plus-subdomains`, or `path-qualified-url`\n",
+    "Coverage inputs:\n",
+    "  --coverage <coverage>               One of `exact-hostname`, `subdomains-only`, `exact-hostname-plus-subdomains`, or `path-qualified-url`\n",
+    "  --hostname <hostname>               Lowercase ASCII is canonical. Case variants are normalized. IP literals, ports, userinfo, wildcards, and URL syntax are rejected\n",
     "  --url-prefix <https-url-prefix>     Credential-free canonical ASCII HTTPS path prefix ending in `/`. Use uppercase `%HH` escapes. Ports, queries, fragments, userinfo, encoded slashes, and dot segments use the generic fallback\n",
     "\n",
     "Artifact and mutation options:\n",
-    "  --baseline <path>   Immutable `baseline-settings.json` from permission-candidate capture\n",
-    "  --bundle <path>     Existing `fetch-validation.json` used by `validate`\n",
-    "  --candidate <path>  Captured `candidate-settings.json`. `apply` requires it to equal the baseline before mutation\n",
+    "  --baseline <path>    Immutable `baseline-settings.json` from permission-candidate capture\n",
+    "  --bundle <path>      Existing `fetch-validation.json` used by `validate`\n",
+    "  --candidate <path>   Captured `candidate-settings.json`. `apply` requires it to equal the baseline before mutation\n",
     "  --output <directory> New explicit artifact directory used by `apply`. Existing paths are refused\n",
-    "  --state <path>      Opaque `state.json` from the same capture. Its exact bytes are bound without interpreting its schema\n",
-    "  --write             Required exact mutation guard for `apply`\n",
+    "  --state <path>       Opaque `state.json` from the same capture. Its exact bytes are bound without interpreting its schema\n",
+    "  --write              Required exact mutation guard for `apply`\n",
     "\n",
     "Output contract:\n",
     "  Added regex artifacts contain the exact decoded candidate pattern bytes with no newline, normalization, quoting, or reserialization\n",
@@ -117,7 +117,7 @@ enum HostScopeGroup {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "scope")]
+#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "coverage")]
 enum Request {
     ExactHostname { hostname: String },
     ExactHostnamePlusSubdomains { hostname: String },
@@ -372,9 +372,9 @@ fn required_path(value: Option<PathBuf>, option: &str) -> Result<PathBuf, AppErr
 fn parse_apply_arguments(arguments: Vec<OsString>) -> Result<ApplyArguments, AppError> {
     let mut baseline = None;
     let mut candidate = None;
+    let mut coverage = None;
     let mut hostname = None;
     let mut output = None;
-    let mut scope = None;
     let mut state = None;
     let mut url_prefix = None;
     let mut write = false;
@@ -392,6 +392,11 @@ fn parse_apply_arguments(arguments: Vec<OsString>) -> Result<ApplyArguments, App
                 PathBuf::from(next_value(&mut arguments, "--candidate")?),
                 "--candidate",
             )?,
+            Some("--coverage") => set_once(
+                &mut coverage,
+                utf8_option(next_value(&mut arguments, "--coverage")?, "--coverage")?,
+                "--coverage",
+            )?,
             Some("--hostname") => set_once(
                 &mut hostname,
                 utf8_option(next_value(&mut arguments, "--hostname")?, "--hostname")?,
@@ -401,11 +406,6 @@ fn parse_apply_arguments(arguments: Vec<OsString>) -> Result<ApplyArguments, App
                 &mut output,
                 PathBuf::from(next_value(&mut arguments, "--output")?),
                 "--output",
-            )?,
-            Some("--scope") => set_once(
-                &mut scope,
-                utf8_option(next_value(&mut arguments, "--scope")?, "--scope")?,
-                "--scope",
             )?,
             Some("--state") => set_once(
                 &mut state,
@@ -427,37 +427,35 @@ fn parse_apply_arguments(arguments: Vec<OsString>) -> Result<ApplyArguments, App
     if !write {
         return Err(invalid("Apply requires the exact `--write` guard"));
     }
-    let scope = scope.ok_or_else(|| invalid("Option `--scope` is required"))?;
-    let request = match scope.as_str() {
+    let coverage = coverage.ok_or_else(|| invalid("Option `--coverage` is required"))?;
+    let request = match coverage.as_str() {
         "exact-hostname" => Request::ExactHostname {
             hostname: canonical_hostname(
                 hostname
                     .as_deref()
-                    .ok_or_else(|| invalid("Scope `exact-hostname` requires `--hostname`"))?,
+                    .ok_or_else(|| invalid("Coverage `exact-hostname` requires `--hostname`"))?,
             )?,
         },
         "exact-hostname-plus-subdomains" => Request::ExactHostnamePlusSubdomains {
             hostname: canonical_hostname(hostname.as_deref().ok_or_else(|| {
-                invalid("Scope `exact-hostname-plus-subdomains` requires `--hostname`")
+                invalid("Coverage `exact-hostname-plus-subdomains` requires `--hostname`")
             })?)?,
         },
         "subdomains-only" => Request::SubdomainsOnly {
             hostname: canonical_hostname(
                 hostname
                     .as_deref()
-                    .ok_or_else(|| invalid("Scope `subdomains-only` requires `--hostname`"))?,
+                    .ok_or_else(|| invalid("Coverage `subdomains-only` requires `--hostname`"))?,
             )?,
         },
-        "path-qualified-url" => {
-            Request::PathQualifiedUrl {
-                url_prefix: canonical_url_prefix(url_prefix.as_deref().ok_or_else(|| {
-                    invalid("Scope `path-qualified-url` requires `--url-prefix`")
-                })?)?,
-            }
-        }
+        "path-qualified-url" => Request::PathQualifiedUrl {
+            url_prefix: canonical_url_prefix(url_prefix.as_deref().ok_or_else(|| {
+                invalid("Coverage `path-qualified-url` requires `--url-prefix`")
+            })?)?,
+        },
         _ => {
             return Err(invalid(
-                "Option `--scope` must be `exact-hostname`, `subdomains-only`, `exact-hostname-plus-subdomains`, or `path-qualified-url`",
+                "Option `--coverage` must be `exact-hostname`, `subdomains-only`, `exact-hostname-plus-subdomains`, or `path-qualified-url`",
             ));
         }
     };
@@ -465,12 +463,12 @@ fn parse_apply_arguments(arguments: Vec<OsString>) -> Result<ApplyArguments, App
     match request {
         Request::PathQualifiedUrl { .. } if hostname.is_some() => {
             return Err(invalid(
-                "Scope `path-qualified-url` does not accept `--hostname`",
+                "Coverage `path-qualified-url` does not accept `--hostname`",
             ));
         }
         Request::PathQualifiedUrl { .. } => {}
         _ if url_prefix.is_some() => {
-            return Err(invalid("Hostname scopes do not accept `--url-prefix`"));
+            return Err(invalid("Hostname coverage does not accept `--url-prefix`"));
         }
         _ => {}
     }
@@ -1679,7 +1677,7 @@ fn build_plan(baseline: &Value, request: &Request) -> Result<Plan, AppError> {
     }
     if added_patterns.is_empty() && added_network_hosts.is_empty() {
         return Err(refused(
-            "The selected fetch and sandbox scope is already covered by existing allowances",
+            "Existing allowances already provide the selected fetch and sandbox coverage",
         ));
     }
 
@@ -1737,7 +1735,7 @@ fn build_plan(baseline: &Value, request: &Request) -> Result<Plan, AppError> {
         }
         if !case.intended && baseline_state != candidate_state {
             return Err(invalid(format!(
-                "The candidate changes a boundary case outside the selected scope: `{}`",
+                "The candidate changes a boundary case outside the selected coverage: `{}`",
                 case.name
             )));
         }

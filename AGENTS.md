@@ -24,7 +24,7 @@
 | --- | --- |
 | `.config/zed/AGENTS.md` | Defines global defaults. Applicable project agent instructions override it. |
 | `AGENTS.md` | Defines project instructions, scope, documentation authority, and skill routing. Applicable project instructions override global defaults. |
-| `.agents/skills/*/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to same-directory references. `domfiles-*` skills are repository-scoped. Others are [portable global skills](.agents/PROJECT.md#global-agent-skills). |
+| `.agents/skills/*/` and `skills/*/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to same-directory references. Distribution follows the [skill classification](#skills). |
 | `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |
 
@@ -32,7 +32,7 @@
 
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement. Consult `.agents/PROJECT.md` for non-obvious rationale and maintenance decisions.
 - **Durable knowledge:** Document newly discovered durable project knowledge in `.agents/PROJECT.md` when the task permits that documentation edit. Otherwise report the update as deferred follow-up work.
-- **Ordering:** Keep entries alphabetized when their order is irrelevant.
+- **Ordering:** Keep entries alphabetized when their order is irrelevant. In source, treat a contiguous run of top-level constant declarations as one such list only when their initializers and behavior do not depend on declaration order, and check the complete qualifying run rather than the changed lines alone.
 
 ## Scope
 
@@ -53,6 +53,19 @@
 
 ## Skills
 
+Classify every project-authored skill by its canonical source and supported installation surface. `metadata.internal: true` marks a skill as unsupported for public installation. It does not make tracked source private.
+
+| Category | Canonical source | `metadata.internal` | Supported installation |
+| --- | --- | --- | --- |
+| Internal | `.agents/skills/domfiles-<skill-name>` | `true` | Project-local to `domfiles`. |
+| Global | `skills/<skill-name>` | `true` | Globally exposed through the system established by `domfiles sync`. |
+| Public | `skills/<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
+
+Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
+
+- **Category changes:** Update the canonical location, metadata, documentation links, and synchronization behavior together. Bring a skill’s scripts into conformance with the [portable skill script contract](skills/agent-documentation/references/portable-skill-scripts.md) before promoting it from internal to global, and remove or relocate them before promoting it into the public category.
+- **Installation-safe links:** Apply the [distributed-skill link contract](skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) to every global or public skill.
+- **Script ownership:** Internal and global skills may own scripts. A global skill’s scripts run from this repository through the `domfiles sync` symlink and take every separate project they inspect or change as an explicitly selected target, following the [portable skill script contract](skills/agent-documentation/references/portable-skill-scripts.md). Public skills remain documentation-only because an independently installed copy has no host repository to execute through.
 - **Implementation default:** Write project-authored skill scripts in Rust with `snake_case` source stems, retaining the established `.test.rs` suffix for adjacent contract tests.
 - **Language exception:** Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes it materially more correct, maintainable, or proportionate than Rust.
     - Record the exception and its durable reason in the owning skill before implementation.

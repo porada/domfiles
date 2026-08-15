@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 #[path = "permission_patterns.rs"]
 mod helper;
 
@@ -83,7 +84,6 @@ fn catalog(
             bucket: Bucket::Allow,
             source_index: 7,
             case_sensitive: false,
-            owner_replacement: true,
             sha256: sha256_hex(pattern_bytes),
             pattern_file: pattern_file.to_owned(),
         }],
@@ -135,7 +135,6 @@ fn parses_validates_and_loads_exact_bound_artifact_catalog_bytes() {
     assert_eq!(loaded.patterns.len(), 1);
     assert_eq!(loaded.patterns[0].definition.source_index, 7);
     assert!(!loaded.patterns[0].definition.case_sensitive);
-    assert!(loaded.patterns[0].definition.owner_replacement);
     assert_eq!(loaded.patterns[0].pattern.as_bytes(), pattern_bytes);
     assert_eq!(fs::read(pattern_path).unwrap(), pattern_bytes);
     assert_ne!(loaded.patterns[0].pattern.as_bytes().last(), Some(&b'\n'));
@@ -200,51 +199,25 @@ fn rejects_artifact_catalog_version_fields_as_unknown() {
 }
 
 #[test]
-fn requires_boolean_owner_replacement_on_every_artifact_catalog_pattern() {
-    let valid = serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
-        .expect("Catalog must convert to JSON");
-    let cases = [
-        ("missing", None),
-        ("nonboolean", Some(json!("private-owner-replacement"))),
-    ];
-
-    for (name, replacement) in cases {
-        let mut document = valid.clone();
-        let pattern = document["patterns"][0]
-            .as_object_mut()
-            .expect("Catalog pattern must be an object");
-        match replacement {
-            Some(value) => {
-                pattern.insert("owner_replacement".to_owned(), value);
-            }
-            None => {
-                pattern.remove("owner_replacement");
-            }
-        }
-
-        let error = parse_artifact_catalog(&serde_json::to_vec(&document).unwrap())
-            .expect_err("Invalid owner replacement metadata must be rejected");
-
-        assert!(
-            error.contains("does not match the required schema"),
-            "Unexpected error for `{name}`: {error}"
+fn rejects_aggregate_ownership_metadata_on_an_artifact_catalog_pattern() {
+    // Ownership belongs to the owner spec, so a catalog carrying the former aggregate field is
+    // rejected rather than silently accepted.
+    let mut document =
+        serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
+            .expect("Catalog must convert to JSON");
+    document["patterns"][0]
+        .as_object_mut()
+        .expect("Catalog pattern must be an object")
+        .insert(
+            "owner_replacement".to_owned(),
+            json!("private-owner-replacement"),
         );
-        assert!(!error.contains("private-owner-replacement"));
-    }
-}
 
-#[test]
-fn propagates_exact_owner_replacement_values() {
-    for expected in [false, true] {
-        let mut document =
-            serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
-                .expect("Catalog must convert to JSON");
-        document["patterns"][0]["owner_replacement"] = json!(expected);
-        let parsed = parse_artifact_catalog(&serde_json::to_vec(&document).unwrap())
-            .expect("Boolean owner replacement metadata must parse");
+    let error = parse_artifact_catalog(&serde_json::to_vec(&document).unwrap())
+        .expect_err("Aggregate ownership metadata must be rejected");
 
-        assert_eq!(parsed.patterns[0].owner_replacement, expected);
-    }
+    assert!(error.contains("does not match the required schema"));
+    assert!(!error.contains("private-owner-replacement"));
 }
 
 #[test]
@@ -549,4 +522,193 @@ fn tracks_all_issues_as_omitted_when_the_limit_is_zero() {
     assert!(issues.issues().is_empty());
     assert_eq!(issues.total_count(), 2);
     assert_eq!(issues.omitted_count(), 2);
+}
+
+fn suite_closure_paths(root: &std::path::Path, manifest: &std::path::Path) -> Vec<String> {
+    let mut builder =
+        helper::InputClosureBuilder::new(root).expect("Graph root must be a directory");
+    let context = helper::ClosureContext { overlay: None };
+    helper::resolve_suite_closure(&mut builder, &context, manifest)
+        .expect("Suite closure must resolve");
+
+    builder
+        .finish()
+        .expect("Suite closure must finish")
+        .records
+        .into_iter()
+        .map(|record| record.path)
+        .collect()
+}
+
+#[test]
+fn records_suite_inputs_whose_paths_contain_the_field_separator() {
+    let fixture = Fixture::new();
+    // The suite evaluator reads a case input with a bounded `splitn`, so a tab inside the path stays
+    // part of the path. The closure must record the same file rather than dropping the record.
+    let input = fixture.write("case\tone.txt", b"fx alpha");
+    let pattern_file = fixture.write("pattern.regex", b"^fx alpha$");
+    let manifest = fixture.write(
+        "suite.tsv",
+        concat!(
+            "default\tconfirm\n",
+            "pattern\tp1\talways_allow\tcase-sensitive\tpattern.regex\n",
+            "pattern-case-file\tp1\tmatch\tcase\tone.txt\n",
+            "decision-case-file\tallow\tcase\tone.txt\n"
+        )
+        .as_bytes(),
+    );
+    assert!(input.is_file() && pattern_file.is_file());
+
+    let recorded = suite_closure_paths(&fixture.root, &manifest);
+
+    assert!(
+        recorded.contains(&"case\tone.txt".to_owned()),
+        "{recorded:?}"
+    );
+    assert!(
+        recorded.contains(&"pattern.regex".to_owned()),
+        "{recorded:?}"
+    );
+    assert!(recorded.contains(&"suite.tsv".to_owned()), "{recorded:?}");
+}
+
+#[test]
+fn refuses_a_suite_manifest_record_the_closure_cannot_represent() {
+    let fixture = Fixture::new();
+    let manifest = fixture.write(
+        "suite.tsv",
+        b"default\tconfirm\nunsupported-record\tp1\tsomewhere.txt\n",
+    );
+
+    let mut builder =
+        helper::InputClosureBuilder::new(&fixture.root).expect("Graph root must be a directory");
+    let context = helper::ClosureContext { overlay: None };
+    let error = helper::resolve_suite_closure(&mut builder, &context, &manifest)
+        .expect_err("An unrepresentable record must refuse");
+
+    assert!(error.contains("unsupported record type"), "{error}");
+}
+
+fn transformation(
+    prefix: &str,
+    baseline_middle: &str,
+    candidate_middle: &str,
+    suffix: &str,
+) -> helper::VisibilityTransformation {
+    helper::VisibilityTransformation {
+        prefix: prefix.to_owned(),
+        baseline_middle: baseline_middle.to_owned(),
+        candidate_middle: candidate_middle.to_owned(),
+        suffix: suffix.to_owned(),
+    }
+}
+
+#[test]
+fn a_visibility_rewrite_accepts_a_reordered_literal_alternation() {
+    let transformation = transformation("^git ", "(?:add|rm)", "(?:rm|add)", "$");
+
+    helper::verify_visibility_transformation(
+        &transformation,
+        "^git (?:add|rm)$",
+        "^git (?:rm|add)$",
+    )
+    .expect("An equal literal expansion must be accepted");
+}
+
+#[test]
+fn a_visibility_rewrite_accepts_an_equivalent_optional_group() {
+    let transformation = transformation("^p ", "a?b", "(?:a)?b", "$");
+
+    helper::verify_visibility_transformation(&transformation, "^p a?b$", "^p (?:a)?b$")
+        .expect("Optional literals and optional groups must expand alike");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_a_different_literal_expansion() {
+    let transformation = transformation("^git ", "(?:add|rm)", "(?:add|mv)", "$");
+
+    let error = helper::verify_visibility_transformation(
+        &transformation,
+        "^git (?:add|rm)$",
+        "^git (?:add|mv)$",
+    )
+    .expect_err("A changed literal set must refuse");
+
+    assert!(
+        error.contains("expand to different literal sets"),
+        "{error}"
+    );
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_bare_alternation_in_a_middle() {
+    // `^x a|b$` is not equivalent to `^x (?:a|b)$`, so an ungrouped `|` must never expand.
+    let transformation = transformation("^x ", "(?:a|b)", "a|b", "$");
+
+    let error = helper::verify_visibility_transformation(&transformation, "^x (?:a|b)$", "^x a|b$")
+        .expect_err("Bare alternation must refuse");
+
+    assert!(error.contains("accepts only literals"), "{error}");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_a_suffix_that_quantifies_the_middle() {
+    // `ab*` quantifies only `b`, while `(?:ab)*` quantifies the whole middle.
+    let transformation = transformation("", "ab", "(?:ab)", "*");
+
+    let error = helper::verify_visibility_transformation(&transformation, "ab*", "(?:ab)*")
+        .expect_err("A quantifier bound to the middle must refuse");
+
+    assert!(error.contains("quantifier that would bind"), "{error}");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_a_boundary_inside_a_character_class() {
+    let transformation = transformation("[a", "b", "(?:b)", "]c");
+
+    let error = helper::verify_visibility_transformation(&transformation, "[ab]c", "[a(?:b)]c")
+        .expect_err("A split inside a character class must refuse");
+
+    assert!(error.contains("supported split point"), "{error}");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_a_boundary_inside_an_escape_pair() {
+    let transformation = transformation("a\\", "d", "(?:d)", "b");
+
+    let error = helper::verify_visibility_transformation(&transformation, "a\\db", "a\\(?:d)b")
+        .expect_err("A split between an escape and its escapee must refuse");
+
+    assert!(error.contains("supported split point"), "{error}");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_affixes_that_do_not_reconstruct_a_member() {
+    let transformation = transformation("^x ", "a", "(?:a)", "$");
+
+    let error = helper::verify_visibility_transformation(&transformation, "^y a$", "^x (?:a)$")
+        .expect_err("Affixes that do not rebuild the baseline must refuse");
+
+    assert!(error.contains("reconstruct the baseline member"), "{error}");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_a_nested_group() {
+    let transformation = transformation("", "(?:a(?:b))", "(?:ab)", "");
+
+    let error = helper::verify_visibility_transformation(&transformation, "(?:a(?:b))", "(?:ab)")
+        .expect_err("A nested group must refuse rather than be approximated");
+
+    assert!(error.contains("Nested transformation groups"), "{error}");
+}
+
+#[test]
+fn a_visibility_rewrite_refuses_an_unbounded_literal_expansion() {
+    let middle = "(?:a|b)".repeat(9);
+    let transformation = transformation("", &middle, &middle, "");
+
+    let error = helper::verify_visibility_transformation(&transformation, &middle, &middle)
+        .expect_err("An expansion beyond the bound must refuse");
+
+    assert!(error.contains("more than"), "{error}");
 }

@@ -16,12 +16,12 @@ When the user explicitly requests an allowance for a named domain or URL, apply 
 
 1. Parse the literal request without network access. Reject non-HTTPS URLs and URLs containing credentials, passwords, secret-bearing path, query, or fragment values, tokens, or userinfo. Never copy or normalize such material into settings or task artifacts. Ask for a credential-free URL or domain scope instead.
 2. For a domain or hostname request, require the request to select exact hostname, subdomains only, or exact hostname plus subdomains. Do not infer subdomain access from the word “domain.” The established authorization includes the corresponding persistent, all-port sandbox scope, so do not ask the user to reselect that boundary for each hostname.
-3. Apply the selected hostname scope exactly:
+3. Apply the selected hostname coverage exactly:
     - Exact hostname: `^(?i:https://domain\.example)(?:[/?#]|$)` and `domain.example`.
     - Subdomains only: `^(?i:https://(?:[^./?#:@]+\.)+domain\.example)(?:[/?#]|$)` and `*.domain.example` only.
     - Exact hostname plus subdomains: `^(?i:https://(?:[^./?#:@]+\.)*domain\.example)(?:[/?#]|$)` plus both `*.domain.example` and `domain.example`.
-4. For a URL request, preserve only the explicitly approved hostname, port, path, query, and fragment constraints. Allow descendants only when the request or an established pattern clearly selects a subtree. Omit `network_hosts` unless the user separately widens the request to hostname scope.
-5. Reuse an equivalent existing allowance rather than adding a duplicate. Order the complete fetch array by the parent skill’s [represented-hostname rule](../SKILL.md#apply-the-general-policy), without grouping by hostname scope. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname.
+4. For a URL request, preserve only the explicitly approved hostname, port, path, query, and fragment constraints. Allow descendants only when the request or an established pattern clearly selects a subtree. Omit `network_hosts` unless the user separately widens the request to hostname coverage.
+5. Reuse an equivalent existing allowance rather than adding a duplicate. Order the complete fetch array by the parent skill’s [represented-hostname rule](../SKILL.md#apply-the-general-policy), without grouping by hostname coverage. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname.
 
 A fetch-tool allowance and a sandbox hostname grant remain independent. An explicit-port URL falls through the canonical hostname fetch pattern to `confirm` even though the persistent sandbox grant already covers that hostname and port. A sandbox grant neither authorizes a terminal command nor bypasses terminal permission evaluation.
 
@@ -29,12 +29,12 @@ Zed’s native fetch tool applies configured fetch patterns to the initial URL, 
 
 ## Choose the fetch fast path
 
-Use `scripts/fetch_permissions.rs` for one canonical addition in any of these bounded scopes:
+Use `scripts/fetch_permissions.rs` for one canonical addition whenever the requested coverage is one of these:
 
 - Exact hostname.
 - Exact hostname plus subdomains.
+- Path-qualified URL, given a credential-free canonical ASCII HTTPS path prefix ending in `/`, with uppercase `%HH` escapes and no port, query, fragment, userinfo, encoded slash, or dot segment.
 - Subdomains only.
-- A credential-free canonical ASCII HTTPS path prefix ending in `/`, with uppercase `%HH` escapes and no port, query, fragment, userinfo, encoded slash, or dot segment.
 
 The fast path owns canonical pattern generation, candidate insertion, represented-hostname ordering, duplicate and equivalent-coverage detection, fetch and sandbox alignment, exact pattern artifacts, and the standard decision corpus. For supported inputs, its complete-array audit and candidate comparison satisfy the fetch branch’s ownership, matching, comparison, and configured-decision checks. Do not construct a terminal owner manifest, add an unrelated terminal sentinel, inventory terminal indexes, or prepare a separate task-local matcher suite.
 
@@ -44,14 +44,14 @@ Use the generic [permission evaluator](permission-evaluator.md) instead when the
 
 ## Prepare a fast-path candidate
 
-Run the candidate binary with `--help` and follow its current schema without copying that schema into this reference. Capture from the latest live settings with an empty terminal-pattern selection and these authorized scopes:
+Run the candidate binary with exact `--help` for current invocation syntax. Follow [CLI contract authority](permission-evaluator.md#resolve-cli-contract-authority) without copying its schema into this reference. Capture from the latest live settings with an empty terminal-pattern selection and these authorized scopes:
 
-- For a hostname scope, select `/agent/tool_permissions/tools/fetch/always_allow` and `/agent/sandbox_permissions/network_hosts`.
-- For a path-qualified scope, select only `/agent/tool_permissions/tools/fetch/always_allow`.
+- For hostname coverage, select `/agent/tool_permissions/tools/fetch/always_allow` and `/agent/sandbox_permissions/network_hosts`.
+- For path-qualified coverage, select only `/agent/tool_permissions/tools/fetch/always_allow`.
 
 Verify the capture against live settings before applying the fast path. Keep `baseline-settings.json` and `state.json` immutable, and require `candidate-settings.json` to remain byte-identical to the baseline until the fast-path invocation.
 
-For a hostname scope, run the applicable form:
+For hostname coverage, run the applicable form:
 
 ```sh
 cargo run --locked --quiet \
@@ -61,12 +61,12 @@ cargo run --locked --quiet \
     --candidate '<capture-path>/candidate-settings.json' \
     --state '<capture-path>/state.json' \
     --output '<fetch-artifact-directory>' \
-    --scope exact-hostname \
+    --coverage exact-hostname \
     --hostname '<hostname>' \
     --write
 ```
 
-Replace `exact-hostname` with `subdomains-only` or `exact-hostname-plus-subdomains` when that is the selected scope.
+Replace `exact-hostname` with `subdomains-only` or `exact-hostname-plus-subdomains` when that is the selected coverage.
 
 For a supported path prefix, run:
 
@@ -78,7 +78,7 @@ cargo run --locked --quiet \
     --candidate '<capture-path>/candidate-settings.json' \
     --state '<capture-path>/state.json' \
     --output '<fetch-artifact-directory>' \
-    --scope path-qualified-url \
+    --coverage path-qualified-url \
     --url-prefix '<credential-free-https-url-prefix>' \
     --write
 ```
@@ -89,7 +89,7 @@ Diagnostics for unknown modes and options omit the supplied values. Regex compil
 
 ## Validate and promote the candidate
 
-Materialize a scope-only candidate catalog through the current permission-candidate contract with an empty terminal-pattern selection. This catalog binds the same candidate and state without inventing URL ownership in the terminal arrays.
+Materialize a scope-only candidate catalog through the current permission-candidate contract with an empty terminal-pattern selection. The resulting empty catalog binds the candidate and state without inventing URL ownership in the terminal arrays.
 
 Validate the fetch bundle:
 
@@ -107,16 +107,18 @@ cargo run --locked --quiet \
 
 Resolve any extension, profile, release-channel, operating-system, or server settings that participate in the effective permission layers through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior). Use the generic fallback when those layers add an affected fetch rule or sandbox host that the candidate file cannot represent.
 
-Immediately before promotion, rerun candidate freshness verification against live settings. Promote only with the untouched scope-only catalog, candidate, and state through the guarded permission-candidate workflow. Candidate promotion retains exact-byte binding, authorized-scope enforcement, the final live-byte recheck, and atomic replacement.
+A scope-only candidate requires no generic terminal validation results. Create the candidate validation manifest with an empty `results` array, then seal the exact candidate, state, empty catalog, empty owner specification, and validation manifest into one bundle through [Build and promote a permission candidate](permission-evaluator.md#build-and-promote-a-permission-candidate). Run bundle preflight and stop until the user explicitly authorizes promotion.
+
+After approval, promote with the untouched sealed bundle. Promotion retains exact-byte binding, authorized-scope enforcement, the final live-byte recheck, and atomic replacement. When live settings have drifted but the reviewed scope-only transformation remains replayable, use the generic bundle refresh workflow instead of manually rebuilding or editing indexes.
 
 ## Standard fetch corpus
 
-The fast path always checks the selected pattern independently and reconstructs the complete configured fetch decision. Every hostname scope includes:
+The fast path always checks the selected pattern independently and reconstructs the complete configured fetch decision. Hostname coverage always includes:
 
 - Intended HTTPS hosts, including scheme and hostname case variants and material hostname-boundary suffixes.
 - HTTP, explicit ports, userinfo, lookalike broader hostnames, and every unapproved apex or subdomain form.
 
-Exact-hostname validation includes the apex plus path, query, and fragment starts at the hostname boundary. Subdomain scopes include one and multiple descendant levels, with the apex classified according to the selected scope. Path-qualified validation adds the exact prefix, a descendant, a sibling path, a path case variant when the path contains letters, and the hostname boundary cases above.
+Exact-hostname validation includes the apex plus path, query, and fragment starts at the hostname boundary. Subdomain coverage includes one and multiple descendant levels, with the apex classified according to the selected coverage. Path-qualified validation adds the exact prefix, a descendant, a sibling path, a path case variant when the path contains letters, and the hostname boundary cases above.
 
 For each boundary case, the complete baseline and candidate bucket states and final decision must remain equal. Every intended case must resolve to `allow` after deny and confirm precedence. This proves the configured fetch-layer transition only. Sandbox authorization, terminal permission, DNS filtering, platform support, and runtime settings layers remain independent execution boundaries.
 

@@ -51,23 +51,25 @@
 
 ## Communication
 
-- **Actionability:** Make every response immediately actionable.
-    - Begin final responses with the result or the smallest useful next action.
+- **Response contract:** Unless the user requests explanation or detail, limit task-completing responses to the result or problem, material caveats or limitations, and required user actions or decisions. Omit generic preambles, process narration, praise, positive commentary, repeated context, redundant recaps, optional next steps, and closing pleasantries.
+- **Actionability:** Make any required user action or decision immediately apparent.
+    - Begin final responses with the result, problem, required decision, or smallest useful next action.
     - Put a requested command, path, or snippet before supporting explanation.
     - When user action remains, end with one small, concrete action they can take immediately.
-- **Progress structure:** Keep multi-step work visible.
+- **Progress structure:** Keep multi-step work visible without repeating prior updates.
     - Use the shortest complete numbered sequence, with one bounded action per item.
     - When a plan tool is available, keep one item in progress and preserve state there rather than repeating it in prose.
-    - Across turns, state what finished, what is current, and what comes next.
-- **Focus:** Resolve incidental questions without involving the user when possible and incorporate the answers into the current work. Defer unrelated observations until the task is complete, then mention them separately and briefly. After three consecutive failed attempts, stop repeating the approach, identify the assumption that may be wrong, and ask one focused diagnostic question.
-- **Outcomes:** State outcomes as positive conditions rather than as the absence of a negative condition. Treat negating a negative-state term such as `blocked`, `failed`, `incomplete`, `missing`, or `unresolved` as a double negative, and name the resulting state directly. State what now works and include verification evidence only when it materially establishes the result. Describe errors with the evidence, known cause, and next corrective action. Give a concrete range and its assumptions when a time estimate would help the user plan.
+    - Across progress updates, report only what changed: what finished, what is current, and what comes next.
+- **Focus:** Resolve incidental questions without involving the user when possible and incorporate only answers needed for the current task. Mention an unrelated observation only when it materially affects correctness, safety, or the next action. After three consecutive failed attempts, stop repeating the approach, identify the assumption that may be wrong, and ask one focused diagnostic question.
+- **Reviews:** When reviewing commits, never assess or mention commit messages. Review responses contain only findings and applicable validation limitations. Omit praise, positive observations, and summaries of correct behavior. When there are no findings, state that directly.
+- **Outcomes:** Name the resulting state directly rather than negating a negative-state term such as `blocked`, `failed`, `incomplete`, `missing`, or `unresolved`. Report only outcomes that change the user’s state or materially establish completion. Describe errors with the evidence, known cause, and next corrective action. Give a concrete range and its assumptions when the user requests a time estimate or must plan around it.
 - **Validation reporting:** Keep routine validation silent.
     - Do not report passing diagnostics, formatting, linting, typechecking, or whitespace checks individually.
     - Treat each applicable unmentioned check as run and passed. Report any check that was skipped, unavailable, incomplete, or not run.
     - Report failures, warnings, and validation limitations directly.
     - Mention a successful check only when it materially demonstrates requested behavior or the user asks for validation details.
     - Do not report routine preservation of unrelated or protected files unless a conflict affected the task or the user asks.
-- **Scanability:** Keep lists to five items or fewer, splitting longer lists into immediate and later or optional groups. Avoid generic preambles, redundant recaps, closing pleasantries, figurative language, and hedging that adds no information. Give full explanations when requested. Safety, real ambiguity, task requirements, and higher-priority instructions override brevity.
+- **Scanability:** Keep lists to five items or fewer, splitting longer lists into immediate and later or optional groups. Use only the formatting needed to make the result, problem, or required action easy to find. Avoid figurative language and empty hedging. Give full explanations when requested. Safety, real ambiguity, task requirements, and higher-priority instructions override brevity.
 
 ## Dependencies
 
@@ -82,6 +84,7 @@
 - **README gate:** Never edit a consumer-facing `README` without explicit user permission.
 - **Block layout:** In Markdown, keep standalone blocks such as tables and fenced code aligned to the document’s left edge. Restructure surrounding lists or blocks to reference them rather than nesting them.
 - **Canonical ownership:** Give each durable detail one canonical home and link to it rather than paraphrasing it elsewhere.
+- **Shared agent instructions:** Never edit `CLAUDE.md`. Put agent instructions in the applicable `AGENTS.md` or shared skill so every supported agent is governed by the same canonical documentation.
 - **Precedence:** Applicable project agent instructions override these global instructions.
 - **Violation citations:** Always reference the applicable `AGENTS.md` line number when reporting a violation.
 - **Findings:** Support every reported issue with concrete evidence relevant to the current task. Do not report speculation or alternatives based only on preference, or issues intentionally suppressed with valid linter comments. Assign each issue a unique number when first reported and preserve that number in subsequent reports.
@@ -111,7 +114,7 @@
 | `pandoc` | Document format conversion | — |
 | `plugins` | Agent plugin installation | — |
 | `pnpm` | JavaScript package management | Preferred. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`. Use `exec` for local binaries and `dlx` for undeclared one-offs |
-| `rg` | File-content search | — |
+| `rg` | File-content search | Always pass `--no-config` |
 | `rustc` | Direct Rust compilation | Use for standalone source files |
 | `shellcheck` | Shell-script analysis | — |
 | `skills` | Agent skill management | — |
@@ -155,7 +158,7 @@
 ## Writing
 
 - **Suppressions:** Write suppression directives as `/* … */` block comments when both the language and relevant tool accept that form, including `/* oxlint-disable-next-line rule/name */`, `/* prettier-ignore */`, and `/* @ts-expect-error */`. Use the tool-required syntax otherwise. Do not add explanatory text unless applicable repository or linter policy requires it.
-- **Prose:** Avoid semicolons, use typographic “quotation marks” and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it.
+- **Prose:** Avoid semicolons, use typographic “quotation marks” and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it. Apply this to every prose surface, including documentation, source comments, and human-facing strings such as help output, diagnostics, and test titles.
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
 - **Numbering:** For nonconsecutive numbered items, write every number explicitly in the item text rather than relying on Markdown ordered-list numbering.
 - **Code tokens:** Wrap identifiers, paths, commands, and quoted code tokens in backticks.

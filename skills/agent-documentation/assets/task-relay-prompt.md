@@ -4,7 +4,7 @@ Use only already-inspected conversation context and artifacts. Do not call tools
 
 ## Output
 
-- Put each relay in its own four-backtick `markdown` block under `# Relay Prompt` or a descriptive numbered relay heading.
+- Put each relay in its own three-backtick `markdown` block under `# Relay Prompt` or a descriptive numbered relay heading. Raise the fence to four backticks only when the relay itself contains a three-backtick code block.
 - Begin each block with `# <task-name> Task Relay` and `**Receiving action:**`.
 - After one relay, write `The prompt is ready for relay.` After multiple relays, write `All prompts are ready for relay.`
 - Keep all relayed text inside its block. When revising relays, return every affected relay in full, omit unrelated unchanged relays, and never return a patch, fragment, or splicing instructions.

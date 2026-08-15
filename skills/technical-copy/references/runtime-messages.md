@@ -19,7 +19,7 @@ Apply the entrypoint’s [standard path](../SKILL.md#use-the-standard-path) befo
 ## Add actionable context
 
 - Include the consumer-facing source filepath when it identifies the failing input, especially in multi-file operations. Keep it in the headline, preserve it exactly, and do not substitute a synthetic internal path.
-- Apply the global [token-formatting rule](../../../../.config/zed/AGENTS.md#writing) only when the prose refers to a value as a path, identifier, option, format, or other code token. A word matching a symbol name does not by itself require identifier framing.
+- Apply the token-formatting rule in the global “Writing” policy only when the prose refers to a value as a path, identifier, option, format, or other code token. A word matching a symbol name does not by itself require identifier framing.
 - Add the exact case, expected or received values, or a reason only when they help the intended reader act and are appropriate to expose on that surface. When the audience or exposure boundary is unclear, omit exact values rather than assuming they are safe to reveal.
 - For a known contract incompatibility, name the unsupported property and present expected values before the received value. Adapt the wording when several values are accepted.
 - Replace internal architecture language with the concrete consumer-facing incompatibility when evidence establishes one. Do not replace it with another broad claim such as universal inability to use a component.

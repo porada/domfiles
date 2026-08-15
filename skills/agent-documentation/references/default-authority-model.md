@@ -5,6 +5,6 @@ Use this fallback only when a project has not defined its own agent-documentatio
 | Surface | Default authority and ownership |
 | --- | --- |
 | `AGENTS.md` | Defines project instructions, scope, documentation authority, and skill routing. Applicable project instructions override global defaults. |
-| Project-authored `.agents/skills/*/` | Define delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. Follow the [skill composition rules](../SKILL.md#compose-the-change) for entrypoints and conditional references. |
+| Project-authored `.agents/skills/*/` and `skills/*/` | Define delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. Follow the [skill composition rules](../SKILL.md#compose-the-change) for entrypoints and conditional references. |
 | `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |

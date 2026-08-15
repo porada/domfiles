@@ -1,6 +1,8 @@
 ---
 name: agent-documentation
-description: Edit, review, audit, and maintain agent documentation and the observable contracts of project-authored skill scripts, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` documentation, prompt-relay assets, reusable script interfaces and artifacts, and adjacent contract tests. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-script contract architecture. Load it for project-authored skill-script work, but defer internal implementation quality to the applicable language or domain workflow. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
+description: Edit, review, audit, and maintain agent documentation and the observable contracts of project-authored skill scripts, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` and `skills/*` documentation, prompt-relay assets, reusable script interfaces and artifacts, and adjacent contract tests. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-script contract architecture. Load it for project-authored skill-script work, but defer internal implementation quality to the applicable language or domain workflow. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
+metadata:
+    internal: true
 ---
 
 # Project agent documentation and skill scripts
@@ -13,6 +15,15 @@ Apply every applicable global and project instruction. Treat project instruction
 - Write instructions that require no conversational context. Define non-obvious terms, and keep consuming-project documentation independent of this skill, its canonical repository, and its installation path.
 - Keep guidance needed by most invocations on the direct path. Defer a coherent conditional rule set only when the saved routine context outweighs the added navigation.
 - Remove duplicated normative guidance while retaining safety-critical summaries, routing context, surface-specific applications, examples, and declarative rationale.
+- Give any identifier scheme referenced from code or documentation, such as numbered checks or requirement labels, one canonical definition in the same repository. Drop the identifiers when no such definition exists, because a reader cannot resolve the reference or tell which members are missing.
+
+## Keep distributed skill links installation-safe
+
+For a skill with a supported installation outside its canonical repository:
+
+- Keep relative links within the installed skill directory or a sibling skill guaranteed by the supported installation.
+- Do not use relative links that leave the installed skills root or target a client-specific global-instruction path. Refer to an already-loaded global policy by its stable policy or section name instead.
+- Keep public skill behavior independent of domfiles-managed policy and sibling skills. Resolve optional peer integrations conditionally and retain complete local guidance for the advertised behavior.
 
 ## Resolve the local documentation model
 
@@ -31,6 +42,7 @@ Apply every applicable global and project instruction. Treat project instruction
 - For an explicit change, including a request that also uses review or audit language, use the change workflow. Treat inspection as the evidence-gathering phase, then resolve the canonical owner, compose the change, and validate the final contents.
 - For a standalone ordinary review, keep the task read-only. Resolve the canonical owner and validate the existing contents, but skip composition, formatting, and every mutation.
 - For a standalone audit, keep the task read-only. Follow an applicable project audit workflow when one exists. Otherwise start from Git-tracked paths, add only explicitly named untracked documentation when local policy permits it, inspect the resolved documentation scope, report findings, and stop without formatting or mutation.
+- When reviewing a change against a file-scoped policy such as ordering, naming, or prose punctuation, evaluate the complete file rather than the diff alone. A diff-only pass reports whichever violations the change happened to touch and silently accepts the rest.
 - Load applicable project and domain skills according to local routing immediately before the pass that requires them.
 
 ## Resolve the canonical owner
@@ -58,7 +70,7 @@ After capturing all task-authorized documentation updates intended for the curre
 
 1. Reread every applicable `AGENTS.md` file and each in-scope documentation file.
 2. Search applicable project-authored agent documentation for the affected identifiers and concepts. Confirm that one normative definition remains and every secondary mention links to it.
-3. Verify every relevant project-relative link, heading anchor, and skill frontmatter name. Before renaming or deleting a heading, search project-authored agent documentation for links to its current anchor and update those links in the same change or preserve the heading.
+3. Verify every relevant project-relative link, heading anchor, and skill frontmatter name. For a skill with a supported installation outside its canonical repository, resolve every relative link from each supported installation root and reject links that escape the installed skills tree or target an unavailable peer. Before renaming or deleting a heading, search project-authored agent documentation for links to its current anchor and update those links in the same change or preserve the heading.
 4. For a change, run targeted diagnostics and `git diff --check` for the changed documentation without formatting unrelated files. Inspect task-owned untracked documentation directly because Git diff checks do not include it. Do not stage files solely for validation.
 5. For a review, use only read-only diagnostics and identify anything that could not be verified.
 

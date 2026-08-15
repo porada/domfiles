@@ -26,6 +26,12 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 GitHub CLI can fall back to storing a token in plaintext when secure credential storage is unavailable. That fallback is outside the supported boundary for agent use.
 
+### Ripgrep configuration isolation
+
+`rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs an arbitrary program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) requires `--no-config` on every agent invocation.
+
+[Zed settings](../.config/zed/settings.json) enforce the same boundary independently, because every ripgrep search allowance requires the literal `--no-config` token and unflagged invocations fall through to the terminal’s confirm-by-default boundary. The permission layer matches command text and cannot observe the environment, so requiring the flag is the only reliable way to establish that no configuration file participates.
+
 ### Zed agent permission model
 
 Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
@@ -60,6 +66,10 @@ Bulk value listings through `git config list`, its legacy `--list` and `-l` form
 
 Operational `cargo clean` and nightly or experimental execution remain confirmable when prefixed by the assignment. Credential-denial patterns intentionally accept any literal no-space `CARGO_TARGET_DIR` value so an unsupported target cannot turn a denied Cargo form into an approvable one. [Zed settings](../.config/zed/settings.json) remain canonical for exact command grammar.
 
+### Zed command discovery defaults
+
+Terminal discovery forms require verified exit-only behavior regardless of spelling. Long and single-dash options can be operational flags or ordinary operands, so an exact, end-anchored form qualifies only when it exits without entering an interactive mode, mutating state, reading input, or starting normal execution. A verified unsupported form may qualify when it terminates without prompting. This fail-closed boundary lets each executable own its discovery forms without treating option-like spelling as evidence of safety.
+
 ### Zed fetch and sandbox host scope
 
 An explicit domain or hostname allowance authorizes the corresponding persistent `agent.sandbox_permissions.network_hosts` scope. Zed matches those grants by case-insensitive hostname without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port persistence is intentional. Terminal commands remain subject to their independent terminal permissions, while explicit-port fetch URLs remain outside the canonical hostname fetch pattern unless separately allowed at the fetch-tool layer.
@@ -91,10 +101,6 @@ The exact `regex` crate version pinned in `Cargo.toml` was verified against Zed 
 The automatic `printenv` allowance is limited to the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
 
 The automatic denial covers exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names ending case-insensitively in `_KEY`, `_PASSPHRASE`, `_PASSWORD`, `_PROXY`, `_SECRET`, or `_TOKEN`, wildcard-bearing variable operands, and zero-name output from either a bare invocation or exact `--`. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
-
-### Zed command discovery defaults
-
-Terminal discovery forms require verified exit-only behavior regardless of spelling. Long and single-dash options can be operational flags or ordinary operands, so an exact, end-anchored form qualifies only when it exits without entering an interactive mode, mutating state, reading input, or starting normal execution. A verified unsupported form may qualify when it terminates without prompting. This fail-closed boundary lets each executable own its discovery forms without treating option-like spelling as evidence of safety.
 
 ### Zed temporary archive staging
 
@@ -140,35 +146,49 @@ Zed authorizes the `xargs` shell segment before standard input becomes child-com
 
 ## Agent integration
 
-### Global agent skills
+### Skill distribution
 
-Skills tracked under `.agents/skills` without the `domfiles-` prefix are portable global skills whose canonical sources live in this repository. They are not scoped to `domfiles`. `domfiles sync` exposes selected portable skills through the user’s global skill directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations.
+The [skill distribution contract](../AGENTS.md#skills) classifies project-authored skills as internal, global, or public by canonical source and supported installation surface. Every tracked skill remains subject to the repository’s public-disclosure boundary. `metadata.internal: true` identifies an unsupported public installation surface rather than confidential content or access control.
 
-Portable skill documentation is maintained under the assumption that an installation exposing one portable skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
+Repository-internal `domfiles-*` skills remain under `.agents/skills` for project discovery. Every skill selected for global exposure by `domfiles sync` has its canonical source under the root `skills` directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations. Both global and public skills share this source location, while their metadata distinguishes the supported installation surface. The current `skills` set is global. No public skill is currently supported.
 
-Edits to an exposed portable skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a portable skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
+Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 
-Every installation of the portable `agent-documentation` skill is assumed to use the tracked global `.config/zed/AGENTS.md`. The skill relies on that document’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
+Supported clients expose globally installed skills beneath different configuration roots, so repository-escaping relative links resolve against different lexical paths. The [distributed-skill link contract](../skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) keeps relative links within the installed skills tree and refers to already-loaded global policies by stable name.
+
+Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a globally exposed skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
+
+Every supported installation of the global `agent-documentation` skill is assumed to load an equivalent domfiles-managed global instruction layer. The skill relies on that layer’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
+
+### Skill-owned script scope
+
+Internal and global skills may own scripts. `domfiles-zed-settings` is the sole owner today, and the root `Cargo.toml` registers its binaries and adjacent tests so the root Cargo workspace validates them.
+
+A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/agent-documentation/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
+
+Public skills remain documentation-only. An independently installed copy has no host repository supplying its toolchain, dependencies, or static validation, so the host-and-target model cannot be extended to that surface.
+
+Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
 
 ### Protected skill staging
 
-At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so these canonical names remain unchanged.
+At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
 
-The [protected skill staging workflow](skills/agent-documentation/references/protected-skill-staging.md) keeps iterative edits in complete skill trees outside `.agents/skills`, then accepts native confirmation for one exact-tree promotion per affected skill. Keeping incomplete new skills outside the fixed discovery path also prevents concurrent agent sessions from loading them. The workflow intentionally does not use terminal mutation, ancestor-directory operations, symlink indirection, or renamed path components to bypass the sensitive-path boundary.
+The [protected skill staging workflow](../skills/agent-documentation/references/protected-skill-staging.md) keeps iterative edits in complete skill trees outside `.agents/skills`, then accepts native confirmation for one exact-tree promotion per affected skill. Keeping incomplete new skills outside the fixed discovery path also prevents concurrent agent sessions from loading them. The workflow intentionally does not use terminal mutation, ancestor-directory operations, symlink indirection, or renamed path components to bypass the sensitive-path boundary.
 
 ### Prompt relays
 
-The portable [`agent-documentation` skill](skills/agent-documentation/SKILL.md) owns the [prompt-relay delivery, complete-revision, composition, and evidence standard](skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](skills/agent-documentation/assets/task-relay-prompt.md). The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for delegation selection, inherited boundaries, and the anti-drift prompt contract. The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+The global [`agent-documentation` skill](../skills/agent-documentation/SKILL.md) owns the [prompt-relay delivery, complete-revision, composition, and evidence standard](../skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](../skills/agent-documentation/assets/task-relay-prompt.md). The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for delegation selection, inherited boundaries, and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
 ### Repository harmonization
 
-The portable [`repository-harmonization` skill](skills/repository-harmonization/SKILL.md) owns the global [`Harmonize` shorthand](../.config/zed/AGENTS.md#harmonize) and its change-oriented cross-repository consistency workflow. The global heading remains a compact deterministic route while the skill owns the complete procedure.
+The global [`repository-harmonization` skill](../skills/repository-harmonization/SKILL.md) owns the global [`Harmonize` shorthand](../.config/zed/AGENTS.md#harmonize) and its change-oriented cross-repository consistency workflow. The global heading remains a compact deterministic route while the skill owns the complete procedure.
 
 ### GitHub CLI agent integration
 
-The portable [`github-cli` skill](skills/github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
+The global [`github-cli` skill](../skills/github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
 
-`gh agent-task` remains [unsupported](skills/github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. External task relays remain governed by the global collaboration policy and use a separately selected delivery mechanism.
+`gh agent-task` remains [unsupported](../skills/github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. External task relays remain governed by the global collaboration policy and use a separately selected delivery mechanism.
 
 [Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The [shared permission-layering policy](skills/domfiles-zed-settings/references/permissions.md#apply-the-shared-permission-policy) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
@@ -184,7 +204,7 @@ The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex
 
 ### Package release-note bullet marker
 
-The [release-note bullet-marker policy](skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
+The [release-note bullet-marker policy](../skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
 
 ### Zed and Codex global instructions
 

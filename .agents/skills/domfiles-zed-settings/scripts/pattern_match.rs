@@ -6,35 +6,99 @@ use permission_patterns::load_bound_artifact_catalog;
 #[cfg(test)]
 pub(crate) use permission_patterns::sha256_hex;
 pub(crate) use permission_patterns::{
-    BoundedIssues, Bucket, CompiledPattern, Decision, MatchState, PatternError, compile_pattern,
-    read_utf8_file, regex_error_summary,
+    BoundArtifact, BoundInputs, BoundedIssues, Bucket, ClosureContext, CompiledPattern, Decision,
+    InputClosure, InputClosureBuilder, MatchState, OUTCOME_PASSED, PatternError, ResolvedOverlay,
+    ResultKind, TerminalPosition, ValidationResult, compile_pattern, parse_strict_json,
+    read_utf8_file, regex_error_summary, relative_within_root, resolve_comparison_closure,
+    resolve_layer_closure, resolve_suite_closure, sha256_hex as closure_sha256_hex,
+    terminal_bucket_array, terminal_pattern_at, write_validation_result,
 };
 use serde::{Deserialize, Deserializer, de};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     ffi::{OsStr, OsString},
     fs,
     io::{self, Write},
     path::{Path, PathBuf},
 };
 
+/// Overlay-aware path resolution. Without an overlay this behaves exactly as manifest-relative
+/// resolution, so reviewed manifests never need editing to run against a refreshed graph.
+pub(crate) struct PathResolver {
+    graph_root: Option<PathBuf>,
+    overlay: Option<ResolvedOverlay>,
+}
+
+impl PathResolver {
+    fn plain() -> Self {
+        Self {
+            graph_root: None,
+            overlay: None,
+        }
+    }
+
+    fn load(graph_root: Option<&Path>, artifact_root: Option<&Path>) -> Result<Self, String> {
+        if graph_root.is_none() && artifact_root.is_none() {
+            return Ok(Self::plain());
+        }
+        let overlay = match artifact_root {
+            Some(root) => Some(ResolvedOverlay::load(root)?),
+            None => None,
+        };
+
+        Ok(Self {
+            graph_root: graph_root.map(Path::to_owned),
+            overlay,
+        })
+    }
+
+    fn closure_context(&self) -> ClosureContext<'_> {
+        ClosureContext {
+            overlay: self.overlay.as_ref(),
+        }
+    }
+
+    fn resolve(&self, manifest_file: &Path, referenced_file: &str) -> PathBuf {
+        let direct = resolve_manifest_path(manifest_file, referenced_file);
+        let (Some(graph_root), Some(overlay)) = (self.graph_root.as_deref(), self.overlay.as_ref())
+        else {
+            return direct;
+        };
+        let Ok(relative) = relative_within_root(graph_root, &direct) else {
+            return direct;
+        };
+        if !overlay.overlay.redirects(&relative) {
+            return direct;
+        }
+
+        overlay
+            .root
+            .join(relative.replace('/', std::path::MAIN_SEPARATOR_STR))
+    }
+}
+
 const HELP: &str = concat!(
     "Usage:\n",
     "  pattern-match [--case-sensitive] --input-file <path> --pattern-file <path>\n",
     "  pattern-match [--case-sensitive] --cases-file <path> --pattern-file <path>\n",
-    "  pattern-match --comparison-file <path>\n",
-    "  pattern-match --suite-file <path>\n",
+    "  pattern-match --comparison-file <path> [--artifact-root <dir>] [--graph-root <dir>] [--result-out <path>]\n",
+    "  pattern-match --layer-file <path> [--artifact-root <dir>] [--graph-root <dir>] [--result-out <path>]\n",
+    "  pattern-match --suite-file <path> [--artifact-root <dir>] [--graph-root <dir>] [--result-out <path>]\n",
     "  pattern-match --help\n",
     "\n",
-    "Match one UTF-8 input, verify case and suite expectations against Zed-compatible regex patterns, or compare configured pattern sets\n",
+    "Match one UTF-8 input, verify case, suite, and configured-pattern-layer expectations against Zed-compatible regex patterns, or compare configured pattern sets\n",
     "\n",
     "Options:\n",
+    "  --artifact-root <dir>     Redirect only the graph paths listed by <dir>/path-overlay.json. Requires `--graph-root` and never rewrites a manifest\n",
     "  --case-sensitive          Match case-sensitively (default: case-insensitive)\n",
     "  --cases-file <path>       Read LF-delimited `match<TAB><input>` and `no-match<TAB><input>` cases\n",
-    "  --comparison-file <path>  Compare baseline and candidate pattern sets over a representative corpus from a strict JSON manifest. Mutually exclusive with every other option\n",
+    "  --comparison-file <path>  Compare baseline and candidate pattern sets over a representative corpus from a strict JSON manifest\n",
+    "  --graph-root <dir>        Anchor input-closure resolution and containment to one bundle graph root\n",
     "  --help                    Print help. Must be used alone\n",
     "  --input-file <path>       Read one complete UTF-8 input from this file\n",
+    "  --layer-file <path>       Evaluate configured-pattern-layer decisions from a strict JSON manifest\n",
     "  --pattern-file <path>     Read the complete UTF-8 pattern from this file\n",
+    "  --result-out <path>       Write hash-bound reviewed workflow evidence to a new file. Requires `--graph-root`\n",
     "  --suite-file <path>       Verify pattern and decision cases from an LF-delimited suite manifest\n",
     "\n",
     "LF-delimited UTF-8 suite manifest with records in any order:\n",
@@ -47,7 +111,7 @@ const HELP: &str = concat!(
     "  pattern-case<TAB><id><TAB>match|no-match<TAB><input>\n",
     "  pattern-case-file<TAB><id><TAB>match|no-match<TAB><input-file>\n",
     "  Relative suite paths resolve from the suite file’s parent. Catalog artifact paths resolve from the catalog’s parent\n",
-    "  Pattern catalogs use the strict artifact catalog schema. Every catalog entry requires boolean `owner_replacement` metadata\n",
+    "  Pattern catalogs use the strict artifact catalog schema. Ownership lives in the owner spec, not the catalog\n",
     "\n",
     "Suite requirements:\n",
     "  Define exactly one `default` record, at least one ordinary or catalog-backed pattern, and at least one `decision-case` or `decision-case-file` record. Catalog declarations do not count as patterns\n",
@@ -78,11 +142,31 @@ const HELP: &str = concat!(
     "  Comparison covers only the representative corpus\n",
     "  It does not reproduce full Zed permission evaluation or establish formal language equivalence\n",
     "\n",
+    "Strict UTF-8 JSON configured-pattern-layer manifest (unknown fields are rejected):\n",
+    "  Root: {\"settings_file\":\"path\",\"default\":\"allow|confirm|deny\",\"raw_provenance\":[...],\"settled_inputs\":[...],\"aggregate_cases\":[...]}\n",
+    "  Provenance: {\"id\":\"...\",\"command\":\"...\"} records the original shell line for review and is never evaluated\n",
+    "  Settled input: {\"type\":\"inline\",\"id\":\"...\",\"input\":\"...\",\"expected_decision\":\"allow|confirm|deny\"}\n",
+    "  Settled input: {\"type\":\"file\",\"id\":\"...\",\"input_file\":\"path\",\"expected_decision\":\"allow|confirm|deny\"}\n",
+    "  Aggregate case: {\"id\":\"...\",\"inputs\":[\"<settled-input-id>\",...],\"expected_decision\":\"allow|confirm|deny\"}\n",
+    "  The layer loads the complete terminal pattern arrays from the supplied snapshot and compiles each pattern once\n",
+    "\n",
+    "Configured-pattern-layer limitations:\n",
+    "  It establishes decisions from the supplied configured arrays, their precedence, the supplied default, settled normalized inputs, and explicit aggregate cases only\n",
+    "  It does not establish Zed shell parsing or command decomposition, input normalization or redirection extraction, pre-rule safety checks, settings discovery or layering, sandbox or Git-metadata permissions, prompt display behavior, or user acceptance\n",
+    "  Keep raw-command provenance and settled normalized inputs distinct\n",
+    "\n",
+    "Evidence:\n",
+    "  `--result-out` records the evaluator, outcome, bound manifest, catalog, settings, overlay, and a complete input closure over every file read\n",
+    "  The closure hashes every resolved input with a length-prefixed encoding, so any added, removed, redirected, or byte-changed input invalidates the record\n",
+    "  Evidence is hash-bound reviewed workflow evidence. It does not prove that this evaluator ran and is not authenticated\n",
+    "  Existing result paths are never overwritten\n",
+    "\n",
     "Output:\n",
     "  Single-input matching writes no output\n",
     "  Successful case manifest verification writes the verified case count to standard output\n",
     "  Successful comparison writes corpus case, baseline pattern, and candidate pattern counts to standard output\n",
     "  Successful suite verification writes pattern case, decision case, and pattern counts to standard output\n",
+    "  Successful configured-pattern-layer evaluation writes settled input, aggregate case, and configured pattern counts plus its stated limitations\n",
     "  Expectation failures and comparison mismatches write at most 10 details to standard error without echoing regexes or inputs\n",
     "  Argument, data, and I/O errors write a diagnostic to standard error\n",
     "\n",
@@ -389,11 +473,21 @@ enum InputMode {
     Single(PathBuf),
 }
 
+/// One manifest-driven invocation together with its optional graph anchoring, overlay redirection,
+/// and evidence destination.
+pub(crate) struct ManifestRun {
+    manifest: PathBuf,
+    graph_root: Option<PathBuf>,
+    artifact_root: Option<PathBuf>,
+    result_out: Option<PathBuf>,
+}
+
 enum ParsedArguments {
-    Comparison(PathBuf),
+    Comparison(ManifestRun),
     Help,
+    Layer(ManifestRun),
     Run(Arguments),
-    Suite(PathBuf),
+    Suite(ManifestRun),
 }
 
 fn parse_arguments<I>(arguments: I) -> Result<ParsedArguments, String>
@@ -407,11 +501,15 @@ where
     }
 
     let mut arguments = arguments.into_iter();
+    let mut artifact_root = None;
     let mut case_sensitive = false;
     let mut cases_file = None;
     let mut comparison_file = None;
+    let mut graph_root = None;
     let mut input_file = None;
+    let mut layer_file = None;
     let mut pattern_file = None;
+    let mut result_out = None;
     let mut suite_file = None;
 
     while let Some(argument) = arguments.next() {
@@ -420,6 +518,46 @@ where
         };
 
         match option {
+            "--artifact-root" => {
+                if artifact_root.is_some() {
+                    return Err("Option `--artifact-root` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--artifact-root` requires a directory".to_owned());
+                };
+                artifact_root = Some(PathBuf::from(path));
+            }
+            "--graph-root" => {
+                if graph_root.is_some() {
+                    return Err("Option `--graph-root` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--graph-root` requires a directory".to_owned());
+                };
+                graph_root = Some(PathBuf::from(path));
+            }
+            "--layer-file" => {
+                if layer_file.is_some() {
+                    return Err("Option `--layer-file` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--layer-file` requires a path".to_owned());
+                };
+                layer_file = Some(PathBuf::from(path));
+            }
+            "--result-out" => {
+                if result_out.is_some() {
+                    return Err("Option `--result-out` may be specified only once".to_owned());
+                }
+
+                let Some(path) = arguments.next() else {
+                    return Err("Option `--result-out` requires a path".to_owned());
+                };
+                result_out = Some(PathBuf::from(path));
+            }
             "--cases-file" => {
                 if cases_file.is_some() {
                     return Err("Option `--cases-file` may be specified only once".to_owned());
@@ -488,32 +626,72 @@ where
         }
     }
 
-    if let Some(comparison_file) = comparison_file {
-        if case_sensitive
+    let manifest_count = [
+        comparison_file.is_some(),
+        layer_file.is_some(),
+        suite_file.is_some(),
+    ]
+    .into_iter()
+    .filter(|selected| *selected)
+    .count();
+    if manifest_count > 1 {
+        return Err(
+            "Options `--comparison-file`, `--layer-file`, and `--suite-file` are mutually exclusive"
+                .to_owned(),
+        );
+    }
+    if manifest_count == 0
+        && (artifact_root.is_some() || graph_root.is_some() || result_out.is_some())
+    {
+        return Err(
+            "Options `--artifact-root`, `--graph-root`, and `--result-out` require `--comparison-file`, `--layer-file`, or `--suite-file`"
+                .to_owned(),
+        );
+    }
+    if result_out.is_some() && graph_root.is_none() {
+        return Err("Option `--result-out` requires `--graph-root`".to_owned());
+    }
+    if artifact_root.is_some() && graph_root.is_none() {
+        return Err("Option `--artifact-root` requires `--graph-root`".to_owned());
+    }
+
+    if manifest_count == 1
+        && (case_sensitive
             || cases_file.is_some()
             || input_file.is_some()
-            || pattern_file.is_some()
-            || suite_file.is_some()
-        {
-            return Err(
-                "Option `--comparison-file` is mutually exclusive with `--case-sensitive`, `--cases-file`, `--input-file`, `--pattern-file`, and `--suite-file`"
-                    .to_owned(),
-            );
-        }
+            || pattern_file.is_some())
+    {
+        return Err(
+            "A manifest mode is mutually exclusive with `--case-sensitive`, `--cases-file`, `--input-file`, and `--pattern-file`"
+                .to_owned(),
+        );
+    }
 
-        return Ok(ParsedArguments::Comparison(comparison_file));
+    if let Some(comparison_file) = comparison_file {
+        return Ok(ParsedArguments::Comparison(ManifestRun {
+            manifest: comparison_file,
+            graph_root,
+            artifact_root,
+            result_out,
+        }));
+    }
+
+    if let Some(layer_file) = layer_file {
+        return Ok(ParsedArguments::Layer(ManifestRun {
+            manifest: layer_file,
+            graph_root,
+            artifact_root,
+            result_out,
+        }));
     }
 
     if let Some(suite_file) = suite_file {
-        if case_sensitive || cases_file.is_some() || input_file.is_some() || pattern_file.is_some()
-        {
-            return Err(
-                "Option `--suite-file` is mutually exclusive with `--case-sensitive`, `--cases-file`, `--input-file`, and `--pattern-file`"
-                    .to_owned(),
-            );
-        }
-
-        return Ok(ParsedArguments::Suite(suite_file));
+        return Ok(ParsedArguments::Suite(ManifestRun {
+            manifest: suite_file,
+            graph_root,
+            artifact_root,
+            result_out,
+        }));
     }
 
     let input = match (cases_file, input_file) {
@@ -640,12 +818,13 @@ fn display_id(id: &str) -> String {
 }
 
 fn read_catalog_source(
+    resolver: &PathResolver,
     manifest_file: &Path,
     catalog: &CatalogDefinition,
 ) -> Result<LoadedCatalogBinding, String> {
-    let catalog_file = resolve_manifest_path(manifest_file, &catalog.catalog_file);
-    let candidate_file = resolve_manifest_path(manifest_file, &catalog.candidate_file);
-    let state_file = resolve_manifest_path(manifest_file, &catalog.state_file);
+    let catalog_file = resolver.resolve(manifest_file, &catalog.catalog_file);
+    let candidate_file = resolver.resolve(manifest_file, &catalog.candidate_file);
+    let state_file = resolver.resolve(manifest_file, &catalog.state_file);
     let candidate_bytes = fs::read(&candidate_file).map_err(|error| {
         format!(
             "Failed to read candidate file for pattern catalog `{}` at `{}`:\n\n{error}",
@@ -687,6 +866,7 @@ fn read_catalog_source(
 }
 
 fn load_catalogs(
+    resolver: &PathResolver,
     manifest_file: &Path,
     definitions: Vec<CatalogDefinition>,
     owner: &str,
@@ -695,7 +875,7 @@ fn load_catalogs(
 
     let mut catalogs = HashMap::with_capacity(definitions.len());
     for definition in definitions {
-        let loaded = read_catalog_source(manifest_file, &definition)?;
+        let loaded = read_catalog_source(resolver, manifest_file, &definition)?;
         catalogs.insert(definition.id, loaded);
     }
 
@@ -739,13 +919,21 @@ fn suite_expected_match(value: &str) -> Option<bool> {
     }
 }
 
-fn read_suite_input(suite_file: &Path, input_file: &str) -> Result<String, String> {
-    let input_file = resolve_manifest_path(suite_file, input_file);
+fn read_suite_input(
+    resolver: &PathResolver,
+    suite_file: &Path,
+    input_file: &str,
+) -> Result<String, String> {
+    let input_file = resolver.resolve(suite_file, input_file);
 
     read_utf8_file(&input_file, "suite input")
 }
 
-fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, String> {
+fn parse_suite_manifest(
+    resolver: &PathResolver,
+    path: &Path,
+    manifest: &str,
+) -> Result<SuiteManifest, String> {
     let mut catalog_definitions = Vec::new();
     let mut catalog_ids = HashSet::new();
     let mut declarations = Vec::new();
@@ -803,7 +991,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                     case_sensitive,
                     id: fields[1].to_owned(),
                     line_number,
-                    pattern_file: resolve_manifest_path(path, fields[4]),
+                    pattern_file: resolver.resolve(path, fields[4]),
                 });
             }
             Some("pattern-catalog") => {
@@ -860,7 +1048,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                     if fields[3].is_empty() {
                         return Err(invalid_suite_line(path, line_number));
                     }
-                    read_suite_input(path, fields[3])?
+                    read_suite_input(resolver, path, fields[3])?
                 } else {
                     fields[3].to_owned()
                 };
@@ -884,7 +1072,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
                     if fields[2].is_empty() {
                         return Err(invalid_suite_line(path, line_number));
                     }
-                    read_suite_input(path, fields[2])?
+                    read_suite_input(resolver, path, fields[2])?
                 } else {
                     fields[2].to_owned()
                 };
@@ -912,7 +1100,7 @@ fn parse_suite_manifest(path: &Path, manifest: &str) -> Result<SuiteManifest, St
         ));
     }
     let owner = format!("suite manifest `{}`", path.display());
-    let catalogs = load_catalogs(path, catalog_definitions, &owner)?;
+    let catalogs = load_catalogs(resolver, path, catalog_definitions, &owner)?;
     let mut patterns = Vec::with_capacity(declarations.len());
     let mut pattern_indices = HashMap::with_capacity(declarations.len());
     for declaration in declarations {
@@ -1167,6 +1355,7 @@ fn validate_comparison_manifest(
 }
 
 fn resolve_pattern_definitions(
+    resolver: &PathResolver,
     comparison_file: &Path,
     definitions: Vec<ComparisonPatternDefinition>,
     catalogs: &HashMap<String, LoadedCatalogBinding>,
@@ -1189,7 +1378,7 @@ fn resolve_pattern_definitions(
                 case_sensitive,
                 reported_id: display_id(&id),
                 id,
-                source: PatternSource::File(resolve_manifest_path(comparison_file, &pattern_file)),
+                source: PatternSource::File(resolver.resolve(comparison_file, &pattern_file)),
             }),
         })
         .collect()
@@ -1257,6 +1446,7 @@ fn compile_patterns(
 }
 
 fn read_comparison_input(
+    resolver: &PathResolver,
     comparison_file: &Path,
     case_position: usize,
     case: ComparisonCaseDefinition,
@@ -1266,7 +1456,7 @@ fn read_comparison_input(
             input_file,
             expected_transition,
         } => {
-            let input_file = resolve_manifest_path(comparison_file, &input_file);
+            let input_file = resolver.resolve(comparison_file, &input_file);
             let description = format!("comparison case {case_position} input");
             let input = read_utf8_file(&input_file, &description)?;
 
@@ -1317,6 +1507,7 @@ fn parse_comparison_manifest(
 }
 
 fn evaluate_comparison_manifest(
+    resolver: &PathResolver,
     comparison_file: &Path,
     definition: ComparisonManifestDefinition,
 ) -> Result<ComparisonResult, String> {
@@ -1329,13 +1520,25 @@ fn evaluate_comparison_manifest(
     let baseline_default = baseline.default;
     let candidate_default = candidate.default;
     let owner = format!("comparison manifest `{}`", comparison_file.display());
-    let catalogs = load_catalogs(comparison_file, catalogs, &owner)?;
+    let catalogs = load_catalogs(resolver, comparison_file, catalogs, &owner)?;
     let baseline_patterns = compile_patterns(
-        resolve_pattern_definitions(comparison_file, baseline.patterns, &catalogs, &owner)?,
+        resolve_pattern_definitions(
+            resolver,
+            comparison_file,
+            baseline.patterns,
+            &catalogs,
+            &owner,
+        )?,
         PatternCollection::BaselineComparison,
     )?;
     let candidate_patterns = compile_patterns(
-        resolve_pattern_definitions(comparison_file, candidate.patterns, &catalogs, &owner)?,
+        resolve_pattern_definitions(
+            resolver,
+            comparison_file,
+            candidate.patterns,
+            &catalogs,
+            &owner,
+        )?,
         PatternCollection::CandidateComparison,
     )?;
     let baseline_pattern_count = baseline_patterns.len();
@@ -1348,7 +1551,7 @@ fn evaluate_comparison_manifest(
     for (index, case) in cases.into_iter().enumerate() {
         let case_position = index + 1;
         let (input, expected_transition) =
-            read_comparison_input(comparison_file, case_position, case)?;
+            read_comparison_input(resolver, comparison_file, case_position, case)?;
         let baseline_state = MatchState::evaluate(&input, &baseline_patterns);
         let candidate_state = MatchState::evaluate(&input, &candidate_patterns);
 
@@ -1397,14 +1600,17 @@ fn evaluate_comparison_manifest(
     })
 }
 
-fn evaluate_comparison(comparison_file: &Path) -> Result<ComparisonResult, String> {
+fn evaluate_comparison(
+    resolver: &PathResolver,
+    comparison_file: &Path,
+) -> Result<ComparisonResult, String> {
     let manifest = read_utf8_file(comparison_file, "comparison manifest")?;
     let definition = parse_comparison_manifest(comparison_file, &manifest)?;
 
-    evaluate_comparison_manifest(comparison_file, definition)
+    evaluate_comparison_manifest(resolver, comparison_file, definition)
 }
 
-fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
+fn evaluate_suite(resolver: &PathResolver, suite_file: &Path) -> Result<SuiteResult, String> {
     let manifest = read_utf8_file(suite_file, "suite manifest")?;
     let SuiteManifest {
         default,
@@ -1412,7 +1618,7 @@ fn evaluate_suite(suite_file: &Path) -> Result<SuiteResult, String> {
         pattern_indices,
         pattern_report_ids,
         patterns,
-    } = parse_suite_manifest(suite_file, &manifest)?;
+    } = parse_suite_manifest(resolver, suite_file, &manifest)?;
     let patterns = compile_patterns(patterns, PatternCollection::Suite)?;
     let pattern_count = patterns.len();
     let mut decision_cases = 0;
@@ -1703,6 +1909,363 @@ fn report_comparison_mismatches(
     Ok(())
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LayerProvenance {
+    id: String,
+    command: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
+enum LayerInputDefinition {
+    File {
+        id: String,
+        input_file: String,
+        #[serde(deserialize_with = "deserialize_decision")]
+        expected_decision: Decision,
+    },
+    Inline {
+        id: String,
+        input: String,
+        #[serde(deserialize_with = "deserialize_decision")]
+        expected_decision: Decision,
+    },
+}
+
+impl LayerInputDefinition {
+    fn id(&self) -> &str {
+        match self {
+            Self::File { id, .. } | Self::Inline { id, .. } => id,
+        }
+    }
+
+    fn expected_decision(&self) -> Decision {
+        match self {
+            Self::File {
+                expected_decision, ..
+            }
+            | Self::Inline {
+                expected_decision, ..
+            } => *expected_decision,
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LayerAggregateCase {
+    id: String,
+    inputs: Vec<String>,
+    #[serde(deserialize_with = "deserialize_decision")]
+    expected_decision: Decision,
+}
+
+/// A configured-pattern-layer manifest. `raw_provenance` records original shell lines for review and
+/// is never evaluated, keeping raw commands separate from settled normalized inputs.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LayerManifestDefinition {
+    settings_file: String,
+    #[serde(deserialize_with = "deserialize_decision")]
+    default: Decision,
+    #[serde(default)]
+    raw_provenance: Vec<LayerProvenance>,
+    settled_inputs: Vec<LayerInputDefinition>,
+    #[serde(default)]
+    aggregate_cases: Vec<LayerAggregateCase>,
+}
+
+struct LayerFailure {
+    case: String,
+    expected: Decision,
+    observed: Decision,
+    matched: Vec<String>,
+}
+
+pub(crate) struct LayerResult {
+    failures: BoundedIssues<LayerFailure>,
+    aggregate_count: usize,
+    input_count: usize,
+    pattern_count: usize,
+}
+
+fn matched_positions(state: MatchState, patterns: &[CompiledPattern], input: &str) -> Vec<String> {
+    patterns
+        .iter()
+        .filter(|pattern| state.matched(pattern.bucket) && pattern.regex.is_match(input))
+        .map(|pattern| pattern.id.clone())
+        .take(MAX_REPORTED_FAILURES)
+        .collect()
+}
+
+/// Evaluate one settings snapshot’s complete configured terminal pattern arrays. This establishes
+/// configured-pattern-layer decisions only. It reproduces no shell parsing, input derivation,
+/// pre-rule check, settings layering, sandbox behavior, or prompt outcome.
+fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerResult, String> {
+    let manifest_bytes = fs::read(layer_file).map_err(|error| {
+        format!(
+            "Failed to read layer manifest `{}`:\n\n{error}",
+            layer_file.display()
+        )
+    })?;
+    let definition: LayerManifestDefinition = parse_strict_json(&manifest_bytes, "Layer manifest")?;
+
+    if definition.settled_inputs.is_empty() {
+        return Err("A layer manifest must declare at least one settled input".to_owned());
+    }
+    let mut provenance_ids = HashSet::new();
+    for provenance in &definition.raw_provenance {
+        if provenance.id.is_empty() || provenance.command.is_empty() {
+            return Err("Layer raw provenance requires a nonempty ID and command".to_owned());
+        }
+        if !provenance_ids.insert(provenance.id.as_str()) {
+            return Err("Layer raw provenance IDs must be unique".to_owned());
+        }
+    }
+
+    let settings_path = resolver.resolve(layer_file, &definition.settings_file);
+    let settings_bytes = fs::read(&settings_path).map_err(|error| {
+        format!(
+            "Failed to read layer settings `{}`:\n\n{error}",
+            settings_path.display()
+        )
+    })?;
+    let settings: serde_json::Value = serde_json::from_slice(&settings_bytes).map_err(|error| {
+        format!(
+            "Invalid layer settings JSON `{}`:\n\n{error}",
+            settings_path.display()
+        )
+    })?;
+
+    let mut patterns = Vec::new();
+    for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
+        let values = terminal_bucket_array(&settings, bucket)?;
+        for index in 0..values.len() {
+            let position = TerminalPosition { bucket, index };
+            let entry = terminal_pattern_at(&settings, position)?;
+            let regex = compile_pattern(&entry.pattern, entry.case_sensitive).map_err(|error| {
+                let detail = match error {
+                    PatternError::Empty => "the pattern is empty".to_owned(),
+                    PatternError::Invalid(error) => regex_error_summary(&error),
+                };
+                format!(
+                    "Failed to compile configured pattern `{}`. {detail}",
+                    position.label()
+                )
+            })?;
+            patterns.push(CompiledPattern {
+                id: position.label(),
+                bucket,
+                regex,
+            });
+        }
+    }
+
+    let mut inputs = Vec::with_capacity(definition.settled_inputs.len());
+    let mut input_ids = HashSet::new();
+    for settled in &definition.settled_inputs {
+        if settled.id().is_empty() {
+            return Err("Layer settled input IDs must be nonempty".to_owned());
+        }
+        if !input_ids.insert(settled.id().to_owned()) {
+            return Err("Layer settled input IDs must be unique".to_owned());
+        }
+        let value = match settled {
+            LayerInputDefinition::Inline { input, .. } => {
+                if input.contains('\n') {
+                    return Err(
+                        "Layer inline inputs must be single-line. Use `input_file` instead"
+                            .to_owned(),
+                    );
+                }
+                input.clone()
+            }
+            LayerInputDefinition::File { input_file, .. } => {
+                let path = resolver.resolve(layer_file, input_file);
+                read_utf8_file(&path, "layer input")?
+            }
+        };
+        inputs.push((settled.id().to_owned(), value, settled.expected_decision()));
+    }
+
+    let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
+    let mut states = HashMap::with_capacity(inputs.len());
+    for (id, value, expected) in &inputs {
+        let state = MatchState::evaluate(value, &patterns);
+        let observed = state.decision(definition.default);
+        if observed != *expected {
+            failures.push(LayerFailure {
+                case: display_id(id),
+                expected: *expected,
+                observed,
+                matched: matched_positions(state, &patterns, value),
+            });
+        }
+        states.insert(id.clone(), (state, value.clone()));
+    }
+
+    let mut aggregate_ids = HashSet::new();
+    for aggregate in &definition.aggregate_cases {
+        if aggregate.id.is_empty() {
+            return Err("Layer aggregate case IDs must be nonempty".to_owned());
+        }
+        if !aggregate_ids.insert(aggregate.id.as_str()) {
+            return Err("Layer aggregate case IDs must be unique".to_owned());
+        }
+        if aggregate.inputs.is_empty() {
+            return Err(format!(
+                "Layer aggregate case `{}` must reference at least one settled input",
+                display_id(&aggregate.id)
+            ));
+        }
+
+        let mut any_deny = false;
+        let mut any_confirm = false;
+        let mut every_allow = true;
+        let mut matched = Vec::new();
+        for reference in &aggregate.inputs {
+            let Some((state, value)) = states.get(reference) else {
+                return Err(format!(
+                    "Layer aggregate case `{}` references unknown settled input `{}`",
+                    display_id(&aggregate.id),
+                    display_id(reference)
+                ));
+            };
+            any_deny |= state.deny;
+            any_confirm |= state.confirm;
+            every_allow &= state.allow;
+            if matched.len() < MAX_REPORTED_FAILURES {
+                matched.extend(matched_positions(*state, &patterns, value));
+                matched.truncate(MAX_REPORTED_FAILURES);
+            }
+        }
+        let observed = if any_deny {
+            Decision::Deny
+        } else if any_confirm {
+            Decision::Confirm
+        } else if every_allow {
+            Decision::Allow
+        } else {
+            definition.default
+        };
+        if observed != aggregate.expected_decision {
+            failures.push(LayerFailure {
+                case: display_id(&aggregate.id),
+                expected: aggregate.expected_decision,
+                observed,
+                matched,
+            });
+        }
+    }
+
+    Ok(LayerResult {
+        failures,
+        aggregate_count: definition.aggregate_cases.len(),
+        input_count: inputs.len(),
+        pattern_count: patterns.len(),
+    })
+}
+
+fn report_layer_failures(stderr: &mut dyn Write, result: &LayerResult) -> io::Result<()> {
+    writeln!(
+        stderr,
+        "pattern-match: {} configured-pattern-layer {} did not match the expected decision",
+        result.failures.total_count(),
+        case_label(result.failures.total_count())
+    )?;
+    for failure in result.failures.issues() {
+        let matched = if failure.matched.is_empty() {
+            "no configured pattern".to_owned()
+        } else {
+            failure.matched.join(", ")
+        };
+        writeln!(
+            stderr,
+            "  {}: expected {}, observed {} via {matched}",
+            failure.case,
+            failure.expected.label(),
+            failure.observed.label()
+        )?;
+    }
+    let omitted = result.failures.omitted_count();
+    if omitted > 0 {
+        writeln!(stderr, "  … {omitted} additional case details omitted")?;
+    }
+
+    Ok(())
+}
+
+fn report_verified_layer(stdout: &mut dyn Write, result: &LayerResult) -> Result<(), String> {
+    writeln!(
+        stdout,
+        "Verified {} settled {} and {} aggregate {} against {} configured {}",
+        result.input_count,
+        case_label(result.input_count),
+        result.aggregate_count,
+        case_label(result.aggregate_count),
+        result.pattern_count,
+        pattern_label(result.pattern_count)
+    )
+    .map_err(|error| format!("Failed to write layer result to standard output:\n\n{error}"))?;
+    writeln!(
+        stdout,
+        "  Configured-pattern-layer decisions only. Shell parsing, input derivation, pre-rule checks, settings layering, sandbox behavior, and prompt outcomes are out of scope"
+    )
+    .map_err(|error| format!("Failed to write layer result to standard output:\n\n{error}"))
+}
+
+/// Record hash-bound reviewed workflow evidence. The bindings show which graph and inputs a claim
+/// refers to. They never prove that this evaluator ran or make the record authentic.
+fn write_evidence(
+    path: &Path,
+    kind: ResultKind,
+    evaluator: &str,
+    closure: InputClosure,
+    bound: BoundInputs,
+    counts: BTreeMap<String, u64>,
+) -> Result<(), String> {
+    write_validation_result(
+        path,
+        &ValidationResult {
+            kind,
+            evaluator: evaluator.to_owned(),
+            outcome: OUTCOME_PASSED.to_owned(),
+            bound_inputs: BoundInputs {
+                input_closure: closure,
+                ..bound
+            },
+            counts,
+        },
+    )
+}
+
+fn overlay_binding(resolver: &PathResolver) -> Result<Option<BoundArtifact>, String> {
+    let Some(overlay) = resolver.overlay.as_ref() else {
+        return Ok(None);
+    };
+    let Some(graph_root) = resolver.graph_root.as_deref() else {
+        return Ok(None);
+    };
+    let bytes = fs::read(&overlay.file)
+        .map_err(|error| format!("Failed to read the path overlay:\n\n{error}"))?;
+
+    Ok(Some(BoundArtifact {
+        path: relative_within_root(graph_root, &overlay.file)?,
+        sha256: closure_sha256_hex(&bytes),
+    }))
+}
+
+fn manifest_binding(graph_root: &Path, manifest: &Path) -> Result<(String, String), String> {
+    let bytes = fs::read(manifest)
+        .map_err(|error| format!("Failed to read the bound manifest:\n\n{error}"))?;
+
+    Ok((
+        relative_within_root(graph_root, manifest)?,
+        closure_sha256_hex(&bytes),
+    ))
+}
+
 fn report_error(stderr: &mut dyn Write, message: &str) {
     let _ = writeln!(stderr, "pattern-match: {message}");
 }
@@ -1750,6 +2313,63 @@ fn report_verified_suite(stdout: &mut dyn Write, result: &SuiteResult) -> Result
     .map_err(|error| format!("Failed to write suite result to standard output:\n\n{error}"))
 }
 
+/// Derive one evidence record from the same resolver that drove evaluation, so a recorded closure
+/// and a later recomputed closure cannot diverge.
+fn record_evidence(
+    resolver: &PathResolver,
+    run: &ManifestRun,
+    kind: ResultKind,
+    evaluator: &str,
+    counts: BTreeMap<String, u64>,
+) -> Result<(), String> {
+    let Some(result_out) = run.result_out.as_deref() else {
+        return Ok(());
+    };
+    let Some(graph_root) = run.graph_root.as_deref() else {
+        return Err("Option `--result-out` requires `--graph-root`".to_owned());
+    };
+
+    let mut builder = InputClosureBuilder::new(graph_root)?;
+    let context = resolver.closure_context();
+    match kind {
+        ResultKind::MatcherSuite => resolve_suite_closure(&mut builder, &context, &run.manifest)?,
+        ResultKind::Comparison => {
+            resolve_comparison_closure(&mut builder, &context, &run.manifest)?;
+        }
+        ResultKind::LayerDecision => resolve_layer_closure(&mut builder, &context, &run.manifest)?,
+        _ => return Err("This evaluator cannot record that evidence kind".to_owned()),
+    }
+    let closure = builder.finish()?;
+
+    let single = |role: &str| {
+        let mut matching = closure
+            .records
+            .iter()
+            .filter(|record| record.role == role)
+            .map(|record| record.sha256.clone());
+        let first = matching.next();
+        matching.next().is_none().then_some(first).flatten()
+    };
+    let (_, manifest_sha256) = manifest_binding(graph_root, &run.manifest)?;
+    let bound = BoundInputs {
+        manifest_sha256: Some(manifest_sha256),
+        catalog_sha256: single(permission_patterns::ROLE_CATALOG),
+        settings_sha256: single(permission_patterns::ROLE_SETTINGS),
+        inventory_owner: None,
+        overlay: overlay_binding(resolver)?,
+        input_closure: InputClosure::default(),
+    };
+
+    write_evidence(result_out, kind, evaluator, closure, bound, counts)
+}
+
+fn counts_of<const N: usize>(entries: [(&str, usize); N]) -> BTreeMap<String, u64> {
+    entries
+        .into_iter()
+        .map(|(key, value)| (key.to_owned(), value as u64))
+        .collect()
+}
+
 pub(crate) fn run<I>(arguments: I, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8
 where
     I: IntoIterator<Item = OsString>,
@@ -1763,28 +2383,105 @@ where
     };
 
     match parsed_arguments {
-        ParsedArguments::Comparison(comparison_file) => match evaluate_comparison(&comparison_file)
-        {
-            Ok(result) if result.mismatches.total_count() == 0 => {
-                if let Err(error) = report_verified_comparison(stdout, &result) {
+        ParsedArguments::Comparison(manifest_run) => {
+            let resolver = match PathResolver::load(
+                manifest_run.graph_root.as_deref(),
+                manifest_run.artifact_root.as_deref(),
+            ) {
+                Ok(resolver) => resolver,
+                Err(error) => {
                     report_error(stderr, &error);
                     return STATUS_ERROR;
                 }
+            };
 
-                STATUS_MATCH
+            match evaluate_comparison(&resolver, &manifest_run.manifest) {
+                Ok(result) if result.mismatches.total_count() == 0 => {
+                    if let Err(error) = record_evidence(
+                        &resolver,
+                        &manifest_run,
+                        ResultKind::Comparison,
+                        "domfiles-zed-settings-pattern-match --comparison-file",
+                        counts_of([
+                            (
+                                "cases",
+                                result.equivalence_case_count + result.transition_case_count,
+                            ),
+                            ("baseline_patterns", result.baseline_pattern_count),
+                            ("candidate_patterns", result.candidate_pattern_count),
+                        ]),
+                    ) {
+                        report_error(stderr, &error);
+                        return STATUS_ERROR;
+                    }
+                    if let Err(error) = report_verified_comparison(stdout, &result) {
+                        report_error(stderr, &error);
+                        return STATUS_ERROR;
+                    }
+
+                    STATUS_MATCH
+                }
+                Ok(result) => {
+                    if report_comparison_mismatches(stderr, &result).is_err() {
+                        return STATUS_ERROR;
+                    }
+
+                    STATUS_NO_MATCH
+                }
+                Err(error) => {
+                    report_error(stderr, &error);
+                    STATUS_ERROR
+                }
             }
-            Ok(result) => {
-                if report_comparison_mismatches(stderr, &result).is_err() {
+        }
+        ParsedArguments::Layer(manifest_run) => {
+            let resolver = match PathResolver::load(
+                manifest_run.graph_root.as_deref(),
+                manifest_run.artifact_root.as_deref(),
+            ) {
+                Ok(resolver) => resolver,
+                Err(error) => {
+                    report_error(stderr, &error);
                     return STATUS_ERROR;
                 }
+            };
 
-                STATUS_NO_MATCH
+            match evaluate_layer(&resolver, &manifest_run.manifest) {
+                Ok(result) if result.failures.total_count() == 0 => {
+                    if let Err(error) = record_evidence(
+                        &resolver,
+                        &manifest_run,
+                        ResultKind::LayerDecision,
+                        "domfiles-zed-settings-pattern-match --layer-file",
+                        counts_of([
+                            ("settled_inputs", result.input_count),
+                            ("aggregate_cases", result.aggregate_count),
+                            ("configured_patterns", result.pattern_count),
+                        ]),
+                    ) {
+                        report_error(stderr, &error);
+                        return STATUS_ERROR;
+                    }
+                    if let Err(error) = report_verified_layer(stdout, &result) {
+                        report_error(stderr, &error);
+                        return STATUS_ERROR;
+                    }
+
+                    STATUS_MATCH
+                }
+                Ok(result) => {
+                    if report_layer_failures(stderr, &result).is_err() {
+                        return STATUS_ERROR;
+                    }
+
+                    STATUS_NO_MATCH
+                }
+                Err(error) => {
+                    report_error(stderr, &error);
+                    STATUS_ERROR
+                }
             }
-            Err(error) => {
-                report_error(stderr, &error);
-                STATUS_ERROR
-            }
-        },
+        }
         ParsedArguments::Help => {
             if let Err(error) = stdout.write_all(HELP.as_bytes()) {
                 report_error(
@@ -1819,27 +2516,54 @@ where
                 STATUS_ERROR
             }
         },
-        ParsedArguments::Suite(suite_file) => match evaluate_suite(&suite_file) {
-            Ok(result) if result.failures.total_count() == 0 => {
-                if let Err(error) = report_verified_suite(stdout, &result) {
+        ParsedArguments::Suite(manifest_run) => {
+            let resolver = match PathResolver::load(
+                manifest_run.graph_root.as_deref(),
+                manifest_run.artifact_root.as_deref(),
+            ) {
+                Ok(resolver) => resolver,
+                Err(error) => {
                     report_error(stderr, &error);
                     return STATUS_ERROR;
                 }
+            };
 
-                STATUS_MATCH
-            }
-            Ok(result) => {
-                if report_suite_failures(stderr, &result).is_err() {
-                    return STATUS_ERROR;
+            match evaluate_suite(&resolver, &manifest_run.manifest) {
+                Ok(result) if result.failures.total_count() == 0 => {
+                    if let Err(error) = record_evidence(
+                        &resolver,
+                        &manifest_run,
+                        ResultKind::MatcherSuite,
+                        "domfiles-zed-settings-pattern-match --suite-file",
+                        counts_of([
+                            ("pattern_cases", result.pattern_cases),
+                            ("decision_cases", result.decision_cases),
+                            ("patterns", result.pattern_count),
+                        ]),
+                    ) {
+                        report_error(stderr, &error);
+                        return STATUS_ERROR;
+                    }
+                    if let Err(error) = report_verified_suite(stdout, &result) {
+                        report_error(stderr, &error);
+                        return STATUS_ERROR;
+                    }
+
+                    STATUS_MATCH
                 }
+                Ok(result) => {
+                    if report_suite_failures(stderr, &result).is_err() {
+                        return STATUS_ERROR;
+                    }
 
-                STATUS_NO_MATCH
+                    STATUS_NO_MATCH
+                }
+                Err(error) => {
+                    report_error(stderr, &error);
+                    STATUS_ERROR
+                }
             }
-            Err(error) => {
-                report_error(stderr, &error);
-                STATUS_ERROR
-            }
-        },
+        }
     }
 }
 

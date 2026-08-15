@@ -1,9 +1,11 @@
 #[path = "permission_candidate.rs"]
 mod helper;
+use helper::permission_patterns as patterns;
 
 use serde_json::{Value, json};
 use std::{
     cell::Cell,
+    collections::BTreeMap,
     env,
     ffi::OsString,
     fs, io,
@@ -165,6 +167,81 @@ fn materialize_arguments(
     ]
 }
 
+const FIXTURE_OWNER: &str = "fx";
+
+/// Strip the fixture-only ownership marker that drives owner-spec construction.
+fn strip_owner_marker(patterns: &[Value]) -> Vec<Value> {
+    patterns
+        .iter()
+        .map(|pattern| {
+            let mut pattern = pattern.clone();
+            pattern
+                .as_object_mut()
+                .expect("Materialization selection pattern must be an object")
+                .remove("owner_replacement");
+            pattern
+        })
+        .collect()
+}
+
+fn marked_ids(patterns: &[Value], owned: bool) -> Vec<String> {
+    patterns
+        .iter()
+        .filter(|pattern| {
+            pattern
+                .get("owner_replacement")
+                .and_then(Value::as_bool)
+                .unwrap_or(true)
+                == owned
+        })
+        .map(|pattern| {
+            pattern
+                .get("id")
+                .and_then(Value::as_str)
+                .expect("Fixture pattern must declare an ID")
+                .to_owned()
+        })
+        .collect()
+}
+
+/// Build the stable owner specification a fixture graph implies.
+fn owner_spec_value(state: &Value, patterns: &[Value]) -> Value {
+    let baseline_members = state["patterns"]
+        .as_array()
+        .expect("State patterns must be an array")
+        .iter()
+        .map(|pattern| {
+            pattern["id"]
+                .as_str()
+                .expect("State ID must be a string")
+                .to_owned()
+        })
+        .collect::<Vec<_>>();
+    let candidate_members = marked_ids(patterns, true);
+    let overlaps = marked_ids(patterns, false);
+    let operation = if baseline_members.is_empty() {
+        "insert"
+    } else if candidate_members.is_empty() {
+        "delete"
+    } else {
+        "replace"
+    };
+
+    let owners = if baseline_members.is_empty() && candidate_members.is_empty() {
+        json!([])
+    } else {
+        json!([{
+            "id": "fixture-owner",
+            "inventory_owner": FIXTURE_OWNER,
+            "operation": operation,
+            "baseline_members": baseline_members,
+            "candidate_members": candidate_members
+        }])
+    };
+
+    json!({ "owners": owners, "overlaps": overlaps })
+}
+
 fn verify_arguments(settings: &Path, state: &Path) -> Vec<OsString> {
     vec![
         OsString::from("verify"),
@@ -175,23 +252,13 @@ fn verify_arguments(settings: &Path, state: &Path) -> Vec<OsString> {
     ]
 }
 
-fn promote_arguments(
-    settings: &Path,
-    candidate: &Path,
-    state: &Path,
-    catalog: &Path,
-    write: bool,
-) -> Vec<OsString> {
+fn promote_arguments(settings: &Path, bundle: &Path, write: bool) -> Vec<OsString> {
     let mut arguments = vec![
         OsString::from("promote"),
         OsString::from("--settings"),
         settings.as_os_str().to_owned(),
-        OsString::from("--candidate"),
-        candidate.as_os_str().to_owned(),
-        OsString::from("--state"),
-        state.as_os_str().to_owned(),
-        OsString::from("--catalog"),
-        catalog.as_os_str().to_owned(),
+        OsString::from("--bundle"),
+        bundle.as_os_str().to_owned(),
     ];
     if write {
         arguments.push(OsString::from("--write"));
@@ -220,10 +287,10 @@ fn settings(allow_patterns: Vec<Value>, generation: u64) -> Value {
                         "default": "confirm",
                         "always_allow": allow_patterns,
                         "always_confirm": [
-                            pattern("^confirm$", true)
+                            pattern("^fx confirm$", true)
                         ],
                         "always_deny": [
-                            pattern("^deny$", true)
+                            pattern("^fx deny$", true)
                         ]
                     }
                 }
@@ -245,16 +312,9 @@ fn selection(id: &str, index: usize) -> Value {
     })
 }
 
-fn materialization_selection(mut patterns: Vec<Value>) -> Value {
-    for pattern in &mut patterns {
-        pattern
-            .as_object_mut()
-            .expect("Materialization selection pattern must be an object")
-            .entry("owner_replacement")
-            .or_insert(Value::Bool(true));
-    }
+fn materialization_selection(patterns: Vec<Value>) -> Value {
     json!({
-        "patterns": patterns
+        "patterns": strip_owner_marker(&patterns)
     })
 }
 
@@ -286,22 +346,346 @@ fn materialized_pattern_file(output: &Path, catalog: &Value, index: usize) -> Pa
     )
 }
 
-fn materialize_for_promotion(
+fn graph_relative(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .expect("Fixture artifact must live inside the graph root")
+        .to_str()
+        .expect("Fixture paths must be UTF-8")
+        .replace(std::path::MAIN_SEPARATOR, "/")
+}
+
+fn file_sha256(path: &Path) -> String {
+    patterns::sha256_hex(&fs::read(path).expect("Fixture artifact must be readable"))
+}
+
+/// Record hash-bound workflow evidence for a fixture graph. Results are evidence, not proof that a
+/// validator ran, so the fixture computes the same closure the verifier recomputes.
+fn write_evidence(
+    fixture: &Fixture,
+    root: &Path,
+    name: &str,
+    kind: &str,
+    manifest: &Path,
+    audit_settings: Option<&Path>,
+) -> (String, String) {
+    let mut builder =
+        patterns::InputClosureBuilder::new(root).expect("Graph root must be a directory");
+    let context = patterns::ClosureContext { overlay: None };
+    match kind {
+        "matcher_suite" => patterns::resolve_suite_closure(&mut builder, &context, manifest),
+        "comparison" => patterns::resolve_comparison_closure(&mut builder, &context, manifest),
+        "layer_decision" => patterns::resolve_layer_closure(&mut builder, &context, manifest),
+        _ => patterns::resolve_audit_closure(
+            &mut builder,
+            manifest,
+            audit_settings.expect("Audit evidence requires settings"),
+            None,
+        ),
+    }
+    .expect("Fixture closure must resolve");
+    let closure = builder.finish().expect("Fixture closure must finish");
+
+    let result = json!({
+        "kind": kind,
+        "evaluator": "fixture",
+        "outcome": "passed",
+        "bound_inputs": {
+            "manifest_sha256": file_sha256(manifest),
+            "input_closure": serde_json::to_value(&closure).expect("Closure must serialize")
+        },
+        "counts": {}
+    });
+    let result_path = fixture.write_json(&format!("{name}-result.json"), &result);
+
+    (
+        graph_relative(root, manifest),
+        graph_relative(root, &result_path),
+    )
+}
+
+/// Seal one fixture graph with the evidence kinds the contract requires for its shape.
+fn seal_bundle(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+    catalog: &Path,
+    owner_spec: &Value,
+) -> PathBuf {
+    let root = fixture.path("");
+    let root = root.as_path();
+    let spec_path = fixture.write_json(&format!("{prefix}-owner-spec.json"), owner_spec);
+    let candidate_relative = graph_relative(root, candidate);
+    let state_relative = graph_relative(root, state);
+    let catalog_relative = graph_relative(root, catalog);
+
+    let owners = owner_spec["owners"]
+        .as_array()
+        .expect("Owner spec must declare owners")
+        .clone();
+    let catalog_document: Value =
+        serde_json::from_slice(&fs::read(catalog).expect("Catalog must be readable"))
+            .expect("Catalog must parse");
+    let changes_patterns = !owners.is_empty()
+        || !catalog_document["patterns"]
+            .as_array()
+            .expect("Catalog patterns must be an array")
+            .is_empty();
+
+    let mut results = Vec::new();
+    if changes_patterns {
+        let ordinary_pattern = fixture.write(&format!("{prefix}-ordinary.regex"), b"^fx alpha$");
+        let validation_input =
+            fixture.write(&format!("{prefix}-validation-input.txt"), b"fx alpha");
+        let ordinary_pattern_relative = graph_relative(root, &ordinary_pattern);
+        let validation_input_relative = graph_relative(root, &validation_input);
+        let suite = fixture.write(
+            &format!("{prefix}-suite.txt"),
+            format!(
+                "default\tconfirm\npattern\tfixture-ordinary\talways_allow\tcase-sensitive\t{ordinary_pattern_relative}\npattern-case-file\tfixture-ordinary\tmatch\t{validation_input_relative}\ndecision-case-file\tallow\t{validation_input_relative}\npattern-catalog\tfixture\t{catalog_relative}\t{candidate_relative}\t{state_relative}\n"
+            )
+            .as_bytes(),
+        );
+        let comparison_pattern = json!({
+            "type": "file",
+            "id": "fixture-ordinary",
+            "bucket": "always_allow",
+            "case_sensitive": true,
+            "pattern_file": ordinary_pattern_relative
+        });
+        let comparison = fixture.write_json(
+            &format!("{prefix}-comparison.json"),
+            &json!({
+                "catalogs": [{
+                    "id": "fixture",
+                    "catalog_file": catalog_relative,
+                    "candidate_file": candidate_relative,
+                    "state_file": state_relative
+                }],
+                "baseline": {
+                    "default": "confirm",
+                    "patterns": [comparison_pattern.clone()]
+                },
+                "candidate": {
+                    "default": "confirm",
+                    "patterns": [comparison_pattern]
+                },
+                "cases": [{"type": "file", "input_file": validation_input_relative}]
+            }),
+        );
+        let layer = fixture.write_json(
+            &format!("{prefix}-layer.json"),
+            &json!({
+                "settings_file": candidate_relative,
+                "default": "confirm",
+                "settled_inputs": [{
+                    "type": "file",
+                    "id": "fixture-input",
+                    "input_file": validation_input_relative,
+                    "expected_decision": "allow"
+                }]
+            }),
+        );
+
+        for (name, kind, manifest) in [
+            ("suite", "matcher_suite", &suite),
+            ("comparison", "comparison", &comparison),
+            ("layer", "layer_decision", &layer),
+        ] {
+            let (manifest_relative, result_relative) = write_evidence(
+                fixture,
+                root,
+                &format!("{prefix}-{name}"),
+                kind,
+                manifest,
+                None,
+            );
+            results.push(json!({
+                "id": format!("{prefix}-{name}"),
+                "kind": kind,
+                "manifest": manifest_relative,
+                "result": result_relative
+            }));
+            if name == "suite" {
+                let (shared_manifest, shared_result) = write_evidence(
+                    fixture,
+                    root,
+                    &format!("{prefix}-{name}-shared"),
+                    kind,
+                    manifest,
+                    None,
+                );
+                results.push(json!({
+                    "id": format!("{prefix}-{name}-shared"),
+                    "kind": kind,
+                    "manifest": shared_manifest,
+                    "result": shared_result
+                }));
+            }
+        }
+
+        let candidate_sha256 = file_sha256(candidate);
+        for owner in &owners {
+            let members = owner["candidate_members"]
+                .as_array()
+                .expect("Owner candidate members must be an array");
+            let owner_id = owner["id"].as_str().expect("Owner ID must be a string");
+            let (kind, manifest) = if members.is_empty() {
+                (
+                    "candidate_inventory",
+                    fixture.write_json(
+                        &format!("{prefix}-{owner_id}-zero-owner.json"),
+                        &json!({
+                            "settings_sha256": candidate_sha256,
+                            "inventory_owner": FIXTURE_OWNER
+                        }),
+                    ),
+                )
+            } else {
+                let entries = members
+                    .iter()
+                    .map(|member| {
+                        let id = member.as_str().expect("Member ID must be a string");
+                        let entry = catalog_document["patterns"]
+                            .as_array()
+                            .expect("Catalog patterns must be an array")
+                            .iter()
+                            .find(|pattern| pattern["id"] == json!(id))
+                            .expect("Owner member must exist in the catalog");
+                        json!({
+                            "id": id,
+                            "bucket": entry["bucket"],
+                            "index": entry["source_index"]
+                        })
+                    })
+                    .collect::<Vec<_>>();
+                (
+                    "owner_audit",
+                    fixture.write_json(
+                        &format!("{prefix}-{owner_id}-audit.json"),
+                        &json!({
+                            "settings_sha256": candidate_sha256,
+                            "inventory_owner": FIXTURE_OWNER,
+                            "entries": entries,
+                            "excluded_candidates": [{
+                                "bucket": "always_allow",
+                                "index": 0
+                            }]
+                        }),
+                    ),
+                )
+            };
+            let (manifest_relative, result_relative) = write_evidence(
+                fixture,
+                root,
+                &format!("{prefix}-{owner_id}-{kind}"),
+                kind,
+                &manifest,
+                Some(candidate),
+            );
+            results.push(json!({
+                "id": format!("{prefix}-{owner_id}"),
+                "kind": kind,
+                "manifest": manifest_relative,
+                "result": result_relative
+            }));
+        }
+    }
+
+    let plan = fixture.write_json(
+        &format!("{prefix}-validation.json"),
+        &json!({ "results": results }),
+    );
+    let bundle = fixture.path(&format!("{prefix}-bundle.json"));
+    let sealed = run(vec![
+        OsString::from("seal"),
+        OsString::from("--candidate"),
+        candidate.as_os_str().to_owned(),
+        OsString::from("--state"),
+        state.as_os_str().to_owned(),
+        OsString::from("--catalog"),
+        catalog.as_os_str().to_owned(),
+        OsString::from("--owner-spec"),
+        spec_path.as_os_str().to_owned(),
+        OsString::from("--validation"),
+        plan.as_os_str().to_owned(),
+        OsString::from("--output"),
+        bundle.as_os_str().to_owned(),
+    ]);
+    assert_eq!(sealed.status, 0, "seal failed: {}", sealed.stderr);
+
+    bundle
+}
+
+/// Attempt to seal a fixture graph, returning the raw result so tests can assert refusals that now
+/// happen when the bundle is created rather than when it is promoted.
+fn try_seal(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+    catalog: &Path,
+    patterns: &[Value],
+) -> RunResult {
+    let spec = owner_spec_value(&state_value(state), patterns);
+    let spec_path = fixture.write_json(&format!("{prefix}-try-spec.json"), &spec);
+    let plan = fixture.write_json(
+        &format!("{prefix}-try-plan.json"),
+        &json!({ "results": [] }),
+    );
+    let bundle = fixture.path(&format!("{prefix}-try-bundle.json"));
+
+    run(vec![
+        OsString::from("seal"),
+        OsString::from("--candidate"),
+        candidate.as_os_str().to_owned(),
+        OsString::from("--state"),
+        state.as_os_str().to_owned(),
+        OsString::from("--catalog"),
+        catalog.as_os_str().to_owned(),
+        OsString::from("--owner-spec"),
+        spec_path.as_os_str().to_owned(),
+        OsString::from("--validation"),
+        plan.as_os_str().to_owned(),
+        OsString::from("--output"),
+        bundle.as_os_str().to_owned(),
+    ])
+}
+
+/// Seal a hand-built catalog so tests can exercise promotion against the bundle surface.
+fn seal_hand_catalog(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+    catalog: &Path,
+    patterns: &[Value],
+) -> PathBuf {
+    let spec = owner_spec_value(&state_value(state), patterns);
+    seal_bundle(fixture, prefix, candidate, state, catalog, &spec)
+}
+
+/// Materialize a fixture graph and seal it, returning both the catalog and the sealed bundle.
+fn materialize_and_seal(
     fixture: &Fixture,
     prefix: &str,
     candidate: &Path,
     state: &Path,
     patterns: Vec<Value>,
-) -> PathBuf {
+) -> (PathBuf, PathBuf) {
     let selection = fixture.write_json(
         &format!("{prefix}-materialization-selection.json"),
-        &materialization_selection(patterns),
+        &materialization_selection(patterns.clone()),
     );
     let output = fixture.path(&format!("{prefix}-materialized"));
     let result = run(materialize_arguments(candidate, state, &selection, &output));
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert!(result.stderr.is_empty());
-    output.join("artifact-catalog.json")
+    let catalog = output.join("artifact-catalog.json");
+    let spec = owner_spec_value(&state_value(state), &patterns);
+    let bundle = seal_bundle(fixture, prefix, candidate, state, &catalog, &spec);
+
+    (catalog, bundle)
 }
 
 fn replacement_pattern(id: &str, bucket: &str, index: usize) -> Value {
@@ -355,9 +739,6 @@ fn write_bound_catalog(
         let source_index = selected["index"]
             .as_u64()
             .expect("Catalog fixture index must be an integer") as usize;
-        let owner_replacement = selected["owner_replacement"]
-            .as_bool()
-            .expect("Catalog fixture owner role must be a boolean");
         let (pattern_body, case_sensitive) =
             helper::terminal_pattern(&candidate_value, bucket(bucket_label), source_index)
                 .expect("Catalog fixture source must be a terminal pattern");
@@ -369,7 +750,6 @@ fn write_bound_catalog(
             "bucket": bucket_label,
             "source_index": source_index,
             "case_sensitive": case_sensitive,
-            "owner_replacement": owner_replacement,
             "sha256": helper::sha256_hex(pattern_body.as_bytes()),
             "pattern_file": pattern_file
         }));
@@ -432,7 +812,7 @@ fn promote_owner_candidate(
         helper::serialize_pretty_json(candidate).expect("Candidate fixture must serialize"),
     )
     .expect("Failed to write candidate fixture");
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         fixture,
         prefix,
         &captured.candidate,
@@ -440,13 +820,7 @@ fn promote_owner_candidate(
         catalog_patterns,
     );
     let live = fixture.write_pretty_json(&format!("{prefix}-live.json"), baseline);
-    let result = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let result = run(promote_arguments(&live, &bundle, true));
 
     (result, live)
 }
@@ -472,7 +846,10 @@ fn assert_owner_remainder_refused(
     assert_eq!(result.status, 1, "{prefix}: {}", result.stderr);
     assert!(result.stdout.is_empty());
     assert!(
-        result.stderr.contains("complete candidate owner remainder"),
+        result
+            .stderr
+            .contains("declared owner membership reconciles to")
+            || result.stderr.contains("outside-owner remainder for"),
         "{prefix}: {}",
         result.stderr
     );
@@ -522,11 +899,9 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     assert_eq!(result.status, 0);
     assert!(result.stderr.is_empty());
     assert!(result.stdout.contains("capture --settings <path>"));
-    assert!(
-        result
-            .stdout
-            .contains("materialize --candidate <candidate-path>")
-    );
+    assert!(result.stdout.contains(
+        "materialize --candidate <candidate-path> --state <state-path> --selection <selection-path> --output <directory>\n"
+    ));
     assert!(result.stdout.contains("verify --settings <path>"));
     assert!(
         result
@@ -543,6 +918,34 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     assert!(result.stdout.contains("State JSON schema"));
     assert!(result.stdout.contains("Artifact catalog JSON schema"));
     assert!(result.stdout.contains("--catalog <artifact-catalog-path>"));
+    assert!(result.stdout.contains("permission-candidate seal "));
+    assert!(result.stdout.contains("permission-candidate preflight "));
+    assert!(result.stdout.contains("permission-candidate refresh "));
+    assert!(result.stdout.contains("--bundle <bundle-path> --write"));
+    assert!(result.stdout.contains("--owner-spec <path>"));
+    assert!(
+        result
+            .stdout
+            .contains("Stable owner specification used by `seal` only")
+    );
+    assert!(
+        result
+            .stdout
+            .contains("`--bundle` and `--write` are mandatory. There is no force option")
+    );
+    assert!(!result.stdout.contains("`--catalog` and `--write`"));
+    assert!(!result.stdout.contains("The strict catalog must bind"));
+    assert!(result.stdout.contains(
+        "The sealed bundle supplies the candidate, state, catalog, owner specification, and bound validation evidence"
+    ));
+    assert!(
+        result
+            .stdout
+            .contains("Neither the bundle, a passing preflight, nor `--write` is user approval")
+    );
+    assert!(result.stdout.contains(
+        "reruns the complete preflight in-process immediately before the mutation boundary"
+    ));
     assert!(result.stdout.contains("{\"scopes\":[\"/json/pointer\"]"));
     assert!(
         result
@@ -550,22 +953,30 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
             .contains("{\"patterns\":[{\"id\":\"nonempty\"")
     );
     assert!(!result.stdout.contains("\"version\""));
-    assert!(result.stdout.contains("\"owner_replacement\":true"));
-    assert!(result.stdout.contains("`patterns` may be empty"));
-    assert!(result.stdout.contains("candidate-settings.json"));
-    assert!(result.stdout.contains("does not authenticate itself"));
+    assert!(!result.stdout.contains("\"owner_replacement\":true"));
     assert!(
         result
             .stdout
-            .contains("results are written to standard output")
+            .contains("Ownership is declared by the owner spec, not the selection")
     );
+    assert!(result.stdout.contains("`patterns` may be empty"));
+    assert!(result.stdout.contains("candidate-settings.json"));
+    assert!(result.stdout.contains("does not authenticate itself"));
+    assert!(result.stdout.contains(
+        "Successful capture, materialization, verification, seal, preflight, refresh, and promotion results are written to standard output"
+    ));
     assert!(
         result
             .stdout
             .contains("Refusals and errors are written to standard error")
     );
     assert!(result.stdout.contains("Exit statuses:"));
-    assert!(result.stdout.contains("1  Current state"));
+    assert!(result.stdout.contains(
+        "0  Capture, materialization, verification, seal, preflight, refresh, promotion, unchanged promotion, or help succeeded"
+    ));
+    assert!(result.stdout.contains(
+        "1  Current state could not be uniquely reindexed, or candidate authorization, owner coverage, refresh replay, preflight, or guarded promotion was refused"
+    ));
     assert!(result.stdout.contains("2  Arguments or data"));
 
     let misplaced = run(vec![OsString::from("verify"), OsString::from("--help")]);
@@ -576,7 +987,9 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     let missing = run(Vec::new());
     assert_eq!(missing.status, 2);
     assert!(missing.stdout.is_empty());
-    assert!(missing.stderr.contains("Missing mode"));
+    assert!(missing.stderr.contains(
+        "Missing mode. Specify `capture`, `materialize`, `preflight`, `promote`, `refresh`, `seal`, or `verify`."
+    ));
 
     let unknown = run(vec![OsString::from("repair")]);
     assert_eq!(unknown.status, 2);
@@ -584,9 +997,55 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
 }
 
 #[test]
+fn rejects_owner_spec_for_materialize_and_catalog_for_promote() {
+    let fixture = Fixture::new();
+
+    let materialize = run(vec![
+        OsString::from("materialize"),
+        OsString::from("--candidate"),
+        fixture.path("candidate-settings.json").into_os_string(),
+        OsString::from("--state"),
+        fixture.path("state.json").into_os_string(),
+        OsString::from("--selection"),
+        fixture.path("selection.json").into_os_string(),
+        OsString::from("--output"),
+        fixture.path("materialized").into_os_string(),
+        OsString::from("--owner-spec"),
+        fixture.path("owner-spec.json").into_os_string(),
+    ]);
+
+    assert_eq!(materialize.status, 2);
+    assert!(materialize.stdout.is_empty());
+    assert!(
+        materialize
+            .stderr
+            .contains("Unknown materialize option `--owner-spec`")
+    );
+
+    let promote = run(vec![
+        OsString::from("promote"),
+        OsString::from("--settings"),
+        fixture.path("live.json").into_os_string(),
+        OsString::from("--bundle"),
+        fixture.path("candidate-bundle.json").into_os_string(),
+        OsString::from("--catalog"),
+        fixture.path("artifact-catalog.json").into_os_string(),
+        OsString::from("--write"),
+    ]);
+
+    assert_eq!(promote.status, 2);
+    assert!(promote.stdout.is_empty());
+    assert!(
+        promote
+            .stderr
+            .contains("Unknown promote option `--catalog`")
+    );
+}
+
+#[test]
 fn rejects_version_and_unknown_selection_and_state_fields() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let settings_path = fixture.write_pretty_json("settings.json", &baseline);
     let invalid_selection = json!({
         "scopes": [ALLOW_SCOPE],
@@ -730,7 +1189,7 @@ fn captures_exact_baseline_and_pattern_bytes_without_newlines() {
 #[test]
 fn refuses_existing_artifacts_before_writing() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let settings_path = fixture.write_pretty_json("settings.json", &baseline);
     let selection_path = fixture.write_json("selection.json", &selection("alpha", 0));
     let output = fixture.create_dir("artifacts");
@@ -756,7 +1215,7 @@ fn refuses_existing_artifacts_before_writing() {
 #[test]
 fn sanitizes_unsafe_ids_and_refuses_symlinked_output_components() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let settings_path = fixture.write_pretty_json("settings.json", &baseline);
     let unsafe_id = "../../séc\nret";
     let selection_path = fixture.write_json("selection.json", &selection(unsafe_id, 0));
@@ -859,7 +1318,7 @@ fn decodes_traverses_and_replaces_rfc6901_pointers() {
 
 #[test]
 fn rejects_root_invalid_missing_and_overlapping_scopes() {
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let child_scope = format!("{ALLOW_SCOPE}/0");
 
     assert!(helper::validate_scopes(&baseline, &[]).is_err());
@@ -877,7 +1336,10 @@ fn rejects_root_invalid_missing_and_overlapping_scopes() {
 #[test]
 fn rejects_duplicate_selections_and_patterns_outside_scopes() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true), pattern("^beta$", true)], 1);
+    let baseline = settings(
+        vec![pattern("^fx alpha$", true), pattern("^fx beta$", true)],
+        1,
+    );
     let settings_path = fixture.write_pretty_json("settings.json", &baseline);
     let duplicate_ids = json!({
         "scopes": [ALLOW_SCOPE],
@@ -952,7 +1414,7 @@ fn rejects_duplicate_selections_and_patterns_outside_scopes() {
 #[test]
 fn shared_bucket_serde_parses_selection_and_state_schemas() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^allow$", true)], 1);
+    let baseline = settings(vec![pattern("^fx allow$", true)], 1);
     let settings_path = fixture.write_pretty_json("settings.json", &baseline);
     let selection_path = fixture.write_json(
         "selection.json",
@@ -1045,7 +1507,7 @@ fn indexes_each_relevant_bucket_once_for_many_exact_pattern_selections() {
     }
     assert!(
         index
-            .indexes(helper::Bucket::Allow, b"^allow-007$", true)
+            .indexes(helper::Bucket::Allow, b"^fx allow-007$", true)
             .is_empty()
     );
     assert_eq!(bucket_reads.map(|reads| reads.get()), [1, 1, 1]);
@@ -1054,9 +1516,12 @@ fn indexes_each_relevant_bucket_once_for_many_exact_pattern_selections() {
 #[test]
 fn reindexes_patterns_after_bucket_movement() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "moving", &baseline, "alpha");
-    let current = settings(vec![pattern("^new$", true), pattern("^alpha$", true)], 2);
+    let current = settings(
+        vec![pattern("^fx new$", true), pattern("^fx alpha$", true)],
+        2,
+    );
     let current_path = fixture.write_pretty_json("current.json", &current);
 
     let result = run(verify_arguments(&current_path, &captured.state));
@@ -1127,7 +1592,7 @@ fn bounds_moved_mappings_and_omits_unchanged_lines() {
 #[test]
 fn refuses_missing_and_duplicate_exact_current_matches() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-pattern$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-pattern$", true)], 1);
     let captured = capture_standard(&fixture, "matches", &baseline, "private");
     let missing = settings(Vec::new(), 1);
     let missing_path = fixture.write_pretty_json("missing.json", &missing);
@@ -1146,12 +1611,12 @@ fn refuses_missing_and_duplicate_exact_current_matches() {
             .stderr
             .contains("private -> always_allow[missing]")
     );
-    assert!(!missing_result.stderr.contains("^private-pattern$"));
+    assert!(!missing_result.stderr.contains("^fx private-pattern$"));
 
     let duplicate = settings(
         vec![
-            pattern("^private-pattern$", true),
-            pattern("^private-pattern$", true),
+            pattern("^fx private-pattern$", true),
+            pattern("^fx private-pattern$", true),
         ],
         1,
     );
@@ -1170,7 +1635,7 @@ fn refuses_missing_and_duplicate_exact_current_matches() {
             .stderr
             .contains("private -> always_allow[duplicate]")
     );
-    assert!(!duplicate_result.stderr.contains("^private-pattern$"));
+    assert!(!duplicate_result.stderr.contains("^fx private-pattern$"));
 }
 
 #[test]
@@ -1229,7 +1694,7 @@ fn bounds_mixed_missing_and_duplicate_failure_details() {
 #[test]
 fn rejects_baseline_and_pattern_hash_tampering() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-pattern$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-pattern$", true)], 1);
     let captured = capture_standard(&fixture, "hashes", &baseline, "private");
     let baseline_file = captured.output.join("baseline-settings.json");
     let original_baseline = fs::read(&baseline_file).unwrap();
@@ -1241,7 +1706,7 @@ fn rejects_baseline_and_pattern_hash_tampering() {
 
     assert_eq!(baseline_result.status, 2);
     assert!(baseline_result.stderr.contains("Baseline artifact SHA-256"));
-    assert!(!baseline_result.stderr.contains("^private-pattern$"));
+    assert!(!baseline_result.stderr.contains("^fx private-pattern$"));
 
     fs::write(&baseline_file, original_baseline).unwrap();
     fs::write(&captured.pattern_file, b"tampered-private-pattern").unwrap();
@@ -1251,13 +1716,13 @@ fn rejects_baseline_and_pattern_hash_tampering() {
     assert_eq!(pattern_result.status, 2);
     assert!(pattern_result.stderr.contains("Pattern artifact SHA-256"));
     assert!(!pattern_result.stderr.contains("tampered-private-pattern"));
-    assert!(!pattern_result.stderr.contains("^private-pattern$"));
+    assert!(!pattern_result.stderr.contains("^fx private-pattern$"));
 }
 
 #[test]
 fn rejects_invalid_utf8_and_recorded_baseline_source_mismatches() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "identity", &baseline, "alpha");
     let mut state = state_value(&captured.state);
     let invalid_bytes = [0xff];
@@ -1270,8 +1735,8 @@ fn rejects_invalid_utf8_and_recorded_baseline_source_mismatches() {
     assert_eq!(utf8_result.status, 2);
     assert!(utf8_result.stderr.contains("not valid UTF-8"));
 
-    fs::write(&captured.pattern_file, b"^alpha$").unwrap();
-    state["patterns"][0]["sha256"] = json!(helper::sha256_hex(b"^alpha$"));
+    fs::write(&captured.pattern_file, b"^fx alpha$").unwrap();
+    state["patterns"][0]["sha256"] = json!(helper::sha256_hex(b"^fx alpha$"));
     state["patterns"][0]["case_sensitive"] = json!(false);
     fs::write(&captured.state, serde_json::to_vec(&state).unwrap()).unwrap();
 
@@ -1279,7 +1744,7 @@ fn rejects_invalid_utf8_and_recorded_baseline_source_mismatches() {
 
     assert_eq!(identity_result.status, 2);
     assert!(identity_result.stderr.contains("source identity"));
-    assert!(!identity_result.stderr.contains("^alpha$"));
+    assert!(!identity_result.stderr.contains("^fx alpha$"));
 }
 
 #[test]
@@ -1333,7 +1798,7 @@ fn bounds_metadata_output_and_never_leaks_contents() {
 #[test]
 fn materializes_exact_candidate_pattern_bytes_and_catalog_bindings() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx baseline$", true)], 1);
     let captured = capture_standard(&fixture, "materialize-exact", &baseline, "baseline");
     let mut candidate_value = baseline.clone();
     replace_allow_scope(
@@ -1386,10 +1851,9 @@ fn materializes_exact_candidate_pattern_bytes_and_catalog_bindings() {
     assert_eq!(catalog["patterns"][0]["bucket"], json!("always_allow"));
     assert_eq!(catalog["patterns"][0]["source_index"], json!(0));
     assert_eq!(catalog["patterns"][0]["case_sensitive"], json!(false));
-    assert_eq!(catalog["patterns"][0]["owner_replacement"], json!(true));
     assert_eq!(catalog["patterns"][1]["source_index"], json!(1));
     assert_eq!(catalog["patterns"][1]["case_sensitive"], json!(true));
-    assert_eq!(catalog["patterns"][1]["owner_replacement"], json!(false));
+    assert_eq!(catalog["patterns"][0]["owner_replacement"], Value::Null);
     let escaped_bytes = fs::read(materialized_pattern_file(&output, &catalog, 0)).unwrap();
     let literal_bytes = fs::read(materialized_pattern_file(&output, &catalog, 1)).unwrap();
     assert_eq!(escaped_bytes, "^line\né猫$".as_bytes());
@@ -1416,9 +1880,9 @@ fn materializes_exact_candidate_pattern_bytes_and_catalog_bindings() {
 #[test]
 fn materializes_a_specific_index_when_candidate_pattern_identities_are_duplicate() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx baseline$", true)], 1);
     let captured = capture_standard(&fixture, "duplicate-identity", &baseline, "baseline");
-    let duplicate = pattern("^duplicate-decoded-identity$", false);
+    let duplicate = pattern("^fx duplicate-decoded-identity$", false);
     let mut candidate_value = baseline.clone();
     replace_allow_scope(&mut candidate_value, json!([duplicate.clone(), duplicate]));
     fs::write(
@@ -1450,7 +1914,7 @@ fn materializes_a_specific_index_when_candidate_pattern_identities_are_duplicate
     assert_eq!(catalog["patterns"][0]["case_sensitive"], json!(false));
     assert_eq!(
         fs::read(materialized_pattern_file(&output, &catalog, 0)).unwrap(),
-        b"^duplicate-decoded-identity$"
+        b"^fx duplicate-decoded-identity$"
     );
 }
 
@@ -1459,8 +1923,8 @@ fn rejects_invalid_materialization_selection_metadata_before_writing() {
     let fixture = Fixture::new();
     let baseline = settings(
         vec![
-            pattern("^private-alpha$", true),
-            pattern("^private-beta$", false),
+            pattern("^fx private-alpha$", true),
+            pattern("^fx private-beta$", false),
         ],
         1,
     );
@@ -1471,20 +1935,6 @@ fn rejects_invalid_materialization_selection_metadata_before_writing() {
             json!({
                 "version": 2,
                 "patterns": [{"id": "alpha", "bucket": "always_allow", "index": 0, "owner_replacement": true}]
-            }),
-            "does not match the required schema",
-        ),
-        (
-            "missing-owner-role",
-            json!({
-                "patterns": [{"id": "alpha", "bucket": "always_allow", "index": 0}]
-            }),
-            "does not match the required schema",
-        ),
-        (
-            "nonboolean-owner-role",
-            json!({
-                "patterns": [{"id": "alpha", "bucket": "always_allow", "index": 0, "owner_replacement": "private-role"}]
             }),
             "does not match the required schema",
         ),
@@ -1551,7 +2001,7 @@ fn rejects_invalid_materialization_selection_metadata_before_writing() {
 #[test]
 fn rejects_missing_and_malformed_selected_candidate_objects_before_writing() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-baseline$", true)], 1);
     let captured = capture_standard(&fixture, "selected-object-errors", &baseline, "baseline");
     let missing_selection = fixture.write_json(
         "missing-selection.json",
@@ -1613,7 +2063,7 @@ fn rejects_missing_and_malformed_selected_candidate_objects_before_writing() {
 #[test]
 fn distinguishes_candidate_authorization_refusal_from_malformed_data() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-baseline$", true)], 1);
     let captured = capture_standard(&fixture, "authorization", &baseline, "baseline");
     let selection_path = fixture.write_json(
         "selection.json",
@@ -1666,7 +2116,7 @@ fn distinguishes_candidate_authorization_refusal_from_malformed_data() {
 #[test]
 fn validates_complete_state_before_materializing_candidate_artifacts() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-state-pattern$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-state-pattern$", true)], 1);
     let captured = capture_standard(&fixture, "materialization-state", &baseline, "state");
     let selection_path = fixture.write_json(
         "selection.json",
@@ -1722,7 +2172,7 @@ fn validates_complete_state_before_materializing_candidate_artifacts() {
 #[test]
 fn materialization_preflights_every_artifact_and_refuses_overwrites() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-preflight$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-preflight$", true)], 1);
     let captured = capture_standard(&fixture, "materialization-preflight", &baseline, "baseline");
     let selection_path = fixture.write_json(
         "selection.json",
@@ -1761,7 +2211,7 @@ fn materialization_preflights_every_artifact_and_refuses_overwrites() {
 #[test]
 fn materialization_sanitizes_ids_and_refuses_symlinked_output_components() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-safe-output$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-safe-output$", true)], 1);
     let captured = capture_standard(
         &fixture,
         "materialization-safe-output",
@@ -1854,7 +2304,7 @@ fn rolls_back_created_artifacts_after_a_later_write_failure() {
 #[test]
 fn bounds_materialization_output_and_never_leaks_patterns_settings_arrays_or_hashes() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-baseline$", true)], 1);
     let captured = capture_standard(&fixture, "materialization-output", &baseline, "baseline");
     let candidate_patterns: Vec<Value> = (0..13)
         .map(|index| pattern(&format!("^private-materialized-body-{index:03}$"), true))
@@ -1915,7 +2365,7 @@ fn bounds_materialization_output_and_never_leaks_patterns_settings_arrays_or_has
 #[test]
 fn supports_scope_only_capture_verification_materialization_and_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_selected(
         &fixture,
         "scope-only",
@@ -1976,13 +2426,15 @@ fn supports_scope_only_capture_verification_materialization_and_promotion() {
     assert_eq!(catalog["patterns"], json!([]));
 
     let live = fixture.write_pretty_json("scope-only-live.json", &baseline);
-    let promotion = run(promote_arguments(
-        &live,
+    let bundle = seal_bundle(
+        &fixture,
+        "scope-only",
         &captured.candidate,
         &captured.state,
         &materialized.join("artifact-catalog.json"),
-        true,
-    ));
+        &json!({ "owners": [], "overlaps": [] }),
+    );
+    let promotion = run(promote_arguments(&live, &bundle, true));
     assert_eq!(promotion.status, 0, "{}", promotion.stderr);
     let promoted: Value = serde_json::from_slice(&fs::read(&live).unwrap()).unwrap();
     assert_eq!(
@@ -1998,21 +2450,27 @@ fn supports_scope_only_capture_verification_materialization_and_promotion() {
 #[test]
 fn promotes_catalog_bound_owner_insertion_from_an_empty_capture() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^retained$", true)], 1);
+    let baseline = settings(vec![pattern("^fx retained$", true)], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(
         &mut candidate,
-        json!([pattern("^new-allow$", true), pattern("^retained$", true)]),
+        json!([
+            pattern("^fx new-allow$", true),
+            pattern("^fx retained$", true)
+        ]),
     );
     replace_scope(
         &mut candidate,
         CONFIRM_SCOPE,
-        json!([pattern("^new-confirm$", true), pattern("^confirm$", true)]),
+        json!([
+            pattern("^fx new-confirm$", true),
+            pattern("^fx confirm$", true)
+        ]),
     );
     replace_scope(
         &mut candidate,
         DENY_SCOPE,
-        json!([pattern("^new-deny$", true), pattern("^deny$", true)]),
+        json!([pattern("^fx new-deny$", true), pattern("^fx deny$", true)]),
     );
 
     let (result, live) = promote_owner_candidate(
@@ -2037,14 +2495,14 @@ fn promotes_catalog_bound_owner_insertion_from_an_empty_capture() {
 #[test]
 fn refuses_undeclared_remainder_changes_during_insertion_only_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^retained$", true)], 1);
+    let baseline = settings(vec![pattern("^fx retained$", true)], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(
         &mut candidate,
         json!([
-            pattern("^new-owner$", true),
-            pattern("^private-undeclared$", true),
-            pattern("^retained$", true)
+            pattern("^fx new-owner$", true),
+            pattern("^fx private-undeclared$", true),
+            pattern("^fx retained$", true)
         ]),
     );
     let expected_live = helper::serialize_pretty_json(&baseline).unwrap();
@@ -2061,7 +2519,12 @@ fn refuses_undeclared_remainder_changes_during_insertion_only_promotion() {
 
     assert_eq!(result.status, 1, "{}", result.stderr);
     assert!(result.stdout.is_empty());
-    assert!(result.stderr.contains("insertion-only candidate"));
+    assert!(
+        result
+            .stderr
+            .contains("declared owner membership reconciles to")
+            || result.stderr.contains("outside-owner remainder")
+    );
     assert!(!result.stderr.contains("private-undeclared"));
     assert!(!result.stderr.contains("new-owner"));
     assert_eq!(fs::read(live).unwrap(), expected_live);
@@ -2070,7 +2533,7 @@ fn refuses_undeclared_remainder_changes_during_insertion_only_promotion() {
 #[test]
 fn refuses_terminal_pattern_array_changes_from_an_empty_capture_without_touching_live_bytes() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-baseline$", true)], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(&mut candidate, json!([]));
     let expected_live = helper::serialize_pretty_json(&baseline).unwrap();
@@ -2087,7 +2550,12 @@ fn refuses_terminal_pattern_array_changes_from_an_empty_capture_without_touching
 
     assert_eq!(result.status, 1, "{}", result.stderr);
     assert!(result.stdout.is_empty());
-    assert!(result.stderr.contains("without captured owner patterns"));
+    assert!(
+        result
+            .stderr
+            .contains("declared owner membership reconciles to")
+            || result.stderr.contains("outside-owner remainder")
+    );
     assert!(!result.stderr.contains("private-baseline"));
     assert_eq!(fs::read(live).unwrap(), expected_live);
 }
@@ -2095,7 +2563,7 @@ fn refuses_terminal_pattern_array_changes_from_an_empty_capture_without_touching
 #[test]
 fn rejects_malformed_terminal_pattern_arrays_from_an_empty_capture() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-baseline$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-baseline$", true)], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(&mut candidate, json!({"private-value": true}));
     let expected_live = helper::serialize_pretty_json(&baseline).unwrap();
@@ -2127,9 +2595,9 @@ fn refuses_undeclared_owner_remainder_addition_removal_edit_and_reorder() {
     let fixture = Fixture::new();
     let baseline = settings(
         vec![
-            pattern("^private-owner-body$", true),
-            pattern("^retained-a$", true),
-            pattern("^retained-b$", false),
+            pattern("^fx private-owner-body$", true),
+            pattern("^fx retained-a$", true),
+            pattern("^fx retained-b$", false),
         ],
         1,
     );
@@ -2143,10 +2611,10 @@ fn refuses_undeclared_owner_remainder_addition_removal_edit_and_reorder() {
     replace_allow_scope(
         &mut addition,
         json!([
-            pattern("^replacement$", true),
-            pattern("^retained-a$", true),
-            pattern("^retained-b$", false),
-            pattern("^undeclared-addition$", true)
+            pattern("^fx replacement$", true),
+            pattern("^fx retained-a$", true),
+            pattern("^fx retained-b$", false),
+            pattern("^fx undeclared-addition$", true)
         ]),
     );
     assert_owner_remainder_refused(
@@ -2166,8 +2634,8 @@ fn refuses_undeclared_owner_remainder_addition_removal_edit_and_reorder() {
     replace_allow_scope(
         &mut removal,
         json!([
-            pattern("^replacement$", true),
-            pattern("^retained-a$", true)
+            pattern("^fx replacement$", true),
+            pattern("^fx retained-a$", true)
         ]),
     );
     assert_owner_remainder_refused(
@@ -2186,13 +2654,13 @@ fn refuses_undeclared_owner_remainder_addition_removal_edit_and_reorder() {
     replace_allow_scope(
         &mut edited,
         json!([
-            pattern("^replacement$", true),
+            pattern("^fx replacement$", true),
             {
-                "pattern": "^retained-a$",
+                "pattern": "^fx retained-a$",
                 "case_sensitive": true,
                 "note": "edited"
             },
-            pattern("^retained-b$", false)
+            pattern("^fx retained-b$", false)
         ]),
     );
     assert_owner_remainder_refused(
@@ -2212,9 +2680,9 @@ fn refuses_undeclared_owner_remainder_addition_removal_edit_and_reorder() {
     replace_allow_scope(
         &mut reordered,
         json!([
-            pattern("^replacement$", true),
-            pattern("^retained-b$", false),
-            pattern("^retained-a$", true)
+            pattern("^fx replacement$", true),
+            pattern("^fx retained-b$", false),
+            pattern("^fx retained-a$", true)
         ]),
     );
     assert_owner_remainder_refused(
@@ -2236,8 +2704,8 @@ fn refuses_retained_owner_omitted_from_the_replacement_set() {
     let fixture = Fixture::new();
     let baseline = settings(
         vec![
-            pattern("^private-owner-body-a$", true),
-            pattern("^private-owner-body-b$", false),
+            pattern("^fx private-owner-body-a$", true),
+            pattern("^fx private-owner-body-b$", false),
         ],
         1,
     );
@@ -2245,8 +2713,8 @@ fn refuses_retained_owner_omitted_from_the_replacement_set() {
     replace_allow_scope(
         &mut candidate,
         json!([
-            pattern("^replacement$", true),
-            pattern("^private-owner-body-b$", false)
+            pattern("^fx replacement$", true),
+            pattern("^fx private-owner-body-b$", false)
         ]),
     );
 
@@ -2269,15 +2737,15 @@ fn refuses_retained_owner_omitted_from_the_replacement_set() {
 #[test]
 fn promotes_complete_one_to_many_replacement_with_validation_only_overlap() {
     let fixture = Fixture::new();
-    let overlap = pattern("^overlap$", false);
-    let baseline = settings(vec![pattern("^old-owner$", true), overlap.clone()], 1);
+    let overlap = pattern("^fx overlap$", false);
+    let baseline = settings(vec![pattern("^fx old-owner$", true), overlap.clone()], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(
         &mut candidate,
         json!([
-            pattern("^new-owner-a$", true),
+            pattern("^fx new-owner-a$", true),
             overlap,
-            pattern("^new-owner-b$", false)
+            pattern("^fx new-owner-b$", false)
         ]),
     );
 
@@ -2306,13 +2774,16 @@ fn promotes_complete_one_to_many_replacement_with_validation_only_overlap() {
 #[test]
 fn promotes_cross_bucket_owner_movement_with_validation_only_overlap() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^old-owner$", true)], 1);
+    let baseline = settings(vec![pattern("^fx old-owner$", true)], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(&mut candidate, json!([]));
     replace_scope(
         &mut candidate,
         CONFIRM_SCOPE,
-        json!([pattern("^confirm$", true), pattern("^moved-owner$", false)]),
+        json!([
+            pattern("^fx confirm$", true),
+            pattern("^fx moved-owner$", false)
+        ]),
     );
 
     let (result, live) = promote_owner_candidate(
@@ -2343,8 +2814,8 @@ fn promotes_cross_bucket_owner_movement_with_validation_only_overlap() {
 #[test]
 fn promotes_duplicate_decoded_identities_by_exact_source_index() {
     let fixture = Fixture::new();
-    let duplicate = pattern("^duplicate$", false);
-    let baseline = settings(vec![pattern("^old-owner$", true), duplicate.clone()], 1);
+    let duplicate = pattern("^fx duplicate$", false);
+    let baseline = settings(vec![pattern("^fx old-owner$", true), duplicate.clone()], 1);
     let mut candidate = baseline.clone();
     replace_allow_scope(&mut candidate, json!([duplicate.clone(), duplicate]));
 
@@ -2372,7 +2843,10 @@ fn promotes_duplicate_decoded_identities_by_exact_source_index() {
 #[test]
 fn promotes_delete_all_owner_replacement_with_an_empty_catalog() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true), pattern("^beta$", false)], 1);
+    let baseline = settings(
+        vec![pattern("^fx alpha$", true), pattern("^fx beta$", false)],
+        1,
+    );
     let captured = capture_selected(
         &fixture,
         "delete-all",
@@ -2390,7 +2864,7 @@ fn promotes_delete_all_owner_replacement_with_an_empty_catalog() {
         helper::serialize_pretty_json(&candidate_value).unwrap(),
     )
     .unwrap();
-    let catalog = materialize_for_promotion(
+    let (catalog, bundle) = materialize_and_seal(
         &fixture,
         "delete-all",
         &captured.candidate,
@@ -2403,13 +2877,7 @@ fn promotes_delete_all_owner_replacement_with_an_empty_catalog() {
     );
     let live = fixture.write_pretty_json("delete-all-live.json", &baseline);
 
-    let result = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let result = run(promote_arguments(&live, &bundle, true));
 
     assert_eq!(result.status, 0, "{}", result.stderr);
     let promoted: Value = serde_json::from_slice(&fs::read(&live).unwrap()).unwrap();
@@ -2420,69 +2888,77 @@ fn promotes_delete_all_owner_replacement_with_an_empty_catalog() {
 }
 
 #[test]
-fn requires_exactly_one_catalog_before_promotion() {
+fn requires_exactly_one_bundle_before_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
-    let captured = capture_standard(&fixture, "catalog-option", &baseline, "alpha");
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
+    let captured = capture_standard(&fixture, "bundle-option", &baseline, "alpha");
     let live = fixture.write_pretty_json("live.json", &baseline);
-    let candidate = fixture.write_pretty_json("candidate.json", &baseline);
-    let catalog = fixture.write("catalog.json", b"{}");
+    let (_, bundle) = materialize_and_seal(
+        &fixture,
+        "bundle-option",
+        &captured.candidate,
+        &captured.state,
+        vec![replacement_pattern("alpha", "always_allow", 0)],
+    );
 
-    let mut missing = promote_arguments(&live, &candidate, &captured.state, &catalog, true);
-    let catalog_position = missing
+    let mut missing = promote_arguments(&live, &bundle, true);
+    let position = missing
         .iter()
-        .position(|argument| argument == "--catalog")
-        .expect("Catalog option must exist");
-    missing.drain(catalog_position..=catalog_position + 1);
+        .position(|argument| argument == "--bundle")
+        .expect("Bundle option must exist");
+    missing.drain(position..=position + 1);
     let missing_result = run(missing);
     assert_eq!(missing_result.status, 2);
     assert!(missing_result.stdout.is_empty());
     assert!(
         missing_result
             .stderr
-            .contains("Missing required option `--catalog <artifact-catalog-path>`")
+            .contains("Missing required option `--bundle <bundle-path>`")
     );
 
-    let mut duplicate = promote_arguments(&live, &candidate, &captured.state, &catalog, true);
-    duplicate.push(OsString::from("--catalog"));
-    duplicate.push(catalog.as_os_str().to_owned());
+    let mut duplicate = promote_arguments(&live, &bundle, true);
+    duplicate.push(OsString::from("--bundle"));
+    duplicate.push(bundle.as_os_str().to_owned());
     let duplicate_result = run(duplicate);
     assert_eq!(duplicate_result.status, 2);
     assert!(duplicate_result.stdout.is_empty());
     assert!(
         duplicate_result
             .stderr
-            .contains("Option `--catalog` may be specified only once")
+            .contains("Option `--bundle` may be specified only once")
     );
 }
 
 #[test]
 fn requires_exact_write_guard_before_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "write-guard", &baseline, "alpha");
     let live = fixture.write_pretty_json("live.json", &baseline);
     let mut candidate_value = baseline.clone();
-    replace_allow_scope(&mut candidate_value, json!([pattern("^beta$", true)]));
-    let candidate = fixture.write_pretty_json("candidate.json", &candidate_value);
+    replace_allow_scope(&mut candidate_value, json!([pattern("^fx beta$", true)]));
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate_value).unwrap(),
+    )
+    .unwrap();
     let original_live = fs::read(&live).unwrap();
-    let catalog = fixture.path("write-guard-catalog.json");
-
-    let missing = run(promote_arguments(
-        &live,
-        &candidate,
+    let (_, bundle) = materialize_and_seal(
+        &fixture,
+        "write-guard",
+        &captured.candidate,
         &captured.state,
-        &catalog,
-        false,
-    ));
+        vec![replacement_pattern("beta", "always_allow", 0)],
+    );
+
+    let missing = run(promote_arguments(&live, &bundle, false));
 
     assert_eq!(missing.status, 2);
     assert!(missing.stdout.is_empty());
     assert!(missing.stderr.contains("exact mutation guard `--write`"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
-    let mut inexact_arguments =
-        promote_arguments(&live, &candidate, &captured.state, &catalog, false);
+    let mut inexact_arguments = promote_arguments(&live, &bundle, false);
     inexact_arguments.push(OsString::from("--write=true"));
     let inexact = run(inexact_arguments);
 
@@ -2494,10 +2970,10 @@ fn requires_exact_write_guard_before_promotion() {
 #[test]
 fn rejects_stale_candidate_and_state_bytes_before_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-alpha$", true)], 1);
     let captured = capture_standard(&fixture, "stale-binding", &baseline, "alpha");
     let live = fixture.write_pretty_json("stale-binding-live.json", &baseline);
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         &fixture,
         "stale-binding",
         &captured.candidate,
@@ -2513,16 +2989,14 @@ fn rejects_stale_candidate_and_state_bytes_before_promotion() {
         serde_json::to_vec(&candidate_value).expect("Reformatted candidate must serialize"),
     )
     .unwrap();
-    let candidate_result = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let candidate_result = run(promote_arguments(&live, &bundle, true));
     assert_eq!(candidate_result.status, 2);
     assert!(candidate_result.stdout.is_empty());
-    assert!(candidate_result.stderr.contains("Candidate SHA-256"));
+    assert!(
+        candidate_result
+            .stderr
+            .contains("bound candidate settings does not match its recorded SHA-256")
+    );
     assert!(!candidate_result.stderr.contains("private-alpha"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
@@ -2538,16 +3012,14 @@ fn rejects_stale_candidate_and_state_bytes_before_promotion() {
         serde_json::to_vec(&state_document).expect("Reformatted state must serialize"),
     )
     .unwrap();
-    let state_result = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let state_result = run(promote_arguments(&live, &bundle, true));
     assert_eq!(state_result.status, 2);
     assert!(state_result.stdout.is_empty());
-    assert!(state_result.stderr.contains("State SHA-256"));
+    assert!(
+        state_result
+            .stderr
+            .contains("bound state manifest does not match its recorded SHA-256")
+    );
     assert!(!state_result.stderr.contains("private-alpha"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 }
@@ -2555,9 +3027,9 @@ fn rejects_stale_candidate_and_state_bytes_before_promotion() {
 #[test]
 fn rejects_cross_candidate_and_invalid_catalog_files_and_artifacts() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-alpha$", true)], 1);
     let captured = capture_standard(&fixture, "catalog-errors", &baseline, "alpha");
-    let catalog = materialize_for_promotion(
+    let (catalog, bundle) = materialize_and_seal(
         &fixture,
         "catalog-errors",
         &captured.candidate,
@@ -2569,26 +3041,26 @@ fn rejects_cross_candidate_and_invalid_catalog_files_and_artifacts() {
 
     let missing = run(promote_arguments(
         &live,
-        &captured.candidate,
-        &captured.state,
-        &fixture.path("missing-catalog.json"),
+        &fixture.path("missing-bundle.json"),
         true,
     ));
     assert_eq!(missing.status, 2);
-    assert!(missing.stderr.contains("artifact catalog"));
+    assert!(missing.stderr.contains("bundle"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
+    // Catalog schema and binding failures now refuse when the bundle is sealed.
     let mut versioned_catalog = catalog_value(catalog.parent().unwrap());
     versioned_catalog["version"] = json!(2);
     let versioned_catalog_path =
         fixture.write_pretty_json("versioned-catalog.json", &versioned_catalog);
-    let versioned_catalog_result = run(promote_arguments(
-        &live,
+    let versioned_catalog_result = try_seal(
+        &fixture,
+        "versioned",
         &captured.candidate,
         &captured.state,
         &versioned_catalog_path,
-        true,
-    ));
+        &[replacement_pattern("alpha", "always_allow", 0)],
+    );
     assert_eq!(versioned_catalog_result.status, 2);
     assert!(
         versioned_catalog_result
@@ -2602,27 +3074,29 @@ fn rejects_cross_candidate_and_invalid_catalog_files_and_artifacts() {
     modified_catalog["candidate_sha256"] = json!(private_hash);
     let modified_catalog_path =
         fixture.write_pretty_json("modified-catalog.json", &modified_catalog);
-    let modified_catalog_result = run(promote_arguments(
-        &live,
+    let modified_catalog_result = try_seal(
+        &fixture,
+        "modified",
         &captured.candidate,
         &captured.state,
         &modified_catalog_path,
-        true,
-    ));
+        &[replacement_pattern("alpha", "always_allow", 0)],
+    );
     assert_eq!(modified_catalog_result.status, 2);
     assert!(modified_catalog_result.stderr.contains("Candidate SHA-256"));
     assert!(!modified_catalog_result.stderr.contains(&"0".repeat(64)));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
-    let other_baseline = settings(vec![pattern("^private-other$", true)], 1);
+    let other_baseline = settings(vec![pattern("^fx private-other$", true)], 1);
     let other = capture_standard(&fixture, "cross-candidate", &other_baseline, "other");
-    let cross = run(promote_arguments(
-        &live,
+    let cross = try_seal(
+        &fixture,
+        "cross",
         &other.candidate,
         &captured.state,
         &catalog,
-        true,
-    ));
+        &[replacement_pattern("alpha", "always_allow", 0)],
+    );
     assert_eq!(cross.status, 2);
     assert!(cross.stderr.contains("Candidate SHA-256"));
     assert!(!cross.stderr.contains("private-other"));
@@ -2631,26 +3105,14 @@ fn rejects_cross_candidate_and_invalid_catalog_files_and_artifacts() {
     let catalog_document = catalog_value(catalog.parent().unwrap());
     let artifact = materialized_pattern_file(catalog.parent().unwrap(), &catalog_document, 0);
     fs::remove_file(&artifact).unwrap();
-    let missing_artifact = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let missing_artifact = run(promote_arguments(&live, &bundle, true));
     assert_eq!(missing_artifact.status, 2);
     assert!(missing_artifact.stderr.contains("catalog pattern 1"));
     assert!(!missing_artifact.stderr.contains("private-alpha"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
     fs::write(&artifact, b"private-modified-artifact").unwrap();
-    let modified = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let modified = run(promote_arguments(&live, &bundle, true));
     assert_eq!(modified.status, 2);
     assert!(modified.stderr.contains("SHA-256"));
     assert!(!modified.stderr.contains("private-modified-artifact"));
@@ -2662,13 +3124,13 @@ fn rejects_catalog_source_index_bytes_and_case_setting_mismatches() {
     let fixture = Fixture::new();
     let baseline = settings(
         vec![
-            pattern("^private-alpha$", true),
-            pattern("^private-beta$", false),
+            pattern("^fx private-alpha$", true),
+            pattern("^fx private-beta$", false),
         ],
         1,
     );
     let captured = capture_standard(&fixture, "source-identity", &baseline, "alpha");
-    let catalog = materialize_for_promotion(
+    let (catalog, _bundle) = materialize_and_seal(
         &fixture,
         "source-identity",
         &captured.candidate,
@@ -2679,21 +3141,25 @@ fn rejects_catalog_source_index_bytes_and_case_setting_mismatches() {
     let artifact = materialized_pattern_file(catalog.parent().unwrap(), &original_catalog, 0);
     let live = fixture.write_pretty_json("source-identity-live.json", &baseline);
     let original_live = fs::read(&live).unwrap();
+    let owner = [replacement_pattern("alpha", "always_allow", 0)];
 
+    // Source-identity mismatches now refuse when the bundle is sealed.
     let mut wrong_index = original_catalog.clone();
     wrong_index["patterns"][0]["source_index"] = json!(1);
+    let wrong_index_path = catalog.parent().unwrap().join("wrong-index-catalog.json");
     fs::write(
-        &catalog,
+        &wrong_index_path,
         helper::serialize_pretty_json(&wrong_index).unwrap(),
     )
     .unwrap();
-    let index_result = run(promote_arguments(
-        &live,
+    let index_result = try_seal(
+        &fixture,
+        "wrong-index",
         &captured.candidate,
         &captured.state,
-        &catalog,
-        true,
-    ));
+        &wrong_index_path,
+        &owner,
+    );
     assert_eq!(index_result.status, 2);
     assert!(index_result.stderr.contains("source identity"));
     assert!(!index_result.stderr.contains("private-alpha"));
@@ -2701,23 +3167,25 @@ fn rejects_catalog_source_index_bytes_and_case_setting_mismatches() {
 
     let mut wrong_case = original_catalog.clone();
     wrong_case["patterns"][0]["case_sensitive"] = json!(false);
+    let wrong_case_path = catalog.parent().unwrap().join("wrong-case-catalog.json");
     fs::write(
-        &catalog,
+        &wrong_case_path,
         helper::serialize_pretty_json(&wrong_case).unwrap(),
     )
     .unwrap();
-    let case_result = run(promote_arguments(
-        &live,
+    let case_result = try_seal(
+        &fixture,
+        "wrong-case",
         &captured.candidate,
         &captured.state,
-        &catalog,
-        true,
-    ));
+        &wrong_case_path,
+        &owner,
+    );
     assert_eq!(case_result.status, 2);
     assert!(case_result.stderr.contains("source identity"));
     assert!(!case_result.stderr.contains("private-alpha"));
 
-    let cross_candidate_bytes = b"^private-cross-candidate-artifact$";
+    let cross_candidate_bytes = b"^fx private-cross-candidate-artifact$";
     fs::write(&artifact, cross_candidate_bytes).unwrap();
     let mut wrong_bytes = original_catalog;
     wrong_bytes["patterns"][0]["sha256"] = json!(helper::sha256_hex(cross_candidate_bytes));
@@ -2726,13 +3194,14 @@ fn rejects_catalog_source_index_bytes_and_case_setting_mismatches() {
         helper::serialize_pretty_json(&wrong_bytes).unwrap(),
     )
     .unwrap();
-    let bytes_result = run(promote_arguments(
-        &live,
+    let bytes_result = try_seal(
+        &fixture,
+        "wrong-bytes",
         &captured.candidate,
         &captured.state,
         &catalog,
-        true,
-    ));
+        &owner,
+    );
     assert_eq!(bytes_result.status, 2);
     assert!(bytes_result.stderr.contains("source identity"));
     assert!(
@@ -2747,9 +3216,9 @@ fn rejects_catalog_source_index_bytes_and_case_setting_mismatches() {
 #[test]
 fn refuses_symlinked_catalogs_and_artifacts_before_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^private-alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx private-alpha$", true)], 1);
     let captured = capture_standard(&fixture, "catalog-links", &baseline, "alpha");
-    let catalog = materialize_for_promotion(
+    let (catalog, _bundle) = materialize_and_seal(
         &fixture,
         "catalog-links",
         &captured.candidate,
@@ -2761,29 +3230,31 @@ fn refuses_symlinked_catalogs_and_artifacts_before_promotion() {
     let catalog_link = fixture.path("catalog-link.json");
     symlink(&catalog, &catalog_link).unwrap();
 
-    let linked_catalog = run(promote_arguments(
-        &live,
+    let linked_catalog = try_seal(
+        &fixture,
+        "catalog-link",
         &captured.candidate,
         &captured.state,
         &catalog_link,
-        true,
-    ));
+        &[replacement_pattern("alpha", "always_allow", 0)],
+    );
     assert_eq!(linked_catalog.status, 2);
     assert!(linked_catalog.stderr.contains("symbolic link"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
     let catalog_document = catalog_value(catalog.parent().unwrap());
     let artifact = materialized_pattern_file(catalog.parent().unwrap(), &catalog_document, 0);
-    let artifact_target = fixture.write("catalog-artifact-target.regex", b"^private-alpha$");
+    let artifact_target = fixture.write("catalog-artifact-target.regex", b"^fx private-alpha$");
     fs::remove_file(&artifact).unwrap();
     symlink(&artifact_target, &artifact).unwrap();
-    let linked_artifact = run(promote_arguments(
-        &live,
+    let linked_artifact = try_seal(
+        &fixture,
+        "artifact-link",
         &captured.candidate,
         &captured.state,
         &catalog,
-        true,
-    ));
+        &[replacement_pattern("alpha", "always_allow", 0)],
+    );
     assert_eq!(linked_artifact.status, 2);
     assert!(linked_artifact.stderr.contains("symbolic link"));
     assert!(!linked_artifact.stderr.contains("private-alpha"));
@@ -2793,16 +3264,16 @@ fn refuses_symlinked_catalogs_and_artifacts_before_promotion() {
 #[test]
 fn promotes_the_exact_untouched_catalog_accepted_by_matcher_validation() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "matcher-handoff", &baseline, "alpha");
     let mut candidate_value = baseline.clone();
-    replace_allow_scope(&mut candidate_value, json!([pattern("^beta$", true)]));
+    replace_allow_scope(&mut candidate_value, json!([pattern("^fx beta$", true)]));
     fs::write(
         &captured.candidate,
         helper::serialize_pretty_json(&candidate_value).unwrap(),
     )
     .unwrap();
-    let catalog = materialize_for_promotion(
+    let (catalog, bundle) = materialize_and_seal(
         &fixture,
         "matcher-handoff",
         &captured.candidate,
@@ -2828,8 +3299,8 @@ fn promotes_the_exact_untouched_catalog_accepted_by_matcher_validation() {
         format!(
             concat!(
                 "catalog-pattern\tcandidate\tbeta\n",
-                "pattern-case\tbeta\tmatch\tbeta\n",
-                "decision-case\tallow\tbeta\n",
+                "pattern-case\tbeta\tmatch\tfx beta\n",
+                "decision-case\tallow\tfx beta\n",
                 "default\tdeny\n",
                 "pattern-catalog\tcandidate\t{}\t{}\t{}"
             ),
@@ -2852,13 +3323,7 @@ fn promotes_the_exact_untouched_catalog_accepted_by_matcher_validation() {
     assert_eq!(fs::read(&artifact).unwrap(), artifact_before);
 
     let live = fixture.write_pretty_json("matcher-handoff-live.json", &baseline);
-    let promotion = run(promote_arguments(
-        &live,
-        &captured.candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let promotion = run(promote_arguments(&live, &bundle, true));
     assert_eq!(promotion.status, 0, "{}", promotion.stderr);
     let promoted: Value = serde_json::from_slice(&fs::read(&live).unwrap()).unwrap();
     assert_eq!(
@@ -2870,7 +3335,7 @@ fn promotes_the_exact_untouched_catalog_accepted_by_matcher_validation() {
 #[test]
 fn promotes_scopes_and_preserves_preexisting_out_of_scope_changes() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "promotion", &baseline, "alpha");
     let mut live_value = baseline.clone();
     live_value["outside"]["generation"] = json!(2);
@@ -2879,10 +3344,10 @@ fn promotes_scopes_and_preserves_preexisting_out_of_scope_changes() {
     let mut candidate_value = baseline.clone();
     replace_allow_scope(
         &mut candidate_value,
-        json!([pattern("^beta$", true), pattern("^gamma$", false)]),
+        json!([pattern("^fx beta$", true), pattern("^fx gamma$", false)]),
     );
     let candidate = fixture.write_json("candidate.json", &candidate_value);
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         &fixture,
         "promotion",
         &candidate,
@@ -2893,17 +3358,11 @@ fn promotes_scopes_and_preserves_preexisting_out_of_scope_changes() {
         ],
     );
 
-    let result = run(promote_arguments(
-        &live,
-        &candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let result = run(promote_arguments(&live, &bundle, true));
 
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert!(result.stdout.contains("Promoted 1 authorized scope"));
-    assert!(!result.stdout.contains("^beta$"));
+    assert!(!result.stdout.contains("^fx beta$"));
     assert!(!result.stdout.contains("preserved"));
     assert!(result.stderr.is_empty());
     let promoted_bytes = fs::read(&live).unwrap();
@@ -2926,12 +3385,12 @@ fn promotes_scopes_and_preserves_preexisting_out_of_scope_changes() {
 #[test]
 fn refuses_live_scope_drift_and_candidate_changes_outside_scopes() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "refusal", &baseline, "alpha");
     let mut candidate_value = baseline.clone();
-    replace_allow_scope(&mut candidate_value, json!([pattern("^beta$", true)]));
+    replace_allow_scope(&mut candidate_value, json!([pattern("^fx beta$", true)]));
     let candidate = fixture.write_pretty_json("candidate.json", &candidate_value);
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         &fixture,
         "refusal",
         &candidate,
@@ -2941,18 +3400,12 @@ fn refuses_live_scope_drift_and_candidate_changes_outside_scopes() {
     let mut drifted_live = baseline.clone();
     replace_allow_scope(
         &mut drifted_live,
-        json!([pattern("^concurrent-scope-change$", true)]),
+        json!([pattern("^fx concurrent-scope-change$", true)]),
     );
     let live = fixture.write_pretty_json("live.json", &drifted_live);
     let drifted_bytes = fs::read(&live).unwrap();
 
-    let drift_result = run(promote_arguments(
-        &live,
-        &candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let drift_result = run(promote_arguments(&live, &bundle, true));
 
     assert_eq!(drift_result.status, 1);
     assert!(drift_result.stdout.is_empty());
@@ -2981,13 +3434,15 @@ fn refuses_live_scope_drift_and_candidate_changes_outside_scopes() {
         &[replacement_pattern("beta", "always_allow", 0)],
     );
 
-    let outside_result = run(promote_arguments(
-        &live,
+    let outside_bundle = seal_hand_catalog(
+        &fixture,
+        "outside-refusal",
         &candidate,
         &captured.state,
         &outside_catalog,
-        true,
-    ));
+        &[replacement_pattern("beta", "always_allow", 0)],
+    );
+    let outside_result = run(promote_arguments(&live, &outside_bundle, true));
 
     assert_eq!(outside_result.status, 1);
     assert!(outside_result.stdout.is_empty());
@@ -3000,7 +3455,7 @@ fn refuses_live_scope_drift_and_candidate_changes_outside_scopes() {
 #[test]
 fn leaves_semantic_and_byte_identical_promotion_untouched() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "noop", &baseline, "alpha");
     let live = fixture.write_pretty_json("live.json", &baseline);
     let mut reordered = serde_json::Map::new();
@@ -3009,7 +3464,7 @@ fn leaves_semantic_and_byte_identical_promotion_untouched() {
     let candidate_value = Value::Object(reordered);
     assert!(helper::semantic_json_equal(&candidate_value, &baseline));
     let candidate = fixture.write_json("candidate.json", &candidate_value);
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         &fixture,
         "noop",
         &candidate,
@@ -3019,13 +3474,7 @@ fn leaves_semantic_and_byte_identical_promotion_untouched() {
     let before = fs::metadata(&live).unwrap();
     let before_bytes = fs::read(&live).unwrap();
 
-    let result = run(promote_arguments(
-        &live,
-        &candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let result = run(promote_arguments(&live, &bundle, true));
 
     let after = fs::metadata(&live).unwrap();
     assert_eq!(result.status, 0, "{}", result.stderr);
@@ -3101,16 +3550,16 @@ fn preserves_the_uncooperative_writer_race_after_the_best_effort_recheck() {
 #[test]
 fn preserves_live_permissions_during_atomic_promotion() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "permissions", &baseline, "alpha");
     let live = fixture.write_pretty_json("live.json", &baseline);
     let mut permissions = fs::metadata(&live).unwrap().permissions();
     permissions.set_mode(0o640);
     fs::set_permissions(&live, permissions).unwrap();
     let mut candidate_value = baseline.clone();
-    replace_allow_scope(&mut candidate_value, json!([pattern("^beta$", true)]));
+    replace_allow_scope(&mut candidate_value, json!([pattern("^fx beta$", true)]));
     let candidate = fixture.write_pretty_json("candidate.json", &candidate_value);
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         &fixture,
         "permissions",
         &candidate,
@@ -3118,13 +3567,7 @@ fn preserves_live_permissions_during_atomic_promotion() {
         vec![replacement_pattern("beta", "always_allow", 0)],
     );
 
-    let result = run(promote_arguments(
-        &live,
-        &candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let result = run(promote_arguments(&live, &bundle, true));
 
     assert_eq!(result.status, 0, "{}", result.stderr);
     assert_eq!(
@@ -3137,7 +3580,7 @@ fn preserves_live_permissions_during_atomic_promotion() {
 #[test]
 fn refuses_symlinked_live_destinations() {
     let fixture = Fixture::new();
-    let baseline = settings(vec![pattern("^alpha$", true)], 1);
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
     let captured = capture_standard(&fixture, "destination-link", &baseline, "alpha");
     let real_parent = fixture.create_dir("real-live-parent");
     let target = real_parent.join("settings.json");
@@ -3150,9 +3593,9 @@ fn refuses_symlinked_live_destinations() {
     symlink(&real_parent, &linked_parent).expect("Failed to create live parent symlink");
     let linked_live = linked_parent.join("settings.json");
     let mut candidate_value = baseline.clone();
-    replace_allow_scope(&mut candidate_value, json!([pattern("^beta$", true)]));
+    replace_allow_scope(&mut candidate_value, json!([pattern("^fx beta$", true)]));
     let candidate = fixture.write_pretty_json("candidate.json", &candidate_value);
-    let catalog = materialize_for_promotion(
+    let (_catalog, bundle) = materialize_and_seal(
         &fixture,
         "destination-link",
         &candidate,
@@ -3161,17 +3604,744 @@ fn refuses_symlinked_live_destinations() {
     );
     let original_target = fs::read(&target).unwrap();
 
-    let result = run(promote_arguments(
-        &linked_live,
-        &candidate,
-        &captured.state,
-        &catalog,
-        true,
-    ));
+    let result = run(promote_arguments(&linked_live, &bundle, true));
 
     assert_eq!(result.status, 1);
     assert!(result.stdout.is_empty());
     assert!(result.stderr.contains("symbolic link"));
     assert_eq!(fs::read(&target).unwrap(), original_target);
     assert_eq!(fs::read_dir(real_parent).unwrap().count(), 1);
+}
+
+fn refresh_arguments(settings: &Path, bundle: &Path, output: &Path) -> Vec<OsString> {
+    vec![
+        OsString::from("refresh"),
+        OsString::from("--settings"),
+        settings.as_os_str().to_owned(),
+        OsString::from("--bundle"),
+        bundle.as_os_str().to_owned(),
+        OsString::from("--output"),
+        output.as_os_str().to_owned(),
+    ]
+}
+
+struct StaleGraph {
+    bundle: PathBuf,
+    candidate_relative: String,
+    catalog_relative: String,
+    drifted: Value,
+    live: PathBuf,
+    owner_spec_relative: String,
+    state_relative: String,
+}
+
+/// Seal one replacement graph, then drift live settings so every captured position moves.
+fn stale_replacement_graph(fixture: &Fixture, prefix: &str) -> StaleGraph {
+    let root = fixture.path("");
+    // The owner member trails the retained overlap, so drift appended after it moves its index and
+    // the reviewed manifest positions can only be resolved through a binding.
+    let overlap = pattern("^fx overlap$", false);
+    let baseline = settings(vec![overlap.clone(), pattern("^fx old-owner$", true)], 1);
+    let mut candidate_value = baseline.clone();
+    replace_allow_scope(
+        &mut candidate_value,
+        json!([overlap.clone(), pattern("^fx new-owner$", true)]),
+    );
+
+    let captured = capture_selected(
+        fixture,
+        prefix,
+        &baseline,
+        vec![ALLOW_SCOPE],
+        vec![json!({"id": "old-owner", "bucket": "always_allow", "index": 1})],
+    );
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate_value).expect("Candidate fixture must serialize"),
+    )
+    .expect("Failed to write candidate fixture");
+    let (catalog, bundle) = materialize_and_seal(
+        fixture,
+        prefix,
+        &captured.candidate,
+        &captured.state,
+        vec![
+            validation_pattern("overlap", "always_allow", 0),
+            replacement_pattern("new-owner", "always_allow", 1),
+        ],
+    );
+
+    // An unrelated allow pattern is appended, so the reviewed positions no longer describe reality.
+    let drifted = settings(
+        vec![
+            overlap,
+            pattern("^fx old-owner$", true),
+            pattern("^fx unrelated$", true),
+        ],
+        2,
+    );
+    let live = fixture.write_pretty_json(&format!("{prefix}-live.json"), &drifted);
+
+    StaleGraph {
+        candidate_relative: graph_relative(&root, &captured.candidate),
+        catalog_relative: graph_relative(&root, &catalog),
+        owner_spec_relative: format!("{prefix}-owner-spec.json"),
+        state_relative: graph_relative(&root, &captured.state),
+        bundle,
+        drifted,
+        live,
+    }
+}
+
+/// Re-record fixture evidence for one refreshed plan entry through the artifacts refresh emitted.
+fn write_refreshed_evidence(root: &Path, candidate_relative: &str, entry: &Value) {
+    let kind = entry["kind"].as_str().expect("Plan kind must be a string");
+    let manifest = root.join(
+        entry["manifest"]
+            .as_str()
+            .expect("Plan manifest must be a string"),
+    );
+    let result_path = root.join(
+        entry["result"]
+            .as_str()
+            .expect("Plan result must be a string"),
+    );
+    let auxiliary = entry["overlay"].as_str().map(str::to_owned);
+    let binds_overlay = matches!(kind, "matcher_suite" | "comparison" | "layer_decision");
+
+    let mut builder =
+        patterns::InputClosureBuilder::new(root).expect("Refreshed graph root must be a directory");
+    let overlay = binds_overlay
+        .then(|| patterns::ResolvedOverlay::load(root).expect("Refreshed overlay must load"));
+    let context = patterns::ClosureContext {
+        overlay: overlay.as_ref(),
+    };
+    match kind {
+        "matcher_suite" => patterns::resolve_suite_closure(&mut builder, &context, &manifest),
+        "comparison" => patterns::resolve_comparison_closure(&mut builder, &context, &manifest),
+        "layer_decision" => patterns::resolve_layer_closure(&mut builder, &context, &manifest),
+        _ => patterns::resolve_audit_closure(
+            &mut builder,
+            &manifest,
+            &root.join(candidate_relative),
+            auxiliary
+                .as_ref()
+                .map(|relative| root.join(relative))
+                .as_deref(),
+        ),
+    }
+    .expect("Refreshed closure must resolve");
+    let closure = builder.finish().expect("Refreshed closure must finish");
+
+    let mut bound_inputs = serde_json::Map::new();
+    bound_inputs.insert("manifest_sha256".to_owned(), json!(file_sha256(&manifest)));
+    if let Some(relative) = &auxiliary {
+        bound_inputs.insert(
+            "overlay".to_owned(),
+            json!({
+                "path": relative,
+                "sha256": file_sha256(&root.join(relative))
+            }),
+        );
+    }
+    bound_inputs.insert(
+        "input_closure".to_owned(),
+        serde_json::to_value(&closure).expect("Closure must serialize"),
+    );
+
+    let result = json!({
+        "kind": kind,
+        "evaluator": "fixture",
+        "outcome": "passed",
+        "bound_inputs": Value::Object(bound_inputs),
+        "counts": {}
+    });
+    if let Some(parent) = result_path.parent() {
+        fs::create_dir_all(parent).expect("Failed to create refreshed result parent");
+    }
+    fs::write(
+        &result_path,
+        serde_json::to_vec(&result).expect("Refreshed result must serialize"),
+    )
+    .expect("Failed to write refreshed result");
+}
+
+fn seal_refreshed_graph(root: &Path, stale: &StaleGraph) -> (Value, PathBuf) {
+    let plan: Value = serde_json::from_slice(&fs::read(root.join("validation-plan.json")).unwrap())
+        .expect("Validation plan must parse");
+    for entry in plan["results"]
+        .as_array()
+        .expect("Validation plan must declare results")
+    {
+        write_refreshed_evidence(root, &stale.candidate_relative, entry);
+    }
+
+    let bundle = root.join("refreshed-bundle.json");
+    let sealed = run(vec![
+        OsString::from("seal"),
+        OsString::from("--candidate"),
+        root.join(&stale.candidate_relative).into_os_string(),
+        OsString::from("--state"),
+        root.join(&stale.state_relative).into_os_string(),
+        OsString::from("--catalog"),
+        root.join(&stale.catalog_relative).into_os_string(),
+        OsString::from("--owner-spec"),
+        root.join(&stale.owner_spec_relative).into_os_string(),
+        OsString::from("--validation"),
+        root.join("validation-plan.json").into_os_string(),
+        OsString::from("--output"),
+        bundle.clone().into_os_string(),
+    ]);
+    assert_eq!(sealed.status, 0, "seal failed: {}", sealed.stderr);
+
+    (plan, bundle)
+}
+
+#[test]
+fn refreshes_a_stale_graph_into_a_sealable_directory() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "round-trip");
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+    assert!(refreshed.stdout.contains("unsealed"));
+
+    // Refresh reproduces every reviewed manifest and emits a binding for each audit entry, so the
+    // refreshed graph seals without editing any reviewed hash, path, or index by hand.
+    let (plan, refreshed_bundle) = seal_refreshed_graph(&root, &stale);
+    let entries = plan["results"]
+        .as_array()
+        .expect("Validation plan must declare results");
+    assert!(!entries.is_empty());
+    for entry in entries {
+        let manifest = entry["manifest"].as_str().unwrap();
+        assert!(root.join(manifest).is_file(), "missing manifest {manifest}");
+        let auxiliary = entry["overlay"]
+            .as_str()
+            .unwrap_or_else(|| panic!("entry {} declares no auxiliary artifact", entry["id"]));
+        assert!(root.join(auxiliary).is_file(), "missing {auxiliary}");
+        match entry["kind"].as_str().unwrap() {
+            "owner_audit" | "candidate_inventory" => {
+                assert_eq!(auxiliary, format!("{manifest}.binding.json"));
+            }
+            _ => assert_eq!(auxiliary, "path-overlay.json"),
+        }
+    }
+    assert_eq!(
+        fs::read(root.join("round-trip-validation-input.txt")).unwrap(),
+        b"fx alpha"
+    );
+    assert_eq!(
+        fs::read(root.join("round-trip-ordinary.regex")).unwrap(),
+        b"^fx alpha$"
+    );
+
+    let rehearsed = run(vec![
+        OsString::from("preflight"),
+        OsString::from("--settings"),
+        stale.live.as_os_str().to_owned(),
+        OsString::from("--bundle"),
+        refreshed_bundle.into_os_string(),
+    ]);
+    assert_eq!(
+        rehearsed.status, 0,
+        "preflight failed: {}",
+        rehearsed.stderr
+    );
+    let unchanged: Value = serde_json::from_slice(&fs::read(&stale.live).unwrap()).unwrap();
+    assert!(helper::semantic_json_equal(&unchanged, &stale.drifted));
+}
+
+#[test]
+fn refresh_rebinds_moved_audit_positions_without_editing_the_reviewed_manifest() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "rebind");
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+
+    let plan: Value =
+        serde_json::from_slice(&fs::read(root.join("validation-plan.json")).unwrap()).unwrap();
+    let audit = plan["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["kind"] == json!("owner_audit"))
+        .expect("The refreshed plan must retain owner-audit evidence");
+    let manifest_relative = audit["manifest"].as_str().unwrap();
+
+    let reviewed = fs::read(fixture.path(manifest_relative)).unwrap();
+    assert_eq!(
+        fs::read(root.join(manifest_relative)).unwrap(),
+        reviewed,
+        "the reviewed manifest must be reproduced byte-for-byte"
+    );
+
+    let binding: Value =
+        serde_json::from_slice(&fs::read(root.join(audit["overlay"].as_str().unwrap())).unwrap())
+            .unwrap();
+    let refreshed_candidate = fs::read(root.join(&stale.candidate_relative)).unwrap();
+    assert_eq!(
+        binding["settings_sha256"],
+        json!(helper::sha256_hex(&refreshed_candidate)),
+        "the binding must bind the refreshed candidate"
+    );
+    let catalog: Value =
+        serde_json::from_slice(&fs::read(root.join(&stale.catalog_relative)).unwrap()).unwrap();
+    let owner_entry = catalog["patterns"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"] == json!("new-owner"))
+        .expect("The refreshed catalog must retain the owner member");
+    let bound = binding["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"] == json!("new-owner"))
+        .expect("The binding must rebind the audited owner member");
+    assert_eq!(bound["bucket"], owner_entry["bucket"]);
+    assert_eq!(bound["index"], owner_entry["source_index"]);
+
+    let reviewed_manifest: Value = serde_json::from_slice(&reviewed).unwrap();
+    let reviewed_entry = reviewed_manifest["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"] == json!("new-owner"))
+        .expect("The reviewed manifest must audit the owner member");
+    assert_ne!(
+        reviewed_entry["index"], bound["index"],
+        "the fixture must move the audited position, or the rebinding proves nothing"
+    );
+}
+
+#[test]
+fn refresh_refuses_an_output_inside_the_reviewed_graph() {
+    let fixture = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "nested");
+    let nested = fixture.path("nested-refresh-output");
+
+    let result = run(refresh_arguments(&stale.live, &stale.bundle, &nested));
+
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("outside the reviewed graph root"));
+    assert!(!nested.exists());
+}
+
+#[test]
+fn refresh_rolls_back_every_artifact_when_one_destination_exists() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "rollback");
+    let root = destination.path("");
+    let occupied = root.join("validation-plan.json");
+    fs::write(&occupied, b"occupied").unwrap();
+
+    let result = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("already exists"));
+    assert_eq!(fs::read(&occupied).unwrap(), b"occupied");
+    assert_eq!(
+        fs::read_dir(&root).unwrap().count(),
+        1,
+        "a refused refresh must leave no partial graph"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn refresh_refuses_a_symlinked_artifact_directory() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let escape = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "artifact-link");
+    let root = destination.path("");
+    let nested = stale
+        .state_relative
+        .rsplit_once('/')
+        .map(|(parent, _)| parent.to_owned())
+        .expect("The fixture state manifest must live in a subdirectory");
+    symlink(escape.path(""), root.join(&nested)).expect("Failed to create artifact directory link");
+
+    let result = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("symbolic link"));
+    assert_eq!(
+        fs::read_dir(escape.path("")).unwrap().count(),
+        0,
+        "refresh must not write through a symlinked component"
+    );
+}
+
+#[test]
+fn refresh_refuses_parent_directory_aliases_into_the_reviewed_graph() {
+    let fixture = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "parent-alias");
+    fixture.create_dir("outside");
+    let aliased = fixture
+        .path("outside")
+        .join("..")
+        .join("nested-refresh-output");
+
+    let result = run(refresh_arguments(&stale.live, &stale.bundle, &aliased));
+
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(
+        result.stderr.contains("parent-directory"),
+        "{}",
+        result.stderr
+    );
+    assert!(!fixture.path("nested-refresh-output").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn refresh_refuses_a_symlinked_output_ancestor() {
+    let fixture = Fixture::new();
+    let container = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "output-link");
+    let alias = container.path("reviewed-graph-link");
+    symlink(fixture.path(""), &alias).expect("Failed to create reviewed graph alias");
+    let output = alias.join("nested-refresh-output");
+
+    let result = run(refresh_arguments(&stale.live, &stale.bundle, &output));
+
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("symbolic link"), "{}", result.stderr);
+    assert!(!fixture.path("nested-refresh-output").exists());
+}
+
+#[test]
+fn refresh_refuses_a_validation_manifest_changed_after_sealing() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "tampered-manifest");
+    let bundle: Value = serde_json::from_slice(&fs::read(&stale.bundle).unwrap()).unwrap();
+    let manifest = bundle["validation"][0]["manifest"]["path"]
+        .as_str()
+        .expect("The bundle must bind a validation manifest");
+    fs::write(fixture.path(manifest), b"{}").unwrap();
+
+    let result = run(refresh_arguments(
+        &stale.live,
+        &stale.bundle,
+        &destination.path(""),
+    ));
+
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(result.stdout.is_empty());
+    assert!(result.stderr.contains("SHA-256"), "{}", result.stderr);
+    assert_eq!(fs::read_dir(destination.path("")).unwrap().count(), 0);
+}
+
+#[test]
+fn refresh_composes_manifest_bindings_across_repeated_refreshes() {
+    let fixture = Fixture::new();
+    let first_destination = Fixture::new();
+    let second_destination = Fixture::new();
+    let stale = stale_replacement_graph(&fixture, "repeat");
+    let first_root = first_destination.path("");
+
+    let first = run(refresh_arguments(&stale.live, &stale.bundle, &first_root));
+    assert_eq!(first.status, 0, "{}", first.stderr);
+    let (_, first_bundle) = seal_refreshed_graph(&first_root, &stale);
+
+    let second_settings = settings(
+        vec![
+            pattern("^fx overlap$", false),
+            pattern("^fx old-owner$", true),
+            pattern("^fx unrelated$", true),
+            pattern("^fx later$", true),
+        ],
+        3,
+    );
+    let second_live = first_destination.write_pretty_json("second-live.json", &second_settings);
+    let second_source = StaleGraph {
+        bundle: first_bundle,
+        candidate_relative: stale.candidate_relative.clone(),
+        catalog_relative: stale.catalog_relative.clone(),
+        drifted: second_settings,
+        live: second_live,
+        owner_spec_relative: stale.owner_spec_relative.clone(),
+        state_relative: stale.state_relative.clone(),
+    };
+    let second_root = second_destination.path("");
+
+    let second = run(refresh_arguments(
+        &second_source.live,
+        &second_source.bundle,
+        &second_root,
+    ));
+    assert_eq!(second.status, 0, "{}", second.stderr);
+    let (plan, _) = seal_refreshed_graph(&second_root, &second_source);
+    let audit = plan["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["kind"] == json!("owner_audit"))
+        .expect("The second refreshed plan must retain owner-audit evidence");
+    let binding: Value = serde_json::from_slice(
+        &fs::read(second_root.join(audit["overlay"].as_str().unwrap())).unwrap(),
+    )
+    .unwrap();
+    let owner = binding["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"] == json!("new-owner"))
+        .expect("The composed binding must retain the owner entry");
+    assert_eq!(owner["index"], json!(3));
+}
+
+#[cfg(unix)]
+#[test]
+fn refresh_rollback_preserves_a_concurrent_replacement() {
+    let destination = Fixture::new();
+    let root = destination.path("");
+    let mut artifacts = BTreeMap::new();
+    artifacts.insert("a.txt".to_owned(), b"owned".to_vec());
+    artifacts.insert("b.txt".to_owned(), b"later".to_vec());
+
+    let result = helper::commit_refresh_artifacts_with_hook(&root, &artifacts, |index, path| {
+        if index == 0 {
+            fs::write(path, b"concurrent").unwrap();
+            return Err("injected failure".to_owned());
+        }
+        Ok(())
+    });
+
+    assert_eq!(result.unwrap_err(), "injected failure");
+    assert_eq!(fs::read(root.join("a.txt")).unwrap(), b"concurrent");
+    assert!(!root.join("b.txt").exists());
+}
+
+fn allow_sources(settings: &Value) -> Vec<String> {
+    settings["agent"]["tool_permissions"]["tools"]["terminal"]["always_allow"]
+        .as_array()
+        .expect("Refreshed allow patterns must be an array")
+        .iter()
+        .map(|entry| {
+            entry["pattern"]
+                .as_str()
+                .expect("Refreshed pattern must be a string")
+                .to_owned()
+        })
+        .collect()
+}
+
+struct GapGraph {
+    bundle: PathBuf,
+    candidate_relative: String,
+    live: PathBuf,
+}
+
+/// Seal one replacement graph whose owner members sit between two retained overlaps, then drift live
+/// settings. Refreshed placement can only be resolved through the reviewed gap boundaries, so this
+/// fixture exercises the interior-gap branch rather than the start and end sentinels.
+fn gap_graph(
+    fixture: &Fixture,
+    prefix: &str,
+    members: &[&str],
+    drifted_allow: Vec<Value>,
+) -> GapGraph {
+    let root = fixture.path("");
+    let left = pattern("^fx left$", true);
+    let right = pattern("^fx right$", true);
+    let baseline = settings(
+        vec![left.clone(), pattern("^fx old-owner$", true), right.clone()],
+        1,
+    );
+
+    let mut candidate_allow = vec![left];
+    for member in members {
+        candidate_allow.push(pattern(&format!("^fx {member}$"), true));
+    }
+    candidate_allow.push(right);
+    let mut candidate_value = baseline.clone();
+    replace_allow_scope(&mut candidate_value, Value::Array(candidate_allow));
+
+    let captured = capture_selected(
+        fixture,
+        prefix,
+        &baseline,
+        vec![ALLOW_SCOPE],
+        vec![json!({"id": "old-owner", "bucket": "always_allow", "index": 1})],
+    );
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate_value).expect("Candidate fixture must serialize"),
+    )
+    .expect("Failed to write candidate fixture");
+
+    let mut selection = vec![validation_pattern("left", "always_allow", 0)];
+    for (offset, member) in members.iter().enumerate() {
+        selection.push(replacement_pattern(member, "always_allow", offset + 1));
+    }
+    selection.push(validation_pattern(
+        "right",
+        "always_allow",
+        members.len() + 1,
+    ));
+
+    let (_, bundle) = materialize_and_seal(
+        fixture,
+        prefix,
+        &captured.candidate,
+        &captured.state,
+        selection,
+    );
+    let live =
+        fixture.write_pretty_json(&format!("{prefix}-live.json"), &settings(drifted_allow, 2));
+
+    GapGraph {
+        candidate_relative: graph_relative(&root, &captured.candidate),
+        bundle,
+        live,
+    }
+}
+
+#[test]
+fn refresh_places_an_owner_member_between_its_relocated_gap_boundaries() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    // Drift inserts unrelated patterns before the left boundary and inside the reviewed gap, so a
+    // replay that trusted reviewed indexes would land the member in the wrong place.
+    let graph = gap_graph(
+        &fixture,
+        "interior",
+        &["new-owner"],
+        vec![
+            pattern("^fx extra$", true),
+            pattern("^fx left$", true),
+            pattern("^fx old-owner$", true),
+            pattern("^fx other$", true),
+            pattern("^fx right$", true),
+        ],
+    );
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&graph.live, &graph.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+
+    let candidate: Value =
+        serde_json::from_slice(&fs::read(root.join(&graph.candidate_relative)).unwrap()).unwrap();
+
+    assert_eq!(
+        allow_sources(&candidate),
+        vec![
+            "^fx extra$",
+            "^fx left$",
+            "^fx new-owner$",
+            "^fx other$",
+            "^fx right$"
+        ],
+        "the owner member must follow its relocated left boundary"
+    );
+}
+
+#[test]
+fn refresh_keeps_the_reviewed_order_of_members_sharing_one_gap() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let graph = gap_graph(
+        &fixture,
+        "shared-gap",
+        &["new-a", "new-b"],
+        vec![
+            pattern("^fx left$", true),
+            pattern("^fx old-owner$", true),
+            pattern("^fx other$", true),
+            pattern("^fx right$", true),
+        ],
+    );
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&graph.live, &graph.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+
+    let candidate: Value =
+        serde_json::from_slice(&fs::read(root.join(&graph.candidate_relative)).unwrap()).unwrap();
+
+    assert_eq!(
+        allow_sources(&candidate),
+        vec![
+            "^fx left$",
+            "^fx new-a$",
+            "^fx new-b$",
+            "^fx other$",
+            "^fx right$"
+        ],
+        "members sharing one reviewed gap must retain their reviewed order"
+    );
+}
+
+#[test]
+fn refresh_refuses_a_reviewed_gap_whose_boundaries_reordered() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    // Live settings swap the boundaries, so no placement preserves the reviewed ordering.
+    let graph = gap_graph(
+        &fixture,
+        "reversed",
+        &["new-owner"],
+        vec![
+            pattern("^fx right$", true),
+            pattern("^fx old-owner$", true),
+            pattern("^fx left$", true),
+        ],
+    );
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&graph.live, &graph.bundle, &root));
+
+    assert_eq!(refreshed.status, 1, "{}", refreshed.stderr);
+    assert!(refreshed.stdout.is_empty());
+    assert!(
+        refreshed.stderr.contains("reordered across its boundaries"),
+        "{}",
+        refreshed.stderr
+    );
+    assert!(!root.join("validation-plan.json").exists());
+}
+
+#[test]
+fn refresh_reports_outside_owner_remainder_drift() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let graph = gap_graph(
+        &fixture,
+        "drift",
+        &["new-owner"],
+        vec![
+            pattern("^fx left$", true),
+            pattern("^fx old-owner$", true),
+            pattern("^fx other$", true),
+            pattern("^fx right$", true),
+        ],
+    );
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&graph.live, &graph.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+
+    let report: Value =
+        serde_json::from_slice(&fs::read(root.join("refresh-report.json")).unwrap()).unwrap();
+    let drift = report["outside_owner_drift"]
+        .as_array()
+        .expect("The refresh report must record outside-owner drift");
+
+    assert_eq!(drift.len(), 1, "{drift:?}");
+    assert_eq!(drift[0], json!("always_allow remainder 2 -> 3"));
 }

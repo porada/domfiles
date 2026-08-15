@@ -135,7 +135,6 @@ struct CatalogPatternFixture<'a> {
     case_sensitive: bool,
     contents: &'a [u8],
     id: &'a str,
-    owner_replacement: bool,
 }
 
 fn write_catalog_fixture(
@@ -166,7 +165,6 @@ fn write_catalog_fixture(
                 "bucket": pattern.bucket,
                 "source_index": index,
                 "case_sensitive": pattern.case_sensitive,
-                "owner_replacement": pattern.owner_replacement,
                 "sha256": helper::sha256_hex(pattern.contents),
                 "pattern_file": relative_file,
             })
@@ -1106,7 +1104,6 @@ fn rejects_suite_mode_with_existing_matching_options() {
         assert_eq!(status, 2, "Option `{option}` unexpectedly succeeded");
         assert!(stdout.is_empty());
         assert!(stderr.contains("mutually exclusive"));
-        assert!(stderr.contains("--suite-file"));
     }
 }
 
@@ -1451,7 +1448,6 @@ fn rejects_comparison_mode_with_every_existing_mode_and_option() {
             assert!(stderr.contains("must be used alone"));
         } else {
             assert!(stderr.contains("mutually exclusive"));
-            assert!(stderr.contains("--comparison-file"));
         }
     }
 }
@@ -2366,7 +2362,6 @@ fn verifies_mixed_suite_patterns_with_catalog_metadata() {
             case_sensitive: false,
             contents: b"^lowercase$",
             id: "catalog-allow",
-            owner_replacement: true,
         }],
     );
     let suite_file = fixture.write(
@@ -2500,7 +2495,6 @@ fn verifies_mixed_catalog_and_file_patterns_in_comparison() {
             case_sensitive: false,
             contents: b"^change$",
             id: "candidate-change",
-            owner_replacement: false,
         }],
     );
     let manifest = comparison_manifest_with_catalogs(
@@ -2555,7 +2549,6 @@ fn rejects_unknown_duplicate_and_conflicting_comparison_catalog_ids() {
             case_sensitive: true,
             contents: b"^input$",
             id: "catalog-pattern",
-            owner_replacement: true,
         }],
     );
     let ordinary = comparison_pattern("ordinary", "always_allow", true, "ordinary");
@@ -2629,7 +2622,6 @@ fn rejects_unknown_duplicate_and_conflicting_suite_catalog_ids() {
             case_sensitive: true,
             contents: b"^input$",
             id: "catalog-pattern",
-            owner_replacement: false,
         }],
     );
     let declarations = format!(
@@ -2723,7 +2715,6 @@ fn rejects_stale_catalog_candidate_and_state_bytes() {
                 case_sensitive: true,
                 contents: b"^private-pattern$",
                 id: "catalog-pattern",
-                owner_replacement: false,
             }],
         );
         let stale_file = if source == "candidate" {
@@ -2786,7 +2777,6 @@ fn rejects_tampered_newline_modified_missing_malformed_and_invalid_utf8_catalog_
                 case_sensitive: true,
                 contents,
                 id: "catalog-pattern",
-                owner_replacement: true,
             }],
         );
         match mutation {
@@ -2846,7 +2836,6 @@ fn rejects_catalog_backed_compile_errors_without_body_leakage() {
             case_sensitive: true,
             contents: b"private-catalog-regex(",
             id: "catalog-invalid",
-            owner_replacement: false,
         }],
     );
     let suite_file = fixture.write(
@@ -2895,7 +2884,7 @@ fn returns_success_for_help() {
     assert!(stdout.contains("decision-case-file<TAB>allow|confirm|deny<TAB><input-file>"));
     assert!(stdout.contains("Suite requirements:"));
     assert!(stdout.contains("strict artifact catalog schema"));
-    assert!(stdout.contains("boolean `owner_replacement` metadata"));
+    assert!(stdout.contains("Ownership lives in the owner spec, not the catalog"));
     assert!(stdout.contains("Catalog declarations do not count as patterns"));
     assert!(stdout.contains("at least one `decision-case` or `decision-case-file` record"));
     assert!(stdout.contains(
@@ -2917,6 +2906,8 @@ fn returns_success_for_help() {
     assert!(stdout.contains(
         "comparison checks whether each bucket matched and compares the configured final decision"
     ));
-    assert!(stdout.contains("Mutually exclusive with every other option"));
+    assert!(
+        stdout.contains("--layer-file <path>       Evaluate configured-pattern-layer decisions")
+    );
     assert!(stderr.is_empty());
 }

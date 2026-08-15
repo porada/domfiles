@@ -146,7 +146,7 @@ fn settings(
 fn apply_arguments(
     capture: &Capture,
     output: &Path,
-    scope: &str,
+    coverage: &str,
     input_option: &str,
     input: &str,
 ) -> Vec<OsString> {
@@ -160,8 +160,8 @@ fn apply_arguments(
         capture.state.as_os_str().to_owned(),
         OsString::from("--output"),
         output.as_os_str().to_owned(),
-        OsString::from("--scope"),
-        OsString::from(scope),
+        OsString::from("--coverage"),
+        OsString::from(coverage),
         OsString::from(input_option),
         OsString::from(input),
         OsString::from("--write"),
@@ -490,7 +490,7 @@ fn equivalent_existing_allowance_is_reused() {
         "domain.example",
     ));
     assert_eq!(result.status, 1);
-    assert!(result.stderr.contains("already covered"));
+    assert!(result.stderr.contains("already provide"));
     assert!(!output.exists());
     assert_eq!(fs::read(&capture.candidate).unwrap(), baseline_bytes);
 }
@@ -607,7 +607,11 @@ fn factored_patterns_account_for_every_represented_hostname() {
         "other.example",
     ));
     assert_eq!(result.status, 2);
-    assert!(result.stderr.contains("misaligned"));
+    assert!(
+        result
+            .stderr
+            .contains("sandbox network scope are misaligned")
+    );
     assert!(!output.exists());
     assert_eq!(fs::read(&capture.candidate).unwrap(), baseline_bytes);
 }
@@ -629,7 +633,11 @@ fn fetch_and_sandbox_scope_mismatches_are_rejected() {
         "other.example",
     ));
     assert_eq!(result.status, 2);
-    assert!(result.stderr.contains("misaligned"));
+    assert!(
+        result
+            .stderr
+            .contains("sandbox network scope are misaligned")
+    );
 }
 
 #[test]
@@ -695,7 +703,7 @@ fn validation_rejects_malformed_and_unsafe_bundle_requests() {
         let bundle = output.join("fetch-validation.json");
         let mut value = bundle_value(&bundle);
         value["request"] = json!({
-            "scope": "path_qualified_url",
+            "coverage": "path_qualified_url",
             "url_prefix": url_prefix
         });
         fixture.write_json("artifacts/fetch-validation.json", &value);

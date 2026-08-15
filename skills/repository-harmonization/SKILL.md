@@ -1,6 +1,8 @@
 ---
 name: repository-harmonization
 description: Run change-oriented cross-repository harmonization for a named concept, policy, workflow, terminology, or documentation family. Use this skill immediately for the bare `Harmonize` shorthand and whenever the user asks to harmonize semantically equivalent content across Git repositories. Do not use it for ordinary single-repository cleanup, standalone audits, broad refactors, or consistency work that does not span repositories.
+metadata:
+    internal: true
 ---
 
 # Repository harmonization

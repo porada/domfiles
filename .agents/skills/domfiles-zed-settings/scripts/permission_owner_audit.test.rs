@@ -286,7 +286,10 @@ fn prints_help_only_for_exact_help() {
 
     assert_eq!(status, 0);
     assert!(stdout.starts_with("Usage:\n  permission-owner-audit"));
-    assert!(stdout.contains("[--after <inventory-cursor>]"));
+    assert!(stdout.contains(
+        "--owner <top-level-executable> [--after <inventory-cursor>] [--graph-root <dir>] [--result-out <path>]\n"
+    ));
+    assert!(stdout.contains("with `--owner` a complete inventory without `--after`"));
     assert!(stdout.contains("Canonical manifest schema"));
     assert!(!stdout.contains("manifest version"));
     assert!(stdout.contains("settings_sha256"));
@@ -802,6 +805,58 @@ fn rejects_duplicate_after_and_after_with_manifest_mode() {
     assert_eq!(status, 2);
     assert!(stdout.is_empty());
     assert!(stderr.contains("valid only with"));
+}
+
+#[test]
+fn records_inventory_query_evidence_for_a_complete_raw_owner_page() {
+    let fixture = Fixture::new();
+    let settings_contents = settings(vec![pattern(r"^git status$", true)], vec![], vec![]);
+    fixture.write("settings.json", &settings_contents);
+    let graph_root =
+        fs::canonicalize(&fixture.root).expect("Fixture root must resolve to a real directory");
+    let settings_path = graph_root.join("settings.json");
+    let result_path = graph_root.join("inventory-result.json");
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--owner"),
+        OsString::from("git"),
+        OsString::from("--graph-root"),
+        graph_root.as_os_str().to_owned(),
+        OsString::from("--result-out"),
+        result_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 0);
+    assert!(stderr.is_empty());
+    assert!(stdout.contains("Total inventory candidates: 1"));
+    let result: Value =
+        serde_json::from_slice(&fs::read(&result_path).expect("Inventory evidence must exist"))
+            .expect("Inventory evidence must be JSON");
+    assert_eq!(result["kind"], json!("inventory_query"));
+    assert_eq!(result["bound_inputs"]["inventory_owner"], json!("git"));
+    assert_eq!(
+        result["bound_inputs"]["settings_sha256"],
+        json!(helper::settings_sha256(&settings_contents))
+    );
+    assert_eq!(result["counts"]["lexical_candidates"], json!(1));
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--owner"),
+        OsString::from("git"),
+        OsString::from("--after"),
+        OsString::from(format!("{ZERO_SHA256}:git:always_allow[0]")),
+        OsString::from("--graph-root"),
+        graph_root.as_os_str().to_owned(),
+        OsString::from("--result-out"),
+        graph_root.join("paged-result.json").as_os_str().to_owned(),
+    ]);
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("valid only for a complete inventory"));
 }
 
 #[test]
@@ -3135,4 +3190,341 @@ fn bounds_finding_ids_before_writing_diagnostics() {
     assert!(stderr.contains(&format!("{}…", "x".repeat(80))));
     assert!(!stderr.contains(private_suffix));
     assert!(!stderr.contains(&long_id));
+}
+
+/// A canonical fixture root, so closure resolution never traverses a symlinked temporary path.
+fn graph_root(fixture: &Fixture) -> PathBuf {
+    fs::canonicalize(fixture.path("")).expect("Fixture root must resolve to a real directory")
+}
+
+fn binding_for(settings: &str, entries: Value, positions: Value) -> String {
+    json!({
+        "settings_sha256": helper::settings_sha256(settings),
+        "entries": entries,
+        "positions": positions,
+    })
+    .to_string()
+}
+
+#[test]
+fn applies_a_manifest_binding_to_moved_entry_positions() {
+    let fixture = Fixture::new();
+    // The reviewed manifest audits `always_allow[0]`, but the settings it now runs against hold the
+    // owned pattern at `always_allow[1]`.
+    let settings = settings(
+        vec![
+            pattern(r"^unrelated run$", true),
+            pattern(r"^foo run$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let reviewed = manifest(vec![direct_entry(
+        "foo-direct",
+        "always_allow",
+        0,
+        "foo",
+        "foo run",
+    )]);
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write("manifest.json", &reviewed);
+    let binding_path = fixture.write(
+        "binding.json",
+        &binding_for(
+            &settings,
+            json!([{"id": "foo-direct", "bucket": "always_allow", "index": 1}]),
+            json!([]),
+        ),
+    );
+
+    let (unbound_status, _, unbound_stderr) = run_files(&settings_path, &manifest_path);
+    assert_ne!(unbound_status, 0, "the reviewed manifest must be stale");
+    assert!(!unbound_stderr.is_empty());
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--manifest"),
+        manifest_path.as_os_str().to_owned(),
+        OsString::from("--binding"),
+        binding_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 0, "{stderr}");
+    assert!(
+        stdout.contains("1 entry") || stdout.contains("1 entries"),
+        "{stdout}"
+    );
+}
+
+#[test]
+fn refuses_a_manifest_binding_that_omits_an_audited_entry() {
+    let fixture = Fixture::new();
+    let (settings, reviewed) = valid_settings_and_manifest();
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write("manifest.json", &reviewed);
+    let binding_path = fixture.write(
+        "binding.json",
+        &binding_for(&settings, json!([]), json!([])),
+    );
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--manifest"),
+        manifest_path.as_os_str().to_owned(),
+        OsString::from("--binding"),
+        binding_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 2, "{stderr}");
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("does not rebind entry"), "{stderr}");
+}
+
+#[test]
+fn refuses_a_manifest_binding_without_a_manifest() {
+    let fixture = Fixture::new();
+    let (settings, _) = valid_settings_and_manifest();
+    let settings_path = fixture.write("settings.json", &settings);
+    let binding_path = fixture.write(
+        "binding.json",
+        &binding_for(&settings, json!([]), json!([])),
+    );
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--owner"),
+        OsString::from("foo"),
+        OsString::from("--binding"),
+        binding_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 2, "{stderr}");
+    assert!(stdout.is_empty());
+    assert!(
+        stderr.contains("`--binding` is valid only with"),
+        "{stderr}"
+    );
+}
+
+#[test]
+fn refuses_a_malformed_manifest_binding() {
+    let fixture = Fixture::new();
+    let (settings, reviewed) = valid_settings_and_manifest();
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write("manifest.json", &bind_manifest(&settings, &reviewed));
+    // A path overlay is not a manifest binding, so the strict schema must reject it.
+    let binding_path = fixture.write("binding.json", &json!({"paths": []}).to_string());
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--manifest"),
+        manifest_path.as_os_str().to_owned(),
+        OsString::from("--binding"),
+        binding_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 2, "{stderr}");
+    assert!(stdout.is_empty());
+    assert!(stderr.contains("Manifest binding"), "{stderr}");
+}
+
+#[test]
+fn refuses_result_out_without_a_graph_root() {
+    let fixture = Fixture::new();
+    let (settings_path, manifest_path) = write_valid_files(&fixture);
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--manifest"),
+        manifest_path.as_os_str().to_owned(),
+        OsString::from("--result-out"),
+        fixture.path("result.json").as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 2, "{stderr}");
+    assert!(stdout.is_empty());
+    assert!(
+        stderr.contains("`--result-out` requires `--graph-root`"),
+        "{stderr}"
+    );
+    assert!(!fixture.path("result.json").exists());
+}
+
+#[test]
+fn records_hash_bound_evidence_for_a_manifest_audit() {
+    let fixture = Fixture::new();
+    let (settings_path, manifest_path) = write_valid_files(&fixture);
+    let root = graph_root(&fixture);
+    let result_path = root.join("result.json");
+
+    let (status, _, stderr) = run(vec![
+        OsString::from("--settings"),
+        root.join("settings.json").into_os_string(),
+        OsString::from("--manifest"),
+        root.join("manifest.json").into_os_string(),
+        OsString::from("--graph-root"),
+        root.clone().into_os_string(),
+        OsString::from("--result-out"),
+        result_path.clone().into_os_string(),
+    ]);
+
+    assert_eq!(status, 0, "{stderr}");
+    let result: Value = serde_json::from_slice(&fs::read(&result_path).unwrap())
+        .expect("Recorded evidence must parse");
+    assert_eq!(result["kind"], json!("owner_audit"));
+    assert_eq!(result["outcome"], json!("passed"));
+    assert_eq!(result["bound_inputs"]["inventory_owner"], json!("foo"));
+
+    // The recorded closure must cover exactly the manifest and settings the audit read.
+    let recorded: Vec<String> = result["bound_inputs"]["input_closure"]["records"]
+        .as_array()
+        .expect("The closure must record its inputs")
+        .iter()
+        .map(|record| record["path"].as_str().unwrap().to_owned())
+        .collect();
+    assert!(
+        recorded.contains(&"manifest.json".to_owned()),
+        "{recorded:?}"
+    );
+    assert!(
+        recorded.contains(&"settings.json".to_owned()),
+        "{recorded:?}"
+    );
+
+    // Rewriting a recorded input must make the evidence stale.
+    let recomputed = {
+        let mut builder = helper::permission_patterns::InputClosureBuilder::new(&root).unwrap();
+        helper::permission_patterns::resolve_audit_closure(
+            &mut builder,
+            &root.join("manifest.json"),
+            &root.join("settings.json"),
+            None,
+        )
+        .unwrap();
+        builder.finish().unwrap()
+    };
+    let declared: helper::permission_patterns::InputClosure =
+        serde_json::from_value(result["bound_inputs"]["input_closure"].clone()).unwrap();
+    assert!(helper::permission_patterns::verify_input_closure(&declared, &recomputed, 10).is_ok());
+
+    fs::write(&manifest_path, b"{}").unwrap();
+    let stale = {
+        let mut builder = helper::permission_patterns::InputClosureBuilder::new(&root).unwrap();
+        let _ = helper::permission_patterns::resolve_audit_closure(
+            &mut builder,
+            &root.join("manifest.json"),
+            &root.join("settings.json"),
+            None,
+        );
+        builder.finish().unwrap()
+    };
+    assert!(helper::permission_patterns::verify_input_closure(&declared, &stale, 10).is_err());
+    let _ = settings_path;
+}
+
+#[test]
+fn refuses_overwriting_an_existing_result() {
+    let fixture = Fixture::new();
+    let (_, _) = write_valid_files(&fixture);
+    let root = graph_root(&fixture);
+    let result_path = fixture.write("result.json", "existing");
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        root.join("settings.json").into_os_string(),
+        OsString::from("--manifest"),
+        root.join("manifest.json").into_os_string(),
+        OsString::from("--graph-root"),
+        root.into_os_string(),
+        OsString::from("--result-out"),
+        result_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 2, "{stderr}");
+    assert!(stdout.is_empty());
+    assert_eq!(fs::read(&result_path).unwrap(), b"existing");
+}
+
+#[test]
+fn verifies_a_zero_owner_manifest_for_a_fully_removed_owner() {
+    let fixture = Fixture::new();
+    let settings = settings(vec![pattern(r"^bar run$", true)], vec![], vec![]);
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write(
+        "zero-owner.json",
+        &json!({
+            "settings_sha256": helper::settings_sha256(&settings),
+            "inventory_owner": "foo"
+        })
+        .to_string(),
+    );
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--zero-owner-manifest"),
+        manifest_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 0, "{stderr}");
+    assert!(stdout.contains("foo"), "{stdout}");
+}
+
+#[test]
+fn refuses_a_zero_owner_manifest_that_leaves_an_unclassified_hit() {
+    let fixture = Fixture::new();
+    let settings = settings(vec![pattern(r"^foo run$", true)], vec![], vec![]);
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write(
+        "zero-owner.json",
+        &json!({
+            "settings_sha256": helper::settings_sha256(&settings),
+            "inventory_owner": "foo"
+        })
+        .to_string(),
+    );
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--zero-owner-manifest"),
+        manifest_path.as_os_str().to_owned(),
+    ]);
+
+    assert_ne!(status, 0, "{stdout}");
+    assert!(!stderr.is_empty(), "{stdout}");
+}
+
+#[test]
+fn refuses_a_zero_owner_manifest_bound_to_other_settings() {
+    let fixture = Fixture::new();
+    let settings = settings(vec![pattern(r"^bar run$", true)], vec![], vec![]);
+    let settings_path = fixture.write("settings.json", &settings);
+    let manifest_path = fixture.write(
+        "zero-owner.json",
+        &json!({
+            "settings_sha256": ZERO_SHA256,
+            "inventory_owner": "foo"
+        })
+        .to_string(),
+    );
+
+    let (status, stdout, stderr) = run(vec![
+        OsString::from("--settings"),
+        settings_path.as_os_str().to_owned(),
+        OsString::from("--zero-owner-manifest"),
+        manifest_path.as_os_str().to_owned(),
+    ]);
+
+    assert_eq!(status, 1, "{stderr}");
+    assert!(stdout.is_empty());
+    assert!(
+        stderr.contains("does not bind the exact candidate settings bytes"),
+        "{stderr}"
+    );
 }

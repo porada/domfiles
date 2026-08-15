@@ -1,6 +1,8 @@
 ---
 name: technical-copy
 description: Draft, edit, review, and refine human-facing technical copy. Use automatically for package or repository descriptions, README and technical-document content or information architecture, GitHub issue, pull request, or Discussion titles, bodies, comments, or reviews, CLI help and output, JSDoc, docstrings, explanatory comments, runtime messages, test titles, labels, and other developer- or user-facing strings—including copy changed during feature implementation or consistency checks. Defer release notes, changelogs, hosted release descriptions, and package-release wording to `release-notes`. Do not use for agent documentation, LICENSE text, formatting-only work, or tasks whose human-facing wording and information architecture are explicitly unchanged.
+metadata:
+    internal: true
 ---
 
 # Technical copy

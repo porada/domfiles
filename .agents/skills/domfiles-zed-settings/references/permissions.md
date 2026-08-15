@@ -38,10 +38,11 @@ For every read-only workflow, treat terminal command candidates as inert strings
 
 At the branch-specific step of the parent change-validation workflow:
 
-1. Audit every complete in-scope owner group through [Audit permission ownership](permission-evaluator.md#audit-permission-ownership).
-2. Compile and validate every changed pattern, participating overlap, and configured-precedence case through [Compile and match permission patterns](permission-evaluator.md#compile-and-match-permission-patterns), including its required intended, hazardous, and near-miss cases.
-3. Compare baseline and candidate bucket unions plus configured decisions through [Compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior), except when object and match behavior are both unchanged.
-4. Resolve the candidate’s complete effective behavior through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior), verify every shared and selected-branch invariant, then complete the candidate workflow’s guarded verification and promotion.
+1. Partition every complete in-scope owner through the candidate owner specification, then produce inventory-owner-grouped `candidate_inventory` evidence for delete operations and structural `owner_audit` evidence covering every retaining operation through [Audit permission ownership](permission-evaluator.md#audit-permission-ownership).
+2. Compile and validate every changed pattern, participating overlap, and configured-decision case through [Compile and match permission patterns](permission-evaluator.md#compile-and-match-permission-patterns), including its required intended, hazardous, and near-miss cases.
+3. Produce baseline/candidate `comparison` evidence and complete supplied-layer `layer_decision` evidence through [Compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior) and [Evaluate a configured pattern layer](permission-evaluator.md#evaluate-a-configured-pattern-layer).
+4. Resolve complete effective behavior through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior), verify every shared and selected-branch invariant, then seal and rehearse the complete candidate graph.
+5. Stop until explicit user promotion approval, then use the guarded bundle promotion or refresh workflow and perform the required post-promotion owner checks.
 
 Resume the parent change-validation workflow against the promoted settings files.
 
@@ -50,8 +51,8 @@ Resume the parent change-validation workflow against the promoted settings files
 At the branch-specific step of the parent read-only validation workflow:
 
 1. Inventory relevant patterns and audit complete in-scope owner groups through the [permission evaluator](permission-evaluator.md).
-2. Compile and validate relevant patterns and configured precedence against representative intended inputs, hazardous forms, and near misses through [Compile and match permission patterns](permission-evaluator.md#compile-and-match-permission-patterns).
-3. Use [Compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior) when the read-only scope includes two settings states or a proposed transformation.
+2. Compile and validate relevant patterns against representative intended inputs, hazardous forms, and near misses through [Compile and match permission patterns](permission-evaluator.md#compile-and-match-permission-patterns).
+3. Use [Compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior) when the scope includes two settings states or a proposed transformation, and [Evaluate a configured pattern layer](permission-evaluator.md#evaluate-a-configured-pattern-layer) for complete supplied-array precedence cases.
 4. Resolve complete effective behavior for each representative operation through [Evaluate permission behavior](permission-evaluator.md#evaluate-permission-behavior).
 
 ## Extend the report

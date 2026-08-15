@@ -65,13 +65,13 @@ This branch specializes the shared [agent permission workflow](permissions.md) f
     - Record the forms that execute code, write data, alter state, or remove resources.
     - Record forms that block indefinitely, monitor continuously, produce unbounded output, or return a terminating snapshot. Treat duration and output boundedness as classification dimensions rather than assuming every non-mutating inspection form is equivalent.
     - For a categorical allowance whose unknown future members must remain confirmable, record the complete finite set of currently allowed names required by the [positive-branch policy](#translate-terminal-behavior-into-regex). A selected domain policy may instead define an explicit user-approved namespace exception.
-    - Run each local help or manual inspection with a short, bounded timeout. Prefer `MANPAGER=cat PAGER=cat man <command> | col -b` when a manual is available. When the manual is long, save its plain-text output under the task-specific temporary directory and read only targeted option sections.
+    - Run each local help or manual inspection with a short, bounded timeout. Prefer `MANPAGER=cat PAGER=cat man <command> | col -b` when a manual is available. When the manual is long, save its plain-text output under the task-specific [`.agent-<name>` directory](../../../../.config/zed/AGENTS.md#temporary-files) and read only targeted option sections.
     - If the executable is unavailable or local help remains interactive, consult current official documentation or source.
 4. When settled evidence supplies a semantic category without its finite current names, leave unenumerated members confirmable and report that stricter boundary. Do not research beyond the evidence when the request forbids it.
 5. Before reading terminal pattern bodies, follow the [inventory-first workflow](permission-evaluator.md#inventory-terminal-patterns). Keep complete long patterns in files rather than command output or conversation context.
 6. For a blocked shell line, determine the permission input that Zed evaluated. Shell operators, redirections, assignments, and wrappers can produce several independently checked segments.
 7. Consult current official Zed documentation or source when parsing, regex support, or permission precedence is unclear.
-8. Use `rg --no-config` for bounded operational ripgrep investigations unless ripgrep configuration behavior or an exact exit-only discovery form is itself under test.
+8. The [global ripgrep guidance](../../../../.config/zed/AGENTS.md#system-available-tooling) requires `--no-config` on every invocation. Omit it only when ripgrep configuration behavior or an exact exit-only discovery form is itself under test.
 9. Ignore repository entrypoints, custom Git aliases, and repository-specific helpers unless the user explicitly includes them in scope.
 
 ## Close the parser and effect model

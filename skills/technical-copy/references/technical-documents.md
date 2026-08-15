@@ -9,7 +9,7 @@ Apply the entrypoint’s [standard path](../SKILL.md#use-the-standard-path) befo
 - When reproducing an existing heading, preserve its exact identifier spelling, significant characters, entities, and intentional markup. Omit an unchanged heading from a structural outline rather than normalizing its markup. Do not introduce nonbreaking characters, entities, or presentational markup where the source does not already use them unless project policy or the user requires it.
 - Apply the entrypoint’s [decision-preservation rule](../SKILL.md#preserve-decisions-without-adding-friction) to selected or restored headings, section order, taglines, links, examples, wording, and structure.
 - Treat supplied template sections as information-allocation boundaries. When a template separates the proposal, rationale, evidence, examples, and implementation ideas, keep the opening proposal to the smallest complete statement of the requested outcome and its essential boundary, then place each supporting detail in its designated section.
-- Follow the global [README permission rule](../../../../.config/zed/AGENTS.md#documentation). When it leaves mutation unauthorized, identify the target location and provide the proposed structure or ready-to-use copy without modifying the file.
+- Follow the README gate in the global “Documentation” policy. When it leaves mutation unauthorized, identify the target location and provide the proposed structure or ready-to-use copy without modifying the file.
 - Follow the [`github-cli` workflow](../../github-cli/SKILL.md) when GitHub CLI use is needed for a GitHub-hosted surface. Drafting a GitHub issue, pull request, Discussion, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
 - For any security report—whether standalone or submitted through an issue or pull request form—also follow the [security-report workflow](security-reports.md).
 
@@ -41,4 +41,4 @@ Treat that sequence as a decision framework rather than a fixed template. A visu
 
 ## Validate the result
 
-As part of the entrypoint’s [final validation](../SKILL.md#use-the-standard-path), read the complete rendered path from the opening statement through the first useful result or decision, then through optional detail. Confirm that headings reveal the hierarchy, links still reach the intended targets, and durable details follow the global [canonical-ownership rule](../../../../.config/zed/AGENTS.md#documentation).
+As part of the entrypoint’s [final validation](../SKILL.md#use-the-standard-path), read the complete rendered path from the opening statement through the first useful result or decision, then through optional detail. Confirm that headings reveal the hierarchy, links still reach the intended targets, and durable details follow canonical ownership in the global “Documentation” policy.

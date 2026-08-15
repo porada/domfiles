@@ -2,6 +2,8 @@
 
 A skill-owned script is a small program that gathers recurring repository evidence, produces declared artifacts, or does both for one project-authored skill. Use one when it makes the workflow more deterministic, efficient, or repeatable than a sequence of manual operations. Do not turn a narrow skill need into a general repository utility.
 
+When a script belongs to a portable skill—one installed for use across target projects rather than scoped to one repository—apply the additional [portable skill script contract](portable-skill-scripts.md) before resolving its interface.
+
 ## Choose the operation route
 
 - Use a read route to gather and report evidence without creating or updating repository artifacts.
@@ -21,9 +23,11 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 - Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
 - Extract code into `scripts/helpers` only when it is genuine shared implementation rather than infrastructure around superficial duplication.
 
+Root ownership assumes the script runs inside its canonical repository. A skill installed for use outside that repository keeps that ownership by running from its host rather than from the installed path.
+
 ## Stage script changes
 
-Before changing a skill-owned script, follow the [protected skill staging workflow](protected-skill-staging.md) for the complete owning skill tree. Keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts` during iteration, and do not promote the `scripts` subtree separately from its reviewed skill tree.
+Before changing a skill-owned script under `.agents/skills`, follow the [protected skill staging workflow](protected-skill-staging.md) for the complete owning skill tree. Keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts` during iteration, and do not promote the `scripts` subtree separately from its reviewed skill tree. Scripts under root `skills` use the ordinary direct-edit workflow. Do not apply protected-skill staging to them merely because `domfiles sync` exposes them through global symlinks.
 
 ## Apply human-facing copy policy
 
@@ -34,6 +38,10 @@ Before changing a skill-owned script, follow the [protected skill staging workfl
 ## Make the interface discoverable
 
 - Support `--help` and describe the script’s purpose, modes, accepted inputs, output behavior, destination selection, overwrite policy, and relevant exit behavior.
+- Treat source and configuration as the authority for implemented CLI behavior and serialized schemas. Treat adjacent contract tests as corroborating evidence, and treat `--help`, proposals, runtime argument diagnostics, and workflow documentation as projections. A stale test or projection never authorizes adding or broadening behavior without explicit user authorization.
+- Before changing a CLI projection, inspect the exact implementation and relevant adjacent tests for every affected combination, mode, option, or schema. Keep help-only and documentation-only tasks behavior-neutral. When an authorized task changes behavior, align help, source and configuration, tests, and workflow documentation before treating the change as complete.
+- Cover help-to-parser agreement with a contract test rather than review alone. Assert for each mode or standalone operation that the options documented for that route exactly match the options its parser accepts. Performing the alignment without a test leaves the next change free to reintroduce the drift.
+- Keep each help option list alphabetized within its section. Ordering there is order-independent, so a reviewer cannot distinguish a deliberate order from drift.
 - Keep each operation bounded and deterministic for the same repository state and inputs.
 - Prefer one batch, manifest, or suite invocation that reads and prepares shared inputs once over repeated one-record processes. Parse, compile, hash, or index shared data once per invocation when later records reuse it.
 - Let cooperating modes or scripts consume one explicit manifest-relative artifact graph instead of repeatedly extracting the same source data. Keep each artifact’s authority, integrity boundary, and mutation contract clear.
@@ -51,13 +59,13 @@ Every filesystem write must remain within one of these authorized categories:
 
 Do not repurpose a location merely because it is ignored. Never modify `.gitignore` while running the script, and do not add an ignore rule solely to accommodate script-specific output. If repository-wide toolchain output exposes a missing ignore policy, handle that as a separate repository configuration change under the current task’s authorization.
 
-For ephemeral artifacts, follow the global [temporary-file policy](../../../../.config/zed/AGENTS.md#temporary-files). Accept the resolved task-specific destination from the caller instead of establishing a separate temporary-output convention.
+For ephemeral artifacts, follow the global “Temporary files” policy. Accept the resolved task-specific destination from the caller instead of establishing a separate temporary-output convention.
 
 Before writing:
 
 - Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
 - Do not write Git metadata or files unrelated to the declared artifact contract.
-- Apply the global [concurrent-work preservation rule](../../../../.config/zed/AGENTS.md#git-worktrees) to repository destinations.
+- Apply the global “Concurrent work” and “Git worktrees” preservation rules to repository destinations.
 - Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
 - Leave byte-identical output unchanged.
 
@@ -73,6 +81,7 @@ Before writing:
 - Use the language’s native test framework when it is sufficient. Use `node:test` for JavaScript or TypeScript and Rust’s built-in `#[test]` harness for Rust.
 - Keep command-line entrypoints testable through an injectable function such as `run(arguments, stdout, stderr)` so focused contract tests avoid spawning a process for every case.
 - Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
+- Cover every documented refusal and every routine that authorizes a mutation on a correctness claim, such as an equivalence, containment, or accounting proof. Generic failure coverage elsewhere does not satisfy this. Assert the refusal a caller would rely on, not only that the operation failed.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](#bound-artifact-locations).
 - Run focused tests and the repository’s root static validation. Direct execution and focused tests do not replace root typechecking or compilation.
 
@@ -82,7 +91,7 @@ Document focused script and test commands in the owning skill or its repair refe
 
 - Prefer an existing repository dependency or standard-library capability when it directly provides the required behavior and keeps the implementation small, complete, and maintainable.
 - Do not reimplement a mature general-purpose capability merely to avoid adding a dependency or requesting approval. This includes cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior.
-- When the best implementation requires a dependency change whose addition or update needs approval, follow the global [dependency approval policy](../../../../.config/zed/AGENTS.md#dependencies) before implementation or mutating delegation. Before asking for approval, tell the user:
+- When the best implementation requires a dependency change whose addition or update needs approval, follow the approval gate in the global “Dependencies” policy before implementation or mutating delegation. Before asking for approval, tell the user:
     - Which dependency or smallest dependency set is proposed
     - What each dependency provides
     - Where it will be declared and which code will use it

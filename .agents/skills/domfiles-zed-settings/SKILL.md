@@ -14,13 +14,13 @@ When agent repository permissions, agent tool or sandbox permissions, fetch or n
 ## Apply the general policy
 
 - Always split Zed settings audits into multiple smaller steps because a single pass can easily exceed the available context window.
-- Follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
+- Follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
     - Exempt `"tab_size": 4` from this requirement.
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
     - Exempt `file_scan_exclusions`. Preserve its repository-specific override without adding installed Zed defaults, following the [documented rationale](../../PROJECT.md#zed-project-scan-exclusions).
 - Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
-    - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname scope.
+    - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
 
 ## Choose the workflow
 

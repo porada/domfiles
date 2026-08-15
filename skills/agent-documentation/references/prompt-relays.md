@@ -18,12 +18,12 @@ Use this reference when creating, revising, reviewing, auditing, or maintaining 
 - Distinguish source evidence, observed behavior, and agent inference. State unavailable evidence and implementation limitations directly rather than reconstructing them.
 - Preserve exact syntax, wording, token ordering, punctuation, paths, URLs, or normalized inputs only when those details materially determine the task or decision.
 - Never reproduce literal credentials, tokens, private values, secret-bearing URLs, unnecessary or unbounded inventories, long generated artifacts, or transcript-like iteration history. Use bounded representative evidence. Preserve a bounded complete inventory when it materially defines the relay’s owned scope, preservation boundary, or required result.
-- Apply the global [positive-state reporting rule](../../../../.config/zed/AGENTS.md#communication) to relay instructions and outcomes.
+- Apply the positive-state outcome rule in the global “Communication” policy to relay instructions and outcomes.
 - Keep the receiving action non-mutating unless the user explicitly authorized changes in the receiving task.
 
 ## Apply relay delivery defaults
 
-- **Outgoing prompts:** Put each complete prompt intended for another conversation in its own four-backtick `markdown` block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready for relay.
+- **Outgoing prompts:** Put each complete prompt intended for another conversation in its own three-backtick `markdown` block, raising the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready for relay.
 - **Verbatim returns:** When an entire response is a decision relay, evidence handoff, status return, completed-work report, or other response intended for verbatim relay, make the relay the whole response. Do not wrap it in an outer code block or add a relay heading or readiness message around it.
 - **Prompt revisions:** When asked to change a prompt, return every affected prompt in full with the change applied. Do not provide a patch, fragment, or splice instructions. When one requested change affects a coordinated prompt set, apply this rule across that set, omit unrelated unchanged prompts, and preserve established decisions and untouched boundaries in each replacement.
 - **Worktree instructions:** Do not add them to a relayed prompt unless the user explicitly requests them or an applicable policy already requires them.
@@ -33,7 +33,7 @@ Make every standalone relay asset implement the applicable delivery and complete
 ## Compose a task relay
 
 - Omit the receiving location by default. Include a repository path, checkout, worktree, directory, host, or other execution location only when selecting that location is necessary to find the task inputs, distinguish among possible targets, preserve isolation, or satisfy an established submission or integration boundary. Do not add an absolute repository path merely for orientation. Material target paths may still be required even when the receiving location is not.
-- Before emitting a dependency-premised mutating relay, apply the global [dependency approval boundary](../../../../.config/zed/AGENTS.md#dependencies).
+- Before emitting a dependency-premised mutating relay, apply the approval gate in the global “Dependencies” policy.
 - Because a task relay assigns work, end its complete prompt with the exact standalone line `**Do not drift.**`. Define the smallest complete owned scope and supporting work first, name material exclusions, and require unrelated findings to remain untouched. Preserve every inherited scope, mutation, approval, submission, integration, access, and security boundary. Explicitly prohibit transferring access or circumventing a boundary, and tell the receiving agent to stop and ask the user directly before crossing one. Place every required result, process, validation, and handoff instruction before the guard. Do not use the guard to exclude supporting edits or validation already required for the stated result.
 - Use the guard only in a task relay whose primary purpose is to assign future work. Never include it in decision relays, evidence handoffs, status returns, completed-work reports, or other relays whose primary purpose is to transfer established data. Receiving-action guidance for later evidence consumption does not turn that transfer into a task relay.
 
@@ -48,7 +48,7 @@ Include the applicable parts of this sequence:
 7. Handoff contents and the receiving agent’s stopping point.
 8. Exact final anti-drift guard.
 
-Execution remains governed by the global [worktree policy](../../../../.config/zed/AGENTS.md#git-worktrees).
+Execution remains governed by the global “Git worktrees” policy.
 
 ## Compose a decision relay
 

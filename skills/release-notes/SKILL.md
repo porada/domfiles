@@ -1,6 +1,8 @@
 ---
 name: release-notes
 description: Draft, edit, review, and refine accurate package release notes and changelog entries from existing notes or verified changes. Use this skill immediately for the bare `Changelog` shorthand or whenever the user asks for release notes, changelog notes, changelog entries, or release-ready prose for any change scope, including a single commit hash, commit range, pull request, branch, tag, diff, or changes since the latest release. Also use it for hosted release descriptions such as GitHub Release bodies and package-release wording or consistency checks, regardless of package manager or registry. Do not use it for ordinary commit summaries that are not intended as release or changelog prose.
+metadata:
+    internal: true
 ---
 
 # Package release notes
