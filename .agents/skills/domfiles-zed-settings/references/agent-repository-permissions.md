@@ -4,6 +4,7 @@
 
 - Treat the project-relative `.agent-<name>` namespace defined by the [global temporary-file policy](../../../../.config/zed/AGENTS.md#temporary-files) as a standing user-approved scope for operation-specific namespace-bounded terminal allowances. This approval establishes eligibility for a scoped variant, not authorization for the command family itself or blanket trust in every command or directory entry.
 - Keep each variant within the requested operation family. Treat it as eligible for automatic allowance only when every effect that makes the general form confirmable is a filesystem or repository mutation contained within the task-owned namespace and the normalized command exposes every behavior-bearing path for lexical validation. Require each such path to be an explicit traversal-free project-relative `.agent-<name>` root or descendant.
+- Keep archive extraction and comparable input-directed mutation confirmable when archive members, links, manifests, other input data, or rules can determine an output path or effect absent from the normalized command. An explicit `.agent-<name>` destination does not qualify by itself. Require operation-specific evidence that every created or modified path and link is exposed or otherwise contained, or a more specific policy that explicitly accepts the residual input-controlled effect.
 - The agent-directory namespace alone does not relax confirmation or denial for effects that path scoping does not contain, including arbitrary code execution, ambient credential or configuration access, authentication and signing, external helper selection, network or remote activity, process or system state, direct symbolic-link creation, and paths that are absolute, traversal-bearing, unresolved, or outside the namespace. Only a more specific policy may explicitly accept such a residual effect. Zed’s sandbox, sensitive-path, and symlink-escape checks remain additional boundaries.
 - Classify plain task directories, top-level registered worktrees, and strict-descendant fixture repositories separately. Apply the more specific repository policies below when Git or worktree behavior is in scope.
 - Do not infer agent-directory scope from the terminal’s current working directory because permission matching does not expose it. When a safe grammar cannot carry every required path explicitly, leave the operation confirmable.
@@ -17,6 +18,7 @@
 - Keep native-tool and terminal permission patterns synchronized with the [global worktree convention](../../../../.config/zed/AGENTS.md#git-worktrees).
 - Leave direct symbolic-link creation confirmable. Treat existing worktree-internal symlinks as user-managed repository state when native path operations are automatically allowed.
 - See [Zed worktree permission coupling](../../../PROJECT.md#zed-worktree-permission-coupling) for rationale.
+- Keep stored Git continuation operations subject to the [Git continuation policy](git-permissions.md#apply-the-git-permission-policy). An agent-worktree path contains repository mutation but does not contain hidden sequencer commands, hooks, or configuration-driven execution.
 - Use native `move_path` for strict descendant moves within agent worktrees and `git worktree move` for top-level worktree moves. Leave terminal `mv` confirmable.
 
 ## Maintain disposable fixture repository permissions
@@ -29,4 +31,4 @@
 
 ## Validate agent repository permissions
 
-Validate in-scope patterns against intended namespace-bounded task-directory, worktree, and fixture operations plus near misses involving ordinary, absolute, top-level, out-of-namespace, or traversal-bearing paths. Include effects not contained by path operands, detached worktrees, credential or configuration access, external helpers, network or remote operations, direct symbolic-link creation, and broader deletion or history-rewriting forms.
+Validate in-scope patterns against intended namespace-bounded task-directory, worktree, and fixture operations plus near misses involving ordinary, absolute, top-level, out-of-namespace, or traversal-bearing paths. Include archive- or input-controlled outputs and links, broader deletion or history-rewriting forms, credential or configuration access, detached worktrees, direct symbolic-link creation, effects not contained by path operands, external helpers, and network or remote operations.

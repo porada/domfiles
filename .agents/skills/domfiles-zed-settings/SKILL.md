@@ -20,12 +20,13 @@ When agent repository permissions, agent tool or sandbox permissions, fetch or n
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
     - Exempt `file_scan_exclusions`. Preserve its repository-specific override without adding installed Zed defaults, following the [documented rationale](../../PROJECT.md#zed-project-scan-exclusions).
 - Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
-    - Within URL-pattern arrays, preserve hostname-scope groupings and alphabetize each group by the represented hostname rather than the raw escaped regex text.
+    - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname scope.
 
 ## Choose the workflow
 
 - For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object. Use the change-validation workflow below.
 - For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
+- During commit review, do not analyze or validate permission patterns in `.config/zed/settings.json` unless the user explicitly includes that analysis. Review surrounding non-pattern changes normally. If evaluating the patterns is necessary to complete the review, stop before that analysis and ask for permission.
 - For a standalone review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 

@@ -158,15 +158,19 @@ The [protected skill staging workflow](skills/agent-documentation/references/pro
 
 ### Prompt relays
 
-The [global agent instructions](../.config/zed/AGENTS.md#prompt-relays) define prompt relay delivery and complete-revision defaults. The portable [`agent-documentation` skill](skills/agent-documentation/SKILL.md) owns the complementary [relay composition and evidence standard](skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](skills/agent-documentation/assets/task-relay-prompt.md). The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+The portable [`agent-documentation` skill](skills/agent-documentation/SKILL.md) owns the [prompt-relay delivery, complete-revision, composition, and evidence standard](skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](skills/agent-documentation/assets/task-relay-prompt.md). The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for delegation selection, inherited boundaries, and the anti-drift prompt contract. The portable `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](skills/release-notes/assets/decision-capture-prompt.md), [technical copy](skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+
+### Repository harmonization
+
+The portable [`repository-harmonization` skill](skills/repository-harmonization/SKILL.md) owns the global [`Harmonize` shorthand](../.config/zed/AGENTS.md#harmonize) and its change-oriented cross-repository consistency workflow. The global heading remains a compact deterministic route while the skill owns the complete procedure.
 
 ### GitHub CLI agent integration
 
-The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) owns agent behavior for `gh`.
+The portable [`github-cli` skill](skills/github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
 
-`gh agent-task` is intentionally unsupported because its preview flags and side effects can change without notice. External task relays remain governed by the global collaboration policy and use a separately selected delivery mechanism.
+`gh agent-task` remains [unsupported](skills/github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. External task relays remain governed by the global collaboration policy and use a separately selected delivery mechanism.
 
-[Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The global [permission and policy layering rule](../.config/zed/AGENTS.md#permission-and-policy-layering) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
+[Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The [shared permission-layering policy](skills/domfiles-zed-settings/references/permissions.md#apply-the-shared-permission-policy) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
 ### Global system-available tooling
 

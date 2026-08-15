@@ -1,6 +1,6 @@
 # Prompt relays
 
-Use this reference when creating, revising, reviewing, auditing, or maintaining a prompt intended to be copied from one conversation into another. Follow the global [prompt relay delivery defaults](../../../../.config/zed/AGENTS.md#prompt-relays). This reference owns relay terminology, composition, evidence provenance, and domain-profile maintenance.
+Use this reference when creating, revising, reviewing, auditing, or maintaining a prompt intended to be copied from one conversation into another. It owns relay terminology, composition, delivery, evidence provenance, and domain-profile maintenance.
 
 ## Use canonical terms
 
@@ -23,9 +23,12 @@ Use this reference when creating, revising, reviewing, auditing, or maintaining 
 
 ## Apply relay delivery defaults
 
-Make every standalone relay asset implement the applicable global delivery and complete-revision defaults in its own output contract. A task-relay asset must frame each outgoing assignment prompt as a copyable code block. A decision-capture asset whose entire response is the returned evidence relay must emit that relay directly as the complete response without an outer relay frame. A capture prompt cannot depend on the receiving agent loading this reference.
+- **Outgoing prompts:** Put each complete prompt intended for another conversation in its own four-backtick `markdown` block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready for relay.
+- **Verbatim returns:** When an entire response is a decision relay, evidence handoff, status return, completed-work report, or other response intended for verbatim relay, make the relay the whole response. Do not wrap it in an outer code block or add a relay heading or readiness message around it.
+- **Prompt revisions:** When asked to change a prompt, return every affected prompt in full with the change applied. Do not provide a patch, fragment, or splice instructions. When one requested change affects a coordinated prompt set, apply this rule across that set, omit unrelated unchanged prompts, and preserve established decisions and untouched boundaries in each replacement.
+- **Worktree instructions:** Do not add them to a relayed prompt unless the user explicitly requests them or an applicable policy already requires them.
 
-When one requested change affects a coordinated prompt set, apply the global [complete-revision default](../../../../.config/zed/AGENTS.md#prompt-relays) across that set and omit unrelated unchanged prompts. Preserve established decisions and untouched boundaries in each replacement.
+Make every standalone relay asset implement the applicable delivery and complete-revision defaults above in its own output contract. A task-relay asset must frame each outgoing assignment prompt as a copyable code block. A decision-capture asset whose entire response is the returned evidence relay must emit that relay directly as the complete response without an outer relay frame. A capture prompt cannot depend on the receiving agent loading this reference.
 
 ## Compose a task relay
 
@@ -45,7 +48,7 @@ Include the applicable parts of this sequence:
 7. Handoff contents and the receiving agent’s stopping point.
 8. Exact final anti-drift guard.
 
-Follow the global [worktree-instruction default](../../../../.config/zed/AGENTS.md#prompt-relays). Execution remains governed by the [worktree policy](../../../../.config/zed/AGENTS.md#git-worktrees).
+Execution remains governed by the global [worktree policy](../../../../.config/zed/AGENTS.md#git-worktrees).
 
 ## Compose a decision relay
 

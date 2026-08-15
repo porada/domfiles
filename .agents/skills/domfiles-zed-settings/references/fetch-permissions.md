@@ -21,7 +21,7 @@ When the user explicitly requests an allowance for a named domain or URL, apply 
     - Subdomains only: `^(?i:https://(?:[^./?#:@]+\.)+domain\.example)(?:[/?#]|$)` and `*.domain.example` only.
     - Exact hostname plus subdomains: `^(?i:https://(?:[^./?#:@]+\.)*domain\.example)(?:[/?#]|$)` plus both `*.domain.example` and `domain.example`.
 4. For a URL request, preserve only the explicitly approved hostname, port, path, query, and fragment constraints. Allow descendants only when the request or an established pattern clearly selects a subtree. Omit `network_hosts` unless the user separately widens the request to hostname scope.
-5. Reuse an equivalent existing allowance rather than adding a duplicate. Preserve the fetch array’s hostname-scope groups in the order above and alphabetize each group by represented hostname. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname.
+5. Reuse an equivalent existing allowance rather than adding a duplicate. Order the complete fetch array by the parent skill’s [represented-hostname rule](../SKILL.md#apply-the-general-policy), without grouping by hostname scope. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname.
 
 A fetch-tool allowance and a sandbox hostname grant remain independent. An explicit-port URL falls through the canonical hostname fetch pattern to `confirm` even though the persistent sandbox grant already covers that hostname and port. A sandbox grant neither authorizes a terminal command nor bypasses terminal permission evaluation.
 
@@ -36,7 +36,7 @@ Use `scripts/fetch_permissions.rs` for one canonical addition in any of these bo
 - Subdomains only.
 - A credential-free canonical ASCII HTTPS path prefix ending in `/`, with uppercase `%HH` escapes and no port, query, fragment, userinfo, encoded slash, or dot segment.
 
-The fast path owns canonical pattern generation, candidate insertion, hostname-scope grouping, lexical ordering, duplicate and equivalent-coverage detection, fetch and sandbox alignment, exact pattern artifacts, and the standard decision corpus. For supported inputs, its complete-array audit and candidate comparison satisfy the fetch branch’s ownership, matching, comparison, and configured-decision checks. Do not construct a terminal owner manifest, add an unrelated terminal sentinel, inventory terminal indexes, or prepare a separate task-local matcher suite.
+The fast path owns canonical pattern generation, candidate insertion, represented-hostname ordering, duplicate and equivalent-coverage detection, fetch and sandbox alignment, exact pattern artifacts, and the standard decision corpus. For supported inputs, its complete-array audit and candidate comparison satisfy the fetch branch’s ownership, matching, comparison, and configured-decision checks. Do not construct a terminal owner manifest, add an unrelated terminal sentinel, inventory terminal indexes, or prepare a separate task-local matcher suite.
 
 The fast path can reuse an existing factored hostname pattern only when it can structurally expand the hostname expression into a complete finite represented-host set through supported noncapturing alternatives and optional groups. Expansion is capped at 256 represented hosts. It validates every represented host, the canonical path-pattern tail, and sandbox alignment before accepting the array.
 

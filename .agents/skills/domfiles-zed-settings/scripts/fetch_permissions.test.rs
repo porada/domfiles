@@ -366,14 +366,14 @@ fn path_qualified_url_adds_no_sandbox_host() {
 }
 
 #[test]
-fn insertion_preserves_scope_groups_and_hostname_order() {
+fn insertion_preserves_represented_hostname_order() {
     let fixture = Fixture::new();
     let capture = fixture.capture(&settings(
         vec![
             pattern("^(?i:https://alpha-only\\.example)(?:[/?#]|$)"),
-            pattern("^(?i:https://zeta\\.example)(?:[/?#]|$)"),
-            pattern("^(?i:https://(?:[^./?#:@]+\\.)+subdomain\\.example)(?:[/?#]|$)"),
             pattern("^(?i:https://(?:[^./?#:@]+\\.)*alpha\\.example)(?:[/?#]|$)"),
+            pattern("^(?i:https://(?:[^./?#:@]+\\.)+subdomain\\.example)(?:[/?#]|$)"),
+            pattern("^(?i:https://zeta\\.example)(?:[/?#]|$)"),
         ],
         Vec::new(),
         Vec::new(),
@@ -399,10 +399,10 @@ fn insertion_preserves_scope_groups_and_hostname_order() {
         fetch_patterns(&candidate),
         vec![
             "^(?i:https://alpha-only\\.example)(?:[/?#]|$)",
-            "^(?i:https://middle\\.example)(?:[/?#]|$)",
-            "^(?i:https://zeta\\.example)(?:[/?#]|$)",
-            "^(?i:https://(?:[^./?#:@]+\\.)+subdomain\\.example)(?:[/?#]|$)",
             "^(?i:https://(?:[^./?#:@]+\\.)*alpha\\.example)(?:[/?#]|$)",
+            "^(?i:https://middle\\.example)(?:[/?#]|$)",
+            "^(?i:https://(?:[^./?#:@]+\\.)+subdomain\\.example)(?:[/?#]|$)",
+            "^(?i:https://zeta\\.example)(?:[/?#]|$)",
         ]
     );
     assert_eq!(

@@ -10,7 +10,7 @@ Apply the entrypoint’s [standard path](../SKILL.md#use-the-standard-path) befo
 
 ## Compose the comment
 
-- For JSDoc, follow the global [multiline block requirement](../../../../.config/zed/AGENTS.md#writing). In every language, lead with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than narrating the implementation.
+- Write every JSDoc comment as a multiline block with `/**` and `*/` on separate lines, including one-sentence comments. In every language, lead with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than narrating the implementation.
 - Prefer one concise sentence. For promises and analogous asynchronous results, use settlement or completion behavior when it states the purpose more directly. State distinct outcomes as separate sentences.
 - Treat the surrounding symbol, type, and nearby API as context already available to the reader, especially in an editor tooltip. Avoid repeating an obvious name, host tool, artifact, parameter explanation, or return type. A comment may share a verb with the function when it still adds purpose or significance beyond the identifier.
 - Mention a parameter in prose only when needed to state an observable consequence. Add dedicated parameter or return documentation only when explicitly requested or required by project policy, an established language-specific convention, or an established local convention, using the language’s established tags or sections.

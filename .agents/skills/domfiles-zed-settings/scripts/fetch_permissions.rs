@@ -116,16 +116,6 @@ enum HostScopeGroup {
     SubdomainsOnly,
 }
 
-impl HostScopeGroup {
-    fn order(self) -> u8 {
-        match self {
-            Self::ExactOrPath => 0,
-            Self::SubdomainsOnly => 1,
-            Self::HostAndSubdomains => 2,
-        }
-    }
-}
-
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields, rename_all = "snake_case", tag = "scope")]
 enum Request {
@@ -271,7 +261,6 @@ struct SettingsSnapshot {
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct PatternSortKey {
-    group: u8,
     hostname: String,
 }
 
@@ -1136,10 +1125,7 @@ fn classify_pattern(rule: &Rule) -> Result<PatternClassification, AppError> {
         group,
         host_boundary,
         represented_hostnames,
-        sort_key: PatternSortKey {
-            group: group.order(),
-            hostname,
-        },
+        sort_key: PatternSortKey { hostname },
     })
 }
 
@@ -1266,7 +1252,7 @@ fn audit_snapshot(snapshot: &SettingsSnapshot) -> Result<(), AppError> {
             .is_some_and(|previous: &PatternSortKey| previous > &classification.sort_key)
         {
             return Err(invalid(
-                "Fetch allow patterns are not ordered by hostname scope and represented hostname",
+                "Fetch allow patterns are not ordered by represented hostname",
             ));
         }
         previous = Some(classification.sort_key.clone());

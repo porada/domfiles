@@ -7,6 +7,8 @@ Do not read every permission reference by default. Select only the branches requ
 ## Apply the shared permission policy
 
 - Treat Zed agent permissions as layered security boundaries.
+- Treat configured Zed terminal allowances as a prompt-friction inventory of verified command forms, not a mirror of agent policy or task authorization. Agent policy may intentionally be stricter and change independently.
+- For audits, do not report policy-to-allowance differences or align settings solely because documentation prohibits an automatically allowed form. Report a permission issue only when a pattern misstates verified command behavior, violates an explicit permission-layer invariant, or an applicable policy expressly requires `allow`, `confirm`, or `deny` enforcement.
 - Preserve `agent.tool_permissions.default` as `allow`.
 
 ## Select a permission branch

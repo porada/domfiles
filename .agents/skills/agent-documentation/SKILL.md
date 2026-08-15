@@ -54,6 +54,8 @@ Apply every applicable global and project instruction. Treat project instruction
 
 ## Validate the documentation
 
+After capturing all task-authorized documentation updates intended for the current change, perform one bounded final alignment pass over the changed documentation against the [documentation principles](#apply-the-documentation-principles), the resolved local authority model, applicable project values, and explicit user decisions. Correct concrete discrepancies within the authorized scope before delivery. Treat this as a completion check rather than a drafting gate: do not withhold useful documentation, reopen settled decisions, repeatedly rewrite compliant content, or expand scope for speculative improvements. If a correction requires new authorization, preserve the completed changes and report that boundary.
+
 1. Reread every applicable `AGENTS.md` file and each in-scope documentation file.
 2. Search applicable project-authored agent documentation for the affected identifiers and concepts. Confirm that one normative definition remains and every secondary mention links to it.
 3. Verify every relevant project-relative link, heading anchor, and skill frontmatter name. Before renaming or deleting a heading, search project-authored agent documentation for links to its current anchor and update those links in the same change or preserve the heading.
