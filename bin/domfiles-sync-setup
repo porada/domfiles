@@ -15,8 +15,10 @@ __print_heading_dimmed 'Linking agent instructions'
 
 for source in agent-documentation github-cli release-notes repository-harmonization technical-copy; do
   __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.agents/skills/$source"
+  __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.claude/skills/$source"
 done
 
+__symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md"
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
 
 __print_heading_dimmed 'Provisioning additional files'

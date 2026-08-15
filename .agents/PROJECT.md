@@ -146,6 +146,14 @@ Zed authorizes the `xargs` shell segment before standard input becomes child-com
 
 ## Agent integration
 
+### Claude Agent integration
+
+The tracked [Claude project instruction bridge](../CLAUDE.md) imports the canonical project instructions from [`AGENTS.md`](../AGENTS.md) and defines no independent policy. [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete global skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
+
+The [`claude-acp` registry entry](../.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, permissions, sandbox, and native configuration independently of Zed Agent. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
+
+Zed’s OS sandbox applies only to Zed Agent and does not isolate Claude Agent. The tracked Zed sandbox and terminal permission settings therefore do not govern Claude Agent tools.
+
 ### Skill distribution
 
 The [skill distribution contract](../AGENTS.md#skills) classifies project-authored skills as internal, global, or public by canonical source and supported installation surface. Every tracked skill remains subject to the repository’s public-disclosure boundary. `metadata.internal: true` identifies an unsupported public installation surface rather than confidential content or access control.
@@ -198,7 +206,7 @@ The [global system-available tooling list](../.config/zed/AGENTS.md#system-avail
 
 The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
 
-The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system-maintenance utility outside coding workflows. `vim` is an interactive editor.
+The list intentionally omits `claude`, `codex`, `fisher`, `git`, `mole`, and `vim`. `claude` and `codex` are agent runtimes rather than supporting commands. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system-maintenance utility outside coding workflows. `vim` is an interactive editor.
 
 `brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
 
@@ -206,9 +214,9 @@ The list intentionally omits `codex`, `fisher`, `git`, `mole`, and `vim`. `codex
 
 The [release-note bullet-marker policy](../skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
 
-### Zed and Codex global instructions
+### Claude, Codex, and Zed global instructions
 
-The tracked `.config/zed/AGENTS.md` is the canonical global `AGENTS.md` shared by Zed and Codex. `domfiles sync` links that source to `~/.config/zed/AGENTS.md` for Zed and `~/.codex/AGENTS.md` for Codex. Both agents therefore load one instruction source across every project. It is not project scoped.
+The tracked `.config/zed/AGENTS.md` is the canonical global instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex, while the managed `~/.config` link exposes it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped.
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
 
@@ -217,6 +225,8 @@ The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defi
 ### Zed project scan exclusions
 
 The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
+
+The `.claude/skills` entry prevents Zed from scanning the [Claude project skill bridge](#claude-agent-integration) as a second path to `.agents/skills`.
 
 ### Zed selection-to-new-thread key binding
 
@@ -243,6 +253,10 @@ The final dependency status is advisory. Its result remains visible while synchr
 `.lastsync` records only that the broader workflow reached its end. Command output remains the record of individual operation outcomes. The file remains intentionally write-only until a consumer is introduced.
 
 ## Tooling
+
+### Claude Code distribution
+
+`claude` is intentionally installed through Homebrew’s `claude-code` cask rather than declared as an `@anthropic-ai/claude-code` project dependency. This keeps the CLI machine-level, follows Anthropic’s stable Homebrew channel, and excludes it from dependency installation in CI because `claude` is a development Homebrew dependency. The Homebrew CLI installation is separate from the `claude-acp` registry package managed by Zed.
 
 ### Codex distribution
 

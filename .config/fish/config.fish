@@ -36,6 +36,7 @@ set -x pnpm_config_npmrc_auth_file "$npm_config_userconfig"
 set -x ZIZMOR_CONFIG "$DOMFILES_CONFIG_DIR/zizmor.yaml"
 
 # Opt out of telemetry
+set -x DISABLE_TELEMETRY 1
 set -x DO_NOT_TRACK 1
 set -x HOMEBREW_NO_ANALYTICS 1
 set -x VERCEL_TELEMETRY_DISABLED 1

@@ -17,9 +17,19 @@ else
 fi
 
 install() {
+  case "$1" in
+    claude-code | codex) cask=true ;;
+    *) cask=false ;;
+  esac
+
   if ! __is_brew_installed "$1"; then
     __print_heading "Installing \`$1\`"
-    __ brew install --quiet "$1"
+
+    if [ "$cask" = true ]; then
+      __ brew install --cask --quiet "$1"
+    else
+      __ brew install --quiet "$1"
+    fi
   fi
 
   if __is_brew_keg_only "$1" && ! __is_brew_linked "$1"; then
@@ -35,7 +45,7 @@ done
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in actionlint ast-grep codex fd gh jq just pandoc ripgrep shellcheck taplo yarn yq zizmor; do
+  for formula in actionlint ast-grep claude-code codex fd gh jq just pandoc ripgrep shellcheck taplo yarn yq zizmor; do
     install "$formula"
   done
 fi

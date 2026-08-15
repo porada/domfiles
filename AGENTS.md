@@ -24,6 +24,7 @@
 | --- | --- |
 | `.config/zed/AGENTS.md` | Defines global defaults. Applicable project agent instructions override it. |
 | `AGENTS.md` | Defines project instructions, scope, documentation authority, and skill routing. Applicable project instructions override global defaults. |
+| `CLAUDE.md` | Bridges Claude to the canonical project instructions in `AGENTS.md`. It defines no independent policy. |
 | `.agents/skills/*/` and `skills/*/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to same-directory references. Distribution follows the [skill classification](#skills). |
 | `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |
