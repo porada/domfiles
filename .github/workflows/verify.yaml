@@ -35,6 +35,16 @@ jobs:
       - run: brew install fish
       - run: bin/domfiles-dev-lint-fish
 
+  lint-json:
+    name: lint / json
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: brew install jq
+      - run: bin/domfiles-dev-lint-json
+
   lint-rs:
     name: lint / rs
     runs-on: macos-26
@@ -59,6 +69,16 @@ jobs:
       - run: brew install shellcheck
       - run: bin/domfiles-dev-lint-sh
 
+  lint-toml:
+    name: lint / toml
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: brew install taplo
+      - run: bin/domfiles-dev-lint-toml
+
   lint-ts:
     name: lint / ts
     runs-on: ubuntu-latest
@@ -71,6 +91,16 @@ jobs:
           cache: true
           runtime: node@24
       - run: pnpm lint:ts:check
+
+  lint-yaml:
+    name: lint / yaml
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: brew install yq
+      - run: bin/domfiles-dev-lint-yaml
 
   typecheck:
     runs-on: ubuntu-latest

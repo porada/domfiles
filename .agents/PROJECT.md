@@ -286,9 +286,9 @@ The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
 
-### Shell wrapper duplication
+### Development lint wrapper architecture
 
-The Fish and POSIX lint wrappers are short, language-specific entrypoints with fixed repository scopes. Keeping those scopes in the wrappers provides one interface for pnpm, staged linting, shell-only CI, and targeted agent validation without retaining separate Git-backed discovery commands. Fish’s no-argument scope intentionally includes the [machine-local configuration](#fish-local-configuration) while excluding other ignored matches. Parameterizing the wrappers would add indirection solely to remove surface similarities.
+The language-specific `bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands while sharing discovery and execution through `domlib`. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
 
 The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
 

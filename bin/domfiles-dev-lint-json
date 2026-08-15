@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# shellcheck source=bin/domlib
+. "$(dirname "$(realpath "$0")")/domlib"
+
+# Lint JSON files that come with domfiles
+# (lints all files when no paths are provided)
+__domfiles_cd_root
+
+lint_default_files() {
+  git ls-files --cached --others --exclude-standard -- '*.json'
+}
+
+lint_file() {
+  __ jq --slurp \
+    'if length == 1 then empty else error("expected exactly one JSON value, received \(length)") end' \
+    -- "$1"
+}
+
+__domfiles_dev_lint 'JSON files' "$@"

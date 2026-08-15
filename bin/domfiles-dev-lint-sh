@@ -7,24 +7,12 @@
 # (lints all files when no paths are provided)
 __domfiles_cd_root
 
-if [ $# -eq 0 ]; then
-  set -- .hooks/* bin/*
-fi
+lint_default_files() {
+  git ls-files --cached --others --exclude-standard -- '*.sh' '.hooks/*' 'bin/*'
+}
 
-if [ $# -eq 1 ]; then
-  __print_heading "Linting \`$1\`"
-else
-  __print_heading 'Linting POSIX shell scripts'
-fi
+lint_file() {
+  __ shellcheck --external-sources -- "$1"
+}
 
-__ifs_set
-
-for file in "$@"; do
-  if [ ! -f "$file" ] || [ -L "$file" ]; then
-    continue
-  fi
-
-  __ shellcheck --external-sources -- "$file"
-done
-
-__ifs_restore
+__domfiles_dev_lint 'POSIX shell scripts' "$@"

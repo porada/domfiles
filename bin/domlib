@@ -115,6 +115,55 @@ __domfiles_cd_root() {
     || __print_error_and_exit "Could not change directory to \`$DOMFILES\`"
 }
 
+__domfiles_dev_lint() (
+  if [ $# -eq 0 ]; then
+    __print_error_and_exit '`__domfiles_dev_lint` requires a label'
+  fi
+
+  for callback in lint_default_files lint_file; do
+    if ! command -v "$callback" > /dev/null 2>&1; then
+      __print_error_and_exit \
+        "\`__domfiles_dev_lint\` requires the \`$callback\` callback"
+    fi
+  done
+
+  lint_label="$1"
+  shift
+
+  if [ $# -eq 0 ]; then
+    files="$(lint_default_files)" || exit $?
+    set --
+
+    if [ -n "$files" ]; then
+      while IFS= read -r file; do
+        if git check-ignore --quiet -- "$file"; then
+          continue
+        fi
+
+        set -- "$@" "$file"
+      done << EOF
+$files
+EOF
+    fi
+  fi
+
+  if [ $# -eq 1 ]; then
+    __print_heading "Linting \`$1\`"
+  else
+    __print_heading "Linting $lint_label"
+  fi
+
+  __ifs_set
+
+  for file in "$@"; do
+    if [ ! -f "$file" ] || [ -L "$file" ]; then
+      continue
+    fi
+
+    lint_file "$file"
+  done
+)
+
 __domfiles_exec() {
   if [ $# -eq 0 ]; then
     __print_error_and_exit '`__domfiles_exec` requires at least one argument'

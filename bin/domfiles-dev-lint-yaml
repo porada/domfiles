@@ -3,16 +3,16 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Lint Fish shell scripts that come with domfiles
+# Lint YAML files that come with domfiles
 # (lints all files when no paths are provided)
 __domfiles_cd_root
 
 lint_default_files() {
-  git ls-files --cached --others --exclude-standard -- '*.fish'
+  git ls-files --cached --others --exclude-standard -- '*.yaml'
 }
 
 lint_file() {
-  __ fish --no-execute -- "$1"
+  __ yq eval-all 'select(false)' -- "$1"
 }
 
-__domfiles_dev_lint 'Fish scripts' "$@"
+__domfiles_dev_lint 'YAML files' "$@"

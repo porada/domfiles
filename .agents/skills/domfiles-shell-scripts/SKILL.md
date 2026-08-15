@@ -69,7 +69,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 ## Evaluate duplication and reuse
 
-- Keep the Fish and POSIX lint wrappers separate. Do not report their fixed-scope traversal, argument handling, or heading setup as duplication. See [shell wrapper duplication](../../PROJECT.md#shell-wrapper-duplication) for rationale.
+- Do not report the language-specific `bin/domfiles-dev-lint-*` entrypoints as duplication merely because each retains its own default scope and lint command. Shared discovery and execution belong in `domlib`. See [development lint wrapper architecture](../../PROJECT.md#development-lint-wrapper-architecture) for rationale.
 - Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned.
 - Do not report `__string_*` helpers or equivalent inline string operations as reimplementations. See [string helper reuse](../../PROJECT.md#string-helper-reuse) for rationale.
 
@@ -95,11 +95,11 @@ value="$(optional-command || true)"
 
 After editing, use the narrowest applicable validation scope:
 
-1. Pass changed shell paths explicitly to the lint wrappers. Omit paths only when repository-wide validation is intended. Explicit paths are honored regardless of the default scopes. With no paths, `domfiles-dev-lint-sh` checks regular non-symlink matches from `.hooks/*` and `bin/*`. `domfiles-dev-lint-fish` checks regular non-symlink matches from `.config/fish/*.fish` and `.config/fish/functions/fish_*.fish`, skipping Git-ignored matches except `.config/fish/local.fish`.
-2. For Fish, run `pnpm run lint:fish <changed-fish-files>`. The wrapper already runs `fish --no-execute`, so do not repeat that check.
+1. Pass changed paths explicitly to the matching lint wrapper. Omit paths only when repository-wide validation is intended. Explicit paths bypass default discovery. With no paths, wrappers discover tracked files and non-ignored untracked files. The Fish, JSON, TOML, and YAML wrappers respectively restrict that inventory to `*.fish`, `*.json`, `*.toml`, and `*.yaml` files. The POSIX wrapper uses `*.sh`, `.hooks/*`, and `bin/*` to include extensionless entrypoints. Every wrapper skips non-files and symlinks.
+2. For Fish, run `pnpm run lint:fish <changed-fish-files>`. Include `.config/fish/local.fish` explicitly when it exists. The wrapper already runs `fish --no-execute`, so do not repeat that check.
 3. For POSIX shell, run `sh -n <file>` for each changed file and `pnpm run lint:sh <changed-posix-files>`. The wrapper supplies the complementary ShellCheck analysis.
-4. Check formatting for changed `.fish` and `.sh` files and extensionless Fish and POSIX shell scripts with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-shell-files>`. The configured Fish plugin infers extensionless Fish scripts from their `fish` hashbang, so do not force `--parser fish`.
-5. Verify every applicable policy invariant above, including `domlib` ordering, usage, and `$DOMFILES_*` parity when relevant. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned unstaged and staged diffs, inspect task-owned untracked files directly without staging them, and review the final status without altering concurrent changes.
+4. For JSON, TOML, or YAML, run `pnpm run lint:<format> <changed-format-files>`. The JSON wrapper requires exactly one parsed JSON value, the TOML wrapper runs `taplo lint --no-schema`, and the YAML wrapper parses every YAML document without emitting document content.
+5. Check formatting for changed `.fish` and `.sh` files and extensionless Fish and POSIX shell scripts with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-shell-files>`. The configured Fish plugin infers extensionless Fish scripts from their `fish` hashbang, so do not force `--parser fish`. Verify every applicable policy invariant above, including `domlib` ordering, usage, and `$DOMFILES_*` parity when relevant. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned unstaged and staged diffs, inspect task-owned untracked files directly without staging them, and review the final status without altering concurrent changes.
 
 ## Validate a shell audit, review, or diagnosis
 
