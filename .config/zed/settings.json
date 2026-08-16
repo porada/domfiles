@@ -166,6 +166,7 @@
 				"*.wordpress.org",
 				"*.yarnpkg.com",
 				"*.zizmor.sh",
+				"add-skill.vercel.sh",
 				"agentclientprotocol.com",
 				"agentskills.io",
 				"apple.com",
@@ -262,6 +263,10 @@
 				"fetch": {
 					"default": "confirm",
 					"always_allow": [
+						{
+							"pattern": "^(?i:https://add-skill\\.vercel\\.sh)(?:[/?#]|$)",
+							"case_sensitive": true
+						},
 						{
 							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*agentclientprotocol\\.com)(?:[/?#]|$)",
 							"case_sensitive": true
@@ -833,7 +838,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*codex (?:-h|-V|app-server (?:-h|--help))$",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*codex (?:-h|--help|-V|--version|app-server (?:-h|--help))$",
 							"case_sensitive": true
 						},
 						{
