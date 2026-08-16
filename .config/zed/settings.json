@@ -8,14 +8,6 @@
 				"model": "opus"
 			},
 			"type": "registry"
-		},
-		"codex-acp": {
-			"default_config_options": {
-				"fast-mode": false,
-				"model": "gpt-5.6-sol",
-				"reasoning_effort": "max"
-			},
-			"type": "registry"
 		}
 	},
 	"autosave": "on_focus_change",
@@ -91,6 +83,7 @@
 		"dock": "left",
 		"hide_root": true
 	},
+	"restore_on_startup": "empty_tab",
 	"scrollbar": {
 		"cursors": false
 	},
