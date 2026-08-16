@@ -1,6 +1,20 @@
+---
+name: prompt-relays
+description: Create, revise, review, and audit prompts copied from one conversation into another—task relays that assign work, decision relays that transfer completed-work evidence, and the capture prompts that generate them. Use this skill whenever composing or revising a prompt intended for another agent or conversation, and when maintaining a standalone relay or decision-capture asset. Covers relay terminology, the shared relay contract, delivery and complete-revision defaults, composition sequences, the anti-drift guard boundary, and decision-evidence provenance labels. Do not use it for ordinary responses in the current conversation or for release and changelog prose.
+metadata:
+    internal: true
+---
+
 # Prompt relays
 
-Use this reference when creating, revising, reviewing, auditing, or maintaining a prompt intended to be copied from one conversation into another. It owns relay terminology, composition, delivery, evidence provenance, and domain-profile maintenance.
+Apply every applicable global and project instruction. This skill owns relay terminology, composition, delivery, evidence provenance, and domain-profile maintenance for every prompt intended to be copied from one conversation into another.
+
+## Choose the workflow
+
+- To create a relay, compose the complete prompt against the standards below and deliver it through the applicable delivery default.
+- To revise a relay, return every affected prompt in full with the change applied, rewriting only the prompts the request names.
+- For a standalone review or audit of an existing relay or capture prompt, keep the task read-only. Report findings against the standards below and skip composition, delivery, and every mutation. Findings alone never authorize editing a relay or its asset.
+- To maintain a standalone relay or decision-capture asset, treat the asset as the change target and apply the domain-profile rules below.
 
 ## Use canonical terms
 
@@ -28,7 +42,7 @@ Use this reference when creating, revising, reviewing, auditing, or maintaining 
 - **Prompt revisions:** When asked to change a prompt, return every affected prompt in full with the change applied. Do not provide a patch, fragment, or splice instructions. When one requested change affects a coordinated prompt set, apply this rule across that set, omit unrelated unchanged prompts, and preserve established decisions and untouched boundaries in each replacement.
 - **Worktree instructions:** Do not add them to a relayed prompt unless the user explicitly requests them or an applicable policy already requires them.
 
-Make every standalone relay asset implement the applicable delivery and complete-revision defaults above in its own output contract. A task-relay asset must frame each outgoing assignment prompt as a copyable code block. A decision-capture asset whose entire response is the returned evidence relay must emit that relay directly as the complete response without an outer relay frame. A capture prompt cannot depend on the receiving agent loading this reference.
+Make every standalone relay asset implement the applicable delivery and complete-revision defaults above in its own output contract. A task-relay asset must frame each outgoing assignment prompt as a copyable code block. A decision-capture asset whose entire response is the returned evidence relay must emit that relay directly as the complete response without an outer relay frame. A capture prompt cannot depend on the receiving agent loading this skill.
 
 ## Compose a task relay
 
@@ -48,7 +62,7 @@ Include the applicable parts of this sequence:
 7. Handoff contents and the receiving agent’s stopping point.
 8. Exact final anti-drift guard.
 
-Execution remains governed by the global “Git worktrees” policy.
+Execution remains governed by the `git-worktrees` skill.
 
 ## Compose a decision relay
 
@@ -91,6 +105,6 @@ Use the most specific applicable label. Reserve `Observed behavior` for results 
 
 ## Maintain domain relay profiles
 
-Treat this reference as the maintainer standard rather than a runtime include.
+Treat a domain profile as a maintainer asset measured against this skill rather than a runtime include of it. Each profile must restate what it needs so an ordinary invocation of that profile loads nothing from here.
 
 A domain profile may specialize context fields, representative evidence, validation levels, and candidate-guidance destinations. It must preserve the [shared relay contract](#apply-the-shared-relay-contract), [delivery defaults](#apply-relay-delivery-defaults), and [source-closed decision-capture workflow](#compose-a-decision-relay).

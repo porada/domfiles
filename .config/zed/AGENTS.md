@@ -4,11 +4,12 @@
 
 - **Scope:** Treat the resolved task scope as a hard boundary. Evidence gathering, root-cause work, validation, and the minimum adjacent integration needed for completion remain in scope. Do not expand into broader audits, cleanup, refactors, dependency changes, speculative research, or unrelated fixes without explicit authorization. When completion requires crossing the boundary, stop and ask one focused question.
 - **User input:** Never override or alter the user’s input unless explicitly asked.
+- **Secrets:** Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, or relays. Never request, inspect, echo, or invent a real secret value unless the user explicitly directs it.
 - **Ambiguity:** When user input appears inconsistent with the current task, accidentally pasted from another context, or mistyped, proceed only when the intended request can be inferred confidently from the conversation and project evidence without changing its material scope or outcome. Otherwise stop before acting and ask one focused clarification rather than following the input literally or silently choosing among plausible interpretations.
 
 ## Collaboration
 
-- **Concurrent work:** Assume others may be working in the same project. Ignore untracked files named `TODO` or `TODO.*` unless the user explicitly requests work on them.
+- **Concurrent work:** Assume others may be working in the same project. Work in the current checkout unless the `git-worktrees` criteria require isolation, and before editing, inspect the status and diff of files in scope, preserve existing changes, and avoid overlapping another agent’s known write scope. Ignore untracked files named `TODO` or `TODO.*` unless the user explicitly requests work on them.
 - **Direct work:** Complete small, bounded, or tightly coupled work directly.
 - **External relays:** Treat a task relay to an external agent—an independently coordinated agent or conversation whose result does not automatically return here—as a normal collaboration option. Proactively use one for a self-contained handoff when it is most efficient after accounting for handoff, review, and integration costs.
     - Favor external relays for long-running or parallel work when in-client subagent work would block the coordinating conversation and continued user steering is valuable, direct visibility into the receiving agent’s work would help, specialist or independent review would help, or the work requires a materially different execution environment such as a remote host, device, or authenticated session.
@@ -16,7 +17,7 @@
 - **In-client subagents:** Prefer an in-client subagent when automatic return to the coordinating conversation is more valuable than keeping that conversation available for steering.
 - **Delegated ownership:** Give every delegate a clear, nonoverlapping owned scope. Avoid duplicated work, continue useful nonoverlapping work while delegation is active, and retain final synthesis, decisions, and integration in the coordinating conversation.
 - **Inherited boundaries:** A delegate inherits the task’s scope, mutation authority, approval requirements, and security boundaries. It cannot authorize scope expansion, provide user-only approval, transfer access, or circumvent a boundary. An external relay must stop and ask the user directly before crossing one. An in-client subagent must return the boundary request to its coordinator, which must obtain any required user decision or authorization.
-- **Prompt contract:** End every initial or follow-up delegated prompt with the exact standalone line `**Do not drift.**`. Before that guard, define the bounded assignment, owned scope, exclusions, source constraints, stop conditions, and output contract. Apply this contract to evidence gathering and review as well as mutation.
+- **Prompt contract:** End every initial or follow-up prompt that assigns work with the exact standalone line `**Do not drift.**`. Before that guard, define the bounded assignment, owned scope, exclusions, source constraints, stop conditions, and output contract. Apply this contract to delegated evidence gathering and review as well as mutation, and omit the guard from a prompt that only transfers established data.
 - **Evidence isolation:** When in-client subagents are available, use them as context-isolation boundaries when evidence source count or output size cannot be bounded safely before execution.
     - Delegate exploratory online research before the first potentially unbounded search, fetch, or open-ended navigation. GitHub issues, pull requests, discussions, release histories, and similar collections are exploratory.
     - For local investigation, first narrow scope and use pagination or output limits. Delegate broad command output, large Git ranges, or independent repository audit scopes only when those controls are insufficient and the main thread needs a concise result.
@@ -29,25 +30,9 @@
 ## Temporary files
 
 - **Namespace:** Place temporary files managed directly by the agent under one task-specific `.agent-<name>` directory at the relevant project root unless applicable project instructions require another approved namespace. Use a unique, filesystem-safe `<name>` that identifies the task, adding a short suffix when needed to avoid collisions.
-- **Shared convention:** `.agent-<name>` names both temporary task directories and Git worktrees. Before reusing, moving, or deleting one, inspect it and run `git --no-pager worktree list --porcelain` to determine whether it is registered. Add `-z` only when a parser consumes the output.
+- **Shared convention:** `.agent-<name>` names both temporary task directories and Git worktrees. Before reusing, moving, or deleting one, inspect it and run `git --no-pager worktree list --porcelain` to determine whether it is registered. Add `-z` only when a parser consumes the output. Load `git-worktrees` before deciding whether to isolate work and before any worktree or paired-branch operation.
 - **Retention:** Helper scripts may remain in their task-specific directory when likely reuse makes retention more efficient than recreation. Treat expected reuse as continued need under the cleanup rule.
 - **Cleanup:** Remove only temporary directories created for the current task, and only when they are no longer needed.
-
-## Git worktrees
-
-- **Default:** Work in the current checkout. Before editing, inspect the status and diff of files in scope, preserve existing changes, and avoid overlapping another agent’s known write scope.
-- **Create only for:**
-    - An explicit user request for an isolated worktree.
-    - Another active agent with an overlapping write scope.
-    - A task requiring isolated branch, dependency, build, or test state.
-    - A broad or high-risk change that materially benefits from independent rollback and has a clear integration plan.
-- **Do not isolate merely for:** A dirty repository, possible concurrent activity, or any task that modifies repository files. Keep follow-up edits to the same uncommitted task in its existing checkout.
-- **Pairing:** When a worktree is required, use a unique, filesystem-safe `<name>` containing a task slug and short unique suffix without path separators. Create it with `git worktree add -b agent/<name> .agent-<name> <start-point>`. Do not use `--detach`. Keep every worktree paired with its `agent/<name>` branch, and move the worktree and rename the branch together when changing `<name>`.
-- **Command location:** For Git commands intended to operate inside a registered `.agent-<name>` worktree, use `git -C .agent-<name> …` rather than relying only on process or tool working directory. Verify registration with `git --no-pager worktree list --porcelain`. Do not treat an ordinary task-specific `.agent-<name>` directory as a worktree. Run worktree-administration commands from the primary checkout unless the command requires another location.
-- **Destructive-operation gate:** Before moving or removing a worktree, or force-renaming or deleting its branch, inspect the affected worktree status and verify that its changes are integrated or explicitly abandoned.
-    - Remove worktrees with `git worktree remove`. Use one or two exact `-f` or `--force` options only after verification when an unclean or locked worktree requires them. Verify afterward that the corresponding directory is gone, and inspect it rather than deleting it recursively if it remains.
-    - After removing the worktree, first delete its branch with `git branch -d agent/<name>`. Use `git branch -D agent/<name>` only when Git refuses because the branch is unmerged and the preceding verification established that its changes are integrated or explicitly abandoned.
-- **Historical inspection:** Inspect revisions through Git without materializing them. Materialize a revision only when a filesystem-based tool requires it, using the isolation policy above when isolation is necessary.
 
 ## Communication
 
@@ -61,7 +46,7 @@
     - When a plan tool is available, keep one item in progress and preserve state there rather than repeating it in prose.
     - Across progress updates, report only what changed: what finished, what is current, and what comes next.
 - **Focus:** Resolve incidental questions without involving the user when possible and incorporate only answers needed for the current task. Mention an unrelated observation only when it materially affects correctness, safety, or the next action. After three consecutive failed attempts, stop repeating the approach, identify the assumption that may be wrong, and ask one focused diagnostic question.
-- **Reviews:** When reviewing commits, never assess or mention commit messages. Review responses contain only findings and applicable validation limitations. Omit praise, positive observations, and summaries of correct behavior. When there are no findings, state that directly.
+- **Reviews:** When reviewing commits, never assess or mention commit messages. Review responses contain only findings and applicable validation limitations. When there are no findings, state that directly.
 - **Outcomes:** Name the resulting state directly rather than negating a negative-state term such as `blocked`, `failed`, `incomplete`, `missing`, or `unresolved`. Report only outcomes that change the user’s state or materially establish completion. Describe errors with the evidence, known cause, and next corrective action. Give a concrete range and its assumptions when the user requests a time estimate or must plan around it.
 - **Validation reporting:** Keep routine validation silent.
     - Do not report passing diagnostics, formatting, linting, typechecking, or whitespace checks individually.
@@ -82,6 +67,7 @@
 ## Documentation
 
 - **README gate:** Never edit a consumer-facing `README` without explicit user permission.
+- **External skills:** Never edit a skill the project did not author, whether managed, vendored, or third-party. This holds even when the skill is committed to the repository.
 - **Block layout:** In Markdown, keep standalone blocks such as tables and fenced code aligned to the document’s left edge. Restructure surrounding lists or blocks to reference them rather than nesting them.
 - **Canonical ownership:** Give each durable detail one canonical home and link to it rather than paraphrasing it elsewhere.
 - **Shared agent instructions:** Never edit `CLAUDE.md`. Put agent instructions in the applicable `AGENTS.md` or shared skill so every supported agent is governed by the same canonical documentation.
@@ -98,31 +84,10 @@
 
 ### System-available tooling
 
-- **Availability:** Assume the following non-standard development commands are installed and available through `PATH`:
-
-| Command | Purpose | Guidance |
-| --- | --- | --- |
-| `actionlint` | GitHub Actions correctness | — |
-| `ast-grep` | Structural code search and transformation | — |
-| `cargo` | Rust package management and workspace workflows | — |
-| `fd` | Filesystem path search | Prefer over `find` for ad hoc terminal path discovery |
-| `fish` | Fish shell and configuration checks | — |
-| `gh` | Bounded GitHub operations | Follow the [GitHub CLI policy](#github-cli) |
-| `jq` | JSON querying and transformation | — |
-| `just` | Command runner | — |
-| `node` | JavaScript and TypeScript execution | Run `*.ts` files directly |
-| `pandoc` | Document format conversion | — |
-| `plugins` | Agent plugin installation | — |
-| `pnpm` | JavaScript package management | Preferred. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`. Use `exec` for local binaries and `dlx` for undeclared one-offs |
-| `rg` | File-content search | Always pass `--no-config` |
-| `rustc` | Direct Rust compilation | Use for standalone source files |
-| `shellcheck` | Shell-script analysis | — |
-| `skills` | Agent skill management | — |
-| `taplo` | TOML formatting and validation | — |
-| `yarn` | JavaScript package management | Use for Yarn-based projects |
-| `yq` | YAML querying and transformation | — |
-| `zizmor` | GitHub Actions security reviews | — |
-
+- **Availability:** Assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `ast-grep`, `cargo`, `fd`, `fish`, `gh`, `jq`, `just`, `node`, `pandoc`, `plugins`, `pnpm`, `rg`, `rustc`, `shellcheck`, `skills`, `taplo`, `yarn`, `yq`, and `zizmor`.
+- **Purpose:** Where the name does not carry it, `plugins` installs agent plugins, `skills` manages agent skills, and `zizmor` reviews GitHub Actions security.
+- **Usage:** Prefer `fd` over `find` for ad hoc terminal path discovery. Follow the [GitHub CLI policy](#github-cli) for `gh`. Run `*.ts` files directly with `node`. Always pass `--no-config` to `rg`. Use `rustc` for standalone source files and `yarn` for Yarn-based projects.
+- **Package manager:** Prefer `pnpm`. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`, and use `exec` for local binaries and `dlx` for undeclared one-offs.
 - **Direct invocation:** Invoke `plugins` and `skills` directly, not through `npx` or `pnpm dlx`.
 - **Scope:** Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.
 
@@ -136,7 +101,7 @@
 
 #### Tool selection
 
-- **Native tools:** Prefer the most specific native tool that represents the operation. Use native file, search, diagnostics, fetch, and browser tools when they can complete the task. Use the terminal for repository workflows and capabilities unavailable through a dedicated tool.
+- **Native tools:** Prefer the most specific native tool that represents the operation. Use native file, search, diagnostics, fetch, and browser tools when they can complete the task. Use the terminal for repository workflows and capabilities unavailable through a dedicated tool. For read-only search and inspection, prefer a terminal form that bounds its output when the native tool’s output would materially exceed it. Do not extend that preference to file reads or mutations, where native tools preserve client file tracking and permission scoping.
 - **Direct access:** Use native file tools for ordinary local files and native fetch tooling for directly addressable URLs. This preference does not apply to web searches.
 - **CLI exceptions:** Use `cat` or `curl` when exact bytes, standard-input delivery, a necessary shell pipeline, command-line HTTP behavior, exact response files, or execution in a shell, container, or remote environment is material. Prefer passing a file path directly when the downstream command supports it. Preserve explicit user requests, project workflows, and repository code that use `curl`.
 - **MCP and browser boundary:** Do not use MCP servers as generic filesystem or HTTP proxies, or reopen the same resource through Chrome MCP, browser automation, a subagent, or another indirect proxy merely because direct access failed. Use MCP or a browser when the task requires server-owned semantics, remote-only or rendered DOM state, user interaction, browser-managed downloads, nontransferable authentication, or an explicit user or project workflow. Select that route for the required capability, not as a retrieval fallback.
@@ -162,18 +127,15 @@
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
 - **Numbering:** For nonconsecutive numbered items, write every number explicitly in the item text rather than relying on Markdown ordered-list numbering.
 - **Code tokens:** Wrap identifiers, paths, commands, and quoted code tokens in backticks.
+- **Commit references:** Write abbreviated commit hashes at 8 characters.
 
 ## Shorthand commands
 
 - **Definition:** Shorthand commands are task macros that define complete, standalone procedures.
-- **Execution:** Always execute them exactly as defined.
-
-### Harmonize
-
-- **Route:** Load `repository-harmonization` and execute its complete workflow.
+- **Execution:** Always execute them exactly as defined. A shorthand owned by a skill is declared in that skill’s description. Load that skill and execute its complete workflow.
 
 ### Verify
 
-- **Reread:** Reread every applicable `AGENTS.md` and previously reported file, then align each finding with the latest instructions and contents.
+- **Reread:** Reread every applicable `AGENTS.md` and previously reported file, then align each finding with the latest instructions and contents. Skip a reread only when Git status and diff prove the file unchanged since the current task loaded it. Reverify any finding whose resolution depends on evidence Git does not track, including ignored files and external tool, upstream, or environment behavior.
 - **Reclassify:** Classify every previously reported finding as resolved, intentional, or unresolved.
 - **Report:** Report only unresolved findings. When every finding is resolved or intentional, state the resulting status directly.

@@ -65,7 +65,7 @@ Before writing:
 
 - Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
 - Do not write Git metadata or files unrelated to the declared artifact contract.
-- Apply the global “Concurrent work” and “Git worktrees” preservation rules to repository destinations.
+- Apply the global “Concurrent work” preservation rule to repository destinations.
 - Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
 - Leave byte-identical output unchanged.
 

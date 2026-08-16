@@ -1,11 +1,13 @@
 ---
 name: domfiles-repository-audit
-description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill for standalone audit requests—including the bare `Audit` command—for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
+description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill immediately for the bare `Audit` shorthand and for standalone audit requests covering redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
 metadata:
     internal: true
 ---
 
 # Domfiles repository audit
+
+Treat the exact prompt `Audit` as the complete workflow below. For an explicitly scoped request, substitute its supplied scope without changing the workflow’s boundaries.
 
 ## Resolve the scope
 
@@ -17,7 +19,7 @@ metadata:
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.
-3. Treat these paths as exclusions from the bare `Audit` command and other default repository scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the absolute exclusions above:
+3. Treat these paths as exclusions from the bare `Audit` shorthand and other default repository scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the absolute exclusions above:
     - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed-settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
     - `.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Absolute exclusions still apply, and supporting evidence does not become reportable.

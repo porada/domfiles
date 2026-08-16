@@ -22,9 +22,13 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ### GitHub CLI authentication boundary
 
-`gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store. `domfiles` does not run `gh auth`, provide token environment variables, broaden authentication scopes, or track generated authentication state.
+`gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store.
 
 GitHub CLI can fall back to storing a token in plaintext when secure credential storage is unavailable. That fallback is outside the supported boundary for agent use.
+
+### Permission pattern length bound
+
+The 1,000-scalar cap on decoded permission patterns in the [terminal permission policy](skills/domfiles-zed-settings/references/terminal-permissions.md#apply-the-terminal-permission-policy) is a self-imposed reviewability bound rather than a Zed or regex-engine constraint. It tracks no external limit and changes only by decision. The `domfiles-zed-settings-permission-owner-audit` binary enforces the same bound, so the policy figure and that enforcement change together.
 
 ### Ripgrep configuration isolation
 
@@ -38,7 +42,7 @@ Agent tool permissions intentionally use an allow-by-default baseline. The termi
 
 ### Zed agent-directory allowance scope
 
-Project-relative task-owned `.agent-<name>` directories are a standing user-approved namespace for operation-specific terminal-allowance variants. A command family’s namespace-bounded variant is eligible for automatic allowance only when every behavior-bearing path is explicit, traversal-free, and lexically contained there. This lets permission work evaluate the scoped variant without asking the user to reapprove the namespace for each command family.
+Project-relative task-owned `.agent-<name>` directories are a standing user-approved namespace for operation-specific terminal-allowance variants. This lets permission work evaluate a scoped variant without asking the user to reapprove the namespace for each command family.
 
 The namespace neither authorizes a command family nor changes effective permissions on its own. The [agent-directory allowance policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#apply-the-agent-directory-allowance-policy) owns exact eligibility and preserves confirmation or denial for effects that path scope cannot contain, while [Zed settings](../.config/zed/settings.json) remain canonical for configured behavior.
 
@@ -68,7 +72,7 @@ Operational `cargo clean` and nightly or experimental execution remain confirmab
 
 ### Zed command discovery defaults
 
-Terminal discovery forms require verified exit-only behavior regardless of spelling. Long and single-dash options can be operational flags or ordinary operands, so an exact, end-anchored form qualifies only when it exits without entering an interactive mode, mutating state, reading input, or starting normal execution. A verified unsupported form may qualify when it terminates without prompting. This fail-closed boundary lets each executable own its discovery forms without treating option-like spelling as evidence of safety.
+Terminal discovery forms require verified exit-only behavior regardless of spelling because long and single-dash options can be operational flags or ordinary operands. This fail-closed boundary lets each executable own its discovery forms, with the exact qualifying test owned by the [terminal permission policy](skills/domfiles-zed-settings/references/terminal-permissions.md#apply-the-terminal-permission-policy).
 
 ### Zed fetch and sandbox host scope
 
@@ -84,9 +88,9 @@ Git’s repository discovery can walk from a descendant into an enclosing worktr
 
 ### Zed generated-output deletion
 
-Entries named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` and paths beneath them are treated as disposable generated output at any path depth. Because permissions match paths lexically, a matching root is intentionally allowed whether it is a directory or a regular file. Native `delete_path` may remove a matching root or its descendants. Terminal `rm` may do the same with `-d`, `-f`, `-R`, `-r`, `-v`, and `-x`, while `rmdir` may remove empty directories with only `-v`. Both accept an optional `--`, multiple operands, safe concrete path segments, and simple `*` or `?` globs.
+Entries named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` and paths beneath them are treated as disposable generated output at any path depth. Because permissions match paths lexically, a matching root is intentionally allowed whether it is a directory or a regular file. Native `delete_path` and bounded terminal `rm` and `rmdir` forms may remove a matching root or its descendants, with the exact accepted option and glob grammar canonical in [Zed settings](../.config/zed/settings.json).
 
-Brace expansion, broader `rm` options, parent-removing `rmdir -p`, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
+Brace expansion, broader deletion grammar, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
 
 ### Zed npm `--all` option
 
@@ -94,13 +98,13 @@ npm’s exact `--all` is an ordinary scope option rather than a lifecycle-script
 
 ### Zed permission regex compatibility
 
-The exact `regex` crate version pinned in `Cargo.toml` was verified against Zed as of commit `9e23609`. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) revalidates the direct version baseline against current Zed source.
+The exact `regex` crate version pinned in `Cargo.toml` was verified against Zed as of commit `9e236090`. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) revalidates the direct version baseline against current Zed source.
 
 ### Zed `printenv` exposure
 
 The automatic `printenv` allowance is limited to the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
 
-The automatic denial covers exact `PASSWORD` and `SSH_AUTH_SOCK` lookups, names ending case-insensitively in `_KEY`, `_PASSPHRASE`, `_PASSWORD`, `_PROXY`, `_SECRET`, or `_TOKEN`, wildcard-bearing variable operands, and zero-name output from either a bare invocation or exact `--`. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
+The automatic denial covers known credential-exposing names, secret-suffixed name patterns, wildcard-bearing variable operands, and zero-name environment dumps, with the exact denied names and suffixes canonical in the same settings. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
 
 ### Zed temporary archive staging
 
@@ -122,11 +126,11 @@ Fixed Git prefix values are limited to disabling optional behavior or interactio
 
 Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations, alternate config paths or config injection, and arbitrary diff, editor, helper, pager, proxy, or SSH executables. It also includes author, committer, and reflog metadata, CA, certificate, credential, key, and proxy-path selection, and every value of `GIT_SSL_NO_VERIFY`, including `0`. Generated, internal, test-only, or unknown variables and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls remain confirmable as well.
 
-Git subcommand discovery is restricted to compiled command names so aliases and external `git-*` helpers remain confirmable. Exact `--help` is allowed for the alphabetized names returned by `git --list-cmds=builtins`. Exact `-h` is allowed for the alphabetized names returned by `git --list-cmds=parseopt`, whose built-ins use Git’s parse-options framework, plus the explicitly verified `credential` exception. `git credential -h` prints usage and exits before reading credential protocol input. Both inventory commands are informational allowances. The lists require refresh when Git changes.
+Git subcommand discovery is restricted to compiled command names so aliases and external `git-*` helpers remain confirmable. Exact `--help` is allowed for the alphabetized names returned by `git --list-cmds=builtins`. Exact `-h` is allowed for the alphabetized names returned by `git --list-cmds=parseopt`, whose built-ins use Git’s parse-options framework, plus the explicitly verified `credential` exception. `git credential -h` prints usage and exits before reading credential protocol input. Both inventory commands are informational allowances. The [global Git inventory form](../.config/zed/AGENTS.md#tooling) cannot supply either list because it includes shipped scripts and guide names that are not compiled built-ins and omits some compiled names, while only `parseopt` identifies which built-ins accept `-h`. The lists require refresh when Git changes.
 
 ### Zed worktree permission coupling
 
-The global [agent instructions](../.config/zed/AGENTS.md#git-worktrees) pair the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
+The global [`git-worktrees` skill](../skills/git-worktrees/SKILL.md) pairs the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
 
 Terminal permission matching evaluates normalized command inputs without exposing the invocation’s current working directory to configured regexes. Bare commands therefore cannot inherit agent-worktree trust from their execution directory. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) owns the resulting permission-pattern namespace requirement.
 
@@ -148,49 +152,27 @@ Zed authorizes the `xargs` shell segment before standard input becomes child-com
 
 ### Claude Agent integration
 
-The tracked [Claude project instruction bridge](../CLAUDE.md) imports the canonical project instructions from [`AGENTS.md`](../AGENTS.md) and defines no independent policy. [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete global skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
+The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete global skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
 
 The [`claude-acp` registry entry](../.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, permissions, sandbox, and native configuration independently of Zed Agent. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
 
 Zed’s OS sandbox applies only to Zed Agent and does not isolate Claude Agent. The tracked Zed sandbox and terminal permission settings therefore do not govern Claude Agent tools.
 
-### Skill distribution
+### Claude, Codex, and Zed global instructions
 
-The [skill distribution contract](../AGENTS.md#skills) classifies project-authored skills as internal, global, or public by canonical source and supported installation surface. Every tracked skill remains subject to the repository’s public-disclosure boundary. `metadata.internal: true` identifies an unsupported public installation surface rather than confidential content or access control.
+The tracked `.config/zed/AGENTS.md` is the canonical global instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex, while the managed `~/.config` link exposes it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped.
 
-Repository-internal `domfiles-*` skills remain under `.agents/skills` for project discovery. Every skill selected for global exposure by `domfiles sync` has its canonical source under the root `skills` directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations. Both global and public skills share this source location, while their metadata distinguishes the supported installation surface. The current `skills` set is global. No public skill is currently supported.
+Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
 
-Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
+The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defines the repository-specific instruction surfaces.
 
-Supported clients expose globally installed skills beneath different configuration roots, so repository-escaping relative links resolve against different lexical paths. The [distributed-skill link contract](../skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) keeps relative links within the installed skills tree and refers to already-loaded global policies by stable name.
+### Deferred global policy
 
-Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a globally exposed skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
+Conditional global policy may move into a global skill when most sessions do not need it, following the [documentation principles](../skills/agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility requires a discrete trigger the agent can recognize without the deferred content, and a safe default when the route is missed. Conduct that applies continuously stays inline even when it is large.
 
-Every supported installation of the global `agent-documentation` skill is assumed to load an equivalent domfiles-managed global instruction layer. The skill relies on that layer’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
+The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a delegate inherits.
 
-### Skill-owned script scope
-
-Internal and global skills may own scripts. `domfiles-zed-settings` is the sole owner today, and the root `Cargo.toml` registers its binaries and adjacent tests so the root Cargo workspace validates them.
-
-A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/agent-documentation/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
-
-Public skills remain documentation-only. An independently installed copy has no host repository supplying its toolchain, dependencies, or static validation, so the host-and-target model cannot be extended to that surface.
-
-Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
-
-### Protected skill staging
-
-At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
-
-The [protected skill staging workflow](../skills/agent-documentation/references/protected-skill-staging.md) keeps iterative edits in complete skill trees outside `.agents/skills`, then accepts native confirmation for one exact-tree promotion per affected skill. Keeping incomplete new skills outside the fixed discovery path also prevents concurrent agent sessions from loading them. The workflow intentionally does not use terminal mutation, ancestor-directory operations, symlink indirection, or renamed path components to bypass the sensitive-path boundary.
-
-### Prompt relays
-
-The global [`agent-documentation` skill](../skills/agent-documentation/SKILL.md) owns the [prompt-relay delivery, complete-revision, composition, and evidence standard](../skills/agent-documentation/references/prompt-relays.md) and a [generic task-relay prompt](../skills/agent-documentation/assets/task-relay-prompt.md). The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for delegation selection, inherited boundaries, and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
-
-### Repository harmonization
-
-The global [`repository-harmonization` skill](../skills/repository-harmonization/SKILL.md) owns the global [`Harmonize` shorthand](../.config/zed/AGENTS.md#harmonize) and its change-oriented cross-repository consistency workflow. The global heading remains a compact deterministic route while the skill owns the complete procedure.
+`git-worktrees` is the first such deferral. Its former `Default` bullet was concurrent-work hygiene rather than worktree policy, so preserving existing changes and avoiding another agent’s write scope now lives in the global “Concurrent work” rule. Its route lives with the global temporary-file `.agent-<name>` convention, which the two namespaces share, and the current-checkout rule names the skill so it cannot read as a prohibition on isolation.
 
 ### GitHub CLI agent integration
 
@@ -214,13 +196,49 @@ The list intentionally omits `claude`, `codex`, `fisher`, `git`, `mole`, and `vi
 
 The [release-note bullet-marker policy](../skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
 
-### Claude, Codex, and Zed global instructions
+### Prompt relays
 
-The tracked `.config/zed/AGENTS.md` is the canonical global instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex, while the managed `~/.config` link exposes it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped.
+The global [`prompt-relays` skill](../skills/prompt-relays/SKILL.md) owns the relay delivery, complete-revision, composition, and evidence standard and a [generic task-relay prompt](../skills/prompt-relays/assets/task-relay-prompt.md). It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. [`agent-documentation`](../skills/agent-documentation/SKILL.md) keeps an explicit route for relay-asset maintenance. The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for delegation selection, inherited boundaries, and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
-Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
+### Protected skill staging
 
-The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defines the repository-specific instruction surfaces.
+At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
+
+The [protected skill staging workflow](../skills/agent-documentation/references/protected-skill-staging.md) owns the staging and promotion procedure that preserves this boundary.
+
+### Repository harmonization
+
+The global [`repository-harmonization` skill](../skills/repository-harmonization/SKILL.md) owns the `Harmonize` shorthand and its change-oriented cross-repository consistency workflow.
+
+### Shorthand command routing
+
+A shorthand owned by a skill is routed by that skill’s description, which declares the bare command. The global [shorthand-command policy](../.config/zed/AGENTS.md#shorthand-commands) therefore carries no per-skill route headings. A heading would duplicate a trigger the description already provides and would require maintenance for every current and future shorthand. `Verify` remains defined inline because no skill owns it.
+
+### Skill description limit
+
+The 1,024-byte figure in the [skill description policy](../skills/agent-documentation/SKILL.md#compose-the-change) is Zed’s limit rather than an intrinsic property of skill descriptions. Each client that receives the global skill set applies its own limit, so the figure requires revalidation whenever a supported client changes one.
+
+### Skill distribution
+
+The [skill distribution contract](../AGENTS.md#skills) classifies project-authored skills as internal, global, or public by canonical source and supported installation surface. Every tracked skill remains subject to the repository’s public-disclosure boundary.
+
+Repository-internal `domfiles-*` skills remain under `.agents/skills` for project discovery. Every skill selected for global exposure by `domfiles sync` has its canonical source under the root `skills` directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations. Both global and public skills share this source location, while their metadata distinguishes the supported installation surface. The current `skills` set is global. No public skill is currently supported.
+
+Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
+
+Supported clients expose globally installed skills beneath different configuration roots, so repository-escaping relative links resolve against different lexical paths. The [distributed-skill link contract](../skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) keeps relative links within the installed skills tree and refers to already-loaded global policies by stable name.
+
+Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a globally exposed skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
+
+Every supported installation of the global `agent-documentation` skill is assumed to load an equivalent domfiles-managed global instruction layer. The skill relies on that layer’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
+
+### Skill-owned script scope
+
+`domfiles-zed-settings` is the sole script owner today, and the root `Cargo.toml` registers its binaries and adjacent tests so the root Cargo workspace validates them.
+
+A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/agent-documentation/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
+
+Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
 
 ### Zed project scan exclusions
 
@@ -266,13 +284,21 @@ The npm package adds a large platform-specific native package to every environme
 
 ### Dependency status labels
 
-`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. Add a row only when the dependency participates in an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone does not qualify.
+`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell-script policy](skills/domfiles-shell-scripts/SKILL.md#check-supported-environment-compatibility) owns the row-inclusion rule.
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
 The `rust` row reports whether both `cargo` and `rustc` are available, matching the managed Homebrew formula rather than either executable name.
 
 `mole` and `vim` are intentionally omitted from the checklist even though synchronization installs them as primary Homebrew dependencies. Their availability does not affect the command’s output or exit status.
+
+### Development lint wrapper architecture
+
+The language-specific `bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands while sharing discovery and execution through `domlib`. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
+
+The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
+
+`git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
 
 ### FFmpeg media preset compatibility
 
@@ -323,14 +349,6 @@ The corresponding scripts in `bin/` are the stable command interfaces. Their imp
 The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `error`, requiring dependencies to be current before commands run. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
-
-### Development lint wrapper architecture
-
-The language-specific `bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands while sharing discovery and execution through `domlib`. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
-
-The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
-
-`git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
 
 ### String helper reuse
 

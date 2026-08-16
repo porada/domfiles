@@ -25,7 +25,7 @@ This branch specializes the shared [agent permission workflow](permissions.md) f
         - Limit `xargs`’s own options to bounded, noninteractive argument splitting and batching controls.
         - Require confirmation for the complete nested child-command owner group whenever standard input could activate a code-execution hook, file-writing option, destructive operation, or other hazardous form. Do not narrow that override to individual nested syntax branches.
     - Keep each repeated wrapper grammar canonical and byte-identical across the command-owned patterns that use it.
-- Keep every decoded regex pattern under `1,000` Unicode scalar values, measuring the parsed `.pattern` value rather than its JSON-escaped source representation.
+- Keep every decoded regex pattern under `1,000` Unicode scalar values, measuring the parsed `.pattern` value rather than its JSON-escaped source representation. See [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound) for rationale.
     - Factor a shared prefix for finite explicit alternatives when that preserves the exact accepted language and every constrained operand role.
     - Split a pattern when the applicable ownership policy assigns its branches to different groups or when it combines unrelated syntax roles.
     - Do not split one coherent syntax role merely to pursue a smaller arbitrary threshold.

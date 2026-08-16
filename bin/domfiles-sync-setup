@@ -13,7 +13,7 @@ done
 
 __print_heading_dimmed 'Linking agent instructions'
 
-for source in agent-documentation github-cli release-notes repository-harmonization technical-copy; do
+for source in agent-documentation git-worktrees github-cli prompt-relays release-notes repository-harmonization technical-copy; do
   __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.agents/skills/$source"
   __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.claude/skills/$source"
 done

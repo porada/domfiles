@@ -161,13 +161,7 @@ Unless the user explicitly requests it, omit:
 
 ## Review before delivery
 
-Before delivery, reapply:
-
-- The [core principle](#apply-the-core-principle) and [evidence inventory](#build-an-evidence-backed-change-inventory).
-- The [epistemic precision](#preserve-epistemic-precision) and [dependency update](#handle-dependency-updates) rules.
-- The [approval gates](references/approval-gates.md) for user-supplied or previously approved drafts and the [thematic-consolidation](#propose-thematic-consolidation) rules.
-- Any applicable [conditional release-structure rules](references/release-structures.md), plus the [ordering](#order-items-for-quick-scanning) and [prose](#write-concise-consumer-facing-prose) rules.
-- The [platform metadata](#keep-platform-metadata-out-of-the-note-body) exclusions.
+Before delivery, reapply every rule above, including the [approval gates](references/approval-gates.md) for user-supplied or previously approved drafts and any applicable [conditional release-structure rules](references/release-structures.md).
 
 ## Deliver the result
 
