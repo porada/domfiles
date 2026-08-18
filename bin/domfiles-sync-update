@@ -10,7 +10,7 @@ if __is_callable pnpm; then
 
   # Avoid mixing dependency installation with uncommitted changes
   if ! __domfiles_is_clean; then
-    set -- '--config.verify-deps-before-run=error'
+    set -- '--config.verifyDepsBeforeRun=warn'
   fi
 
   __print_heading 'Updating `skills`'
