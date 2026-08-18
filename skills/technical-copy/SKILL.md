@@ -1,6 +1,6 @@
 ---
 name: technical-copy
-description: Draft, edit, review, and refine human-facing technical copy. Use automatically for package or repository descriptions, README and technical-document content or information architecture, GitHub issue, pull request, or Discussion titles, bodies, comments, or reviews, CLI help and output, JSDoc, docstrings, explanatory comments, runtime messages, test titles, labels, and other developer- or user-facing strings—including copy changed during feature implementation or consistency checks. Defer release, changelog, and package-release prose to `release-notes`. Do not use for agent documentation, LICENSE text, formatting-only work, or tasks whose human-facing wording and information architecture are explicitly unchanged.
+description: Draft, edit, review, and refine human-facing technical copy. Use automatically for package or repository descriptions, README and technical-document content or information architecture, CLI help and output, JSDoc, docstrings, explanatory comments, runtime messages, test titles, labels, and other developer- or user-facing strings—including copy changed during feature implementation or consistency checks. Use it automatically for every GitHub issue, pull request, and Discussion title, body, comment, and review. Defer release, changelog, and package-release prose to `release-notes`. Do not use for agent documentation, LICENSE text, formatting-only work, or tasks whose human-facing wording and information architecture are explicitly unchanged.
 metadata:
     internal: true
 ---
@@ -37,7 +37,7 @@ Treat applicable project policy—including `AGENTS.md` instructions and narrowe
 | Explanatory source comments | Explain non-obvious intent, constraints, invariants, or consequences rather than narrating nearby code. Proactively document a surprising tradeoff that could look accidental. Omit terminal periods from ordinary `//` comments. |
 | JSDoc | Follow the [JSDoc workflow](references/jsdoc-comments.md), including for language-native documentation comments and docstrings. |
 | Package and repository descriptions | Use one compact phrase without terminal punctuation. When both requested surfaces represent the same artifact, scope, and proposition, matching wording is the default. |
-| README, technical-document, issue, pull request, and Discussion copy | Follow the [technical-document workflow](references/technical-documents.md). |
+| README, technical-document, issue, pull request, and Discussion copy, including titles, bodies, and comments | Follow the [technical-document workflow](references/technical-documents.md). |
 | Runtime errors and warnings | Follow the [runtime-message workflow](references/runtime-messages.md). |
 | Test titles | Use a lowercase present-tense predicate that reads naturally after an implicit subject. Omit modal `should` and trailing punctuation. Include only the condition needed to distinguish the case. |
 
