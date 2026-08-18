@@ -27,11 +27,11 @@ function clone
     if test (count $argv) -eq 1
         set -l repository (basename "$argv[1]")
 
-        if string match --quiet '*.git' "$repository"
+        if not string match --quiet '/*' "$argv[1]"
             set repository (string replace -r '^.*:' '' -- "$repository")
-            set repository (basename "$repository" .git)
         end
 
+        set repository (basename "$repository" .git)
         git clone "$argv[1]" && cd "$repository"
     else
         git clone $argv

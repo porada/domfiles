@@ -318,6 +318,10 @@ The Instagram branch intentionally combines `-t 60` and `-shortest` so output en
 
 The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations. Abbreviations defined outside domfiles are not preserved across shell startup.
 
+### Fish `clone` target derivation
+
+The `clone` helper in [`.config/fish/aliases.fish`](../.config/fish/aliases.fish) derives the directory for its follow-up `cd` with a heuristic scoped to common remote URL forms and ordinary local paths. Full parity with `git clone`’s own destination naming is a non-goal. A source that addresses a repository through its inner `.git` directory, such as `/path/to/repo/.git`, clones successfully while the follow-up `cd` reports an error because the derived name stays `.git`. This gap is accepted to keep the helper free of special cases for inputs outside its practical use.
+
 ### Fish local configuration
 
 `.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.

@@ -48,6 +48,7 @@ set -x HOMEBREW_NO_ENV_HINTS 1
 # Set `$PATH`
 fish_add_path --path --move /opt/homebrew/sbin
 fish_add_path --path --move /opt/homebrew/bin
+fish_add_path --path --move "$HOME/.cargo/bin"
 fish_add_path --path --move "$PNPM_HOME/bin"
 fish_add_path --path --move "$DOMFILES_BIN_DIR"
 
