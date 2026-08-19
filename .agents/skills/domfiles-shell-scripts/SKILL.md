@@ -54,7 +54,7 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 - Keep all functions defined in `domlib` alphabetized in natural order.
 - Keep the set of `$DOMFILES_*` variables defined in `domlib` and `.config/fish/config.fish` in sync, with exactly matching names.
-    - Exempt `$DOMFILES_DEFAULT_IFS`, `$DOMFILES_SSH_KEY`, and `$DOMFILES_VIM_PLUG`.
+    - Exempt `$DOMFILES_DEFAULT_IFS`, `$DOMFILES_SSH_KEY`, `$DOMFILES_SUPPRESSED`, and `$DOMFILES_VIM_PLUG`.
 - Report unused functions or variables defined in `domlib`.
     - Do not treat variables as unused when they exist solely to maintain parity with `.config/fish/config.fish`.
 - Report every POSIX shell function prefixed with `__` when it is defined outside `domlib`.
@@ -86,7 +86,9 @@ value="$(optional-command || true)"
 ```
 
 - Use exit-status control flow instead when successful empty output or partial output on failure must remain distinguishable.
-
+- Never prefix a POSIX shell function or special built-in invocation with a variable assignment. POSIX leaves persistence unspecified after a function returns and requires it after a special built-in such as `.` or `eval`, so the supported `/bin/sh` keeps the assignment in effect for the rest of the script either way. Regular built-ins and external commands are unaffected. See [suppressed command output](../../PROJECT.md#suppressed-command-output).
+    - Use `__suppress <command>` rather than `DOMFILES_SUPPRESSED=1 <command>` to suppress command echo for a single command.
+    - Never wrap `__domfiles_exec` in `__suppress`. The subshell would absorb its `exec` and let the caller resume. Omit that function’s opt-in `--print` flag instead.
 - Prefer the variable name `param` over `arg`. Exempt Fish’s built-in `$argv` variable.
 - Do not report `eval` unless it poses a security risk.
 - Report `find` commands that place `-maxdepth` anywhere other than immediately after the search path.

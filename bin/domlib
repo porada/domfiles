@@ -38,16 +38,15 @@ __() {
     __print_error_and_exit '`__` requires at least one argument'
   fi
 
+  __print_command "$@"
+
   if [ "$1" = 'brew' ]; then
-    __print_command "$@"
     shift
     brew "$@"
   elif [ "$1" = 'pnpm' ]; then
-    __print_command "$@"
     shift
     pnpm "$@"
   else
-    __print_command "$@"
     command "$@"
   fi
 }
@@ -132,7 +131,6 @@ __domfiles_dev_lint() (
 
   if [ $# -eq 0 ]; then
     files="$(lint_default_files)" || exit $?
-    set --
 
     if [ -n "$files" ]; then
       while IFS= read -r file; do
@@ -152,8 +150,6 @@ EOF
   else
     __print_heading "Linting $lint_label"
   fi
-
-  __ifs_set
 
   for file in "$@"; do
     if [ ! -f "$file" ] || [ -L "$file" ]; then
@@ -242,10 +238,21 @@ __git_default_commit_count() {
 
 __git_default_log_params() {
   params="--date=format:'%Y-%m-%d / %H:%M' --pretty=format:'%C(dim)%h"
-  [ "${1-}" != "--no-refs" ] && params="$params%C(reset)%C(red)%d"
+  [ "${1-}" != '--no-refs' ] && params="$params%C(reset)%C(red)%d"
   params="$params %C(reset)%s %C(dim)%cd / %an%C(reset)'"
 
   echo "$params"
+}
+
+__git_diff_exclude_params() {
+  if [ $# -ne 1 ]; then
+    __print_error_and_exit '`__git_diff_exclude_params` requires one argument'
+  fi
+
+  printf '%s\n' "$1" \
+    | while IFS= read -r path; do
+      echo ":(exclude)$path"
+    done
 }
 
 __git_diff_excluded_files() {
@@ -305,17 +312,6 @@ __git_diff_excluded_paths() {
   done
 
   __ifs_restore
-}
-
-__git_diff_exclude_params() {
-  if [ $# -ne 1 ]; then
-    __print_error_and_exit '`__git_diff_exclude_params` requires one argument'
-  fi
-
-  printf '%s\n' "$1" \
-    | while IFS= read -r path; do
-      echo ":(exclude)$path"
-    done
 }
 
 __git_diff_page() {
@@ -399,9 +395,9 @@ __ifs_set() {
 
 __is_brew_installed() {
   if [ $# -eq 0 ]; then
-    brew --version > /dev/null 2>&1
+    (brew --version) > /dev/null 2>&1
   else
-    brew list | grep -q "^$1\$" 2> /dev/null
+    brew list 2> /dev/null | grep -q "^$1\$"
   fi
 }
 
@@ -501,6 +497,10 @@ __pager() {
 }
 
 __print_command() {
+  if [ -n "${DOMFILES_SUPPRESSED-}" ] && ! __is_ci; then
+    return 0
+  fi
+
   __print_info "\$ $(__quote_params "$@")" >&2
 }
 
@@ -548,11 +548,10 @@ __print_warning() {
 
 __printf() {
   if [ $# -eq 0 ]; then
-    printf ''
     return 0
   fi
 
-  format="${1-}"
+  format="$1"
   shift
 
   if [ -n "$format" ]; then
@@ -601,6 +600,21 @@ pattern, replacement, subject = sys.argv[1:4]
 sys.stdout.write(subject.replace(pattern, replacement))' "$@"
 }
 
+__suppress() {
+  if [ $# -eq 0 ]; then
+    __print_error_and_exit '`__suppress` requires at least one argument'
+  fi
+
+  if [ "$1" = '__domfiles_exec' ]; then
+    __print_error_and_exit '`__suppress` cannot wrap `__domfiles_exec`'
+  fi
+
+  (
+    export DOMFILES_SUPPRESSED=1
+    "$@"
+  )
+}
+
 __symlink() {
   parent="$(dirname "$2")"
 
@@ -615,7 +629,7 @@ __symlink() {
         ;;
     esac
 
-    rm -rf "$2"
+    __suppress __ rm -rf "$2"
   else
     __mkdir "$parent"
   fi

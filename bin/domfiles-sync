@@ -38,7 +38,7 @@ if __is_callable git; then
   elif __ git -C "$DOMFILES" merge-base --is-ancestor '@{u}' HEAD; then
     __print_confirmation 'Up to date'
   else
-    merge_base_status=$?
+    merge_base_status="$?"
 
     if [ "$merge_base_status" -ne 1 ]; then
       __print_error 'Failed to compare the local and upstream revisions'

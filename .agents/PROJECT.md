@@ -310,6 +310,8 @@ The lockfile-aware presentation in `git-d` and `git-view` is consolidated becaus
 
 Every supplied input and generated output media format, dimension, duration, and other size constraint in `bin/ffmpeg-wav-png` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
 
+Each preset owns a complete conversion branch. The repeated discovery loop, image pairing, and output naming across those branches are intentional. Consolidating them into one shared pipeline is a non-goal, so every preset’s container, filter chain, codec options, and constraints stay independent.
+
 `ffmpeg` is an intentionally unmanaged optional runtime dependency for this command. Its availability check defines the supported failure behavior, and bootstrap and synchronization intentionally do not provision it.
 
 The Instagram branch intentionally combines `-t 60` and `-shortest` so output ends at 60 seconds or when shorter audio ends. The hard cap takes precedence over preserving a stream-copied audio packet that crosses the limit.
@@ -356,10 +358,30 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 The corresponding scripts in `bin/` are the stable command interfaces. Their implementations are resolved from the domfiles pnpm workspace so `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
-The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `error`, requiring dependencies to be current before commands run. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
+The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
 
 ### String helper reuse
 
 The `__string_*` helpers are optional conveniences rather than a mandatory abstraction boundary.
+
+### Suppressed command output
+
+`DOMFILES_SUPPRESSED` suppresses the `$ …` command echo emitted by `__print_command`. Gating that one function covers every caller—`__`, and therefore `__chmod`, `__mkdir`, `__touch`, and `__symlink`, plus `__ssh_add` and `__domfiles_exec --print`. Any non-empty value enables suppression, matching the `${CI-}` convention `__is_ci` already uses. Only the echo is suppressed, so a wrapped command’s own output, headings, confirmations, and errors continue to print.
+
+`__is_ci` overrides the variable, so automated runs keep the complete command trace no matter how `DOMFILES_SUPPRESSED` is set. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
+
+`__print_command` reads the variable the way `domlib` reads `${CI-}`, `${GITHUB_ACTIONS-}`, and `${PAGER-}`, and `__suppress` defines it only inside its own subshell rather than at top level alongside the mirrored path variables. The [`domlib` maintenance policy](skills/domfiles-shell-scripts/SKILL.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set, as it does the other variables that `.config/fish/config.fish` does not mirror.
+
+A `.config/fish/config.fish` counterpart remains unwanted for a different reason than the other exemptions. Fish does not export `set -g`, which every `DOMFILES_*` entry in that file uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
+
+An exported value reaches every child script, so `DOMFILES_SUPPRESSED=1 domfiles sync` covers an entire synchronization run. `__suppress` applies the same suppression to one command by exporting the variable inside a subshell, which is how `domfiles-sync-setup` keeps the agent-skill linking loop from echoing without affecting later synchronization steps.
+
+That loop intentionally confirms the source skill directory rather than the two destinations it replaces. One source is the unit of work, both destination roots are fixed, and `__symlink` removes and recreates each destination on every run, so naming them would report routine churn rather than the artifact being distributed. The removals stay in the CI trace through `__suppress`.
+
+That subshell is also why `__suppress` rejects `__domfiles_exec`. It would absorb that function’s `exec`, letting the caller resume and run the remainder of `domfiles-sync` a second time. The echo there is suppressed by omitting the opt-in `--print` flag instead.
+
+The prefix form `DOMFILES_SUPPRESSED=1 __symlink …` is intentionally unused. POSIX leaves it unspecified whether a variable assignment preceding a function call persists after that function returns, and macOS `/bin/sh` is bash 3.2 in POSIX mode, where it does persist and suppresses the remainder of the script.
+
+No standardized environment variable covers command-echo suppression. `NO_COLOR` and `DO_NOT_TRACK` address color and telemetry only, so this name follows the prefixed convention of `HOMEBREW_NO_*` rather than an unprefixed `SUPPRESSED`, which any unrelated exported value in the invoking shell could set.

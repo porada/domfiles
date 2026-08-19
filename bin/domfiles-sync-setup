@@ -14,8 +14,9 @@ done
 __print_heading_dimmed 'Linking agent instructions'
 
 for source in agent-documentation git-worktrees github-cli prompt-relays release-notes repository-harmonization technical-copy; do
-  __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.agents/skills/$source"
-  __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.claude/skills/$source"
+  __suppress __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.agents/skills/$source"
+  __suppress __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.claude/skills/$source"
+  __print_confirmation "$DOMFILES_SKILLS_DIR/$source"
 done
 
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md"

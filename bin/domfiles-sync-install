@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-__print_heading "Installing dependencies"
+__print_heading 'Installing dependencies'
 __is_ci && __ brew --version
 __ brew analytics off
 
@@ -75,7 +75,7 @@ if __is_callable vim && ! __is_vim_plug_installed; then
   url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
   __print_url "$url"
 
-  curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
+  __suppress __ curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
 
   if ! __is_vim_plug_installed; then
     __print_error_and_exit 'Failed to install `vim-plug`'

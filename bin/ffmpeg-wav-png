@@ -9,7 +9,7 @@ if ! __is_callable ffmpeg; then
 fi
 
 # Parse `--preset` from arguments
-preset=""
+preset=''
 
 for param in "$@"; do
   name="${param#--preset=}"
@@ -43,7 +43,7 @@ if [ "$preset" = 'instagram' ]; then
 
     # Limit Instagram clips to 60 seconds
     __ ffmpeg -nostdin -y -framerate 1 -loop 1 -i "$image" -i "$audio" -r 1 \
-      -vf "format=rgb24,scale=in_range=full:out_range=tv" \
+      -vf 'format=rgb24,scale=in_range=full:out_range=tv' \
       -c:v prores_ks -profile:v 3 -pix_fmt yuv444p10le -color_range 1 \
       -c:a copy -t 60 -shortest "$video"
   done
@@ -70,7 +70,7 @@ if [ "$preset" = 'youtube' ]; then
 
     __print_heading "Generating \`$video\` for YouTube"
     __ ffmpeg -nostdin -loop 1 -framerate 1 -i "$image" -i "$audio" \
-      -vf "format=yuv420p,eq=gamma=1.18,scale=out_color_matrix=bt709" \
+      -vf 'format=yuv420p,eq=gamma=1.18,scale=out_color_matrix=bt709' \
       -c:v libx264 -crf 0 -preset veryslow -pix_fmt yuv420p \
       -color_range 1 -colorspace 1 -color_primaries 1 -color_trc 1 \
       -c:a copy -shortest -y "$video"
