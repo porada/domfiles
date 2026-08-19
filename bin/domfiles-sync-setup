@@ -7,7 +7,7 @@ __print_heading 'Linking domfiles'
 
 __symlink "$DOMFILES_CONFIG_DIR" "$HOME/.config"
 
-for source in .curlrc .gitconfig .vimrc; do
+for source in .curlrc .vimrc; do
   __symlink "$DOMFILES_CONFIG_DIR/$source" "$HOME/$source"
 done
 
@@ -45,7 +45,7 @@ else
   signer="$(git config --global --get user.email 2> /dev/null || true)"
 
   if [ -z "$signer" ]; then
-    __print_error_and_exit 'Could not resolve `user.email` from `.gitconfig`'
+    __print_error_and_exit 'Could not resolve `user.email` from `.config/git/config`'
   fi
 
   read -r type key _ < "$DOMFILES_SSH_KEY.pub"

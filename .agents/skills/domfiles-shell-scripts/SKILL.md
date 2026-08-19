@@ -61,10 +61,10 @@ Use this skill as the canonical source for shell-script policy and workflow. Con
 
 ## Choose Git helper form
 
-- Before adding or reviewing a `bin/git-*` entrypoint, inspect `.config/.gitconfig` and determine whether a plain Git alias preserves the required behavior.
+- Before adding or reviewing a `bin/git-*` entrypoint, inspect `.config/git/config` and determine whether a plain Git alias preserves the required behavior.
 - Prefer a plain Git alias when the helper invokes one Git subcommand with fixed options and relies on Git’s normal argument forwarding.
 - Keep a script when the behavior requires shell control flow, dynamic values, safety checks, external commands, or shared `domlib` behavior.
-- If a Git alias would require the `!` shell-command form, implement it as a `bin/git-*` script instead. Never define shell commands inside `.config/.gitconfig` aliases.
+- If a Git alias would require the `!` shell-command form, implement it as a `bin/git-*` script instead. Never define shell commands inside `.config/git/config` aliases.
 - Do not retain a script solely for custom argument-count validation unless strict arity is required behavior.
 
 ## Evaluate duplication and reuse

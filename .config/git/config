@@ -1,6 +1,6 @@
 [alias]
 	a = add --verbose
-	c = commit --verbose
+	c = commit
 	p = pull
 	v = view
 
@@ -29,9 +29,16 @@
 
 [commit]
 	gpgSign = true
+	verbose = true
+
+[credential]
+	interactive = false
 
 [diff]
-	algorithm = patience
+	algorithm = histogram
+
+[fetch]
+	prune = true
 
 [gpg]
 	format = ssh
@@ -42,7 +49,11 @@
 [init]
 	defaultBranch = main
 
+[interactive]
+	diffFilter = git-diff-highlight
+
 [merge]
+	conflictStyle = zdiff3
 	ff = only
 
 [pager]
@@ -58,22 +69,23 @@
 	rebase = true
 
 [push]
-	default = simple
 	autoSetupRemote = true
+	followTags = true
 
 [rebase]
 	autoSquash = true
 	autoStash = true
+	updateRefs = true
 
 [rerere]
 	enabled = true
 
 [status]
-	showUntrackedFiles = all
 	submoduleSummary = true
 
 [tag]
 	gpgSign = true
+	sort = version:refname
 
 [user]
 	# Please change these if you’re not me
