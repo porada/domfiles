@@ -41,8 +41,8 @@ importers:
         specifier: ^1.3.4
         version: 1.3.4
       skills:
-        specifier: ^1.5.22
-        version: 1.5.22
+        specifier: ^1.5.23
+        version: 1.5.23
     devDependencies:
       '@standard-config/oxlint':
         specifier: ^2.8.0
@@ -1628,8 +1628,8 @@ packages:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
 
-  skills@1.5.22:
-    resolution: {integrity: sha512-cHiLjwZEawWFvudIqeeMZlvZayTLbRouydMbblyrdiyH7ZLbqUrSrEEr+Tg+X265iztRlVMsyOYRwpD5JxBsvg==}
+  skills@1.5.23:
+    resolution: {integrity: sha512-+hMNBSi35yfX0sKD+ZcRm9y5or7u313OdkcvrRvJAsAzGCaA8wRTu2OmVdN0KRbk9ybqKby5dijkn6OVvNTUmw==}
     engines: {node: '>=22.20.0'}
     hasBin: true
 
@@ -3026,7 +3026,7 @@ snapshots:
       mrmime: 2.0.1
       totalist: 3.0.1
 
-  skills@1.5.22:
+  skills@1.5.23:
     dependencies:
       tar: 7.5.22
       yaml: 2.9.0
