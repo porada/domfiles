@@ -33,6 +33,16 @@ Run the owner-audit binary with exact `--help` for current invocation syntax. Ke
 
 For an owner retaining candidate entries, bind the canonical audit manifest to the exact candidate settings. Declare every inventory-owned entry’s stable ID, bucket and current index, semantic owner, owner and domain-section sort keys, role, stable role-local sort key, and one normalized witness. Declare every excluded lexical candidate’s bucket, index, semantic outside owner, matching witness, and nonempty semantic reason. Derive this manifest independently from the candidate transformation.
 
+Derive each witness from its own pattern and confirm the pattern accepts it before declaring it. Hand-authoring is impractical for a large owner such as `git`, and these failure modes are not evident in the reported finding text:
+
+- A witness must match its pattern. Inferring the intended owner is not sufficient.
+- A witness that ends in a space is not normalized and fails owner inference. Prefer an alternative branch when the pattern accepts one.
+- An execution allowance witnessed through its `-h` or `--help` branch infers the discovery role and sorts ahead of its own group. Prefer a branch that shows the execution form.
+- An entry whose witness fails owner inference leaves the position map, which breaks the Git ordering-separation exception for every span crossing its index. One unparseable witness can surface as occupancy findings against unrelated owners.
+- An agent-namespace entry that binds its path positionally still infers `general` scope. Witness it through a `-C` worktree path when the pattern accepts one, so its span matches the run it belongs to.
+
+Only `-C <path>`, `--no-optional-locks`, `--no-pager`, and the exact `-c commit.gpgsign=false` precede the subcommand during owner inference. Any other leading token ends the prefix and makes the inferred owner `git:root`, so declare that owner while keeping the entry’s domain-section key with the subcommand its pattern governs.
+
 Resolve semantic ownership through the [terminal command-owner policy](terminal-permissions.md#apply-the-terminal-permission-policy) and each selected domain policy. Apply the [Git owner partition](git-permissions.md#apply-the-git-permission-policy) to Git owner and section keys, the [Node manager boundaries](node-package-manager-permissions.md#apply-manager-boundaries) to Corepack mediation, and the terminal policy’s wrapper ownership to `xargs`.
 
 For a discovery entry, set `discovery_coverage` to one of these values and provide nonempty `discovery_inputs` containing the witness:

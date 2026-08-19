@@ -85,7 +85,9 @@
 	},
 	"restore_on_startup": "empty_tab",
 	"scrollbar": {
-		"cursors": false
+		"cursors": false,
+		"selected_symbol": false,
+		"selected_text": false
 	},
 	"search": {
 		"button": false
@@ -122,6 +124,9 @@
 		100
 	],
 	"agent": {
+		"auto_compact": {
+			"threshold": "85%"
+		},
 		"default_model": {
 			"effort": "max",
 			"enable_thinking": true,
@@ -1847,6 +1852,14 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*commit (?:-F ?|--file(?:=| ))(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})/)*(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*commit --fixup(?:=| )[A-Za-z0-9][A-Za-z0-9._/@~^-]*$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:-C [^-][^ ]*|-c color[.]status=(?:always|auto|false|never)|-c pager[.]diff=(?:git-diff-highlight [|] less --chop-long-lines|off|yes)|--no-optional-locks|--no-pager) )*config (?:(?:-h|--help)$|(?:(?:(?:-f|--(?:blob|file)) [^-][^ ]*|-z|--(?:global|local|name-only|null|path|show-names|show-origin|show-scope|system|type=bool|worktree)) )*(?:--get [^-][^ ]*(?: [^-][^ ]*)?(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*|--get-all [^-][^ ]*(?: [^-][^ ]*)?(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*|--get-colorbool [^-][^ ]*(?: (?:false|true))?|--get-regexp [^-][^ ]*(?: [^-][^ ]*)?(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*|--list(?: (?:-z|--(?:name-only|null|path|show-names|show-origin|show-scope)))*)$|(?:get|list)(?: |$))",
 							"case_sensitive": true
 						},
@@ -2011,11 +2024,11 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-c commit[.]gpgsign=false (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)?/? (?:(?:--no-optional-locks|--no-pager) )*commit (?:(?:(?:-a|--all|--allow-empty|--no-verify|--signoff) )*-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|-am [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|(?:--no-verify )?--amend (?:--no-edit|-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*))$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-c commit[.]gpgsign=false (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)?/? (?:(?:--no-optional-locks|--no-pager) )*commit (?:(?:(?:-a|--all|--allow-empty|--no-verify|--signoff) )*(?:-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|--fixup(?:=| )[A-Za-z0-9][A-Za-z0-9._/@~^-]*)|-am [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|(?:--no-verify )?--amend (?:--no-edit|-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*))$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)?/? (?:(?:--no-optional-locks|--no-pager) )*-c commit[.]gpgsign=false (?:(?:--no-optional-locks|--no-pager) )*commit (?:(?:(?:-a|--all|--allow-empty|--no-verify|--signoff) )*-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|-am [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|(?:--no-verify )?--amend (?:--no-edit|-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*))$",
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*-C (?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})(?:/(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,}))*)?/? (?:(?:--no-optional-locks|--no-pager) )*-c commit[.]gpgsign=false (?:(?:--no-optional-locks|--no-pager) )*commit (?:(?:(?:-a|--all|--allow-empty|--no-verify|--signoff) )*(?:-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|--fixup(?:=| )[A-Za-z0-9][A-Za-z0-9._/@~^-]*)|-am [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*|(?:--no-verify )?--amend (?:--no-edit|-m [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*))$",
 							"case_sensitive": true
 						},
 						{
@@ -3395,11 +3408,23 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*xcodebuild (?:--help|--usage|-h|-help|-usage)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:nohup )?xcodebuild(?: (?:-(?:alltargets|checkFirstLaunchStatus|disableAutomaticPackageResolution|enumerate-tests|json|list|onlyUsePackageVersionsFromResolvedFile|quiet|resolvePackageDependencies|retry-tests-on-failure|showBuildSettings|showBuildTimingSummary|showTestPlans|showdestinations|showsdks|skipPackageUpdates|skipUnavailableActions|verbose|version)|-(?:arch|archivePath|configuration|derivedDataPath|project|resultBundlePath|scheme|sdk|showComponent|target|testPlan|toolchain|workspace|xcconfig|xctestrun) [^- ][^ ]*|-(?:enable(?:AddressSanitizer|CodeCoverage|ThreadSanitizer|UndefinedBehaviorSanitizer)|parallel-testing-enabled) (?:NO|YES)|-(?:only|skip)-testing[ :][^- ][^ ]*|-destination [^- ][^ ]*(?: [^- ][^ ]*)*|-destination-timeout [1-9][0-9]*|analyze|archive|build(?:-for-testing)?|clean|docbuild|install(?:src)?|test(?:-without-building)?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*))*$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*xcrun (?:--help|--version|-help|-version)$",
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^xcrun(?: --(?:sdk|toolchain)(?:=| )[^ ]+)* (?:--find(?:=| )[^ ]+|--show-sdk-path)$",
+							"pattern": "^xcrun(?: (?:--log|--(?:sdk|toolchain)(?:=| )[^ ]+|--verbose|-[lv]))* (?:--find(?:=| )[^ ]+|--show-sdk-build-version|--show-sdk-path|--show-sdk-platform-path|--show-sdk-platform-version|--show-sdk-version|--show-toolchain-path|-f [^ ]+)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^xcrun(?: (?:--log|--(?:sdk|toolchain)(?:=| )[^ ]+|--verbose|-[lv]))* metal(?: (?:-###|--help|--target=[A-Za-z0-9._-]+|--version|-D ?[A-Za-z_][^ ]*|-I ?[^-@ ][^ ]*|-M(?:M?D?)|-MF [^-@ ][^ ]*|-O(?:[0-3]|fast|s|z)?|-S|-U ?[A-Za-z_][A-Za-z0-9_]*|-W[a-z][a-z0-9=-]*|-arch [A-Za-z0-9_]+|-c|-f(?:color-diagnostics|fast-math|no-color-diagnostics|no-fast-math|preserve-invariance|record-sources(?:=[^ ]+)?)|-g(?:line-tables-only)?|-isysroot [^-@ ][^ ]*|-o [^-@ ][^ ]*|-std=[A-Za-z0-9.+-]+|-target [A-Za-z0-9._-]+|-v|[^-@ ][^ ]*))*$",
 							"case_sensitive": true
 						},
 						{
