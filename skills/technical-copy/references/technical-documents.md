@@ -1,7 +1,5 @@
 # Technical documents
 
-Apply the entrypoint’s [standard path](../SKILL.md#use-the-standard-path) before these surface-specific rules.
-
 ## Resolve the requested surface
 
 - Interpret scope literally. A content-only request does not authorize restructuring, and a structure-only request does not authorize rewriting otherwise sound prose.

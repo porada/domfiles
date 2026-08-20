@@ -88,6 +88,7 @@
 - **Availability:** Assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `ast-grep`, `cargo`, `fd`, `fish`, `gh`, `jq`, `just`, `node`, `pandoc`, `plugins`, `pnpm`, `rg`, `rustc`, `shellcheck`, `skills`, `taplo`, `yarn`, `yq`, and `zizmor`.
 - **Purpose:** Where the name does not carry it, `plugins` installs agent plugins, `skills` manages agent skills, and `zizmor` reviews GitHub Actions security.
 - **Usage:** Prefer `fd` over `find` for ad hoc terminal path discovery. Follow the [GitHub CLI policy](#github-cli) for `gh`. Run `*.ts` files directly with `node`. Always pass `--no-config` to `rg`. Use `rustc` for standalone source files and `yarn` for Yarn-based projects.
+- **Pandoc sandbox:** Use `pandoc --sandbox` for document parsing and conversion when the reader and writer need access only to files supplied on the command line. Treat `--sandbox` as a reader and writer boundary only—it does not constrain filters or PDF engines.
 - **Package manager:** Prefer `pnpm`. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`, and use `exec` for local binaries and `dlx` for undeclared one-offs.
 - **Direct invocation:** Invoke `plugins` and `skills` directly, not through `npx` or `pnpm dlx`.
 - **Scope:** Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.
@@ -128,7 +129,7 @@
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
 - **Numbering:** For nonconsecutive numbered items, write every number explicitly in the item text rather than relying on Markdown ordered-list numbering.
 - **Code tokens:** Wrap identifiers, paths, commands, and quoted code tokens in backticks.
-- **Commit references:** Write abbreviated commit hashes at 8 characters.
+- **Commit references:** Write abbreviated commit hashes at 8 characters by default. Use a full object ID only when disambiguation or an external format requires it.
 
 ## Shorthand commands
 

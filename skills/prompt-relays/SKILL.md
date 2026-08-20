@@ -12,7 +12,7 @@ Apply every applicable global and project instruction. This skill owns relay ter
 ## Choose the workflow
 
 - To create a relay, compose the complete prompt against the standards below and deliver it through the applicable delivery default.
-- To revise a relay, return every affected prompt in full with the change applied, rewriting only the prompts the request names.
+- To revise a relay, follow the [prompt-revision delivery default](#apply-relay-delivery-defaults).
 - For a standalone review or audit of an existing relay or capture prompt, keep the task read-only. Report findings against the standards below and skip composition, delivery, and every mutation. Findings alone never authorize editing a relay or its asset.
 - To maintain a standalone relay or decision-capture asset, treat the asset as the change target and apply the domain-profile rules below.
 
@@ -48,8 +48,8 @@ Make every standalone relay asset implement the applicable delivery and complete
 
 - Omit the receiving location by default. Include a repository path, checkout, worktree, directory, host, or other execution location only when selecting that location is necessary to find the task inputs, distinguish among possible targets, preserve isolation, or satisfy an established submission or integration boundary. Do not add an absolute repository path merely for orientation. Material target paths may still be required even when the receiving location is not.
 - Before emitting a dependency-premised mutating relay, apply the approval gate in the global “Dependencies” policy.
-- Because a task relay assigns work, end its complete prompt with the exact standalone line `**Do not drift.**`. Define the smallest complete owned scope and supporting work first, name material exclusions, and require unrelated findings to remain untouched. Preserve every inherited scope, mutation, approval, submission, integration, access, and security boundary. Explicitly prohibit transferring access or circumventing a boundary, and tell the receiving agent to stop and ask the user directly before crossing one. Place every required result, process, validation, and handoff instruction before the guard. Do not use the guard to exclude supporting edits or validation already required for the stated result.
-- Use the guard only in a task relay whose primary purpose is to assign future work. Never include it in decision relays, evidence handoffs, status returns, completed-work reports, or other relays whose primary purpose is to transfer established data. Receiving-action guidance for later evidence consumption does not turn that transfer into a task relay.
+- Apply the global “Prompt contract” policy to every task relay. Place every required result, process, validation, and handoff instruction before its guard, and do not use the guard to exclude supporting edits or validation already required for the stated result.
+- Use the guard only when the relay’s primary purpose is to assign future work. Receiving-action guidance does not turn a transfer of established data into a task relay.
 
 Include the applicable parts of this sequence:
 

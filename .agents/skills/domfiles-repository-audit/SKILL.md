@@ -28,7 +28,7 @@ Treat the exact prompt `Audit` as the complete workflow below. For an explicitly
 
 - Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
 - Follow the [repository skill-loading rule](../../../AGENTS.md#skills) for each pass. When delegating a pass, have the delegate load those skills instead of accumulating their bodies in the coordinating context.
-- Give each delegate a bounded assignment with its exact pass scope, exclusions, source constraints, stop conditions, concise output contract, and the required standalone `**Do not drift.**` guard. Identify the applicable `AGENTS.md` files, this audit workflow, and relevant domain skills for the delegate to load rather than copying their bodies into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
+- Apply the global “Prompt contract” policy to every delegated pass. Identify the applicable `AGENTS.md` files, this audit workflow, and relevant domain skills for the delegate to load rather than copying their bodies into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
 
 ## Audit the contents
 
@@ -51,12 +51,7 @@ For every path in the reportable scope:
 
 ## Stage a publication audit
 
-When a publication audit requires a clean copy of tracked `HEAD`:
-
-1. Create a tar archive with `git archive --format=tar --output=<temporary-path> HEAD`.
-2. Keep the archive and extraction destination beneath a writable temporary directory supplied to shell commands by the active agent environment.
-3. Extract only with `tar -xf <temporary-archive> -C <temporary-directory>`.
-4. Do not use alternate archive formats, refs, paths, or broader extraction options.
+When a publication audit requires a clean copy of tracked `HEAD`, follow [Publication audit staging](references/publication-audit-staging.md).
 
 ## Report the result
 

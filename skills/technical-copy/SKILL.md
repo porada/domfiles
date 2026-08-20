@@ -1,6 +1,6 @@
 ---
 name: technical-copy
-description: Draft, edit, review, and refine human-facing technical copy. Use automatically for package or repository descriptions, README and technical-document content or information architecture, CLI help and output, JSDoc, docstrings, explanatory comments, runtime messages, test titles, labels, and other developer- or user-facing strings—including copy changed during feature implementation or consistency checks. Use it automatically for every GitHub issue, pull request, and Discussion title, body, comment, and review. Defer release, changelog, and package-release prose to `release-notes`. Do not use for agent documentation, LICENSE text, formatting-only work, or tasks whose human-facing wording and information architecture are explicitly unchanged.
+description: Draft, edit, review, and refine human-facing technical copy. Use automatically for package or repository descriptions, README and technical-document content or information architecture, CLI help and output, JSDoc, docstrings, explanatory comments, runtime messages, test titles, labels, and other developer- or user-facing strings—including copy changed during feature implementation or consistency checks. Use it automatically for every GitHub issue, pull request, and Discussion title, body, comment, or review. Apply `prose` alongside it for every GitHub surface and for explanatory technical content that develops context, reasoning, causality, tradeoffs, or consequences. Defer release, changelog, and package-release prose to `release-notes`. Do not use for agent documentation, LICENSE text, formatting-only work, or tasks whose human-facing wording and information architecture are explicitly unchanged.
 metadata:
     internal: true
 ---
@@ -17,6 +17,13 @@ Treat applicable project policy—including `AGENTS.md` instructions and narrowe
 - During feature implementation, apply this workflow to task-owned human-facing copy as part of the feature.
 - For a review-only request, remain read-only and report only evidence-backed factual, clarity, consistency, or established-voice problems. Do not report optional rewrites merely because another phrasing is possible. This read-only rule takes precedence over the consistency and delivery defaults below.
 - For an explicit consistency request, apply the standard path across the named family.
+
+## Compose explanatory copy with prose
+
+- Apply [`prose`](../prose/SKILL.md) to every GitHub issue, pull request, and Discussion title, body, comment, or review, even when the copy is brief.
+- On other technical surfaces, apply `prose` according to function rather than length. A single sentence or atomic string qualifies when it develops context, reasoning, causality, tradeoffs, consequences, or another explanation the reader must follow. Do not apply `prose` to strings that only name, instruct, or report one fact.
+- This skill owns factual accuracy, exact terminology, required actions, template constraints, and observable behavior. `prose` owns the reading path, paragraph movement, cohesion, cadence, and voice within those boundaries.
+- If their defaults differ, preserve the technical surface’s facts and constraints, then make the strongest prose possible inside them.
 
 ## Use the standard path
 

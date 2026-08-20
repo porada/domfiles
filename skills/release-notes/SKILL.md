@@ -27,27 +27,6 @@ For each non-initial release unit, keep two distinct layers throughout the task:
 
 Treat an outcome as material when it changes what consumers can do, how they configure or migrate, what output they should expect, or what compatibility they can rely on. Keep implementation mechanisms, verification cases, cosmetic diagnostics, and internal refinements in the inventory unless they create a distinct consumer action or boundary. Completeness of investigation does not require completeness of narration.
 
-### Compression example
-
-When one change set contains a new capability, a concrete behavior improvement, broad compatibility work, and supporting diagnostic cleanup, compress an evidence-shaped draft:
-
-```text
-* Added support for standalone formatting by loading the host’s `standalone` entry point.
-* Fixed the `wrap: "always"` option for the `alpha-box`, `beta-box`, and `gamma-box` elements.
-* Improved compatibility with other host plugins that format documents by composing lifecycle hooks and rejecting incompatible internal formats.
-* Improved error messages by quoting file paths and changing separators.
-```
-
-into independent consumer outcomes:
-
-```text
-* Added support for standalone formatting.
-* Fixed wrapping around `<alpha-box>`, `<beta-box>`, and `<gamma-box>` elements when `wrap: "always"` is enabled.
-* Improved compatibility with other document-formatting plugins.
-```
-
-The outcome-shaped version applies the [prose rules](#write-concise-consumer-facing-prose), orders capability → concrete behavior → compatibility, and leaves implementation proof and cosmetic diagnostics in the inventory.
-
 ## Choose the workflow
 
 - To edit existing notes, treat the supplied file or text as the working draft. Apply the [approval gates](references/approval-gates.md) to a user-supplied or previously approved draft, and use the [evidence inventory](#build-an-evidence-backed-change-inventory) to verify it when repository evidence is available.

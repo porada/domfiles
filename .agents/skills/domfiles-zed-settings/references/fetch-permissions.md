@@ -23,7 +23,7 @@ When the user explicitly requests an allowance for a named domain or URL, apply 
 4. For a URL request, preserve only the explicitly approved hostname, port, path, query, and fragment constraints. Allow descendants only when the request or an established pattern clearly selects a subtree. Omit `network_hosts` unless the user separately widens the request to hostname coverage.
 5. Reuse an equivalent existing allowance rather than adding a duplicate. Order the complete fetch array by the parent skill’s [represented-hostname rule](../SKILL.md#apply-the-general-policy), without grouping by hostname coverage. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname.
 
-A fetch-tool allowance and a sandbox hostname grant remain independent. An explicit-port URL falls through the canonical hostname fetch pattern to `confirm` even though the persistent sandbox grant already covers that hostname and port. A sandbox grant neither authorizes a terminal command nor bypasses terminal permission evaluation.
+An explicit-port URL falls through the canonical hostname fetch pattern to `confirm` even though the persistent sandbox grant covers that hostname and port.
 
 Zed’s native fetch tool applies configured fetch patterns to the initial URL, then separately authorizes every redirect hostname. It does not re-evaluate redirect URLs against the original fetch regex. Treat redirects and subresources as outside the request unless their hosts and URL scopes were already approved. Do not make a live request merely to validate a settings change.
 
@@ -42,7 +42,7 @@ The fast path can reuse an existing factored hostname pattern only when it can s
 
 Use the generic [permission evaluator](permission-evaluator.md) instead when the request or existing affected grammar includes an exact path rather than a prefix, a port-qualified or non-ASCII URL, query or fragment constraints, regex factoring outside the bounded finite hostname-expression contract above, an unclassifiable pattern, unresolved effective settings layers, or another shape outside the fast-path contract. Reject secret-bearing inputs rather than routing them through either workflow.
 
-When the fast path applies and the task authorizes mutation, follow the [fetch candidate](fetch-candidate.md) workflow to prepare, validate, and promote it. Every read-only fetch workflow stays in this file and still applies the [standard fetch corpus](#standard-fetch-corpus).
+When the fast path applies and the task authorizes mutation, follow the [fetch candidate](fetch-candidate.md) workflow to prepare, validate, and promote it. Every read-only fetch workflow skips that candidate workflow and still applies the [standard fetch corpus](#standard-fetch-corpus).
 
 ## Standard fetch corpus
 
@@ -53,7 +53,7 @@ The fast path always checks the selected pattern independently and reconstructs 
 
 Exact-hostname validation includes the apex plus path, query, and fragment starts at the hostname boundary. Subdomain coverage includes one and multiple descendant levels, with the apex classified according to the selected coverage. Path-qualified validation adds the exact prefix, a descendant, a sibling path, a path case variant when the path contains letters, and the hostname boundary cases above.
 
-For each boundary case, the complete baseline and candidate bucket states and final decision must remain equal. Every intended case must resolve to `allow` after deny and confirm precedence. This proves the configured fetch-layer transition only. Sandbox authorization, terminal permission, DNS filtering, platform support, and runtime settings layers remain independent execution boundaries.
+For each boundary case, the complete baseline and candidate bucket states and final decision must remain equal. Every intended case must resolve to `allow` after deny and confirm precedence. This proves only the configured fetch-layer transition, subject to the independent execution boundaries above.
 
 ## Run focused contract tests
 

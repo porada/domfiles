@@ -48,7 +48,7 @@ Use the most specific applicable label. Reserve `Observed behavior` for results 
 
 # Technical Copy Skill Improvement Relay
 
-**Receiving action:** Review this relay as evidence for improving the portable `technical-copy` skill. Compare it with the current skill, distinguish reusable guidance from task-specific decisions, and report concrete gaps or confirmed coverage. Do not edit the skill unless the user explicitly requests it.
+**Receiving action:** Review this relay as evidence for improving the global `technical-copy` skill. Compare it with the current skill, distinguish reusable guidance from task-specific decisions, and report concrete gaps or confirmed coverage. Do not edit the skill unless the user explicitly requests it.
 
 ## Task context
 
@@ -86,7 +86,7 @@ Explain the factual, editorial, contextual, evidentiary, or workflow reason. Inc
 
 **Decision basis**
 
-Use one or more precise labels: `Agent inference`, `Context-specific requirement`, `Correction`, `Direct instruction`, `Documentation evidence`, `Explicit acceptance`, `Implementation limitation`, `Observed behavior`, `Project policy`, `Repository evidence`, `Settled user evidence`, `Unresolved`, or `User selection`.
+Use one or more labels defined under Evidence rules.
 
 ## Evidence and validation
 

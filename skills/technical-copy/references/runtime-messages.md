@@ -1,7 +1,5 @@
 # Runtime errors and warnings
 
-Apply the entrypoint’s [standard path](../SKILL.md#use-the-standard-path) before this workflow.
-
 ## Resolve ownership and audience
 
 - Separate project-authored context, destination-supplied values, and original error text owned by an upstream dependency. Edit only the layer owned by the task.

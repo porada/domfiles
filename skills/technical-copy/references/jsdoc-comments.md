@@ -1,7 +1,5 @@
 # JSDoc
 
-Apply the entrypoint’s [standard path](../SKILL.md#use-the-standard-path) before these surface-specific rules.
-
 ## Resolve the documentation scope
 
 - Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. Apply this reference to their wording and editorial review. Do not universalize family-wide coverage or JSDoc syntax from one language or project.

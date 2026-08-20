@@ -7,7 +7,7 @@ metadata:
 
 # Repository harmonization
 
-Apply every applicable global and project instruction. Treat the exact prompt `Harmonize` as the complete workflow below. For a narrower request, substitute its explicitly supplied scope and named family without changing the workflow’s boundaries.
+Apply every applicable global and project instruction. For a narrower request, substitute its explicitly supplied scope and named family without changing the workflow’s boundaries.
 
 ## Resolve the change
 
@@ -24,5 +24,5 @@ Apply every applicable global and project instruction. Treat the exact prompt `H
 
 - **Edit matrix:** Build the complete repository-and-file edit matrix before mutation.
 - **Atomicity:** Apply each supported semantic family across every required safely writable repository as one coordinated unit. If a required destination is blocked or has overlapping work, leave that family unchanged everywhere and report it as unresolved.
-- **Coordination and boundaries:** When a repository is unavailable to its required tools or protected-path workflow, relay its edit pass to an agent running there or stop before mutation. Delegate inventory in small nonoverlapping groups, defaulting to one documentation-heavy repository per agent, and retain the authoritative comparison matrix in the coordinating conversation or one coordinator-owned task artifact. Follow every repository’s instructions, disclosure boundary, concurrent-work policy, protected-path workflow, and validation requirements. Do not transfer private facts or secret-bearing values between repositories. Do not edit consumer-facing `README` files, change dependencies, or commit unless separately authorized.
+- **Coordination and boundaries:** When a repository is unavailable to its required tools or protected-path workflow, relay its edit pass to an agent running there or stop before mutation. Delegate inventory in small nonoverlapping groups, defaulting to one documentation-heavy repository per agent, and retain the authoritative comparison matrix in the coordinating conversation or one coordinator-owned task artifact. Follow every repository’s instructions, disclosure boundary, concurrent-work policy, protected-path workflow, and validation requirements. Do not transfer private facts or secret-bearing values between repositories.
 - **Validation and report:** Validate every changed repository with targeted documentation or copy checks and `git diff --check`. Reread the complete compared family and confirm that every semantically equivalent item uses the canonical formulation. Report the canonical wording, repositories changed, intentional repository-specific variants, and unresolved meaning or authority decisions. Do not report discrepancies already resolved by the pass.

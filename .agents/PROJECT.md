@@ -226,9 +226,9 @@ The 1,024-byte figure in the [skill description policy](../skills/agent-document
 
 ### Skill distribution
 
-The [skill distribution contract](../AGENTS.md#skills) classifies project-authored skills as internal, global, or public by canonical source and supported installation surface. Every tracked skill remains subject to the repository’s public-disclosure boundary.
+The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public-disclosure boundary.
 
-Repository-internal `domfiles-*` skills remain under `.agents/skills` for project discovery. Every skill selected for global exposure by `domfiles sync` has its canonical source under the root `skills` directory. [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations. Both global and public skills share this source location, while their metadata distinguishes the supported installation surface. The current `skills` set is global. No public skill is currently supported.
+[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations for globally exposed skills. The current `skills` set is global. No public skill is currently supported.
 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 

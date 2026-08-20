@@ -111,7 +111,7 @@ Explain the behavioral, security, ownership, structural, efficiency, compatibili
 
 **Decision basis**
 
-Use one or more precise labels: `Agent inference`, `Context-specific requirement`, `Correction`, `Direct instruction`, `Documentation evidence`, `Explicit acceptance`, `Implementation limitation`, `Observed behavior`, `Project policy`, `Repository evidence`, `Settled user evidence`, `Unresolved`, or `User selection`.
+Use one or more labels defined under Evidence rules.
 
 ## Evidence and validation
 
