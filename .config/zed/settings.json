@@ -93,7 +93,6 @@
 		"button": false
 	},
 	"show_whitespaces": "boundary",
-	"tab_size": 4,
 	"telemetry": {
 		"diagnostics": false,
 		"metrics": false
