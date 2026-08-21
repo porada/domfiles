@@ -1,0 +1,126 @@
+#!/bin/sh
+
+# shellcheck source=bin/domlib
+. "$(dirname "$(realpath "$0")")/domlib"
+
+# Create a fixup commit for the requested commit or `HEAD`
+amend=false
+explicit_fixup=false
+option_operand=false
+param_index=0
+separator_index=0
+target='HEAD'
+target_count=0
+target_index=0
+
+for param in "$@"; do
+  param_index="$((param_index + 1))"
+
+  if [ "$option_operand" = true ]; then
+    option_operand=false
+    continue
+  fi
+
+  if [ "$param" = '--' ]; then
+    separator_index="$param_index"
+    break
+  fi
+
+  # Keep option operand forms aligned with `git commit --help`, recognizing
+  # optional short-option values only when attached and treating bare required
+  # forms as consuming the next argument
+  case "$param" in
+    --fixup | --fixup=*)
+      explicit_fixup=true
+      break
+      ;;
+    --amend)
+      amend=true
+      continue
+      ;;
+    --author | --cleanup | --date | --file | --inter-hunk-context | \
+      --message | --pathspec-from-file | --reedit-message | --reuse-message | \
+      --squash | --template | --trailer | --unified)
+      option_operand=true
+      continue
+      ;;
+    --*)
+      continue
+      ;;
+    -*[Su]?* | -*[cCFmtU]?*)
+      continue
+      ;;
+    -*[cCFmtU])
+      option_operand=true
+      continue
+      ;;
+    -?*)
+      continue
+      ;;
+  esac
+
+  is_target=false
+
+  if [ "${#param}" -ge 4 ]; then
+    case "$param" in
+      *[!0-9a-fA-F]*) ;;
+      *)
+        if __git_is_commit_reference "$param"; then
+          is_target=true
+        fi
+        ;;
+    esac
+  fi
+
+  if [ "$is_target" = true ]; then
+    target="$param"
+    target_count="$((target_count + 1))"
+    target_index="$param_index"
+  fi
+done
+
+if [ "$explicit_fixup" = true ] || [ "$option_operand" = true ]; then
+  __ git commit "$@"
+  exit $?
+fi
+
+if [ "$target_count" -gt 1 ]; then
+  __print_error_and_exit '`git f` accepts at most one commit SHA'
+fi
+
+if [ "$amend" = true ] && [ "$target_count" -eq 0 ]; then
+  __print_error_and_exit '`git f --amend` requires a commit SHA'
+fi
+
+fixup_added=false
+param_index=0
+total="$#"
+
+while [ "$param_index" -lt "$total" ]; do
+  param="$1"
+  shift
+  param_index="$((param_index + 1))"
+
+  if [ "$param_index" -eq "$target_index" ]; then
+    continue
+  fi
+
+  if [ "$fixup_added" = true ]; then
+    set -- "$@" "$param"
+    continue
+  fi
+
+  if [ "$param_index" -eq "$separator_index" ]; then
+    set -- "$@" "--fixup=$target" "$param"
+    fixup_added=true
+    continue
+  fi
+
+  set -- "$@" "$param"
+done
+
+if [ "$fixup_added" = false ]; then
+  set -- "$@" "--fixup=$target"
+fi
+
+__ git commit "$@"
