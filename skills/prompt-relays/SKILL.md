@@ -7,7 +7,7 @@ metadata:
 
 # Prompt relays
 
-Apply every applicable global and project instruction. This skill owns relay terminology, composition, delivery, evidence provenance, and domain-profile maintenance for every prompt intended to be copied from one conversation into another.
+This skill owns relay terminology, composition, delivery, evidence provenance, and domain-profile maintenance for every prompt intended to be copied from one conversation into another.
 
 ## Choose the workflow
 

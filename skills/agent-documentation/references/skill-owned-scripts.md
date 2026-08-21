@@ -25,9 +25,9 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 
 Root ownership assumes the script runs inside its canonical repository. A skill installed for use outside that repository keeps that ownership by running from its host rather than from the installed path.
 
-## Stage script changes
+## Change protected scripts
 
-Before changing a skill-owned script under `.agents/skills`, follow the [protected skill staging workflow](protected-skill-staging.md), which determines whether to stage one file or the complete skill tree. Keep staged scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts`, and promote only the reviewed staging unit. Scripts under root `skills` use the ordinary direct-edit workflow. Do not apply protected-skill staging to them merely because `domfiles sync` exposes them through global symlinks.
+Before changing a skill-owned script under `.agents/skills`, follow the [protected skill mutation policy](protected-skill-staging.md), which selects in-bounds staging or out-of-bounds guarded direct mutation. For a staged change, keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts`, and promote only the reviewed staging unit. Scripts under root `skills` use the ordinary direct-edit workflow. Do not apply protected-skill staging to them merely because `domfiles sync` exposes them through global symlinks.
 
 ## Apply human-facing copy policy
 

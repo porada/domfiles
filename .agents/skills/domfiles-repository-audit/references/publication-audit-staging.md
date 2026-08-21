@@ -2,7 +2,7 @@
 
 When a publication audit requires a clean copy of tracked `HEAD`:
 
-1. Create a tar archive with `git archive --format=tar --output=<temporary-path> HEAD`.
+1. Create a tar archive with `git archive --format=tar --output=<temporary-archive> HEAD`.
 2. Keep the archive and extraction destination beneath a writable temporary directory supplied to shell commands by the active agent environment.
 3. Extract only with `tar -xf <temporary-archive> -C <temporary-directory>`.
 4. Do not use alternate archive formats, refs, paths, or broader extraction options.

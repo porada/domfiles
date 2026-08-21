@@ -7,7 +7,7 @@ metadata:
 
 # Git worktrees
 
-Apply every applicable global and project instruction. The global “Temporary files” policy owns the `.agent-<name>` namespace that worktrees share with ordinary task directories, and the global “Concurrent work” rule owns preserving existing changes and avoiding another agent’s write scope. This skill owns deciding, creating, operating, and dismantling isolation.
+The global “Temporary files” policy owns the `.agent-<name>` namespace that worktrees share with ordinary task directories, and the global “Concurrent work” rule owns preserving existing changes and avoiding another agent’s write scope. This skill owns deciding, creating, operating, and dismantling isolation.
 
 ## Decide whether to isolate
 

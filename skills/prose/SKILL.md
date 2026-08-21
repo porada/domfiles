@@ -1,13 +1,13 @@
 ---
 name: prose
-description: Draft, edit, review, and refine prose intended for sustained human reading. Use automatically when writing or revising a passage, essay, article, letter, chapter, speech, story, or longer work where structure, cohesion, clarity, rhythm, pacing, voice, or reader momentum matters—even when the user asks only to “write,” “rewrite,” “polish,” or “tighten.” Use it with `technical-copy` for every GitHub issue, pull request, and Discussion title, body, comment, or review, and for explanatory content inside technical surfaces when the reader must follow context, reasoning, causality, tradeoffs, or consequences. Apply across subjects and genres without imposing a house voice. Defer agent documentation, release material, atomic technical copy that does not form explanatory prose, formatting-only work, and tasks whose wording and information structure are explicitly unchanged to their owning workflows.
+description: Draft, edit, review, and refine human-facing prose, including short-form writing. Use automatically with `technical-copy` for every GitHub issue, pull request, and Discussion title, body, comment, or review. Use it whenever a reader must follow connected ideas, context, explanation, reasoning, causality, tradeoffs, consequences, narrative, or tone—even in a message, email, reply, review, proposal, report, documentation passage, or other brief work. Also use it for passages, essays, articles, letters, chapters, speeches, stories, and longer works where structure, cohesion, clarity, rhythm, pacing, voice, or reader momentum matters. Apply across subjects and genres without imposing a house voice. Defer agent documentation, release material, atomic technical copy that only names, instructs, or reports one fact, formatting-only work, and tasks whose wording and information structure are explicitly unchanged to their owning workflows.
 metadata:
     internal: true
 ---
 
 # Prose
 
-Apply applicable project policy and narrower surface-specific workflows before this skill’s defaults. Use this skill to shape the reading experience, not to override factual, legal, structural, or submission constraints owned elsewhere.
+Apply narrower surface-specific workflows before this skill’s defaults. Use this skill to shape the reading experience, not to override factual, legal, structural, or submission constraints owned elsewhere.
 
 ## Choose the workflow
 

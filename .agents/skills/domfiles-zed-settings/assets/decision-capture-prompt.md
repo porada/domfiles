@@ -47,8 +47,6 @@ Use the most specific applicable label. Reserve `Observed behavior` for results 
 
 ## Output structure
 
-**Complete response structure—populate every applicable section and output it from the heading onward**
-
 # Zed Settings Skill Improvement Relay
 
 **Receiving action:** Review this relay as evidence for improving the repository-scoped `domfiles-zed-settings` skill. Compare it with the current skill, distinguish reusable guidance from task-specific decisions, and report concrete gaps or confirmed coverage. Treat any identified user-approved classifications as evidence rather than reopening their behavioral research. Do not edit the skill, settings, scripts, or documentation unless the user explicitly requests it.

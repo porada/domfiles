@@ -46,8 +46,6 @@ Use the most specific applicable label. Reserve `Observed behavior` for results 
 
 ## Output structure
 
-**Complete response structure—populate every applicable section and output it from the heading onward**
-
 # Release Notes Skill Improvement Relay
 
 **Receiving action:** Review this relay as evidence for improving the global `release-notes` skill. Compare it with the current skill, distinguish reusable guidance from task-specific decisions, and report concrete gaps or confirmed coverage. Do not edit the skill unless the user explicitly requests it.

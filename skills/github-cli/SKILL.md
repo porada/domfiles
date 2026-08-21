@@ -7,11 +7,9 @@ metadata:
 
 # GitHub CLI
 
-Apply every applicable global and project instruction. The global machine-local authentication and remote-mutation authorization gates remain authoritative. This skill neither grants GitHub access nor authorizes a GitHub change.
-
 ## Select the interface
 
-- Use `gh` only for bounded GitHub state and operations already authorized by applicable instructions.
+- Use `gh` only for bounded GitHub state and operations.
 - Use native fetch for directly addressable public URLs, native browser tools for rendered or interactive state, `git` and the applicable worktree policy for local repository state, `skills` for agent skills, and `plugins` for agent plugins.
 - For GitHub repository and code discovery, prefer a dedicated native GitHub search tool, then bounded `gh search repos` or `gh search code`, rather than `curl`, browser scraping, or hand-written API requests.
 
@@ -26,4 +24,4 @@ Do not use `gh agent-task` or its aliases. `gh` availability does not authorize 
 
 ## Stop at capability boundaries
 
-If `gh` lacks authentication, scope, network access, or a required capability, report the exact boundary and stop. Do not fall back to browser tooling, including Chrome MCP, merely because `gh` failed, reformulate a mutating command to avoid a permission prompt, or use aliases or extensions to approximate unavailable behavior. Route an explicitly requested exception through its established owner and approval boundary.
+If `gh` lacks authentication, scope, network access, or a required capability, report the exact boundary and stop. Do not use aliases or extensions to approximate unavailable behavior. Route an explicitly requested exception through its established owner and approval boundary.

@@ -7,7 +7,7 @@ metadata:
 
 # Domfiles shell scripts
 
-Use this skill as the canonical source for shell-script policy and workflow. Continue to follow applicable `AGENTS.md` files for repository-wide instructions.
+Use this skill as the canonical source for shell-script policy and workflow.
 
 ## Choose the workflow
 

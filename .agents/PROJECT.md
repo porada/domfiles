@@ -176,7 +176,7 @@ The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defi
 
 Conditional global policy may move into a global skill when most sessions do not need it, following the [documentation principles](../skills/agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility requires a discrete trigger the agent can recognize without the deferred content, and a safe default when the route is missed. Conduct that applies continuously stays inline even when it is large.
 
-The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a delegate inherits.
+The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
 
 `git-worktrees` is the first such deferral. Its former `Default` bullet was concurrent-work hygiene rather than worktree policy, so preserving existing changes and avoiding another agent’s write scope now lives in the global “Concurrent work” rule. Its route lives with the global temporary-file `.agent-<name>` convention, which the two namespaces share, and the current-checkout rule names the skill so it cannot read as a prohibition on isolation.
 
@@ -184,7 +184,7 @@ The `Collaboration` policy is the standing example of what does not move. Its de
 
 The global [`github-cli` skill](../skills/github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
 
-`gh agent-task` remains [unsupported](../skills/github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. External task relays remain governed by the global collaboration policy and use a separately selected delivery mechanism.
+`gh agent-task` remains [unsupported](../skills/github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. User-requested external task relays use the [prompt-relays workflow](../skills/prompt-relays/SKILL.md) with a separately selected delivery mechanism.
 
 [Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The [shared permission-layering policy](skills/domfiles-zed-settings/references/permissions.md#apply-the-shared-permission-policy) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
@@ -204,13 +204,13 @@ The [release-note bullet-marker policy](../skills/release-notes/SKILL.md#write-c
 
 ### Prompt relays
 
-The global [`prompt-relays` skill](../skills/prompt-relays/SKILL.md) owns the relay delivery, complete-revision, composition, and evidence standard and a [generic task-relay prompt](../skills/prompt-relays/assets/task-relay-prompt.md). It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. [`agent-documentation`](../skills/agent-documentation/SKILL.md) keeps an explicit route for relay-asset maintenance. The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for delegation selection, inherited boundaries, and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+The global [`prompt-relays` skill](../skills/prompt-relays/SKILL.md) owns the relay delivery, complete-revision, composition, and evidence standard and a [generic task-relay prompt](../skills/prompt-relays/assets/task-relay-prompt.md). It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. [`agent-documentation`](../skills/agent-documentation/SKILL.md) keeps an explicit route for relay-asset maintenance. The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for subagent delegation and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
-### Protected skill staging
+### Protected skill mutation
 
 At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
 
-The [protected skill staging workflow](../skills/agent-documentation/references/protected-skill-staging.md) owns the staging and promotion procedure that preserves this boundary.
+The [protected skill mutation policy](../skills/agent-documentation/references/protected-skill-staging.md) preserves this boundary through staging and reviewed promotion when native file tools expose the target repository as a current project root. Outside those roots, scoped terminal write approval is the operative boundary, so the policy requires guarded direct mutation without staged copies.
 
 ### Repository harmonization
 
@@ -382,6 +382,6 @@ That loop intentionally confirms the source skill directory rather than the two 
 
 That subshell is also why `__suppress` rejects `__domfiles_exec`. It would absorb that function’s `exec`, letting the caller resume and run the remainder of `domfiles-sync` a second time. The echo there is suppressed by omitting the opt-in `--print` flag instead.
 
-The prefix form `DOMFILES_SUPPRESSED=1 __symlink …` is intentionally unused. POSIX leaves it unspecified whether a variable assignment preceding a function call persists after that function returns, and macOS `/bin/sh` is bash 3.2 in POSIX mode, where it does persist and suppresses the remainder of the script.
+The prefix form `DOMFILES_SUPPRESSED=1 __symlink …` is intentionally unused. POSIX leaves it unspecified whether a variable assignment preceding a function call persists after that function returns, and macOS `/bin/sh` is Bash 3.2 in POSIX mode, where it does persist and suppresses the remainder of the script.
 
 No standardized environment variable covers command-echo suppression. `NO_COLOR` and `DO_NOT_TRACK` address color and telemetry only, so this name follows the prefixed convention of `HOMEBREW_NO_*` rather than an unprefixed `SUPPRESSED`, which any unrelated exported value in the invoking shell could set.

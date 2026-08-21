@@ -9,7 +9,7 @@ metadata:
 
 Apply this skill without announcing it or narrating its editorial heuristics.
 
-Treat applicable project policy—including `AGENTS.md` instructions and narrower project or domain skills—as authoritative over this skill’s defaults.
+Treat narrower project or domain skills as authoritative over this skill’s defaults.
 
 ## Choose the workflow
 

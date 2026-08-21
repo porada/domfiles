@@ -15,8 +15,6 @@ Use a rating only when it helps explain a material finding. Support it with an o
 
 ## Review the complete work
 
-Read the complete authorized scope once without editing. Record only material places where orientation, attention, understanding, emotion, judgment, or trust changes. Then consult the dimensions needed to understand or repair those points.
-
 ### 1. Reader contract and stakes
 
 Ask who the implied reader is, what brings them to the work, what kind of experience or change the work promises, and how soon that promise becomes recognizable.

@@ -7,7 +7,7 @@ metadata:
 
 # Domfiles repository audit
 
-Treat the exact prompt `Audit` as the complete workflow below. For an explicitly scoped request, substitute its supplied scope without changing the workflow’s boundaries.
+Changing the default scope does not change the workflow’s gates.
 
 ## Resolve the scope
 

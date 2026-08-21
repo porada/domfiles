@@ -1,6 +1,6 @@
 # Permission candidate
 
-Use this reference for the guarded workflow that builds, seals, and promotes a Zed permission change. Apply the parent [agent permission workflow](permissions.md), and keep read-only inventory, ownership, matching, and behavior evaluation in the [permission evaluator](permission-evaluator.md).
+Apply the parent [agent permission workflow](permissions.md).
 
 ## Build and promote a permission candidate
 

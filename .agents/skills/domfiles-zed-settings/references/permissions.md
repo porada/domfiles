@@ -1,6 +1,6 @@
 # Agent permissions
 
-Use this conditional branch whenever the resolved scope includes agent repository permissions, `agent.sandbox_permissions`, `agent.tool_permissions`, fetch or network allowances, native path-tool permissions, terminal rules, or a tool or command unexpectedly allowing, confirming, or denying. Agent permissions are configured through `.config/zed/settings.json`, not project `.zed/settings.json`. Follow the parent [Zed settings workflow](../SKILL.md) for general validation, investigation, and mutation boundaries.
+Agent permissions are configured through `.config/zed/settings.json`, not project `.zed/settings.json`. Follow the parent [Zed settings workflow](../SKILL.md) for general validation, investigation, and mutation boundaries.
 
 Do not read every permission reference by default. Select only the branches required by the resolved scope, and within each branch read the sections the task needs rather than the complete file.
 

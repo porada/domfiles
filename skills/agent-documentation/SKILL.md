@@ -7,16 +7,14 @@ metadata:
 
 # Project agent documentation and skill scripts
 
-Apply every applicable global and project instruction. Treat project instructions and a more specific project agent-documentation workflow as authoritative over this fallback.
-
 ## Apply the documentation principles
 
 - Preserve requested scope and every applicable read-only, approval, mutation, and submission boundary. Findings alone never authorize edits.
 - Write instructions that require no conversational context. Define non-obvious terms, and keep consuming-project documentation independent of this skill, its canonical repository, and its installation path.
-- Keep guidance needed by most invocations on the direct path. Defer a coherent conditional rule set only when the saved routine context outweighs the added navigation.
+- Optimize the complete context path loaded for a task rather than an individual file’s size. Treat applicable `AGENTS.md` files, skill descriptions, and `SKILL.md` entrypoints as direct-path context. Keep wording there only when most invocations need it, and move coherent conditional detail into a conditional reference in the existing skill when the saved direct-path context exceeds the navigation cost.
 - Before deferring a section, separate and rehome the rules that only look domain-specific. Retain an explicit route on the surface that still loads, and keep any rule the route depends on conditional there, because a skill description is not a deterministic trigger for policy the agent initiates rather than the user.
 - Weigh a deferral against its own overhead. A new skill’s description loads in every session, so deferring content that does not clearly exceed the description it requires costs more than it saves. Move smaller conditional detail into a reference of an existing skill instead.
-- Remove duplicated normative guidance while retaining safety-critical summaries, routing context, surface-specific applications, examples, and declarative rationale.
+- Give each proposition one canonical definition and classify every secondary occurrence as routing, surface-specific application, rationale, example, or required standalone context. Remove a secondary occurrence when it merely paraphrases the definition. Keep it only when its distinct role requires wording at that surface, using the smallest wording that preserves that role.
 - Give any identifier scheme referenced from code or documentation, such as numbered checks or requirement labels, one canonical definition in the same repository. Drop the identifiers when no such definition exists, because a reader cannot resolve the reference or tell which members are missing.
 
 ## Keep distributed skill links installation-safe
@@ -36,7 +34,7 @@ For a skill with a supported installation outside its canonical repository:
 
 ## Choose the workflow
 
-- Before changing any project-authored path under `.agents/skills`, resolve its canonical owner, then follow [protected skill staging](references/protected-skill-staging.md) before mutation. Keep standalone reviews and audits read-only without staging them.
+- Before changing any project-authored path under `.agents/skills`, resolve its canonical owner, then follow the [protected skill mutation policy](references/protected-skill-staging.md) before mutation. Keep standalone reviews and audits read-only.
 - When a task creates, revises, reviews, audits, or maintains a prompt relay or capture prompt, load `prompt-relays` before resolving its canonical owner or composing it.
 - When a task adds, changes, reviews, or audits a reusable script or adjacent contract test owned by a project-authored skill, read the [skill-owned script policy](references/skill-owned-scripts.md) before planning the work. Agent documentation owns whether the script belongs, its canonical owner and location, observable interface, operation modes, side effects, artifacts and schemas, documented invocation, and required contract coverage. The owning project skill supplies domain semantics within those boundaries.
 - For a documentation-only or script-contract review or audit, inspect implementation and adjacent tests only as bounded evidence for a specific observable contract, then stop once the claim is established. Do not assess algorithms, internal structure, language idioms, performance, dead code, duplication, or general test quality unless the user explicitly includes implementation. Evaluation criteria such as security, maintainability, or project values apply within the resolved scope and do not expand it.
@@ -67,17 +65,19 @@ For a skill with a supported installation outside its canonical repository:
 - Treat two skills matching one task as ordinary composition. Narrow a description only when the skills state contradictory rules for the same decision or duplicate one normative rule, and prefer a deferral clause naming the sibling over an exclusion that removes the surface. An exclusion that ends a correct overlap fails silently, because the skill simply stops loading.
 - Keep each project-authored skill’s frontmatter `name` identical to its directory name.
 - Keep each `SKILL.md` as an entrypoint. Keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves.
+- Before composing a change across routed or layered surfaces, use the [documentation boundary checks](references/documentation-boundaries.md) to identify the canonical side of each boundary.
 
 ## Validate the documentation
 
 After capturing all task-authorized documentation updates intended for the current change, perform one bounded final alignment pass over the changed documentation against the [documentation principles](#apply-the-documentation-principles), the resolved local authority model, applicable project values, and explicit user decisions. Correct concrete discrepancies within the authorized scope before delivery. Treat this as a completion check rather than a drafting gate: do not withhold useful documentation, reopen settled decisions, repeatedly rewrite compliant content, or expand scope for speculative improvements. If a correction requires new authorization, preserve the completed changes and report that boundary.
 
 1. Reread every applicable `AGENTS.md` file and each in-scope documentation file that the current task has not already loaded unchanged. Use Git status and diff to identify what changed since it was loaded.
-2. Search applicable project-authored agent documentation for the affected identifiers and concepts. Confirm that one normative definition remains and every secondary mention links to it.
-3. Verify every relevant project-relative link, heading anchor, and skill frontmatter name. For a skill with a supported installation outside its canonical repository, resolve every relative link from each supported installation root and reject links that escape the installed skills tree or target an unavailable peer. Before renaming or deleting a heading, search project-authored agent documentation for links to its current anchor and update those links in the same change or preserve the heading.
-4. When the task moved content between files or surfaces, recheck every reference that resolved through its old location, including directional prose such as “above” and “below,” phrases naming the containing document, and terms defined only in the origin. Apply any policy the destination surface newly imposes.
-5. For a change, run targeted diagnostics and `git diff --check` for the changed documentation without formatting unrelated files. Inspect task-owned untracked documentation directly because Git diff checks do not include it. Do not stage files solely for validation.
-6. For a review, use only read-only diagnostics and identify anything that could not be verified.
+2. Search the complete applicable documentation family for each changed proposition, its distinctive wording, and close semantic variants. Apply the [documentation boundary checks](references/documentation-boundaries.md) to routed or layered surfaces. Confirm that one normative definition remains and that every secondary occurrence has a distinct required role or links to the canonical owner.
+3. For every changed direct-path surface, compare its before-and-after context footprint. Any increase must be required by most invocations or necessary to route conditional guidance. In a change workflow, move unjustified growth into a conditional reference in the existing skill and remove obsolete direct-path wording in the same change. In a review workflow, report unjustified growth without editing.
+4. Verify every relevant project-relative link, heading anchor, and skill frontmatter name. For a skill with a supported installation outside its canonical repository, resolve every relative link from each supported installation root and reject links that escape the installed skills tree or target an unavailable peer. Before renaming or deleting a heading, search project-authored agent documentation for links to its current anchor and update those links in the same change or preserve the heading.
+5. When the task moved content between files or surfaces, recheck every reference that resolved through its old location, including directional prose such as “above” and “below,” phrases naming the containing document, and terms defined only in the origin. Apply any policy the destination surface newly imposes.
+6. For a change, run targeted diagnostics and `git diff --check` for the changed documentation without formatting unrelated files. Inspect task-owned untracked documentation directly because Git diff checks do not include it. Do not stage files solely for validation.
+7. For a review, use only read-only diagnostics and identify anything that could not be verified.
 
 For a follow-up `Verify` request, execute the applicable global `Verify` procedure.
 

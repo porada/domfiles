@@ -7,7 +7,7 @@ metadata:
 
 # Zed settings
 
-Use this skill as the entrypoint and canonical owner of settings-wide Zed policy and workflow. Continue to follow applicable `AGENTS.md` files for repository-wide instructions. Do not copy the current command, domain, permission-pattern, or settings inventories into agent documentation.
+Use this skill as the entrypoint and canonical owner of settings-wide Zed policy and workflow. Do not copy the current command, domain, permission-pattern, or settings inventories into agent documentation.
 
 When agent repository permissions, agent tool or sandbox permissions, fetch or network allowances, native path-tool permissions, terminal rules, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/permissions.md) before investigation or planning. Read only the branch references it selects.
 
