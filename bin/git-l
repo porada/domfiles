@@ -3,10 +3,43 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Print the most recent commits or filter all commits by a search term
+# Print recent or all commits, or filter all commits by a search term
+color_mode=never
+show_all=false
+
+[ -t 1 ] && color_mode=always
+
+if [ "${1-}" = '--all' ]; then
+  show_all=true
+  shift
+fi
+
 if [ $# -gt 0 ]; then
-  log="$(eval "git --no-pager log $(__git_default_log_params --no-refs) --color=never")"
-  printf '%s\n' "$log" | __grep --color=always -i -- "$*"
+  log="$(eval "git --no-pager log $(__git_default_log_params --no-refs) --color=$color_mode")"
+  matches="$(printf '%s\n' "$log" | __grep --color=$color_mode -i -- "$*")" || exit $?
+  [ -z "$matches" ] || printf '%s\n' "$matches" | __pager log
+elif [ "$show_all" = true ]; then
+  log="$(eval "git --no-pager log $(__git_default_log_params) --color=$color_mode")"
+  printf '%s\n' "$log" | __pager log
 else
-  eval "git --no-pager log $(__git_default_log_params) -n $(__git_default_commit_count)"
+  default_count="$(__git_default_commit_count)"
+  commit_count="$default_count"
+  minimum_count="$(((default_count + 1) / 2))"
+
+  if [ -t 1 ] && [ "$default_count" -gt 0 ]; then
+    if terminal_size="$(__terminal_size)"; then
+      available_rows="${terminal_size%% *}"
+      terminal_columns="${terminal_size##* }"
+
+      # Measure entries without counting color escapes
+      entries="$(eval "git --no-pager log $(__git_default_log_params) --color=never -n $default_count")"
+      commit_count="$(__terminal_fitting_line_count "$terminal_columns" "$available_rows" "$entries")"
+
+      if [ "$commit_count" -lt "$minimum_count" ]; then
+        commit_count="$minimum_count"
+      fi
+    fi
+  fi
+
+  eval "git --no-pager log $(__git_default_log_params) -n $commit_count"
 fi

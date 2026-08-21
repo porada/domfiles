@@ -7,7 +7,7 @@
 __git_cd_root
 
 if branch="$(git symbolic-ref --quiet --short HEAD)"; then
-  git checkout -b "wip/$branch"
+  __ git checkout -b "wip/$branch"
 else
   status="$?"
   [ "$status" -eq 1 ] || exit "$status"

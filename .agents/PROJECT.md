@@ -224,7 +224,7 @@ The list intentionally omits `claude`, `codex`, `fisher`, `git`, `mole`, and `vi
 
 `brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
 
-Direct invocation assumes `domfiles` has put managed commands on `PATH`.
+In shell sessions configured by `domfiles` after synchronization, direct invocation assumes repository-managed commands are available through `PATH` in addition to the [supported-environment](#supported-environment) prerequisites.
 
 ### Package release-note bullet marker
 
@@ -360,6 +360,10 @@ The `clone` helper in [`.config/fish/aliases.fish`](../.config/fish/aliases.fish
 
 `.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.
 
+### Git log search coloring
+
+`git l` intentionally filters the ANSI-colored formatted log directly so Git’s field colors and `grep`’s match highlighting remain a simple pipeline. Because `grep` treats ANSI escape sequences as input bytes, an expression that crosses a color boundary—for example, from the hash into the subject or from the subject into the date—does not match even though the displayed text is contiguous. This limitation is intentional in favor of implementation simplicity.
+
 ### Git short status command
 
 `git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
@@ -400,20 +404,20 @@ The `__string_*` helpers are optional conveniences rather than a mandatory abstr
 
 ### Suppressed command output
 
-`DOMFILES_SUPPRESSED` suppresses the `$ …` command echo emitted by `__print_command`. Gating that one function covers every caller—`__`, and therefore `__chmod`, `__mkdir`, `__touch`, and `__symlink`, plus `__ssh_add` and `__domfiles_exec --print`. Any non-empty value enables suppression, matching the `${CI-}` convention `__is_ci` already uses. Only the echo is suppressed, so a wrapped command’s own output, headings, confirmations, and errors continue to print.
+`DOMFILES_SUPPRESSED` suppresses the `$ …` command echo emitted by `__print_command`. It defaults to `false`. `domlib` parses user-supplied values through `__read_boolean_from_env`, then only normalized `true` enables suppression. Gating that one function covers every caller—`__`, and therefore `__chmod`, `__mkdir`, `__touch`, and `__symlink`, plus `__ssh_add` and `__domfiles_exec --print`. Only the echo is suppressed, so a wrapped command’s own output, headings, confirmations, and errors continue to print.
 
-`__is_ci` overrides the variable, so automated runs keep the complete command trace no matter how `DOMFILES_SUPPRESSED` is set. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
+`__is_ci` overrides suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
 
-`__print_command` reads the variable the way `domlib` reads `${CI-}`, `${GITHUB_ACTIONS-}`, and `${PAGER-}`, and `__suppress` defines it only inside its own subshell rather than at top level alongside the mirrored path variables. The [`domlib` maintenance policy](skills/domfiles-shell-scripts/SKILL.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set, as it does the other variables that `.config/fish/config.fish` does not mirror.
+`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state rather than a path mirrored into Fish. The [`domlib` maintenance policy](skills/domfiles-shell-scripts/SKILL.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set.
 
 A `.config/fish/config.fish` counterpart remains unwanted for a different reason than the other exemptions. Fish does not export `set -g`, which every `DOMFILES_*` entry in that file uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
 
-An exported value reaches every child script, so `DOMFILES_SUPPRESSED=1 domfiles sync` covers an entire synchronization run. `__suppress` applies the same suppression to one command by exporting the variable inside a subshell, which is how `domfiles-sync-setup` keeps the agent-skill linking loop from echoing without affecting later synchronization steps.
+An exported value reaches every child script, so `DOMFILES_SUPPRESSED=true domfiles sync` covers an entire synchronization run. `__suppress` applies the same suppression to one command by exporting the variable inside a subshell, which is how `domfiles-sync-setup` keeps the agent-skill linking loop from echoing without affecting later synchronization steps.
 
 That loop intentionally confirms the source skill directory rather than the two destinations it replaces. One source is the unit of work, both destination roots are fixed, and `__symlink` removes and recreates each destination on every run, so naming them would report routine churn rather than the artifact being distributed. The removals stay in the CI trace through `__suppress`.
 
 That subshell is also why `__suppress` rejects `__domfiles_exec`. It would absorb that function’s `exec`, letting the caller resume and run the remainder of `domfiles-sync` a second time. The echo there is suppressed by omitting the opt-in `--print` flag instead.
 
-The prefix form `DOMFILES_SUPPRESSED=1 __symlink …` is intentionally unused. POSIX leaves it unspecified whether a variable assignment preceding a function call persists after that function returns, and macOS `/bin/sh` is Bash 3.2 in POSIX mode, where it does persist and suppresses the remainder of the script.
+The prefix form `DOMFILES_SUPPRESSED=true __symlink …` is intentionally unused. POSIX leaves it unspecified whether a variable assignment preceding a function call persists after that function returns, and macOS `/bin/sh` is Bash 3.2 in POSIX mode, where it does persist and suppresses the remainder of the script.
 
 No standardized environment variable covers command-echo suppression. `NO_COLOR` and `DO_NOT_TRACK` address color and telemetry only, so this name follows the prefixed convention of `HOMEBREW_NO_*` rather than an unprefixed `SUPPRESSED`, which any unrelated exported value in the invoking shell could set.

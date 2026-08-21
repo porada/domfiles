@@ -53,6 +53,7 @@ Use this skill as the canonical source for shell-script policy and workflow.
 ## Maintain `domlib`
 
 - Keep all functions defined in `domlib` alphabetized in natural order.
+- When the design or contract of a reusable `domlib` helper is in scope, follow [shared helper design](references/shared-helper-design.md).
 - Keep the set of `$DOMFILES_*` variables defined in `domlib` and `.config/fish/config.fish` in sync, with exactly matching names.
     - Exempt `$DOMFILES_DEFAULT_IFS`, `$DOMFILES_SSH_KEY`, `$DOMFILES_SUPPRESSED`, and `$DOMFILES_VIM_PLUG`.
 - Report unused functions or variables defined in `domlib`.
@@ -75,6 +76,9 @@ Use this skill as the canonical source for shell-script policy and workflow.
 
 ## Write robust shell control flow
 
+- Keep short conditions, pipelines, and command substitutions on one line. For longer constructs, prefer a named helper when the logic forms a reusable semantic unit. Otherwise, use the established backslash-continuation layout.
+- Represent boolean variables defined by domfiles shell code with the literal values `true` and `false`. Initialize them before use and compare them explicitly with `=`. Do not represent booleans through unset state, empty strings, or `0` and `1`.
+- In POSIX `sh`, parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value set owned by that helper rather than repeating it in policy or project documentation. Third-party environment variables remain outside this rule.
 - In POSIX `sh`, set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.
     - Exempt `printf` output piped into `while`.
@@ -87,7 +91,7 @@ value="$(optional-command || true)"
 
 - Use exit-status control flow instead when successful empty output or partial output on failure must remain distinguishable.
 - Never prefix a POSIX shell function or special built-in invocation with a variable assignment. POSIX leaves persistence unspecified after a function returns and requires it after a special built-in such as `.` or `eval`, so the supported `/bin/sh` keeps the assignment in effect for the rest of the script either way. Regular built-ins and external commands are unaffected. See [suppressed command output](../../PROJECT.md#suppressed-command-output).
-    - Use `__suppress <command>` rather than `DOMFILES_SUPPRESSED=1 <command>` to suppress command echo for a single command.
+    - Use `__suppress <command>` rather than `DOMFILES_SUPPRESSED=true <command>` to suppress command echo for a single command.
     - Never wrap `__domfiles_exec` in `__suppress`. The subshell would absorb its `exec` and let the caller resume. Omit that function’s opt-in `--print` flag instead.
 - Prefer the variable name `param` over `arg`. Exempt Fish’s built-in `$argv` variable.
 - Do not report `eval` unless it poses a security risk.

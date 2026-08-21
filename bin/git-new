@@ -17,4 +17,4 @@ else
   [ "$status" -eq 1 ] || exit "$status"
 fi
 
-git checkout -B "$1"
+__ git checkout -B "$1"

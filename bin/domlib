@@ -236,8 +236,10 @@ __git_default_commit_count() {
   echo "$((count < default ? count : default))"
 }
 
+# Returns parameters for one-line logs without optional signature or note output,
+# omitting refs when `$1` is `--no-refs`
 __git_default_log_params() {
-  params="--date=format:'%Y-%m-%d / %H:%M' --pretty=format:'%C(dim)%h"
+  params="--date=format:'%Y-%m-%d / %H:%M' --no-notes --no-show-signature --pretty=format:'%C(dim)%h"
   [ "${1-}" != '--no-refs' ] && params="$params%C(reset)%C(red)%d"
   params="$params %C(reset)%s %C(dim)%cd / %an%C(reset)'"
 
@@ -393,6 +395,16 @@ __ifs_set() {
 '
 }
 
+# Returns success when its single value is exactly `true` or `false`, returns
+# failure for other values, and rejects any other argument count
+__is_boolean() {
+  if [ $# -ne 1 ]; then
+    __print_error_and_exit '`__is_boolean` requires one value'
+  fi
+
+  [ "$1" = true ] || [ "$1" = false ]
+}
+
 __is_brew_installed() {
   if [ $# -eq 0 ]; then
     (brew --version) > /dev/null 2>&1
@@ -461,10 +473,18 @@ __mkdir() {
   __chmod "$1"
 }
 
+# Pages standard input only to a terminal, preferring an optional
+# `pager.<name>` setting followed by `$PAGER` and `less`, while copying input
+# unchanged when paging is disabled or unavailable
 __pager() {
   if [ $# -gt 1 ]; then
     __print_error_and_exit '`__pager` accepts at most one pager name'
   fi
+
+  [ -t 1 ] || {
+    cat
+    return 0
+  }
 
   pager=''
   pager_boolean=''
@@ -497,7 +517,7 @@ __pager() {
 }
 
 __print_command() {
-  if [ -n "${DOMFILES_SUPPRESSED-}" ] && ! __is_ci; then
+  if [ "$DOMFILES_SUPPRESSED" = true ] && ! __is_ci; then
     return 0
   fi
 
@@ -567,6 +587,45 @@ params = (shlex.quote(param) for param in sys.argv[1:])
 sys.stdout.write(" ".join(params))' "$@"
 }
 
+# Reads the environment variable named by `$1` and returns its value normalized
+# to `true` or `false`, using the required boolean default in `$2` when unset or
+# empty. Accepts `1`/`0` plus case-insensitive `true`/`false`, `yes`/`no`, and
+# `on`/`off`, rejecting every other nonempty value
+__read_boolean_from_env() (
+  if [ $# -ne 2 ]; then
+    __print_error_and_exit '`__read_boolean_from_env` requires an environment variable name and boolean default'
+  fi
+
+  if ! __is_boolean "$2"; then
+    __print_error_and_exit '`__read_boolean_from_env` requires a `true` or `false` default'
+  fi
+
+  # Preserve input whitespace with a marker before removing the `printenv` line ending
+  value="$(
+    printenv "$1" || true
+    printf .
+  )"
+  value="${value%?}"
+  value="${value%?}"
+
+  if [ -z "$value" ]; then
+    echo "$2"
+    return 0
+  fi
+
+  case "$value" in
+    1 | [Tt][Rr][Uu][Ee] | [Yy][Ee][Ss] | [Oo][Nn])
+      echo true
+      ;;
+    0 | [Ff][Aa][Ll][Ss][Ee] | [Nn][Oo] | [Oo][Ff][Ff])
+      echo false
+      ;;
+    *)
+      __print_error_and_exit "\`$1\` has an unsupported boolean value. Leave it empty to use the default"
+      ;;
+  esac
+)
+
 __ssh_add() {
   __print_command 'ssh-add' "$@"
   ssh-add "$@" > /dev/null 2>&1 || __print_error 'Failed to add the SSH key'
@@ -610,7 +669,7 @@ __suppress() {
   fi
 
   (
-    export DOMFILES_SUPPRESSED=1
+    export DOMFILES_SUPPRESSED=true
     "$@"
   )
 }
@@ -636,6 +695,90 @@ __symlink() {
 
   __ ln -s "$1" "$2"
 }
+
+# Returns how many leading lines from `$3` fit within `$2` rows at the positive
+# terminal width supplied by `$1`
+__terminal_fitting_line_count() (
+  if [ $# -ne 3 ]; then
+    __print_error_and_exit '`__terminal_fitting_line_count` requires columns, available rows, and text'
+  fi
+
+  if ! __is_uint "$1" || [ "$1" -le 0 ]; then
+    __print_error_and_exit '`__terminal_fitting_line_count` requires a positive column count'
+  fi
+
+  if ! __is_uint "$2"; then
+    __print_error_and_exit '`__terminal_fitting_line_count` requires an unsigned available row count'
+  fi
+
+  columns="$1"
+  available_rows="$2"
+
+  printf '%s\n' "$3" \
+    | {
+      count=0
+      used_rows=0
+
+      while IFS= read -r line; do
+        line_rows="$(__terminal_text_rows "$columns" "$line")"
+
+        if [ "$((used_rows + line_rows))" -gt "$available_rows" ]; then
+          break
+        fi
+
+        count="$((count + 1))"
+        used_rows="$((used_rows + line_rows))"
+      done
+
+      echo "$count"
+    }
+)
+
+# Returns available rows and positive columns from the terminal attached to
+# standard error after reserving four rows unless `$1` overrides the count
+__terminal_size() (
+  if [ $# -gt 1 ]; then
+    __print_error_and_exit '`__terminal_size` accepts an optional reserved row count'
+  fi
+
+  reserved_rows="${1-4}"
+
+  if ! __is_uint "$reserved_rows"; then
+    __print_error_and_exit '`__terminal_size` requires an unsigned reserved row count'
+  fi
+
+  size="$(stty size <&2 2> /dev/null)" || return $?
+  rows="${size%% *}"
+  columns="${size##* }"
+
+  if ! __is_uint "$rows" || [ "$rows" -le 0 ]; then
+    return 1
+  fi
+
+  if ! __is_uint "$columns" || [ "$columns" -le 0 ]; then
+    return 1
+  fi
+
+  available_rows="$((rows > reserved_rows ? rows - reserved_rows : 0))"
+  echo "$available_rows $columns"
+)
+
+# Returns the rows needed to render `$2` as plain text within the positive
+# terminal width supplied by `$1`
+__terminal_text_rows() (
+  if [ $# -ne 2 ]; then
+    __print_error_and_exit '`__terminal_text_rows` requires columns and text'
+  fi
+
+  if ! __is_uint "$1" || [ "$1" -le 0 ]; then
+    __print_error_and_exit '`__terminal_text_rows` requires a positive column count'
+  fi
+
+  columns="$1"
+  rows="$(printf '%s\n' "$2" | expand | fold -w "$columns" | wc -l)"
+
+  echo "$((rows))"
+)
 
 __touch() {
   parent="$(dirname "$1")"
@@ -663,3 +806,5 @@ pnpm() {
 
   PATH="$HOME/Library/pnpm/bin:$PATH" command pnpm "$@"
 }
+
+DOMFILES_SUPPRESSED="$(__read_boolean_from_env DOMFILES_SUPPRESSED false)"

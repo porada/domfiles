@@ -8,6 +8,9 @@ if ! __is_brew_installed; then
 fi
 
 if __is_callable git; then
+  stash_failed=false
+  stashed_changes=false
+
   __print_heading 'Syncing domfiles'
 
   # Ensure the remote uses SSH
@@ -61,7 +64,7 @@ if __is_callable git; then
           fi
         fi
 
-        if [ -z "${stash_failed-}" ]; then
+        if [ "$stash_failed" = false ]; then
           if ! __ git -C "$DOMFILES" rebase; then
             echo
             __print_error 'Failed to update the repository'
@@ -74,7 +77,7 @@ if __is_callable git; then
     fi
   fi
 
-  if [ -n "${stashed_changes-}" ]; then
+  if [ "$stashed_changes" = true ]; then
     if __ git -C "$DOMFILES" stash pop --index --quiet; then
       __print_confirmation 'Changes restored'
     else
