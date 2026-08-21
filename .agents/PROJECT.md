@@ -224,6 +224,8 @@ The list intentionally omits `claude`, `codex`, `fisher`, `git`, `mole`, and `vi
 
 `brew` is intentionally absent because it is a supported-environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
 
+Direct invocation assumes `domfiles` has put managed commands on `PATH`.
+
 ### Package release-note bullet marker
 
 The [release-note bullet-marker policy](../skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
@@ -259,6 +261,10 @@ The [skill distribution contract](../AGENTS.md#skills) defines project-authored 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 
 Supported clients expose globally installed skills beneath different configuration roots, so repository-escaping relative links resolve against different lexical paths. The [distributed-skill link contract](../skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) keeps relative links within the installed skills tree and refers to already-loaded global policies by stable name.
+
+Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. The [public skill portability contract](../skills/agent-documentation/references/public-skill-portability.md) therefore treats useful verbatim global-policy copies as standalone mirrors and optional remote peers as conditional enhancements. Promotion uses dependency evidence rather than topical similarity, limiting mirrors to required or materially enriching global rules. Public-peer classification remains owned by the source repository, so each standalone remote branch carries that repository’s predicate instead of the global workflow imposing domfiles metadata conventions. Resolving one immutable snapshot from the latest `porada/domfiles` revision keeps a composed remote chain internally consistent without adding that branch to ordinary entrypoint context.
+
+Public skill descriptions are human-facing discovery and marketing surfaces as well as routing metadata, so their composition follows the [public skill portability contract](../skills/agent-documentation/references/public-skill-portability.md).
 
 Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a globally exposed skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
 
