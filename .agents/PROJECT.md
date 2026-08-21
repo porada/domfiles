@@ -92,6 +92,16 @@ Entries named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` and 
 
 Brace expansion, broader deletion grammar, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
 
+### Zed Git permission ordering
+
+Git patterns for one subcommand can occupy several independently ordered sections. If an [owner-audit manifest](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-permission-ownership) uses only the subcommand as its section key, the audit collapses those sections and reports entries beyond the first boundary. The [Git permission policy](skills/domfiles-zed-settings/references/git-permissions.md#apply-the-git-permission-policy) owns section membership and ordering, while the owner-audit workflow owns the manifest contract.
+
+### Zed Git remote URL scope
+
+`ls-remote` is the only broadly allowed Git subcommand that reaches the network with an unconstrained destination, while `fetch` and `clone` remain confirmable by default. [Zed settings](../.config/zed/settings.json) keep its broad allowance and add a confirmation for operands carrying a URL scheme or an scp-style `<host>:<path>`, so `git ls-remote <remote-name>` stays automatic while an explicit destination requires approval. A separate denial covers URLs that embed credentials.
+
+The confirmation recognizes the operand shape rather than the host, so an explicit `github.com` URL confirms alongside any other. Exempting one host would require a complement expression the Rust-compatible engine cannot express, and the remote-name form already covers ordinary use.
+
 ### Zed npm `--all` option
 
 npm’s exact `--all` is an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. The ambiguous `--a` and `--al` forms and exact `--allow-scripts` remain behind confirmation. `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
@@ -105,6 +115,12 @@ The exact `regex` crate version pinned in `Cargo.toml` was verified against Zed 
 The automatic `printenv` allowance is limited to the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
 
 The automatic denial covers known credential-exposing names, secret-suffixed name patterns, wildcard-bearing variable operands, and zero-name environment dumps, with the exact denied names and suffixes canonical in the same settings. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
+
+### Zed `stty` device scope
+
+[Zed settings](../.config/zed/settings.json) allow `stty` only in its reporting forms. The bare invocation, `-a`, `-e`, `-g`, and the `all`, `everything`, and `size` operands display current characteristics, while every other operand modifies terminal state the agent and the user share. `stty` has no help or version option, and it opens its target before rejecting an unknown one, so this owner carries no discovery entry.
+
+The `-f` operand retargets the report at a named terminal, which is the only way to read settings when standard input is not a tty. Because `stty` opens that path, and opening a serial device can assert modem control even under `O_NONBLOCK`, the operand is held to `/dev/stdin`, `/dev/tty`, and numbered `/dev/ttys` pseudo-terminals. The allowance fixes `-f` ahead of the reporting option so the grammar stays one ordered sequence. The reverse order remains confirmable.
 
 ### Zed temporary archive staging
 
@@ -133,6 +149,16 @@ Outside agent worktrees, an allowed commit that supplies a message takes it from
 Autosquash commit forms are classified by editor behavior rather than by their effect on later history. Plain `git commit --fixup=<commit>` composes its message from the target commit without an editor, while `--fixup=amend:<commit>`, `--fixup=reword:<commit>`, and `--squash=<commit>` open one and block an automated commit, so only the plain form is allowed.
 
 Neither general-scope commit form admits `--no-verify`, so each runs the target repository’s `commit-msg`, `post-commit`, `pre-commit`, and `prepare-commit-msg` hooks. Terminal matching does not expose the working directory, so that residual execution trust reaches every repository opened in the editor rather than this one alone.
+
+Commit signature verification runs `gpg.program` or `gpg.ssh.program`. Neither key is restricted to protected configuration, so a repository’s own config selects the executable. `--show-signature`, the `%G` pretty placeholders, and `for-each-ref`’s `%(signature)` fields all reach that verification, so each is confirmable across every command that interprets it. The guard is lexical and a `pretty.<name>` alias defined in the same repository config defeats it, because `git log --pretty=<name>` expands to a `%G` format string the normalized command never contains.
+
+### Zed `tput` capname namespace
+
+[Zed settings](../.config/zed/settings.json) allow `tput` to query any terminfo capability name rather than a finite list. A capname query reads the terminfo database and writes the capability’s value to standard output, so an unknown or misspelled name produces a diagnostic and a nonzero exit rather than a state change. Enumerating capnames would leave ordinary formatting and geometry queries confirmable while adding no safety, so this is the user-approved bounded namespace the [positive-branch rule](skills/domfiles-zed-settings/references/terminal-permissions.md#translate-terminal-behavior-into-regex) requires before an allowance may accept unknown future names.
+
+`init` and `reset` are subtracted from that namespace because they set tty driver delays and tab expansion in addition to writing strings. Zed’s regex engine has no lookarounds, so the allowance spells the exclusion as an explicit complement over the capname alphabet, accepting every differing or longer name such as `inits` and `rese` while rejecting the two exact operands. `-S` stays outside the namespace because it reads capability names from standard input and waits.
+
+Capability parameters are limited to non-negative integers. The few capabilities that take string parameters remain confirmable so no unconstrained operand reaches the allowance.
 
 ### Zed worktree permission coupling
 

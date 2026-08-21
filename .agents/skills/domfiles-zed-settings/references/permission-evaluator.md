@@ -33,6 +33,8 @@ Run the owner-audit binary with exact `--help` for current invocation syntax. Ke
 
 For an owner retaining candidate entries, bind the canonical audit manifest to the exact candidate settings. Declare every inventory-owned entry’s stable ID, bucket and current index, semantic owner, owner and domain-section sort keys, role, stable role-local sort key, and one normalized witness. Declare every excluded lexical candidate’s bucket, index, semantic outside owner, matching witness, and nonempty semantic reason. Derive this manifest independently from the candidate transformation.
 
+The audit checks actual bucket order against the tuple (`owner_sort_key`, `section_sort_key`, role order `discovery`/`direct`/`wrapped`, `owner`, `pattern_sort_key`) and requires every tuple to be unique within its bucket.
+
 Derive each witness from its own pattern and confirm the pattern accepts it before declaring it. Hand-authoring is impractical for a large owner such as `git`, and these failure modes are not evident in the reported finding text:
 
 - A witness must match its pattern. Inferring the intended owner is not sufficient.
