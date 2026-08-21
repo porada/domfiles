@@ -132,10 +132,11 @@
 			"model": "gpt-5.6-sol",
 			"provider": "openai-subscribed"
 		},
-		"default_width": 360,
+		"default_width": 500,
 		"dock": "right",
 		"enable_feedback": false,
 		"expand_terminal_card": false,
+		"flexible": false,
 		"limit_content_width": false,
 		"sandbox_permissions": {
 			"network_hosts": [
