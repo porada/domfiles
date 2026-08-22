@@ -21,6 +21,7 @@
 
 	skip = update-index --assume-unchanged
 	unskip = update-index --no-assume-unchanged
+	unstage = restore --staged --
 
 	# Quick commits
 	boom = commit --all --allow-empty --message '💥' --no-verify
