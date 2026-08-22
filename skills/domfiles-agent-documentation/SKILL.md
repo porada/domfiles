@@ -21,7 +21,7 @@ metadata:
 
 For a skill with a supported installation outside its canonical repository:
 
-- Keep relative links within the installed skill directory or a sibling skill guaranteed by the supported installation.
+- Keep relative links within the installed skill directory. Link to a sibling only when every supported installation guarantees that sibling and the same relative path resolves from the canonical source and every installation. Otherwise refer to the sibling by its frontmatter `name` without a Markdown link.
 - Do not use relative links that leave the installed skills root or target a client-specific global-instruction path. Refer to an already-loaded global policy by its stable policy or section name instead.
 - When authoring, reviewing, or maintaining a public skill, follow the [public skill portability contract](references/public-skill-portability.md).
 
@@ -63,7 +63,7 @@ For a skill with a supported installation outside its canonical repository:
 - Keep `PROJECT.md` declarative and organized under broad second-level sections. Move agent actions, reporting exclusions, and workflows to the applicable `AGENTS.md` or domain skill, leaving facts, constraints, maintenance decisions, and rationale in `PROJECT.md`.
 - Keep each skill description limited to capability, triggering, exclusions, and essential routing language, and within the strictest description limit any supported client imposes. Treat 1,024 UTF-8 bytes as that limit unless a supported client documents a stricter one. Measure the decoded description value rather than the complete frontmatter or source line. Shorten redundant phrasing before dropping trigger distinctions, and validate every project-authored skill description after changing this policy or any description. Remove body text that only repeats why a skill loaded. When a description advertises review or audit, define an explicit read-only branch in the body that follows the workflow precedence above.
 - Treat two skills matching one task as ordinary composition. Narrow a description only when the skills state contradictory rules for the same decision or duplicate one normative rule, and prefer a deferral clause naming the sibling over an exclusion that removes the surface. An exclusion that ends a correct overlap fails silently, because the skill simply stops loading.
-- Keep each project-authored skill’s frontmatter `name` identical to its directory name.
+- Keep each project-authored skill’s frontmatter `name` identical to its discovery name. For internal and public skills, this is the canonical directory basename. For global skills, omit the canonical source directory’s `domfiles-` prefix so the name matches every final symlink basename.
 - Keep each `SKILL.md` as an entrypoint. Keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves.
 - Before composing a change across routed or layered surfaces, use the [documentation boundary checks](references/documentation-boundaries.md) to identify the canonical side of each boundary.
 

@@ -31,7 +31,7 @@ Before changing a skill-owned script under `.agents/skills`, follow the [protect
 
 ## Apply human-facing copy policy
 
-- Treat every project-authored string that can reach a person—including CLI help, runtime output, prompts, generated human-readable artifacts, test titles, and failure-only assertion diagnostics—as human-facing. Apply the [`technical-copy` skill](../../technical-copy/SKILL.md) when implementation, review, or maintenance creates, changes, or evaluates that wording.
+- Treat every project-authored string that can reach a person—including CLI help, runtime output, prompts, generated human-readable artifacts, test titles, and failure-only assertion diagnostics—as human-facing. Apply the `technical-copy` skill when implementation, review, or maintenance creates, changes, or evaluates that wording.
 - Keep related human-facing terminology and adjacent exact-string tests aligned in the same task. Agent-documentation policy owns behavior, interfaces, schemas, and machine contracts, while `technical-copy` owns potentially human-facing wording.
 - Do not rewrite machine-readable protocol records, serialized field names, exact syntax tokens, fixture payloads, or preserved upstream text merely for style. Review any surrounding project-authored explanation through `technical-copy`.
 

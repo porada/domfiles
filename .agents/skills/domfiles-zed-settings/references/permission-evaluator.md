@@ -6,7 +6,7 @@ Establish one graph root in the task-specific [`.agent-<name>` directory](../../
 
 ## Resolve CLI contract authority
 
-Apply the [CLI contract authority rule](../../../../skills/agent-documentation/references/skill-owned-scripts.md#make-the-interface-discoverable) to every permission binary. Use exact `--help` for ordinary invocation syntax. Inspect the exact implementation and relevant adjacent tests only when changing or reconciling a CLI projection, and limit that inspection to each affected combination, mode, option, or schema.
+Apply the [CLI contract authority rule](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#make-the-interface-discoverable) to every permission binary. Use exact `--help` for ordinary invocation syntax. Inspect the exact implementation and relevant adjacent tests only when changing or reconciling a CLI projection, and limit that inspection to each affected combination, mode, option, or schema.
 
 ## Inventory terminal patterns
 
@@ -200,7 +200,7 @@ cargo test --locked --test domfiles-zed-settings-permission-owner-audit-test
 cargo test --locked --test domfiles-zed-settings-regex-dependency-audit-test
 ```
 
-Select the applicable commands above and remaining focused and root checks through the [skill-owned script validation policy](../../../../skills/agent-documentation/references/skill-owned-scripts.md#test-the-contracts).
+Select the applicable commands above and remaining focused and root checks through the [skill-owned script validation policy](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).
 
 ## Evaluate permission behavior
 

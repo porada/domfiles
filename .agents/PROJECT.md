@@ -162,7 +162,7 @@ Capability parameters are limited to non-negative integers. The few capabilities
 
 ### Zed worktree permission coupling
 
-The global [`git-worktrees` skill](../skills/git-worktrees/SKILL.md) pairs the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
+The global [`git-worktrees` skill](../skills/domfiles-git-worktrees/SKILL.md) pairs the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
 
 Terminal permission matching evaluates normalized command inputs without exposing the invocation’s current working directory to configured regexes. Bare commands therefore cannot inherit agent-worktree trust from their execution directory. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) owns the resulting permission-pattern namespace requirement.
 
@@ -200,7 +200,7 @@ The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defi
 
 ### Deferred global policy
 
-Conditional global policy may move into a global skill when most sessions do not need it, following the [documentation principles](../skills/agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility requires a discrete trigger the agent can recognize without the deferred content, and a safe default when the route is missed. Conduct that applies continuously stays inline even when it is large.
+Conditional global policy may move into a global skill when most sessions do not need it, following the [documentation principles](../skills/domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility requires a discrete trigger the agent can recognize without the deferred content, and a safe default when the route is missed. Conduct that applies continuously stays inline even when it is large.
 
 The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
 
@@ -208,9 +208,9 @@ The `Collaboration` policy is the standing example of what does not move. Its de
 
 ### GitHub CLI agent integration
 
-The global [`github-cli` skill](../skills/github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
+The global [`github-cli` skill](../skills/domfiles-github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
 
-`gh agent-task` remains [unsupported](../skills/github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. User-requested external task relays use the [prompt-relays workflow](../skills/prompt-relays/SKILL.md) with a separately selected delivery mechanism.
+`gh agent-task` remains [unsupported](../skills/domfiles-github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. User-requested external task relays use the [prompt-relays workflow](../skills/domfiles-prompt-relays/SKILL.md) with a separately selected delivery mechanism.
 
 [Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The [shared permission-layering policy](skills/domfiles-zed-settings/references/permissions.md#apply-the-shared-permission-policy) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
@@ -228,21 +228,21 @@ In shell sessions configured by `domfiles` after synchronization, direct invocat
 
 ### Package release-note bullet marker
 
-The [release-note bullet-marker policy](../skills/release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
+The [release-note bullet-marker policy](../skills/domfiles-release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
 
 ### Prompt relays
 
-The global [`prompt-relays` skill](../skills/prompt-relays/SKILL.md) owns the relay delivery, complete-revision, composition, and evidence standard and a [generic task-relay prompt](../skills/prompt-relays/assets/task-relay-prompt.md). It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. [`agent-documentation`](../skills/agent-documentation/SKILL.md) keeps an explicit route for relay-asset maintenance. The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for subagent delegation and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
+The global [`prompt-relays` skill](../skills/domfiles-prompt-relays/SKILL.md) owns the relay delivery, complete-revision, composition, and evidence standard and a [generic task-relay prompt](../skills/domfiles-prompt-relays/assets/task-relay-prompt.md). It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. [`agent-documentation`](../skills/domfiles-agent-documentation/SKILL.md) keeps an explicit route for relay-asset maintenance. The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for subagent delegation and the anti-drift prompt contract. The global `release-notes` and `technical-copy` skills and the repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/domfiles-release-notes/assets/decision-capture-prompt.md), [technical copy](../skills/domfiles-technical-copy/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
 ### Protected skill mutation
 
 At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
 
-The [protected skill mutation policy](../skills/agent-documentation/references/protected-skill-staging.md) preserves this boundary through staging and reviewed promotion when native file tools expose the target repository as a current project root. Outside those roots, scoped terminal write approval is the operative boundary, so the policy requires guarded direct mutation without staged copies.
+The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-staging.md) preserves this boundary through staging and reviewed promotion when native file tools expose the target repository as a current project root. Outside those roots, scoped terminal write approval is the operative boundary, so the policy requires guarded direct mutation without staged copies.
 
 ### Repository harmonization
 
-The global [`repository-harmonization` skill](../skills/repository-harmonization/SKILL.md) owns the `Harmonize` shorthand and its change-oriented cross-repository consistency workflow.
+The global [`repository-harmonization` skill](../skills/domfiles-repository-harmonization/SKILL.md) owns the `Harmonize` shorthand and its change-oriented cross-repository consistency workflow.
 
 ### Shorthand command routing
 
@@ -250,23 +250,25 @@ A shorthand owned by a skill is routed by that skill’s description, which decl
 
 ### Skill description limit
 
-The 1,024-byte figure in the [skill description policy](../skills/agent-documentation/SKILL.md#compose-the-change) is Zed’s limit rather than an intrinsic property of skill descriptions. Each client that receives the global skill set applies its own limit, so the figure requires revalidation whenever a supported client changes one.
+The 1,024-byte figure in the [skill description policy](../skills/domfiles-agent-documentation/SKILL.md#compose-the-change) is Zed’s limit rather than an intrinsic property of skill descriptions. Each client that receives the global skill set applies its own limit, so the figure requires revalidation whenever a supported client changes one.
 
 ### Skill distribution
 
 The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public-disclosure boundary.
 
-[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact links and destinations for globally exposed skills. The current `skills` set is global. No public skill is currently supported.
+[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills. The current `skills/domfiles-*` set is global. No public skill is currently supported.
 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 
-Supported clients expose globally installed skills beneath different configuration roots, so repository-escaping relative links resolve against different lexical paths. The [distributed-skill link contract](../skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) keeps relative links within the installed skills tree and refers to already-loaded global policies by stable name.
+The canonical `domfiles-` prefix distinguishes global source directories from unprefixed public source directories without changing a global skill’s identity.
 
-Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. The [public skill portability contract](../skills/agent-documentation/references/public-skill-portability.md) therefore treats useful verbatim global-policy copies as standalone mirrors and optional remote peers as conditional enhancements. Promotion uses dependency evidence rather than topical similarity, limiting mirrors to required or materially enriching global rules. Public-peer classification remains owned by the source repository, so each standalone remote branch carries that repository’s predicate instead of the global workflow imposing domfiles metadata conventions. Resolving one immutable snapshot from the latest `porada/domfiles` revision keeps a composed remote chain internally consistent without adding that branch to ordinary entrypoint context.
+Supported clients expose globally installed skills beneath different configuration roots, and a global skill’s canonical basename differs from its installed basename. The [distributed-skill link contract](../skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) therefore keeps relative links within one skill and refers to sibling skills by stable frontmatter name when no path resolves in every layout.
 
-Public skill descriptions are human-facing discovery and marketing surfaces as well as routing metadata, so their composition follows the [public skill portability contract](../skills/agent-documentation/references/public-skill-portability.md).
+Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) therefore treats useful verbatim global-policy copies as standalone mirrors and optional remote peers as conditional enhancements. Promotion uses dependency evidence rather than topical similarity, limiting mirrors to required or materially enriching global rules. Public-peer classification remains owned by the source repository, so each standalone remote branch carries that repository’s predicate instead of the global workflow imposing domfiles metadata conventions. Resolving one immutable snapshot from the latest `porada/domfiles` revision keeps a composed remote chain internally consistent without adding that branch to ordinary entrypoint context.
 
-Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding, removing, or renaming a globally exposed skill requires updating synchronization behavior. Removing or renaming a skill that has already been distributed also requires migration behavior for obsolete installed paths.
+Public skill descriptions are human-facing discovery and marketing surfaces as well as routing metadata, so their composition follows the [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md).
+
+Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding or removing a globally exposed skill, changing its logical name, or changing its source-to-install mapping requires updating synchronization behavior. Removing or renaming a logical skill that has already been distributed also requires migration behavior for obsolete installed paths.
 
 Every supported installation of the global `agent-documentation` skill is assumed to load an equivalent domfiles-managed global instruction layer. The skill relies on that layer’s documentation, writing, review, and `Verify` policies instead of restating them. External repositories remain self-contained and do not name, require, or link to the skill. Applicable project instructions continue to override its fallback workflow.
 
@@ -274,7 +276,7 @@ Every supported installation of the global `agent-documentation` skill is assume
 
 `domfiles-zed-settings` is the sole script owner today, and the root `Cargo.toml` registers its binaries and adjacent tests so the root Cargo workspace validates them.
 
-A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/agent-documentation/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
+A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/domfiles-agent-documentation/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
 
 Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
 

@@ -13,10 +13,15 @@ done
 
 __print_heading_dimmed 'Linking agent instructions'
 
-for source in agent-documentation git-worktrees github-cli prompt-relays prose release-notes repository-harmonization technical-copy; do
-  __suppress __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.agents/skills/$source"
-  __suppress __symlink "$DOMFILES_SKILLS_DIR/$source" "$HOME/.claude/skills/$source"
-  __print_confirmation "$DOMFILES_SKILLS_DIR/$source"
+for source in domfiles-agent-documentation domfiles-git-worktrees domfiles-github-cli \
+  domfiles-prompt-relays domfiles-prose domfiles-release-notes domfiles-repository-harmonization \
+  domfiles-technical-copy; do
+  name="$(__string_replace "$source" 'domfiles-' '')"
+  source="$DOMFILES_SKILLS_DIR/$source"
+
+  __suppress __symlink "$source" "$HOME/.agents/skills/$name"
+  __suppress __symlink "$source" "$HOME/.claude/skills/$name"
+  __print_confirmation "$source"
 done
 
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md"

@@ -18,7 +18,7 @@ Apply narrower surface-specific workflows before this skill’s defaults. Use th
 
 ## Compose with technical copy
 
-For GitHub and technical surfaces, follow the [`technical-copy` composition contract](../technical-copy/SKILL.md#compose-explanatory-copy-with-prose). It defines when both skills apply, including the treatment of explanatory atomic strings, and which skill owns each decision.
+For GitHub and technical surfaces, follow `technical-copy`’s “Compose explanatory copy with prose” contract. It defines when both skills apply, including the treatment of explanatory atomic strings, and which skill owns each decision.
 
 ## Keep the work moving
 

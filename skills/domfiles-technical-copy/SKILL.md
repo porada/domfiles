@@ -20,7 +20,7 @@ Treat narrower project or domain skills as authoritative over this skill’s def
 
 ## Compose explanatory copy with prose
 
-- Apply [`prose`](../prose/SKILL.md) to every GitHub issue, pull request, and Discussion title, body, comment, or review, even when the copy is brief.
+- Apply `prose` to every GitHub issue, pull request, and Discussion title, body, comment, or review, even when the copy is brief.
 - On other technical surfaces, apply `prose` according to function rather than length. A single sentence or atomic string qualifies when it develops context, reasoning, causality, tradeoffs, consequences, or another explanation the reader must follow. Do not apply `prose` to strings that only name, instruct, or report one fact.
 - This skill owns factual accuracy, exact terminology, required actions, template constraints, and observable behavior. `prose` owns the reading path, paragraph movement, cohesion, cadence, and voice within those boundaries.
 - If their defaults differ, preserve the technical surface’s facts and constraints, then make the strongest prose possible inside them.

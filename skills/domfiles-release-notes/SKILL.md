@@ -7,7 +7,7 @@ metadata:
 
 # Package release notes
 
-Follow the [`github-cli` workflow](../github-cli/SKILL.md) when a release task uses GitHub CLI. Do not publish a release, create a tag, or bump a version unless the user explicitly requests that mutation.
+Follow the `github-cli` workflow when a release task uses GitHub CLI. Do not publish a release, create a tag, or bump a version unless the user explicitly requests that mutation.
 
 ## Apply the `Changelog` shorthand
 

@@ -56,22 +56,24 @@
 
 Classify every project-authored skill by its canonical source and supported installation surface. `metadata.internal: true` marks a skill as unsupported for public installation. It does not make tracked source private. The categories below are ordered by widening installation surface.
 
-| Category | Canonical source | `metadata.internal` | Supported installation |
-| --- | --- | --- | --- |
-| Internal | `.agents/skills/domfiles-<skill-name>` | `true` | Project-local to `domfiles`. |
-| Global | `skills/<skill-name>` | `true` | Globally exposed through the system established by `domfiles sync`. |
-| Public | `skills/<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
+| Category | Canonical source | `name` | `metadata.internal` | Supported installation |
+| --- | --- | --- | --- | --- |
+| Internal | `.agents/skills/domfiles-<skill-name>` | `domfiles-<skill-name>` | `true` | Project-local to `domfiles`. |
+| Global | `skills/domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
+| Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
+
+The root `skills/*` tree stores global and public canonical sources and is not a project-local discovery surface. Client-specific project discovery remains backed by `.agents/skills/*`. `domfiles sync` removes the canonical `domfiles-` prefix when linking a global skill, so its frontmatter `name` and final symlink basename remain `<skill-name>`.
 
 Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
 
-- **Category changes:** Update the canonical location, metadata, documentation links, and synchronization behavior together. Bring a skill’s scripts into conformance with the [portable skill script contract](skills/agent-documentation/references/portable-skill-scripts.md) before promoting it from internal to global, and remove or relocate them before promoting it into the public category.
-- **Installation-safe links:** Apply the [distributed-skill link contract](skills/agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) to every global or public skill.
+- **Category changes:** Update the canonical location, metadata, documentation links, and synchronization behavior together. Bring a skill’s scripts into conformance with the [portable skill script contract](skills/domfiles-agent-documentation/references/portable-skill-scripts.md) before promoting it from internal to global, and remove or relocate them before promoting it into the public category.
+- **Installation-safe links:** Apply the [distributed-skill link contract](skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) to every global or public skill.
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
-- **Script ownership:** Internal and global skills may own scripts. A global skill’s scripts run from this repository through the `domfiles sync` symlink and take every separate project they inspect or change as an explicitly selected target, following the [portable skill script contract](skills/agent-documentation/references/portable-skill-scripts.md). Public skills remain documentation-only because an independently installed copy has no host repository to execute through.
+- **Script ownership:** Internal and global skills may own scripts. A global skill’s scripts run from this repository through the `domfiles sync` symlink and take every separate project they inspect or change as an explicitly selected target, following the [portable skill script contract](skills/domfiles-agent-documentation/references/portable-skill-scripts.md). Public skills remain documentation-only because an independently installed copy has no host repository to execute through.
 - **Implementation default:** Write project-authored skill scripts in Rust with `snake_case` source stems, retaining the established `.test.rs` suffix for adjacent contract tests.
 - **Language exception:** Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes it materially more correct, maintainable, or proportionate than Rust.
     - Record the exception and its durable reason in the owning skill before implementation.
     - Avoiding migration, existing language use, familiarity, or shorter syntax alone does not justify an exception.
 - **Cargo names:** Keep established Cargo target and CLI names unchanged when only source filenames change.
-- **Routing:** Load each applicable `domfiles-*` skill immediately before the task pass whose resolved scope intersects its declared scope. Do not preload domain skills for later passes.
-- **Maintenance:** Treat every maintained `domfiles-*` skill as a living document. After using one, suggest a concrete edit only when execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.
+- **Routing:** Load each applicable project-local `domfiles-*` skill immediately before the task pass whose resolved scope intersects its declared scope. Do not preload domain skills for later passes.
+- **Maintenance:** Treat every maintained project-local `domfiles-*` skill as a living document. After using one, suggest a concrete edit only when execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.

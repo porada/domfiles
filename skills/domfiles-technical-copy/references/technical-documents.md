@@ -8,7 +8,7 @@
 - Apply the entrypoint’s [decision-preservation rule](../SKILL.md#preserve-decisions-without-adding-friction) to selected or restored headings, section order, taglines, links, examples, wording, and structure.
 - Treat supplied template sections as information-allocation boundaries. When a template separates the proposal, rationale, evidence, examples, and implementation ideas, keep the opening proposal to the smallest complete statement of the requested outcome and its essential boundary, then place each supporting detail in its designated section.
 - Follow the README gate in the global “Documentation” policy. When it leaves mutation unauthorized, identify the target location and provide the proposed structure or ready-to-use copy without modifying the file.
-- Follow the [`github-cli` workflow](../../github-cli/SKILL.md) when GitHub CLI use is needed for a GitHub-hosted surface. Drafting a GitHub issue, pull request, Discussion, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
+- Follow the `github-cli` workflow when GitHub CLI use is needed for a GitHub-hosted surface. Drafting a GitHub issue, pull request, Discussion, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
 - For any security report—whether standalone or submitted through an issue or pull request form—also follow the [security-report workflow](security-reports.md).
 
 ## Design the reading path

@@ -15,7 +15,7 @@
 - Keep forced worktree and branch operations constrained to their respective namespaces, and keep `--detach` confirmable.
 - Allow commits inside agent worktrees to stage tracked changes with `-a` or `--all` and to amend the current commit through bounded noninteractive `-m` or `--no-edit` forms only with the exact `-c commit.gpgsign=false` guard. Preserve its supported placement before or after the worktree’s `-C` option. Keep editor-driven amendments and broader history rewriting confirmable.
 - For terminal allowances whose safety depends on top-level agent-worktree scope, require the normalized command to carry an explicit project-relative `.agent-<name>` operand—for example, as Git’s `-C` path.
-- Keep native-tool and terminal permission patterns synchronized with the [worktree convention](../../../../skills/git-worktrees/SKILL.md).
+- Keep native-tool and terminal permission patterns synchronized with the [worktree convention](../../../../skills/domfiles-git-worktrees/SKILL.md).
 - Leave direct symbolic-link creation confirmable. Treat existing worktree-internal symlinks as user-managed repository state when native path operations are automatically allowed.
 - See [Zed worktree permission coupling](../../../PROJECT.md#zed-worktree-permission-coupling) for rationale.
 - Keep stored Git continuation operations subject to the [Git continuation policy](git-permissions.md#apply-the-git-permission-policy). An agent-worktree path contains repository mutation but does not contain hidden sequencer commands, hooks, or configuration-driven execution.
