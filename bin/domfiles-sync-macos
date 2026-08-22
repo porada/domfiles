@@ -6,7 +6,7 @@
 __print_heading 'Configuring macOS'
 
 if ! __is_macos; then
-  __print_info_and_exit 'Skipping configuration. This isn’t macOS'
+  __print_info_and_exit 'Skipping in a non-macOS environment'
 fi
 
 # Enable full keyboard access for all controls

@@ -109,13 +109,13 @@ __domfiles_bin() {
 # Changes the current directory to `bin`
 __domfiles_cd_bin() {
   cd "$DOMFILES_BIN_DIR" \
-    || __print_error_and_exit "Could not change directory to \`$DOMFILES_BIN_DIR\`"
+    || __print_error_and_exit "Failed to change directory to \`$DOMFILES_BIN_DIR\`"
 }
 
 # Changes the current directory to the repository root
 __domfiles_cd_root() {
   cd "$DOMFILES" \
-    || __print_error_and_exit "Could not change directory to \`$DOMFILES\`"
+    || __print_error_and_exit "Failed to change directory to \`$DOMFILES\`"
 }
 
 # Runs `lint_file` on remaining files or defaults from `lint_default_files`.
@@ -146,8 +146,22 @@ EOF
     fi
   fi
 
-  if [ $# -eq 1 ]; then
-    __print_heading "Linting \`$1\`"
+  valid_count=0
+  valid_file=''
+
+  for file in "$@"; do
+    if [ ! -f "$file" ] || [ -L "$file" ]; then
+      continue
+    fi
+
+    valid_count="$((valid_count + 1))"
+    valid_file="$file"
+  done
+
+  if [ "$valid_count" -eq 0 ]; then
+    __print_info_and_exit 'No files to lint'
+  elif [ "$valid_count" -eq 1 ]; then
+    __print_heading "Linting \`$valid_file\`"
   else
     __print_heading "Linting $lint_label"
   fi
@@ -248,7 +262,7 @@ __git_cd_root() {
   root="$(git rev-parse --show-toplevel)" || return $?
 
   cd "$root" \
-    || __print_error_and_exit "Could not change directory to \`$root\`"
+    || __print_error_and_exit "Failed to change directory to \`$root\`"
 
   unset root
 }
@@ -408,8 +422,8 @@ __git_is_path_changed_in_commit() {
   [ -n "$changed_files" ]
 }
 
-# Prints skipped files from the repository at `$1`. Limits results to paths
-# passed after `$1`
+# Prints skipped files from the repository at `$1`. Applies any remaining
+# arguments as filters relative to that location
 __git_skipped_files() {
   if [ $# -eq 0 ]; then
     __print_error_and_exit '`__git_skipped_files` requires at least one argument'
@@ -418,8 +432,11 @@ __git_skipped_files() {
   repository="$1"
   shift
 
-  root="$(git -C "$repository" rev-parse --show-toplevel)" || return $?
-  files="$(git -C "$root" ls-files -v -- "$@")" || return $?
+  if [ $# -eq 0 ]; then
+    repository="$(git -C "$repository" rev-parse --show-toplevel)" || return $?
+  fi
+
+  files="$(git -C "$repository" ls-files -v --full-name -- "$@")" || return $?
   printf '%s\n' "$files" | __grep '^[a-z]'
 }
 
@@ -749,7 +766,7 @@ __string_replace() {
   fi
 
   if [ -z "$2" ]; then
-    __print_error_and_exit '`__string_replace` pattern can’t be empty'
+    __print_error_and_exit '`__string_replace` pattern cannot be empty'
   fi
 
   if ! __string_contains "$1" "$2"; then

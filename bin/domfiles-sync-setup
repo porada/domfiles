@@ -51,7 +51,7 @@ else
   signer="$(git config --global --get user.email 2> /dev/null || true)"
 
   if [ -z "$signer" ]; then
-    __print_error_and_exit 'Could not resolve `user.email` from `.config/git/config`'
+    __print_error_and_exit 'Failed to resolve `user.email` from `.config/git/config`'
   fi
 
   read -r type key _ < "$DOMFILES_SSH_KEY.pub"

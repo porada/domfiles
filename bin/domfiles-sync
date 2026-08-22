@@ -3,6 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
+# shellcheck disable=SC2119
 if ! __is_brew_installed; then
   __print_error_and_exit '`brew` needs to be installed before running `domfiles sync`'
 fi

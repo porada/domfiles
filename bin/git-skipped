@@ -22,14 +22,6 @@ print_skipped() {
   fi
 }
 
-# Preserve parameters relative to the caller
-prefix="$(git rev-parse --show-prefix)" || exit $?
-params="$(git rev-parse --sq --prefix "$prefix" -- "$@")" || exit $?
-eval "set $params"
-unset params prefix
-
-__git_cd_root
-
 files="$(__git_skipped_files . "$@")"
 [ -z "$files" ] && exit 0
 

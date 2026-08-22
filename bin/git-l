@@ -27,6 +27,7 @@ else
   minimum_count="$(((default_count + 1) / 2))"
 
   if [ -t 1 ] && [ "$default_count" -gt 0 ]; then
+    # shellcheck disable=SC2119
     if terminal_size="$(__terminal_get_available_size)"; then
       available_rows="${terminal_size%% *}"
       terminal_columns="${terminal_size##* }"
