@@ -132,7 +132,7 @@
 			"model": "gpt-5.6-sol",
 			"provider": "openai-subscribed"
 		},
-		"default_width": 500,
+		"default_width": 600,
 		"dock": "right",
 		"enable_feedback": false,
 		"expand_terminal_card": false,
@@ -155,12 +155,14 @@
 				"*.go.dev",
 				"*.grep.app",
 				"*.home-assistant.io",
+				"*.iana.org",
 				"*.mozilla.org",
 				"*.npmjs.com",
 				"*.npmjs.org",
 				"*.openai.com",
 				"*.php.net",
 				"*.playwright.dev",
+				"*.rfc-editor.org",
 				"*.rust-lang.org",
 				"*.schemastore.org",
 				"*.shellcheck.net",
@@ -204,6 +206,7 @@
 				"gnu.org",
 				"go.dev",
 				"grep.app",
+				"iana.org",
 				"jqlang.org",
 				"knip.dev",
 				"man.openbsd.org",
@@ -230,6 +233,7 @@
 				"pubs.opengroup.org",
 				"pypi.org",
 				"react.dev",
+				"rfc-editor.org",
 				"rust-lang.github.io",
 				"rust-lang.org",
 				"sass-lang.com",
@@ -251,8 +255,6 @@
 				"viteplus.dev",
 				"vitest.dev",
 				"w3.org",
-				"www.iana.org",
-				"www.rfc-editor.org",
 				"yarnpkg.com",
 				"zed.dev",
 				"zizmor.sh"
@@ -408,6 +410,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*iana\\.org)(?:[/?#]|$)",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?i:https://jqlang\\.org)(?:[/?#]|$)",
 							"case_sensitive": true
 						},
@@ -520,6 +526,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*rfc-editor\\.org)(?:[/?#]|$)",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?i:https://rust-lang\\.github\\.io)(?:[/?#]|$)",
 							"case_sensitive": true
 						},
@@ -617,14 +627,6 @@
 						},
 						{
 							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+wordpress\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://www\\.iana\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://www\\.rfc-editor\\.org)(?:[/?#]|$)",
 							"case_sensitive": true
 						},
 						{
