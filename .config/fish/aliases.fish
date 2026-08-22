@@ -32,7 +32,7 @@ function clone
         end
 
         set repository (basename "$repository" .git)
-        git clone "$argv[1]" && cd "$repository"
+        git clone "$argv[1]"; and cd "$repository"
     else
         git clone $argv
     end

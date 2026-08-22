@@ -53,6 +53,7 @@ Use this skill as the canonical source for shell-script policy and workflow.
 ## Maintain `domlib`
 
 - Keep all functions defined in `domlib` alphabetized in natural order.
+- When a `domlib` function changes, keep its adjacent contract comment aligned with the resulting behavior.
 - When the design or contract of a reusable `domlib` helper is in scope, follow [shared helper design](references/shared-helper-design.md).
 - Keep the set of `$DOMFILES_*` variables defined in `domlib` and `.config/fish/config.fish` in sync, with exactly matching names.
     - Exempt `$DOMFILES_DEFAULT_IFS`, `$DOMFILES_SSH_KEY`, `$DOMFILES_SUPPRESSED`, and `$DOMFILES_VIM_PLUG`.
@@ -76,7 +77,9 @@ Use this skill as the canonical source for shell-script policy and workflow.
 
 ## Write robust shell control flow
 
-- Keep short conditions, pipelines, and command substitutions on one line. For longer constructs, prefer a named helper when the logic forms a reusable semantic unit. Otherwise, use the established backslash-continuation layout.
+- Treat 100 columns, including indentation, as the default threshold for introducing `\` continuations in new or materially rewritten shell commands, not as a conformance limit for existing code. Do not report or reflow an existing command based on line length alone. Preserve a continuation when it communicates semantic grouping, control flow, or intentional alignment.
+- When wrapping is warranted, break at a meaningful argument, operator, or redirection boundary, indent continuation lines two spaces, and use the fewest lines that preserve clear grouping. Allow an overlong line when no useful boundary exists or wrapping would only isolate one argument. Do not add `\` where shell syntax already continues the construct, and prefer a named helper over a long chain of continuations.
+- Apply this continuation policy only to executable shell code. `domlib` contract comments retain their 80-column limit.
 - Represent boolean variables defined by domfiles shell code with the literal values `true` and `false`. Initialize them before use and compare them explicitly with `=`. Do not represent booleans through unset state, empty strings, or `0` and `1`.
 - In POSIX `sh`, parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value set owned by that helper rather than repeating it in policy or project documentation. Third-party environment variables remain outside this rule.
 - In POSIX `sh`, set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
@@ -106,6 +109,7 @@ After editing, use the narrowest applicable validation scope:
 3. For POSIX shell, run `sh -n <file>` for each changed file and `pnpm run lint:sh <changed-posix-files>`. The wrapper supplies the complementary ShellCheck analysis.
 4. For JSON, TOML, or YAML, run `pnpm run lint:<format> <changed-format-files>`. The JSON wrapper requires exactly one parsed JSON value, the TOML wrapper runs `taplo lint --no-schema`, and the YAML wrapper parses every YAML document without emitting document content.
 5. Check formatting for changed `.fish` and `.sh` files and extensionless Fish and POSIX shell scripts with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-shell-files>`. The configured Fish plugin infers extensionless Fish scripts from their `fish` hashbang, so do not force `--parser fish`. Verify every applicable policy invariant above, including `domlib` ordering, usage, and `$DOMFILES_*` parity when relevant. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned unstaged and staged diffs, inspect task-owned untracked files directly without staging them, and review the final status without altering concurrent changes.
+6. When `domlib` is in scope, verify every function has an adjacent contract comment and its comment prose stays within 80 columns.
 
 ## Validate a shell audit, review, or diagnosis
 

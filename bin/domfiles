@@ -12,6 +12,8 @@ if [ $# -gt 0 ]; then
     __domfiles_exec "$command" "$@"
   fi
 
+  __print_error "Unknown command: \`$command\`"
+
   # Narrow down the list to `domfiles` commands
   __print_heading 'Available Commands'
   __domfiles_ls_bin 'domfiles-*'

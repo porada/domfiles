@@ -9,7 +9,7 @@ explicit_fixup=false
 option_operand=false
 param_index=0
 separator_index=0
-target='HEAD'
+target=HEAD
 target_count=0
 target_index=0
 
@@ -111,7 +111,7 @@ while [ "$param_index" -lt "$total" ]; do
   fi
 
   if [ "$param_index" -eq "$separator_index" ]; then
-    set -- "$@" "--fixup=$target" "$param"
+    set -- "$@" --fixup "$target" "$param"
     fixup_added=true
     continue
   fi
@@ -120,7 +120,7 @@ while [ "$param_index" -lt "$total" ]; do
 done
 
 if [ "$fixup_added" = false ]; then
-  set -- "$@" "--fixup=$target"
+  set -- "$@" --fixup "$target"
 fi
 
 __ git commit "$@"

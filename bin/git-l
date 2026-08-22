@@ -16,24 +16,24 @@ fi
 
 if [ $# -gt 0 ]; then
   log="$(eval "git --no-pager log $(__git_default_log_params --no-refs) --color=$color_mode")"
-  matches="$(printf '%s\n' "$log" | __grep --color=$color_mode -i -- "$*")" || exit $?
-  [ -z "$matches" ] || printf '%s\n' "$matches" | __pager log
+  matches="$(printf '%s\n' "$log" | __grep --color="$color_mode" -i -- "$*")" || exit $?
+  [ -z "$matches" ] || printf '%s\n' "$matches" | __page_input log
 elif [ "$show_all" = true ]; then
   log="$(eval "git --no-pager log $(__git_default_log_params) --color=$color_mode")"
-  printf '%s\n' "$log" | __pager log
+  printf '%s\n' "$log" | __page_input log
 else
   default_count="$(__git_default_commit_count)"
   commit_count="$default_count"
   minimum_count="$(((default_count + 1) / 2))"
 
   if [ -t 1 ] && [ "$default_count" -gt 0 ]; then
-    if terminal_size="$(__terminal_size)"; then
+    if terminal_size="$(__terminal_get_available_size)"; then
       available_rows="${terminal_size%% *}"
       terminal_columns="${terminal_size##* }"
 
       # Measure entries without counting color escapes
       entries="$(eval "git --no-pager log $(__git_default_log_params) --color=never -n $default_count")"
-      commit_count="$(__terminal_fitting_line_count "$terminal_columns" "$available_rows" "$entries")"
+      commit_count="$(__terminal_count_fitting_lines "$terminal_columns" "$available_rows" "$entries")"
 
       if [ "$commit_count" -lt "$minimum_count" ]; then
         commit_count="$minimum_count"

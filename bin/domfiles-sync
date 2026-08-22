@@ -16,12 +16,12 @@ if __is_callable git; then
   # Ensure the remote uses SSH
   if __is_ssh_configured; then
     current="$(git -C "$DOMFILES" remote get-url origin)"
-    updated="$(__string_replace 'https://github.com/' 'git@github.com:' "$current")"
-    updated="$(__string_replace 'porada/dotfiles' 'porada/domfiles' "$updated")"
+    updated="$(__string_replace "$current" 'https://github.com/' 'git@github.com:')"
+    updated="$(__string_replace "$updated" 'porada/dotfiles' 'porada/domfiles')"
 
     if __is_macos; then
       __print_heading_dimmed 'Ensuring the SSH key is linked to Apple Keychain'
-      __ssh_add --apple-use-keychain "$DOMFILES_SSH_KEY"
+      __ssh_add --apple-use-keychain "$DOMFILES_SSH_KEY" || true
     fi
 
     if [ "$current" = "$updated" ]; then
@@ -102,7 +102,7 @@ if __is_callable git; then
 
   if [ "$(__domfiles_revision)" != "$current_revision" ]; then
     __print_heading_dimmed 'Restarting the sync after the update'
-    __domfiles_exec sync --print
+    __domfiles_exec --print sync
   fi
 fi
 

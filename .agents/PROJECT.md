@@ -338,6 +338,20 @@ The lockfile-aware presentation in `git-d` and `git-view` is consolidated becaus
 
 `git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
 
+### Domlib helper documentation
+
+Every `domlib` function has one adjacent contract comment. The uniform surface lets readers compare helpers without reconstructing shell bodies. Comment prose wraps at 80 columns while preserving ordinary sentence flow, so a wrapped line remains a continuation rather than a separate statement. Internal periods may separate sentences, while terminal punctuation remains omitted under the shell prose policy.
+
+Comments describe the semantic contract domfiles adds. They omit ordinary behavior already implied by a command-shaped name, implementation values canonically owned by source, validation and fallback details, and cross-cutting policy owned elsewhere unless the omission would make the contract misleading. The `__touch` comment therefore emphasizes file existence, standard permissions, and parent creation while timestamp updates remain implied by `touch`. The `__print_command` and `__suppress` comments leave the CI exception to [suppressed command output](#suppressed-command-output), which canonically owns that policy.
+
+In helper comments, domfiles is an unformatted plural noun parallel to “dotfiles” when it denotes the repository or managed configuration, while `domfiles` is code-formatted only when it denotes the CLI command. The phrase “domfiles have …” is therefore intentional. The postpositive modifiers in “heading, dimmed” and “text, formatted” preserve the shared base description across related helpers rather than introducing separate terminology for each variant.
+
+`__is_brew_installed` intentionally owns both the no-argument Homebrew installation check and the optional package check. Repeating “returns success” makes the result of each branch explicit. `__git_skipped_files` intentionally describes semantic skipped files while preserving tagged `git ls-files -v` entries because `git-skipped` owns display-path extraction and its other callers only test whether output exists. `__git_diff_list_changed_excluded_paths` lets `--commit` and `--worktree` stand for their complete modes, with the commit reference implied by the `--commit` context.
+
+`__ssh_add`’s comment intentionally relies on the command-shaped name for ordinary success and failure semantics. The helper reports failures before returning nonzero, allowing `domfiles-sync` to tolerate the status without silencing the diagnostic.
+
+The `__symlink` comment states the normal replacement contract and omits source-containment rejection because that rejection is a safety precondition rather than an alternate supported outcome. The helper creates the complete missing destination-parent chain through `__mkdir` and `mkdir -p`. Standard permissions apply to the final parent passed to `__mkdir`, while any ancestors created by `mkdir -p` retain their ordinary creation modes.
+
 ### FFmpeg media preset compatibility
 
 Every supplied input and generated output media format, dimension, duration, and other size constraint in `bin/ffmpeg-wav-png` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
@@ -392,7 +406,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 `domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
 
-The corresponding scripts in `bin/` are the stable command interfaces. Their implementations are resolved from the domfiles pnpm workspace so `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
+The corresponding scripts in `bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
 The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 

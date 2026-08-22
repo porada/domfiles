@@ -3,4 +3,4 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-pnpm --dir "$DOMFILES" exec skills "$@"
+__domfiles_pnpm_exec skills "$@"

@@ -10,7 +10,7 @@ fi
 
 if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
   __git_cd_root
-  excluded_paths="$(__git_diff_excluded_paths --commit "$1")"
+  excluded_paths="$(__git_diff_list_changed_excluded_paths --commit "$1")"
 
   if [ -n "$excluded_paths" ]; then
     if git rev-parse --verify "$1^2" > /dev/null 2>&1; then
@@ -19,8 +19,10 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
       exit $?
     fi
 
-    exclude_params="$(__git_diff_exclude_params "$excluded_paths")"
-    excluded_paths="$(__git_diff_excluded_paths --commit "$1" --related)"
+    color_mode=never
+    [ -t 1 ] && color_mode=always
+    exclude_params="$(__git_diff_format_exclude_params "$excluded_paths")"
+    excluded_paths="$(__git_diff_list_changed_excluded_paths --commit "$1" --related)"
 
     # shellcheck disable=SC2086
     if git diff-tree --quiet --root "$1" -- . $exclude_params > /dev/null; then
@@ -32,10 +34,10 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
     fi
 
     # shellcheck disable=SC2086
-    stat_output="$(git show --show-signature --stat --color=always "$1" -- $excluded_paths)" \
+    stat_output="$(git show --show-signature --stat --color="$color_mode" "$1" -- $excluded_paths)" \
       || exit $?
     # shellcheck disable=SC2086
-    patch_output="$(git show --pretty=format: --color=always "$1" -- . $exclude_params)" \
+    patch_output="$(git show --pretty=format: --color="$color_mode" "$1" -- . $exclude_params)" \
       || exit $?
 
     __git_diff_page show "$stat_output" "$patch_output"

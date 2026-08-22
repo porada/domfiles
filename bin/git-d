@@ -6,11 +6,13 @@
 # Show formatted `git diff` output
 if [ $# -eq 0 ]; then
   __git_cd_root
-  excluded_paths="$(__git_diff_excluded_paths --worktree)"
+  excluded_paths="$(__git_diff_list_changed_excluded_paths --worktree)"
 
   if [ -n "$excluded_paths" ]; then
-    exclude_params="$(__git_diff_exclude_params "$excluded_paths")"
-    excluded_paths="$(__git_diff_excluded_paths --worktree --related)"
+    color_mode=never
+    [ -t 1 ] && color_mode=always
+    exclude_params="$(__git_diff_format_exclude_params "$excluded_paths")"
+    excluded_paths="$(__git_diff_list_changed_excluded_paths --worktree --related)"
 
     # shellcheck disable=SC2086
     if git diff --quiet -- . $exclude_params; then
@@ -22,11 +24,11 @@ if [ $# -eq 0 ]; then
     fi
 
     # shellcheck disable=SC2086
-    stat_output="$(git diff --stat --color=always -- $excluded_paths)" || exit $?
+    stat_output="$(git diff --stat --color="$color_mode" -- $excluded_paths)" || exit $?
     # shellcheck disable=SC2086
-    patch_output="$(git diff --patch --color=always -- . $exclude_params)" || exit $?
+    patch_output="$(git diff --patch --color="$color_mode" -- . $exclude_params)" || exit $?
 
-    __git_diff_page diff "$stat_output" "$patch_output" --leading-newline
+    __git_diff_page --leading-newline diff "$stat_output" "$patch_output"
     exit $?
   fi
 fi
