@@ -14,8 +14,8 @@ done
 __print_heading_dimmed 'Linking agent instructions'
 
 for source in domfiles-agent-documentation domfiles-git-worktrees domfiles-github-cli \
-  domfiles-prompt-relays domfiles-prose domfiles-release-notes domfiles-repository-harmonization \
-  domfiles-technical-copy; do
+  domfiles-prompt-relays domfiles-release-notes domfiles-repository-harmonization \
+  human-facing-writing; do
   name="$(__string_replace "$source" 'domfiles-' '')"
   source="$DOMFILES_SKILLS_DIR/$source"
 

@@ -119,12 +119,16 @@
 
 ## Writing
 
-- **Suppressions:** Write suppression directives as `/* … */` block comments when both the language and relevant tool accept that form, including `/* oxlint-disable-next-line rule/name */`, `/* prettier-ignore */`, and `/* @ts-expect-error */`. Use the tool-required syntax otherwise. Do not add explanatory text unless applicable repository or linter policy requires it.
-- **Prose:** Avoid semicolons, use typographic “quotation marks” and apostrophes, and write em dashes without surrounding spaces. Preserve literal punctuation where syntax requires it. Apply this to every prose surface, including documentation, source comments, and human-facing strings such as help output, diagnostics, and test titles.
+The Typography, Semicolons, and Pause punctuation rules apply to all prose. For these rules, natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings counts as prose whether it is atomic or connected.
+
+- **Typography:** Use typographic “quotation marks” and apostrophes in prose. Preserve exact punctuation where literal syntax requires it.
+- **Semicolons:** Never introduce semicolons in prose or human-facing technical copy. Preserve a supplied semicolon only when the user explicitly wants it retained.
+- **Pause punctuation:** Limit dashes and other punctuation used to create a pause. Use a dash only when its additional pause or emphasis materially improves the reading unit. Never surround em dashes with spaces.
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
-- **Numbering:** For nonconsecutive numbered items, write every number explicitly in the item text rather than relying on Markdown ordered-list numbering.
 - **Code tokens:** Wrap identifiers, paths, commands, and quoted code tokens in backticks.
+- **Numbering:** For nonconsecutive numbered items, write every number explicitly in the item text rather than relying on Markdown ordered-list numbering.
 - **Commit references:** Write abbreviated commit hashes at 8 characters by default. Use a full object ID only when disambiguation or an external format requires it.
+- **Suppressions:** Write suppression directives as `/* … */` block comments when both the language and relevant tool accept that form, including `/* oxlint-disable-next-line rule/name */`, `/* prettier-ignore */`, and `/* @ts-expect-error */`. Use the tool-required syntax otherwise. Do not add explanatory text unless applicable repository or linter policy requires it.
 
 ## Shorthand commands
 

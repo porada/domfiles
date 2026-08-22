@@ -17,7 +17,7 @@
 ## Add actionable context
 
 - Include the consumer-facing source filepath when it identifies the failing input, especially in multi-file operations. Keep it in the headline, preserve it exactly, and do not substitute a synthetic internal path.
-- Apply the token-formatting rule in the global “Writing” policy only when the prose refers to a value as a path, identifier, option, format, or other code token. A word matching a symbol name does not by itself require identifier framing.
+- Apply the [code-token convention](typography.md) only when the prose refers to a value as a path, identifier, option, format, or other code token. A word matching a symbol name does not by itself require identifier framing.
 - Add the exact case, expected or received values, or a reason only when they help the intended reader act and are appropriate to expose on that surface. When the audience or exposure boundary is unclear, omit exact values rather than assuming they are safe to reveal.
 - For a known contract incompatibility, name the unsupported property and present expected values before the received value. Adapt the wording when several values are accepted.
 - Replace internal architecture language with the concrete consumer-facing incompatibility when evidence establishes one. Do not replace it with another broad claim such as universal inability to use a component.
@@ -33,5 +33,5 @@
 
 - Adapt only destination-owned dynamic values and module attribution, confirming that any prefix names the destination module rather than the source whose wording was consulted.
 - Keep related failures that share an operation structurally parallel. When one uses a `Failed to …` headline, preserve that headline across the family unless a materially different failure requires another framing.
-- Apply the entrypoint’s [decision-preservation rule](../SKILL.md#preserve-decisions-without-adding-friction) to the selected prefix, punctuation, line breaks, code formatting, and lack of terminal punctuation across equivalent paths.
+- Apply the entrypoint’s [intent and boundary rules](../SKILL.md#preserve-intent-and-boundaries) to the selected prefix, punctuation, line breaks, code formatting, and lack of terminal punctuation across equivalent paths.
 - Align related test titles to the same verified behavior and terminology without copying runtime-message syntax into a different surface.

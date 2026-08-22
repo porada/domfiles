@@ -5,13 +5,12 @@
 - Interpret scope literally. A content-only request does not authorize restructuring, and a structure-only request does not authorize rewriting otherwise sound prose.
 - Treat heading wording as copy. A structure-only request may move existing headings or change their level, but may not rename them or invent new heading text.
 - When reproducing an existing heading, preserve its exact identifier spelling, significant characters, entities, and intentional markup. Omit an unchanged heading from a structural outline rather than normalizing its markup. Do not introduce nonbreaking characters, entities, or presentational markup where the source does not already use them unless project policy or the user requires it.
-- Apply the entrypoint’s [decision-preservation rule](../SKILL.md#preserve-decisions-without-adding-friction) to selected or restored headings, section order, taglines, links, examples, wording, and structure.
+- Apply the entrypoint’s [intent and boundary rules](../SKILL.md#preserve-intent-and-boundaries) to selected or restored headings, section order, taglines, links, examples, wording, and structure.
 - Treat supplied template sections as information-allocation boundaries. When a template separates the proposal, rationale, evidence, examples, and implementation ideas, keep the opening proposal to the smallest complete statement of the requested outcome and its essential boundary, then place each supporting detail in its designated section.
-- Follow the README gate in the global “Documentation” policy. When it leaves mutation unauthorized, identify the target location and provide the proposed structure or ready-to-use copy without modifying the file.
-- Follow the `github-cli` workflow when GitHub CLI use is needed for a GitHub-hosted surface. Drafting a GitHub issue, pull request, Discussion, security report, comment, or review does not authorize submitting it or modifying linked code or documentation unless the current request explicitly does so.
+- When a task clearly concerns composing an issue or pull request body for a specific repository, stop before drafting or revising it and offer to look up the user’s previously submitted issues and pull requests in that repository. If the user accepts, identify recurring structure, terminology, tone, and level of detail, then apply that pattern without copying incidental wording or overriding the repository’s current template. Continue without the lookup if the user declines, the lookup is unavailable, or no useful prior submissions are available.
 - For any security report—whether standalone or submitted through an issue or pull request form—also follow the [security-report workflow](security-reports.md).
 
-## Design the reading path
+## Design the information architecture
 
 1. After the surface-appropriate opening, arrange the remaining content in progressive depth. Move from the first useful action or conclusion through evidence, setup, core behavior, optional detail, caveats, alternatives, reference material, troubleshooting, or questions as the task requires.
 2. Keep optional variants subordinate to the primary path. Use direct question headings when a question-and-answer format helps readers scan non-obvious concerns.
@@ -39,4 +38,4 @@ Treat that sequence as a decision framework rather than a fixed template. A visu
 
 ## Validate the result
 
-As part of the entrypoint’s [final validation](../SKILL.md#use-the-standard-path), read the complete rendered path from the opening statement through the first useful result or decision, then through optional detail. Confirm that headings reveal the hierarchy, links still reach the intended targets, and durable details follow canonical ownership in the global “Documentation” policy.
+As part of the technical-copy workflow’s [final validation](technical-copy.md#use-the-standard-path), read the complete rendered document from the opening statement through the first useful result or decision, then through optional detail. Confirm that headings reveal the hierarchy and links still reach their intended targets.

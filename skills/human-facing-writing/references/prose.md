@@ -1,24 +1,6 @@
----
-name: prose
-description: Draft, edit, review, and refine human-facing prose, including short-form writing. Use automatically with `technical-copy` for every GitHub issue, pull request, and Discussion title, body, comment, or review. Use it whenever a reader must follow connected ideas, context, explanation, reasoning, causality, tradeoffs, consequences, narrative, or tone—even in a message, email, reply, review, proposal, report, documentation passage, or other brief work. Also use it for passages, essays, articles, letters, chapters, speeches, stories, and longer works where structure, cohesion, clarity, rhythm, pacing, voice, or reader momentum matters. Apply across subjects and genres without imposing a house voice. Defer agent documentation, release material, atomic technical copy that only names, instructs, or reports one fact, formatting-only work, and tasks whose wording and information structure are explicitly unchanged to their owning workflows.
-metadata:
-    internal: true
----
+# Connected prose
 
-# Prose
-
-Apply narrower surface-specific workflows before this skill’s defaults. Use this skill to shape the reading experience, not to override factual, legal, structural, or submission constraints owned elsewhere.
-
-## Choose the workflow
-
-- For drafting, compose the complete authorized prose unit directly from the user’s intent and available evidence.
-- For editing, preserve the writer’s meaning, material decisions, and recognizable voice while improving the requested dimensions.
-- For a review-only request, remain read-only. Report concrete points where the reading path, meaning, cohesion, or trust weakens. Do not rewrite the work or present optional preferences as defects.
-- For a multi-unit work, consider both the local quality of each unit and the cumulative movement of the complete work.
-
-## Compose with technical copy
-
-For GitHub and technical surfaces, follow `technical-copy`’s “Compose explanatory copy with prose” contract. It defines when both skills apply, including the treatment of explanatory atomic strings, and which skill owns each decision.
+Build on the entrypoint’s prose baseline when a reader must follow an idea across more than one atomic unit. Use this workflow independently for nontechnical, creative, narrative, reflective, persuasive, personal, and other general writing. Apply narrower surface-specific workflows before these defaults, and do not impose technical conventions unless the subject, evidence, or destination requires them. Shape the reading experience without overriding factual, legal, structural, or submission constraints owned elsewhere.
 
 ## Keep the work moving
 
@@ -27,14 +9,9 @@ For GitHub and technical surfaces, follow `technical-copy`’s “Compose explan
 - Draft or revise before trying to optimize every dimension. Focus later passes on the few changes that materially improve the requested reading experience.
 - Stop when the prose fulfills its reader contract and the user’s request. Do not delay delivery for exhaustive alternatives, low-impact polish, or theoretical perfection.
 
-## Resolve the reader and the work
+## Resolve the movement
 
-Resolve these details silently when the context makes them clear:
-
-1. Identify the authorized prose scope, intended reader, immediate purpose, and desired change in the reader’s understanding, feeling, judgment, or action.
-2. Determine the work’s dominant movement: argument, explanation, narrative, reflection, description, instruction, or a deliberate combination. Use this to understand what progression means without forcing a genre template.
-3. Preserve explicit user decisions about voice, point of view, structure, terminology, degree of formality, and intended ambiguity. Ask only when missing context would materially change the result.
-4. Inspect source evidence when the prose makes factual claims. Treat verified facts as boundaries rather than a list that must all appear.
+Determine the work’s dominant movement—argument, explanation, narrative, reflection, description, instruction, or a deliberate combination—without forcing a genre template.
 
 ## Compose with reading units
 
@@ -55,8 +32,7 @@ A reading unit should be locally satisfying without pretending to be independent
 
 ## Work within an existing form
 
-- Treat supplied headings, section order, template fields, and formatting conventions as constraints unless the task authorizes changing them.
-- Fit prose and reading units into that structure without forcing a one-to-one relationship. An existing section may consist of a single paragraph, one reading unit spanning several paragraphs, or several reading units.
+- Under the entrypoint’s [intent and boundary rules](../SKILL.md#preserve-intent-and-boundaries), fit prose and reading units into the supplied structure without forcing a one-to-one relationship. An existing section may consist of a single paragraph, one reading unit spanning several paragraphs, or several reading units.
 - Let headings establish context rather than repeating their wording or promise in the opening sentence.
 - Preserve movement and cohesion across imposed boundaries with proportionate transitions and callbacks.
 - If the structure materially obstructs the reader contract, produce the best result available within it and identify the specific conflict. Do not silently restructure the work or stop over minor friction.
@@ -87,8 +63,6 @@ Follow [Keep the work moving](#keep-the-work-moving) while applying this sequenc
 4. Tighten sentences without deleting necessary distinctions, causes, qualifications, texture, or voice.
 5. Revisit openings, boundaries, and endings after the body works. Confirm that each promise is fulfilled and each transition carries the right amount of context.
 
-For a substantive review, difficult revision, or multi-unit work, apply the relevant parts of the [revision rubric](references/revision-rubric.md). Do not evaluate every dimension by default or turn its labels into a scorecard.
-
 ## Avoid imitation as a method
 
 Do not manufacture quality by copying another writer’s swagger, sentence lengths, paragraph counts, slogans, quirks, or formatting habits. Extract the mechanism behind an effective choice, then adapt it to this reader, subject, voice, and purpose.
@@ -97,9 +71,6 @@ Treat familiar rules of economy, directness, active voice, and paragraph structu
 
 Do not use readability formulas, corpus averages, or fixed quotas as proxies for attention or quality. Measurements can locate unusual density or repetition, but the reading effect determines whether revision is needed.
 
-## Deliver the result
+## Preserve the prose form
 
-- Edit the contextual target directly when authorized. Without a file target, put the ready-to-use prose first.
-- Provide one best version by default. Offer alternatives only when the user requests them or a material decision remains unresolved.
-- Preserve the requested format unless changing it is part of the task. Do not add headings, summaries, lists, or explanatory framing merely because they improve scanability.
-- Explain only material uncertainties, structural decisions, or intentional departures that the user needs to assess.
+Do not add headings, summaries, lists, or explanatory framing merely because they improve scanability.

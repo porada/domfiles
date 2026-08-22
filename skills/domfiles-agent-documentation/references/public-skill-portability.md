@@ -5,7 +5,11 @@ Apply the applicable skill classification’s independent-behavior requirement f
 - Keep local guidance sufficient when repository-managed policy, sibling skills, the source repository, and network access are unavailable.
 - **Standalone mirrors:** A public skill may mirror an applicable global instruction when the copy materially improves its independently installed behavior. Copy the smallest complete normative unit verbatim, treat it as required standalone context rather than a second definition, and align every mirror whenever either occurrence changes.
 - Treat every remote peer as an optional enhancement rather than a substitute for behavior the skill advertises.
-- Treat every public skill description as a human-facing discovery and marketing surface. When one is created, changed, reviewed, or validated for public promotion, automatically apply `technical-copy`, `prose`, and every narrower copy workflow their contracts require to the complete decoded value. `agent-documentation` retains ownership of capability, triggers, exclusions, essential routing, and client limits. Within those boundaries, `technical-copy` owns factual accuracy and terminology, while `prose` owns the reading path, cohesion, and tone.
+
+## Compose public skill descriptions
+
+- Treat every public skill description as a human-facing discovery and marketing surface. This skill owns its complete composition, including capability, triggers, exclusions, essential routing, client limits, factual accuracy, terminology, reading path, cohesion, and tone.
+- **Description format:** Write every public skill description as a YAML `|-` literal block scalar. Separate coherent parts with blank lines, and validate the complete decoded value rather than a client’s flattened list rendering.
 
 ## Review global instruction dependencies
 
@@ -72,7 +76,7 @@ Before applying any remote instruction, validate the complete routed closure rea
 
 ## Validate public portability
 
-1. Validate the complete description through `technical-copy`, `prose`, and every other applicable copy workflow. Evaluate the skill with repository-managed policy, optional peers, source-repository files, and network access removed. Its advertised behavior must remain complete.
+1. Validate the complete decoded description against the [public-description composition and format](#compose-public-skill-descriptions). Evaluate the skill with repository-managed policy, optional peers, source-repository files, and network access removed. Its advertised behavior must remain complete.
 2. Confirm that each remote-peer branch has one entrypoint route and a separate conditional reference, with no remote protocol or URL in the description or entrypoint.
 3. When a global instruction or this contract changes, search public skills for its prior exact wording and align every required standalone mirror in the same change. When a public skill changes, compare each mirrored block with its source and remove any copy that no longer adds standalone value.
 4. Validate each declared peer’s latest-source URL, public classification, identity, and same-snapshot routed closure without treating a currently reachable mutable file as immutable evidence.
