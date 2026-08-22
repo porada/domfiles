@@ -1882,6 +1882,10 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*commit (?:(?:-a|--all|--allow-empty(?:-message)?|--amend|--(?:no-)?branch|--(?:fixup|squash)(?:=| )[A-Za-z0-9][A-Za-z0-9._/@~^-]*|-i|--include|--long|--null|-o|--only|--porcelain|-q|--quiet|--short|-u(?:all|no|normal)?|--untracked-files(?:=(?:all|no|normal))?|-v|--verbose|-z) )*--dry-run(?: (?:-a|--all|--allow-empty(?:-message)?|--amend|--(?:no-)?branch|--(?:fixup|squash)(?:=| )[A-Za-z0-9][A-Za-z0-9._/@~^-]*|-i|--include|--long|--null|-o|--only|--porcelain|-q|--quiet|--short|-u(?:all|no|normal)?|--untracked-files(?:=(?:all|no|normal))?|-v|--verbose|-z))*(?: --(?: (?:[.]|[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*(?:/[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*)*/?))+)?$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*commit (?:-F ?|--file(?:=| ))(?:[.]/)?[.]agent-[A-Za-z0-9_-][A-Za-z0-9_.-]*/(?:(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})/)*(?:[.]*[A-Za-z0-9@_+~][A-Za-z0-9.@_+~-]*|[.]{3,})$",
 							"case_sensitive": true
 						},
