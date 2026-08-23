@@ -20,6 +20,16 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
+### Fish configuration isolation
+
+Fish reads startup configuration before evaluating a noninteractive command unless `--no-config` is present. In this repository, [`config.fish`](../.config/fish/config.fish) sources tracked aliases and colors and the active machine-local [`local.fish`](#fish-local-configuration), so a discovery-looking command can execute configuration before reaching its requested help surface.
+
+The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) therefore defaults agent uses of Fish as a noninteractive interpreter to `fish --no-config`. The default excludes tasks whose subject is startup configuration or configured runtime behavior, where the loaded configuration is part of the evidence. This isolates startup files. It does not make the process hermetic or establish the provenance of an autoloaded function. Fish builtins can be forced through `builtin`, while shipped autoloaded functions retain function-path resolution, so permission inventories classify those implementation classes separately.
+
+Fish’s shipped help renderer invokes `man`, whose pager may come from `MANPAGER` or `PAGER`. Setting both variables to `cat` bounds the intended renderer, but Zed’s [terminal normalization](skills/domfiles-zed-settings/references/terminal-permissions.md#close-the-parser-and-effect-model) can make a real assignment and a quoted assignment-looking command word indistinguishable.
+
+The same normalization removes ordinary argument quoting before permission matching. Single-quoted, double-quoted, and unquoted raw forms can therefore share one normalized permission input even when Fish assigns their arguments differently, so every raw form represented by that input must have the same safety classification.
+
 ### GitHub CLI authentication boundary
 
 `gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store.
@@ -79,6 +89,18 @@ Terminal discovery forms require verified exit-only behavior regardless of spell
 An explicit domain or hostname allowance authorizes the corresponding persistent `agent.sandbox_permissions.network_hosts` scope. Zed matches those grants by case-insensitive hostname without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port persistence is intentional. Terminal commands remain subject to their independent terminal permissions, while explicit-port fetch URLs remain outside the canonical hostname fetch pattern unless separately allowed at the fetch-tool layer.
 
 URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname intentionally omit that hostname from `network_hosts`. A hostname grant would broaden trust beyond the path-qualified fetch allowance.
+
+### Zed Fish command-text help allowances
+
+[Zed settings](../.config/zed/settings.json) automatically allow Fish help commands supplied through `-c` or `--command`. Three families are covered: forced `builtin <name>` help, the shipped functions whose zero-argument form rejects before ordinary effects, and the direct `argparse` and `fish_add_path` compatibility forms. The exact name lists and accepted option grammar remain canonical in those settings.
+
+Fish source does not close these paths. Recognized help resolves an ordinary `__fish_print_help`, so each allowed form inherits the renderer, pager, function-path, and quote-normalization conditions recorded in [Fish configuration isolation](#fish-configuration-isolation). The allowance is therefore an accepted-limitation decision rather than a verified exit-only classification.
+
+The accepted grammar admits exactly one command option, at most one `-N` or `--no-config` option, and no residual child `$argv`. Repeated command or no-config options, `--` terminators, trailing operands, long-option abbreviations, and unrelated Fish options remain confirmable because each changes which command the child shell evaluates. Expansion-bearing forms that Zed classifies as unsafe or unsupported are instead denied before configured patterns are considered. Other excluded dynamic forms fall through to confirmation. A no-config token inside the command text normalizes identically to a real child option, so no pattern can establish that startup configuration was actually disabled.
+
+Direct `argparse` and `fish_add_path` help are a bounded compatibility exception. Quote removal makes their normalized input shared with a raw form whose child shell runs the bare command before Fish root help, and that bare form enters ordinary execution. The exception therefore covers those two names only. It does not extend to the other help-bearing shipped functions or to other direct builtin spellings, and forced `builtin <name>` help with `--no-config` remains the preferred form.
+
+The covered names are pinned to Fish 4.8. Refresh them when the supported Fish minor release changes or when an update changes the covered command surface, help behavior, or zero-argument behavior.
 
 ### Zed fixture repository permissions
 
@@ -268,7 +290,7 @@ The canonical `domfiles-` prefix distinguishes global source directories from un
 
 Supported clients expose globally installed skills beneath different configuration roots, and a global skill’s canonical basename differs from its installed basename. The [distributed-skill link contract](../skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) owns the resulting portability requirements.
 
-Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills, while public skill descriptions serve as human-facing discovery surfaces as well as routing metadata. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) owns the resulting requirements for standalone behavior, optional composition, and descriptions.
+Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. A public skill’s top-level `SKILL.md` also serves as a human-facing installation, evaluation, and maintenance surface, while its references remain agent documentation unless separately in-scope content is itself human-facing. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) separates agent-documentation ownership of the entrypoint contract from `human-facing-writing` ownership of its prose and also owns standalone behavior, optional composition, and descriptions. This source-authoring composition creates no installed sibling dependency.
 
 Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding or removing a globally exposed skill, changing its logical name, or changing its source-to-install mapping requires updating synchronization behavior. Removing or renaming a logical skill that has already been distributed also requires migration behavior for obsolete installed paths.
 

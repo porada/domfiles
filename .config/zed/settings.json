@@ -1124,6 +1124,18 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fish (?:(?:-c ?|--command[ =])(?:argparse|fish_add_path) (?:-h|--help)(?: (?:-N|--no-config))?|(?:(?:-N|--no-config) (?:-c ?|--command[ =])|-Nc ?)(?:argparse|fish_add_path) (?:-h|--help))$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fish (?:(?:-c ?|--command[ =])builtin (?:!|\\.|abbr|and|argparse|begin|bg|bind|block|break|builtin|case|cd|command|commandline|complete|contains|continue|disown|else|emit|end|exec|exit|fg|fish_indent|fish_key_reader|for|function|functions|history|if|jobs|math|not|or|path|pwd|random|read|realpath|return|set|set_color|source|status|string|switch|time|type|ulimit|wait|while) (?:-h|--help)(?: (?:-N|--no-config))?|(?:(?:-N|--no-config) (?:-c ?|--command[ =])|-Nc ?)builtin (?:!|\\.|abbr|and|argparse|begin|bg|bind|block|break|builtin|case|cd|command|commandline|complete|contains|continue|disown|else|emit|end|exec|exit|fg|fish_indent|fish_key_reader|for|function|functions|history|if|jobs|math|not|or|path|pwd|random|read|realpath|return|set|set_color|source|status|string|switch|time|type|ulimit|wait|while) (?:-h|--help))$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fish (?:(?:-c ?|--command[ =])(?:fish_opt|funced|funcsave|psub|vared) (?:-h|--help)(?: (?:-N|--no-config))?|(?:(?:-N|--no-config) (?:-c ?|--command[ =])|-Nc ?)(?:fish_opt|funced|funcsave|psub|vared) (?:-h|--help))$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*fish (?:-h|-v)$",
 							"case_sensitive": true
 						},
@@ -1893,6 +1905,10 @@
 						},
 						{
 							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*commit --fixup(?:=| )[A-Za-z0-9][A-Za-z0-9._/@~^-]*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:GIT_(?:ADVICE=(?:0|false)|CONFIG_COUNT=(?:0)?|EDITOR=(?::|true)|OPTIONAL_LOCKS=(?:0|false)|PAGER=(?:cat)?|TERMINAL_PROMPT=(?:0|false))|MANPAGER=cat|PAGER=cat) )*git (?:(?:--no-optional-locks|--no-pager) )*commit (?:-m |--message(?:=| ))[A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*(?: [A-Za-z0-9][A-Za-z0-9.,:_+/@~-]*)*$",
 							"case_sensitive": true
 						},
 						{
@@ -2729,6 +2745,22 @@
 						},
 						{
 							"pattern": "^xargs(?: -[0rtx]+| -(?:L|n)(?:[1-9][0-9]*| [1-9][0-9]*)| --exit| --max-args=[1-9][0-9]*| --no-run-if-empty| --null| --verbose)* pgrep(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*pkg-config (?:--about|--help|--version)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*pkg-config(?: (?:--(?:cflags|cflags-only-I|cflags-only-other|exists|libs|libs-only-L|libs-only-l|libs-only-other|license|link-abi|list-all|list-package-names|modversion|path|print-provides|print-requires|print-requires-private|print-variables|shared|source|static|variable=[A-Za-z_][0-9A-Za-z_]*)|[0-9A-Za-z][0-9A-Za-z_.+-]*))+$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*pkgconf (?:--about|--help|--version)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*pkgconf(?: (?:--(?:cflags|cflags-only-I|cflags-only-other|exists|libs|libs-only-L|libs-only-l|libs-only-other|license|link-abi|list-all|list-package-names|modversion|path|print-provides|print-requires|print-requires-private|print-variables|shared|source|static|variable=[A-Za-z_][0-9A-Za-z_]*)|[0-9A-Za-z][0-9A-Za-z_.+-]*))+$",
 							"case_sensitive": true
 						},
 						{
