@@ -7,18 +7,25 @@ metadata:
 
 # Domfiles shell scripts
 
-Use this skill as the canonical source for shell-script policy and workflow.
+Use this skill as the canonical source for POSIX shell policy and domfiles-specific shell integration, invariants, and validation.
+
+For every Fish target, load `fish-shell-scripting` for portable language policy and workflow. Apply this skill as the narrower domfiles layer when both govern the same decision.
 
 ## Choose the workflow
 
+For Fish targets, apply the applicable domfiles-specific policy below within the inherited `fish-shell-scripting` workflow.
+
+For POSIX shell targets:
+
 - For an explicit change, including a request that also uses review or audit language, investigate the affected scripts and cross-file invariants, make the smallest applicable edit, and use the change-validation workflow below.
-- For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md) and apply the shell-specific checks below.
 - For a standalone review, keep the task read-only. Apply the policy below and use the read-only validation workflow.
 - For a standalone diagnosis, keep the task read-only. Reproduce the reported behavior when possible, trace the relevant execution path and cross-file invariants, and report the root cause with evidence using the read-only validation workflow below.
 
+For a standalone audit in either language, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), keep the task read-only, and apply the shell-specific checks below.
+
 ## Investigate the task
 
-1. Identify whether each in-scope file uses Fish or POSIX `sh` from its shebang and syntax rather than its extension alone.
+1. Identify whether each in-scope file uses Fish or POSIX `sh` from its hashbang and syntax rather than its extension alone.
 2. When `domlib` or `.config/fish/config.fish` is relevant, inspect both files before evaluating shared variables or functions.
 3. Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
 4. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
@@ -29,22 +36,25 @@ Use this skill as the canonical source for shell-script policy and workflow.
 - Judge each requirement at its intended lifecycle stage—fresh bootstrap, synchronization, post-sync runtime, or development—and account for prerequisites provisioned earlier by `domfiles sync`.
 - Treat `domfiles dependencies` as the user-facing readiness check defined by [dependency status labels](../../PROJECT.md#dependency-status-labels). Add a row only for an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone does not qualify a dependency.
 
-## Write concise shell prose
+## Apply domfiles shell wording constraints
 
-- Keep script comments and user-facing strings passed to `__print*` concise, neutral, and consistent.
-    - Use sentence-case imperative voice for action and section comments.
-    - In explanatory comments, describe stable intent or policy rather than restating control flow. Do not require comments to enumerate conditional behavior that is clear from adjacent code.
-    - Phrase diagnostics as direct descriptions of the outcome or constraint, using consistent terminology for the same condition.
-    - Avoid first-person and subjective wording.
-    - Omit final punctuation from prose.
-    - Treat standalone headings and status labels as labels rather than sentences. Allow sentence case or title case, and do not require imperative voice.
+For Fish text, use `fish-shell-scripting` for Fish-semantic requirements, composition with `human-facing-writing`, and the standalone fallback.
+
+For POSIX text, load `human-facing-writing` whenever a task creates, changes, or reviews human-facing text whose contract is in scope. It owns the general wording decisions.
+
+Apply these domfiles-specific constraints after those workflows:
+
+- Avoid first-person and subjective wording.
+- Omit final punctuation from script comments and user-facing strings passed to `__print*`.
+- Treat standalone headings and status labels as labels rather than sentences. Allow sentence case or title case, and do not require imperative voice.
+- Use sentence-case imperative voice for action and section comments.
 
 ## Keep POSIX scripts portable
 
 - Ensure every shell script not written in Fish strictly conforms to POSIX `sh`, applying strict mode when applicable.
 - Ensure every POSIX shell entrypoint sources `domlib`. Exempt `.hooks` scripts. Treat `bin/domlib` as the shared library rather than an entrypoint, and keep strict mode there so sourced scripts inherit it.
 
-## Quote shell strings appropriately
+## Quote POSIX shell strings appropriately
 
 - Use double quotes for strings where expansion may occur.
 - Use single quotes for literal strings containing characters that would otherwise require escaping.
@@ -77,10 +87,10 @@ Use this skill as the canonical source for shell-script policy and workflow.
 
 ## Write robust shell control flow
 
-- Treat 100 columns, including indentation, as the default threshold for introducing `\` continuations in new or materially rewritten shell commands, not as a conformance limit for existing code. Do not report or reflow an existing command based on line length alone. Preserve a continuation when it communicates semantic grouping, control flow, or intentional alignment.
-- When wrapping is warranted, break at a meaningful argument, operator, or redirection boundary, indent continuation lines two spaces, and use the fewest lines that preserve clear grouping. Allow an overlong line when no useful boundary exists or wrapping would only isolate one argument. Do not add `\` where shell syntax already continues the construct, and prefer a named helper over a long chain of continuations.
-- Apply this continuation policy only to executable shell code. `domlib` contract comments retain their 80-column limit.
-- Represent boolean variables defined by domfiles shell code with the literal values `true` and `false`. Initialize them before use and compare them explicitly with `=`. Do not represent booleans through unset state, empty strings, or `0` and `1`.
+- In POSIX shell code, treat 100 columns, including indentation, as the default threshold for introducing `\` continuations in new or materially rewritten commands, not as a conformance limit for existing code. Do not report or reflow an existing command based on line length alone. Preserve a continuation when it communicates semantic grouping, control flow, or intentional alignment.
+- When wrapping POSIX shell code is warranted, break at a meaningful argument, operator, or redirection boundary, indent continuation lines two spaces, and use the fewest lines that preserve clear grouping. Allow an overlong line when no useful boundary exists or wrapping would only isolate one argument. Do not add `\` where shell syntax already continues the construct, and prefer a named helper over a long chain of continuations.
+- Apply this continuation policy only to executable POSIX shell code. `domlib` contract comments retain their 80-column limit.
+- In domfiles POSIX shell code, represent boolean variables with the literal values `true` and `false`. Initialize them before use and compare them explicitly with `=`. Do not represent booleans through unset state, empty strings, or `0` and `1`.
 - In POSIX `sh`, parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value set owned by that helper rather than repeating it in policy or project documentation. Third-party environment variables remain outside this rule.
 - In POSIX `sh`, set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.

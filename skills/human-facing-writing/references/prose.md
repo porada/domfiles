@@ -47,10 +47,10 @@ A reading unit should be locally satisfying without pretending to be independent
 
 ## Write paragraphs and sentences that carry their weight
 
-- Give each paragraph one primary job and enough development to complete it. Use one-sentence paragraphs only when isolation changes emphasis, pace, or meaning.
+- Give each paragraph one primary job and enough development to complete it. Make each sentence add or purposefully reshape what the reader knows, sees, feels, judges, or can do. Use one-sentence paragraphs only when isolation changes emphasis, pace, or meaning.
 - Prefer precise nouns and active verbs where they clarify agency. Preserve abstraction, technical terms, and syntactic complexity when the thought genuinely requires them.
 - Vary sentence and paragraph length according to the work being performed. Constant staccato is as monotonous as unbroken density.
-- Let repetition perform meaningful semantic, rhythmic, emotional, or structural work. Use lists, questions, fragments, and typographic emphasis when they clarify structure or alter cadence, not as default decoration.
+- Let repetition perform meaningful semantic, rhythmic, emotional, or structural work. Use lists, questions, fragments, and typographic emphasis when they clarify structure or alter cadence, not as default decoration. Do not spend the reader’s attention announcing what follows, restating what the writing already established, or adding a conclusion that only repeats it.
 - Keep confidence proportional to evidence and directness compatible with the reader’s agency. A distinctive voice should make the subject more present, not merely make the writer louder.
 
 ## Revise from the reading path outward

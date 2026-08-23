@@ -2,7 +2,7 @@
 
 Use these checks when an agent-documentation change crosses routed or layered documentation surfaces. Apply the entrypoint’s canonical-definition and secondary-role principle, then inspect only the applicable boundaries:
 
-- **Description and body:** A skill body must not merely paraphrase its description’s trigger or exclusion.
+- **Description and body:** Apply the entrypoint’s description-content limit in both directions. Keep behavioral defaults, validation, optional composition, and internal workflow in the body, and do not let the body merely paraphrase the description’s trigger or exclusion.
 - **Inbound routes and exclusions:** Before adding or retaining a description exclusion, search project-authored skills for explicit routes that compose the excluded skill or surface. When the broad skill remains independently useful, place domain-specific non-composition policy in the narrower workflow rather than excluding the domain from the broad skill.
 - **Entrypoint and reference:** A reference must not merely paraphrase its parent entrypoint’s applicability or routing.
 - **Generic and specialized workflows:** A specialized workflow must begin at its domain-specific divergence and route back to the generic lifecycle rather than repeating that lifecycle. As an ownership test, remove each specialized rule’s domain-specific nouns and constraints. If the remaining instruction still applies to sibling routes, the parent entrypoint owns it. When the specialized copy is more complete, promote the complete rule before removing the duplicate.

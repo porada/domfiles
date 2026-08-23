@@ -25,7 +25,8 @@ Apply this skill without announcing it or narrating its editorial heuristics. Tr
 - Resolve the authorized writing unit, surface, intended reader, immediate purpose, and desired change in the reader’s understanding, feeling, judgment, or action.
 - Make the useful point, action, or experience recognizable soon enough to sustain attention without forcing urgency or simplifying necessary complexity.
 - Scale movement to the unit. Let an atomic string complete one clear job, while connected writing develops purposeful progression between sentences, paragraphs, or sections.
-- Prefer precise wording and purposeful rhythm, keep confidence proportional to the available material, and verify factual claims when the work makes them.
+- Prefer precise, familiar, concrete wording and purposeful rhythm.
+- Where immediate clarity is intended, state material agency, causality, conditions, contrasts, and dependencies directly instead of relying on adjacency, syntax, or cadence to imply them. Keep confidence proportional to the available material, and verify factual claims when the work makes them.
 - Preserve the writer’s intended voice and the reader’s agency. Do not impose a house voice or technical conventions unless the context requires them.
 - Apply the [writing conventions](references/typography.md) to every writing task.
 
@@ -36,13 +37,14 @@ The prose baseline applies to every human-facing writing task.
 1. Add the [connected-prose workflow](references/prose.md) whenever a reader must follow context, explanation, reasoning, causality, tradeoffs, consequences, narrative, tone, or another idea across more than one atomic unit. Use it independently for nontechnical, creative, narrative, reflective, persuasive, personal, and other general writing.
 2. Add the [technical-copy overlay](references/technical-copy.md) when correctness depends on implementation or contract evidence. This includes package and repository descriptions, README and technical-document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and other technical or developer-facing strings.
 3. Apply the prose baseline and technical-copy overlay to every GitHub issue, pull request, and Discussion title, body, comment, or review. Add the connected-prose workflow whenever the reader must follow more than an atomic fact or action, including most bodies, comments, and reviews.
-4. When both specialized routes apply, technical copy owns factual accuracy, exact terminology, required actions, observable behavior, and document-level information architecture, including templates, headings, and section order. Connected prose owns the reading path within that architecture, including reading-unit progression, paragraph movement, cohesion, cadence, and voice. Preserve the technical facts and structural constraints, then make the strongest prose possible inside them.
+4. When both specialized routes apply, technical copy owns factual accuracy, exact literal tokens, consistent reader-facing terminology, necessary technical distinctions, required actions, observable behavior, and document-level information architecture, including templates, headings, and section order. Connected prose owns the reading path within that architecture, including reading-unit progression, paragraph movement, cohesion, cadence, and voice. Preserve the technical facts and structural constraints, then make the strongest prose possible inside them.
 5. For a substantive prose review, difficult revision, or multi-unit work, apply the relevant parts of the [prose revision rubric](references/prose-revision-rubric.md).
 
 Load only the additional references selected by this routing decision.
 
 ## Preserve intent and boundaries
 
+- **Secrets:** Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, or relays. Never request, inspect, echo, or invent a real secret value unless the user explicitly directs it.
 - Carry wording, punctuation, formatting, structure, voice, point of view, terminology, formality, and intended ambiguity established by direct user instruction, correction, selection, or explicit acceptance through later iterations. An agent draft or endorsement, user silence, or existing text alone does not establish a decision. Do not reopen writing the user marked intentional, final, or implemented unless the current request clearly does so.
 - Treat supplied templates and their fields, headings, section and field order, syntax, and formatting conventions as constraints unless the task authorizes changing them.
 - If a requested shorter version would lose a material condition, exception, rationale, or qualifier, preserve the meaning and explain the limit rather than silently weakening the writing.

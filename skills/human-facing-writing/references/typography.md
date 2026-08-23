@@ -2,9 +2,10 @@
 
 Within `human-facing-writing`, apply these conventions only when no narrower user, project, surface, language, or syntax rule governs the same decision.
 
-The Typography, Semicolons, and Pause punctuation rules apply to all prose. For these rules, natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings counts as prose whether it is atomic or connected.
+The Typography, Oxford comma, Semicolons, and Pause punctuation rules apply to all prose. For these rules, natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings counts as prose whether it is atomic or connected.
 
 - **Typography:** Use typographic “quotation marks” and apostrophes in prose. Preserve exact punctuation where literal syntax requires it.
+- **Oxford comma:** In a list of three or more items, place a comma before the final conjunction.
 - **Semicolons:** Never introduce semicolons in prose or human-facing technical copy. Preserve a supplied semicolon only when the user explicitly wants it retained.
 - **Pause punctuation:** Limit dashes and other punctuation used to create a pause. Use a dash only when its additional pause or emphasis materially improves the reading unit. Never surround em dashes with spaces.
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.

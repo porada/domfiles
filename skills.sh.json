@@ -1,0 +1,18 @@
+{
+	"$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+	"notGrouped": "bottom",
+	"groupings": [
+		{
+			"title": "Words",
+			"skills": [
+				"human-facing-writing"
+			]
+		},
+		{
+			"title": "Code",
+			"skills": [
+				"fish-shell-scripting"
+			]
+		}
+	]
+}
