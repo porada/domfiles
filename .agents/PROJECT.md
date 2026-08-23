@@ -260,7 +260,9 @@ The global [`prompt-relays` skill](../skills/domfiles-prompt-relays/SKILL.md) ow
 
 At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
 
-The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-staging.md) preserves this boundary through staging and reviewed promotion when native file tools expose the target repository as a current project root. Outside those roots, scoped terminal write approval is the operative boundary, so the policy requires guarded direct mutation without staged copies.
+The public `skills/human-facing-writing` source does not receive Zed’s agent-specific classification. Project policy protects it separately because changes to its writing contract can affect every public skill composed through it.
+
+The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-staging.md) gives both protected source types the same staging and reviewed-promotion boundary when native file tools expose the target repository as a current project root. Outside those roots, scoped terminal write approval is the operative boundary, so the policy requires guarded direct mutation without staged copies.
 
 ### Repository harmonization
 
@@ -290,7 +292,7 @@ The canonical `domfiles-` prefix distinguishes global source directories from un
 
 Supported clients expose globally installed skills beneath different configuration roots, and a global skill’s canonical basename differs from its installed basename. The [distributed-skill link contract](../skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) owns the resulting portability requirements.
 
-Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. A public skill’s top-level `SKILL.md` also serves as a human-facing installation, evaluation, and maintenance surface, while its references remain agent documentation unless separately in-scope content is itself human-facing. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) separates agent-documentation ownership of the entrypoint contract from `human-facing-writing` ownership of its prose and also owns standalone behavior, optional composition, and descriptions. This source-authoring composition creates no installed sibling dependency.
+Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. Every project-authored writing surface in a public skill remains agent documentation and is also composed through `human-facing-writing` as human-facing installation, evaluation, or maintenance content. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) owns that composition boundary alongside standalone behavior, optional composition, and descriptions. This source-authoring composition creates no installed sibling dependency.
 
 Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding or removing a globally exposed skill, changing its logical name, or changing its source-to-install mapping requires updating synchronization behavior. Removing or renaming a logical skill that has already been distributed also requires migration behavior for obsolete installed paths.
 

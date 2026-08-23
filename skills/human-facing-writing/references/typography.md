@@ -1,13 +1,19 @@
-# Typography and technical tokens
+# Typography
 
-Within `human-facing-writing`, apply these conventions only when no narrower user, project, surface, language, or syntax rule governs the same decision.
+Use these conventions only when no narrower user, project, surface, language, or syntax rule governs the same choice.
 
-The Typography, Oxford comma, Semicolons, and Pause punctuation rules apply to all prose. For these rules, natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings counts as prose whether it is atomic or connected.
+## Prose
 
-- **Typography:** Use typographic “quotation marks” and apostrophes in prose. Preserve exact punctuation where literal syntax requires it.
-- **Oxford comma:** In a list of three or more items, place a comma before the final conjunction.
+These rules apply to all prose, whether atomic or connected. Prose includes natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings.
+
+- **Quotation marks and apostrophes:** Use typographic “quotation marks” and apostrophes. Preserve exact punctuation where literal syntax requires it.
+- **Oxford commas:** In a list of three or more items, place a comma before the final conjunction.
 - **Semicolons:** Never introduce semicolons in prose or human-facing technical copy. Preserve a supplied semicolon only when the user explicitly wants it retained.
-- **Pause punctuation:** Limit dashes and other punctuation used to create a pause. Use a dash only when its additional pause or emphasis materially improves the reading unit. Never surround em dashes with spaces.
+- **Pause punctuation:** Use dashes and other pause punctuation sparingly. Add a dash only when its pause or emphasis materially improves the reading unit. Never put spaces around an em dash.
+
+## Headings and Technical Text
+
+- **Headings:** Use title case. Prefer equally clear, natural wording that avoids a word title case would lowercase. Keep the lowercased word when no alternative preserves the meaning or the user requires it.
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
 - **Code tokens:** Wrap identifiers, paths, commands, and quoted code tokens in backticks.
-- **Commit references:** Write abbreviated commit hashes at 8 characters by default. Use a full object ID only when disambiguation or an external format requires it.
+- **Commit references:** Write abbreviated commit hashes at 8 characters unless disambiguation or an external format requires the full object ID.
