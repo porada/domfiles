@@ -284,15 +284,6 @@ __git_default_commit_count() {
   echo "$((count < default ? count : default))"
 }
 
-# Prints default log parameters. Omits refs with `--no-refs`
-__git_default_log_params() {
-  params="--date=format:'%Y-%m-%d / %H:%M' --no-notes --no-show-signature --pretty=format:'%C(dim)%h"
-  [ "${1-}" != '--no-refs' ] && params="$params%C(reset)%C(red)%d"
-  params="$params %C(reset)%s %C(dim)%cd / %an%C(reset)'"
-
-  echo "$params"
-}
-
 # Prints exclusion parameters for the paths in `$@`
 __git_diff_format_exclude_params() {
   if [ $# -eq 0 ]; then

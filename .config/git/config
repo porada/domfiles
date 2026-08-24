@@ -41,6 +41,9 @@
 [fetch]
 	prune = true
 
+[format]
+	pretty = format:%C(dim)%h%C(reset)%C(red)%d %C(reset)%s %C(dim)%cd / %an%C(reset)
+
 [gpg]
 	format = ssh
 
@@ -52,6 +55,9 @@
 
 [interactive]
 	diffFilter = git-diff-highlight
+
+[log]
+	date = format:%Y-%m-%d / %H:%M
 
 [merge]
 	conflictStyle = zdiff3

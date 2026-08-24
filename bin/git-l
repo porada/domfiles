@@ -14,12 +14,19 @@ if [ "${1-}" = '--all' ]; then
   shift
 fi
 
+print_log() {
+  git --no-pager log --no-notes --no-show-signature "$@"
+}
+
 if [ $# -gt 0 ]; then
-  log="$(eval "git --no-pager log $(__git_default_log_params --no-refs) --color=$color_mode")"
+  log="$(print_log --color="$color_mode" \
+    --decorate-refs-exclude='*' \
+    --decorate-refs-exclude=HEAD)"
+
   matches="$(printf '%s\n' "$log" | __grep --color="$color_mode" -i -- "$*")" || exit $?
   [ -z "$matches" ] || printf '%s\n' "$matches" | __page_input log
 elif [ "$show_all" = true ]; then
-  log="$(eval "git --no-pager log $(__git_default_log_params) --color=$color_mode")"
+  log="$(print_log --color="$color_mode")"
   printf '%s\n' "$log" | __page_input log
 else
   default_count="$(__git_default_commit_count)"
@@ -33,7 +40,7 @@ else
       terminal_columns="${terminal_size##* }"
 
       # Measure entries without counting color escapes
-      entries="$(eval "git --no-pager log $(__git_default_log_params) --color=never -n $default_count")"
+      entries="$(print_log --color=never -n "$default_count")"
       commit_count="$(__terminal_count_fitting_lines "$terminal_columns" "$available_rows" "$entries")"
 
       if [ "$commit_count" -lt "$minimum_count" ]; then
@@ -42,5 +49,5 @@ else
     fi
   fi
 
-  eval "git --no-pager log $(__git_default_log_params) -n $commit_count"
+  print_log --color="$color_mode" -n "$commit_count"
 fi
