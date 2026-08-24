@@ -23,7 +23,9 @@ An undefined variable, a defined empty list, and a list containing one empty str
 
 When Fish code owns the representation of stored boolean state and neither an applicable policy nor the user selects another form, use the literal values `true` and `false`. Initialize the variable before use, compare it explicitly with `=`, and do not encode owned boolean state through unset or empty values or `0` and `1`.
 
-A single-command override such as `LC_ALL=C command` is valid Fish syntax. Use it only when the value must exist for that command alone. Fish applies the override before expanding the rest of the command line.
+By default, a called Fish function cannot read its caller’s unexported local variables. Exported locals remain visible, and `--no-scope-shadowing` lets a function access variables in its calling scope.
+
+When caller-scope inheritance is not part of the function’s contract, use a single-command override such as `NAME=value function_name` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
 
 ## Argument Lists
 

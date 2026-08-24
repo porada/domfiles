@@ -12,6 +12,8 @@ Alongside the technical-copy workflow’s [evidence requirements](technical-copy
 
 Write every JSDoc comment as a multiline block with `/**` and `*/` on separate lines, including one-sentence comments. Across languages, begin each documentation comment or docstring with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than a description of the implementation. Prefer one concise sentence. For promises and analogous asynchronous results, describe settlement or completion behavior when it states the purpose more directly. State distinct outcomes in separate sentences.
 
+When no project, language, or established local convention governs callable documentation, begin with a third-person present-tense verb and omit terminal punctuation from a compact summary.
+
 Treat the surrounding symbol, type, and nearby API as context the reader already has, especially in an editor tooltip. Avoid repeating an obvious name, host tool, artifact, parameter explanation, or return type. A comment may share a verb with the function when it still adds purpose or significance beyond the identifier.
 
 Mention a parameter in prose only when it is needed to state an observable consequence. Add dedicated parameter or return documentation only when the user explicitly requests it or when project policy, an established language-specific convention, or an established local convention requires it. Use the language’s established tags or sections.
@@ -34,7 +36,7 @@ Previously acceptable local wording may require revision when it becomes inconsi
 
 Review precise relationship words and qualifiers together with sentence flow. Resolve ambiguity without replacing a specific operation with a broader claim.
 
-Follow applicable project wrapping policy. Account for a comment or docstring’s leading indentation when measuring line length and choosing a balanced wrap, so nested declarations use less prose width than top-level declarations. When neither project policy nor formatter configuration defines tab width, count each leading tab as four columns. When manual wrapping is accepted, avoid preventable one-word orphans even before a hard limit requires a break.
+Follow applicable project wrapping policy. When no project or formatter owns wrapping, wrap prose at 80 columns, including indentation. Account for a comment or docstring’s leading indentation when measuring line length and choosing a balanced wrap, so nested declarations use less prose width than top-level declarations. When neither project policy nor formatter configuration defines tab width, count each leading tab as four columns. When manual wrapping is accepted, avoid preventable one-word orphans even before a hard limit requires a break.
 
 Rephrase to improve a wrap only when the meaning remains exact. Never remove a semantically important word or introduce an inaccurate synonym merely to shape the lines. When documentation review exposes an unnecessarily long internal name, report the resulting wrapping constraint. Propose a focused rename and explain its value only when identifier design or source changes are explicitly in scope. Do not rename source unless the current task authorizes that code change.
 

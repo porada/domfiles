@@ -27,8 +27,10 @@ For a standalone audit in either language, follow the [repository audit process]
 
 1. Identify whether each in-scope file uses Fish or POSIX `sh` from its hashbang and syntax rather than its extension alone.
 2. When `domlib` or `.config/fish/config.fish` is relevant, inspect both files before evaluating shared variables or functions.
-3. Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
-4. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
+3. When changes to `.config/fish/config.fish` alter interactive guards or sourced files, keep [Fish configuration isolation](../../PROJECT.md#fish-configuration-isolation) and, when applicable, [Fish local configuration](../../PROJECT.md#fish-local-configuration) aligned.
+4. Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
+5. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
+6. Evaluate `.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Do not report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
 
 ## Check supported-environment compatibility
 

@@ -22,7 +22,7 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ### Fish configuration isolation
 
-Fish reads startup configuration before evaluating a noninteractive command unless `--no-config` is present. In this repository, [`config.fish`](../.config/fish/config.fish) sources tracked aliases and colors and the active machine-local [`local.fish`](#fish-local-configuration), so a discovery-looking command can execute configuration before reaching its requested help surface.
+Fish reads startup configuration before evaluating a noninteractive command unless `--no-config` is present. In this repository, [`config.fish`](../.config/fish/config.fish) always configures shared paths and environment variables and sources the active machine-local [`local.fish`](#fish-local-configuration). Tracked aliases and colors load only for interactive sessions. A discovery-looking noninteractive command can therefore execute machine-local configuration before reaching its requested help surface.
 
 The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) therefore defaults agent uses of Fish as a noninteractive interpreter to `fish --no-config`. The default excludes tasks whose subject is startup configuration or configured runtime behavior, where the loaded configuration is part of the evidence. This isolates startup files. It does not make the process hermetic or establish the provenance of an autoloaded function. Fish builtins can be forced through `builtin`, while shipped autoloaded functions retain function-path resolution, so permission inventories classify those implementation classes separately.
 
@@ -394,9 +394,11 @@ The Instagram branch intentionally combines `-t 60` and `-shortest` so output en
 
 The managed Fish configuration intentionally erases every existing abbreviation before defining its own set. This keeps abbreviation state deterministic across machines and removes stale universal abbreviations. Abbreviations defined outside domfiles are not preserved across shell startup.
 
-### Fish `clone` target derivation
+### Fish `clone` argument contract
 
-The `clone` helper in [`.config/fish/aliases.fish`](../.config/fish/aliases.fish) derives the directory for its follow-up `cd` with a heuristic scoped to common remote URL forms and ordinary local paths. Full parity with `git clone`’s own destination naming is a non-goal. A source that addresses a repository through its inner `.git` directory, such as `/path/to/repo/.git`, clones successfully while the follow-up `cd` reports an error because the derived name stays `.git`. This gap is accepted to keep the helper free of special cases for inputs outside its practical use.
+The [`clone`](../.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Use `git clone` directly for option-bearing invocations. An unsupported invocation can reach Git without a reliable follow-up directory change, which is an accepted consequence of keeping the wrapper simple.
+
+For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
 
 ### Fish local configuration
 

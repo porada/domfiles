@@ -71,7 +71,7 @@ Give every explicit function a docstring, including private helpers, wrappers, e
 Treat `function --description` as optional runtime metadata. It may supplement the source docstring but never replace it.
 
 ```fish
-# Resolve a repository path to its canonical form
+# Resolves a repository path to its canonical form
 function resolve_repository
     path resolve -- $argv[1]
 end
