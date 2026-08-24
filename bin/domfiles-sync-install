@@ -50,6 +50,10 @@ if ! __is_ci; then
   done
 fi
 
+# Configure `pnpm`
+__print_heading_dimmed 'Configuring `pnpm`'
+__ pnpm config set --global store-dir .pnpm-store
+
 # Install project dependencies
 if __is_callable node && __is_callable pnpm; then
   __print_heading_dimmed 'Installing `pnpm` dependencies'
