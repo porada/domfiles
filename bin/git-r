@@ -17,7 +17,7 @@ else
 fi
 
 # Ensure the repository has a `HEAD` first
-if git rev-parse --verify HEAD > /dev/null 2>&1; then
+if __git_is_commit_reference HEAD; then
   available="$(git rev-list --first-parent --count HEAD)"
 fi
 

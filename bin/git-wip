@@ -11,5 +11,5 @@ if branch="$(git symbolic-ref --quiet --short HEAD)"; then
 else
   status="$?"
   [ "$status" -eq 1 ] || exit "$status"
-  __print_error_and_exit 'Cannot create a `wip` branch from a detached `HEAD`'
+  __print_error_and_exit 'Creating a `wip` branch requires `HEAD` to reference a branch'
 fi

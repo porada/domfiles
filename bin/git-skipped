@@ -4,7 +4,7 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Match `git status` color output
-if [ -t 1 ]; then
+if __is_stdout_tty; then
   output_is_tty=true
 else
   output_is_tty=false

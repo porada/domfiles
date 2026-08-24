@@ -273,7 +273,7 @@ __git_default_commit_count() {
   default=10
   count=0
 
-  if git rev-parse --verify HEAD > /dev/null 2>&1; then
+  if __git_is_commit_reference HEAD; then
     count="$(git rev-list --count HEAD)"
   fi
 
@@ -522,9 +522,19 @@ __is_ssh_configured() {
   [ -f "$DOMFILES_SSH_KEY" ] && [ -f "$DOMFILES_SSH_KEY.pub" ]
 }
 
+# Returns success when standard input is a terminal
+__is_stdin_tty() {
+  [ -t 0 ]
+}
+
+# Returns success when standard output is a terminal
+__is_stdout_tty() {
+  [ -t 1 ]
+}
+
 # Returns success in an interactive terminal
 __is_tty() {
-  [ -t 0 ] && [ -t 1 ]
+  __is_stdin_tty && __is_stdout_tty
 }
 
 # Returns success when `$1` contains only decimal digits
@@ -558,7 +568,7 @@ __page_input() {
     __print_error_and_exit '`__page_input` accepts at most one Git command'
   fi
 
-  [ -t 1 ] || {
+  __is_stdout_tty || {
     cat
     return 0
   }
@@ -757,7 +767,7 @@ __string_replace() {
   fi
 
   if [ -z "$2" ]; then
-    __print_error_and_exit '`__string_replace` pattern cannot be empty'
+    __print_error_and_exit '`__string_replace` requires a nonempty pattern'
   fi
 
   if ! __string_contains "$1" "$2"; then
@@ -778,7 +788,7 @@ __suppress() {
   fi
 
   if [ "$1" = '__domfiles_exec' ]; then
-    __print_error_and_exit '`__suppress` cannot wrap `__domfiles_exec`'
+    __print_error_and_exit '`__suppress` does not support `__domfiles_exec`'
   fi
 
   (
@@ -797,7 +807,7 @@ __symlink() {
 
     case "$source_path" in
       "$destination_path" | "$destination_path"/*)
-        __print_error_and_exit "Cannot replace \`$destination_path\` because it contains \`$source_path\`"
+        __print_error_and_exit "Symlink destination \`$destination_path\` contains source \`$source_path\`"
         ;;
     esac
 

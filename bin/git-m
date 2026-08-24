@@ -17,7 +17,7 @@ for param in main trunk master; do
 done
 
 if [ -z "$branch" ]; then
-  __print_error_and_exit 'Could not find the main branch'
+  __print_error_and_exit 'Failed to find the main branch'
 fi
 
 __ git checkout "$branch"

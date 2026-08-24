@@ -10,7 +10,7 @@ if [ $# -eq 0 ]; then
 
   if [ -n "$excluded_paths" ]; then
     color_mode=never
-    [ -t 1 ] && color_mode=always
+    __is_stdout_tty && color_mode=always
     exclude_params="$(__git_diff_format_exclude_params "$excluded_paths")"
     excluded_paths="$(__git_diff_list_changed_excluded_paths --worktree --related)"
 

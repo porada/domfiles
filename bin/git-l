@@ -7,7 +7,7 @@
 color_mode=never
 show_all=false
 
-[ -t 1 ] && color_mode=always
+__is_stdout_tty && color_mode=always
 
 if [ "${1-}" = '--all' ]; then
   show_all=true
@@ -33,7 +33,7 @@ else
   commit_count="$default_count"
   minimum_count="$(((default_count + 1) / 2))"
 
-  if [ -t 1 ] && [ "$default_count" -gt 0 ]; then
+  if __is_stdout_tty && [ "$default_count" -gt 0 ]; then
     # shellcheck disable=SC2119
     if terminal_size="$(__terminal_get_available_size)"; then
       available_rows="${terminal_size%% *}"
