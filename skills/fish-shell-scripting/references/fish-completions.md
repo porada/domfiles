@@ -40,7 +40,6 @@ Use `string`, `path`, and list operations to transform candidate data instead of
 
 ## Validation
 
-- Parse and format the completion file through the project workflow.
 - Exercise representative command lines with `complete --do-complete`, including empty input, partial options, `--`, option arguments, and paths containing whitespace.
 - Confirm that descriptions, conditions, file-completion behavior, and wrapped-command behavior match the target command.
 - Check interactive latency when candidate generation runs external commands.

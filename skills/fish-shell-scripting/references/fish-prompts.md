@@ -10,7 +10,7 @@ Fish builds the prompt from three named functions and displays what each writes 
 - `fish_right_prompt` renders the right prompt.
 - `fish_mode_prompt` renders the current mode when Vi key bindings use it.
 
-Give every prompt function and helper the [required source docstring](../SKILL.md#function-documentation).
+Give every prompt function and helper the source docstring required by the [function-documentation contract](../SKILL.md#function-documentation).
 
 ## Rendering Contract
 
@@ -28,7 +28,6 @@ Define and validate the behavior for both states of every distinction the design
 
 ## Validation
 
-- Parse and format every changed prompt file.
 - Exercise successful and failed previous commands, including pipelines when the prompt renders `$pipestatus`. Confirm that no prompt operation replaces captured state before rendering it.
 - Check each supported state and layout, including local and remote sessions, root and non-root users, version-control state present and absent, multiline prompts, right prompts, mode prompts, and transient rendering.
 - Check inherited prompt color defaults in an interactive Fish process. A noninteractive `fish --command` invocation does not establish the interactive default theme state.

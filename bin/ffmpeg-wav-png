@@ -24,8 +24,6 @@ if [ -z "$preset" ]; then
 fi
 
 if [ "$preset" = 'instagram' ]; then
-  __ifs_set
-
   for audio in ./*.wav; do
     if [ ! -f "$audio" ] || [ -L "$audio" ]; then
       continue
@@ -48,13 +46,10 @@ if [ "$preset" = 'instagram' ]; then
       -c:a copy -t 60 -shortest "$video"
   done
 
-  __ifs_restore
   exit 0
 fi
 
 if [ "$preset" = 'youtube' ]; then
-  __ifs_set
-
   for audio in ./*.wav; do
     if [ ! -f "$audio" ] || [ -L "$audio" ]; then
       continue
@@ -76,7 +71,6 @@ if [ "$preset" = 'youtube' ]; then
       -c:a copy -shortest -y "$video"
   done
 
-  __ifs_restore
   exit 0
 fi
 

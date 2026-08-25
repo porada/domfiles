@@ -105,11 +105,6 @@ while [ "$param_index" -lt "$total" ]; do
     continue
   fi
 
-  if [ "$fixup_added" = true ]; then
-    set -- "$@" "$param"
-    continue
-  fi
-
   if [ "$param_index" -eq "$separator_index" ]; then
     set -- "$@" --fixup "$target" "$param"
     fixup_added=true

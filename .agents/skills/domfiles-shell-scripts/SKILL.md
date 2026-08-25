@@ -94,7 +94,7 @@ Apply these domfiles-specific constraints after those workflows:
 - Apply this continuation policy only to executable POSIX shell code. `domlib` contract comments retain their 80-column limit.
 - In domfiles POSIX shell code, represent boolean variables with the literal values `true` and `false`. Initialize them before use and compare them explicitly with `=`. Do not represent booleans through unset state, empty strings, or `0` and `1`.
 - In POSIX `sh`, parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value set owned by that helper rather than repeating it in policy or project documentation. Third-party environment variables remain outside this rule.
-- In POSIX `sh`, set `IFS` locally when iterating over filenames or command output. Exempt loops over a fixed list of literal filenames.
+- In POSIX `sh`, set `IFS` locally when a loop list comes from an unquoted parameter expansion, command substitution, or arithmetic expansion. Exempt lists of literal words, including glob patterns, because field splitting never reaches pathname-expansion results.
 - Avoid bare pipelines when feeding command output into a loop. Use command substitution for better detection of potential upstream failures.
     - Exempt `printf` output piped into `while`.
 - In POSIX `sh` strict mode, when an optional command emits either a usable nonempty value or no output on failure, scope `|| true` inside the command substitution before testing the quoted result. This keeps the expected failure from triggering `set -e` while limiting suppression to that command:

@@ -20,13 +20,15 @@ Use universal variables for intentionally mutable, cross-session preferences man
 
 ## Function Contracts
 
-Apply the [function-docstring contract](../SKILL.md#function-documentation) to every explicit function on this surface. Use `$argv` for function arguments and `return` to report the function’s status. Add `function --description` when runtime discovery through `functions` or completion tooling benefits from it, while keeping the source docstring regardless.
+Apply the [function-documentation contract](../SKILL.md#function-documentation) to every explicit function on this surface. Use `$argv` for function arguments and `return` to report the function’s status.
 
 ## Function Autoloading
 
-Put an autoloaded function named `example` in `example.fish` within `$fish_function_path`, and prefer one public autoload target per file. Private helpers may share that file. Fish first loads it when resolving the matching function name and automatically reloads a changed definition after detecting the change. A helper does not independently trigger the initial load.
+Put an autoloaded function named `<function-name>` in `<function-name>.fish` within `$fish_function_path`, and treat it as that file’s owner. Put every other exposed function in its own matching autoload file. Replace each `-` in `<function-name>` with `_` to derive `<function-namespace>`. Choose a stable underscore-form `<owner>` namespace token for the owning tool or configuration rather than deriving it mechanically from its name. The token must be unique in the target Fish function namespace. Outside source maintained by Fish itself, `<owner>` must neither equal `fish` nor begin with `fish_`, keeping generated names outside the [Fish-owned `__fish_` namespace](#runtime-state). Prefix every private helper owned by the function with `__<owner>_<function-namespace>_`. Within one `<owner>`, no two helper-owning functions may derive the same `<function-namespace>`. For example, private helpers for `start-app` under owner `app_tools` use names such as `__app_tools_start_app_find_root`, while a `fish_prompt` under owner `shell_theme` uses `__shell_theme_fish_prompt_git`.
 
-Put a shared helper that must autoload independently in its own matching file. Namespace private user functions for the owning tool or configuration to reduce collisions.
+Fish first loads the file when resolving the matching function name and automatically reloads a changed definition after detecting the change. A helper does not independently trigger the initial load. Once loaded, every function in the file remains callable by name. Fish omits underscore-prefixed names from the default `functions` listing, but the prefix is an internal-use and namespace convention rather than access control.
+
+Put a shared helper that must autoload independently in its own matching file. When no single function owns it, use `__<owner>_` followed by a role-specific name instead of assigning it a `<function-namespace>`.
 
 ## `argparse` Contracts
 
@@ -37,9 +39,9 @@ argparse \
     --strict-longopts \
     --min-args=1 \
     --max-args=1 \
-    --name=extract_archive \
-    f/force \
-    'o/output=' \
+    --name=start-app \
+    o/open \
+    'p/port=' \
     -- $argv
 or return
 ```
@@ -80,13 +82,13 @@ Treat `--on-variable <name>` as a notification that Fish may combine or delay, n
 
 Load the defining file before the event can occur because Fish cannot discover an unloaded handler from its declaration. Ordinary autoloading by function name is insufficient. Do not depend on handler order when several functions subscribe to the same event.
 
-Keep handlers fast and avoid unexpected interactive output unless that output is the feature. Treat event names, variable names, and process targets as part of the handler contract. Document non-obvious lifetimes in the function docstring.
+Keep handlers fast and avoid unexpected interactive output unless that output is the feature. Treat event names, variable names, and process targets as part of the handler contract. Document non-obvious lifetimes in the handler’s source docstring.
 
 ## Runtime State
 
 Capture `$status` as the first command in any function whose behavior depends on the preceding command, especially prompt and event functions. Avoid mutable global state when a local or function-scoped value is sufficient, and remember that a global variable can shadow a universal variable of the same name.
 
-Do not modify undocumented Fish internals. A name beginning with `__fish` is a review signal rather than proof that the interface is private. Allow interfaces that official Fish documentation exposes for user configuration.
+Never define a user function whose name begins with `__fish_`, because it can shadow one of Fish’s internal helpers. Do not modify other undocumented Fish internals. Call or configure an existing `__fish_*` interface only when official Fish documentation exposes it for that use.
 
 ## Loading Diagnosis
 

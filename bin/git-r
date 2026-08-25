@@ -5,12 +5,22 @@
 
 # Rebase the requested number of most recent commits
 available=0
+count_param=''
+manual=false
 
 __git_cd_root
 
-# Invalid arguments are intentionally ignored for simplicity
-if __is_uint "${1-}"; then
-  count="$1"
+for param in "$@"; do
+  if [ "$param" = '--manual' ]; then
+    manual=true
+  elif [ -z "$count_param" ]; then
+    count_param="$param"
+  fi
+done
+
+# Ignore invalid arguments for simplicity
+if __is_uint "$count_param"; then
+  count="$count_param"
 else
   count="$(git rev-list --first-parent --count '@{u}..HEAD' 2> /dev/null || true)"
   [ -z "$count" ] && count="$(__git_default_commit_count --no-initial)"
@@ -34,4 +44,8 @@ if [ "$count" -gt "$available" ]; then
   count="$available"
 fi
 
-git rebase --interactive "HEAD~$count"
+if [ "$manual" = true ]; then
+  git rebase --interactive --no-autosquash "HEAD~$count"
+else
+  git rebase --interactive "HEAD~$count"
+fi

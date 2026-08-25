@@ -64,22 +64,23 @@ For new or materially rewritten commands:
 
 ## Function Documentation
 
-A Fish function docstring is a contiguous block of `#` comment lines immediately above an explicit `function` declaration, with no blank line between the docstring and declaration.
+A Fish function source docstring is a contiguous block of `#` comment lines immediately above an explicit `function` declaration, with no blank line between the docstring and declaration.
 
-Give every explicit function a docstring, including private helpers, wrappers, event handlers, prompt functions, completion helpers, and intentionally empty overrides. State its purpose, observable contract, compatibility boundary, or non-obvious constraint instead of narrating the implementation or repeating an obvious name. Keep the docstring attached when moving or refactoring the function.
+Treat a function as exposed when its name is a supported command interface for users or integrations. Fish’s lack of private function visibility does not make an implementation detail or lifecycle callback exposed. Give every exposed function a concise `--description` that states its purpose or observable contract and remains suitable for completion display. Use the runtime description instead of repeating the same statement in a source docstring.
 
-Treat `function --description` as optional runtime metadata. It may supplement the source docstring but never replace it.
+Give every unexposed explicit function a source docstring, including private helpers, event handlers, prompt functions, completion helpers, and intentionally empty overrides. State its purpose, observable contract, compatibility boundary, or non-obvious constraint instead of narrating the implementation or repeating an obvious name.
+
+Add a source docstring to an exposed function only when it communicates a non-obvious contract, compatibility boundary, or constraint beyond what the concise runtime description can carry. Keep each source docstring attached when moving or refactoring the function.
 
 ```fish
-# Resolves a repository path to its canonical form
-function resolve_repository
+function resolve_repository --description 'Resolve a repository path to its canonical form'
     path resolve -- $argv[1]
 end
 ```
 
 ## Human-Facing Text
 
-Function docstrings, explanatory comments, help and usage text, diagnostics, warnings, prompts, completion descriptions, interactive labels, and test titles are human-facing technical copy.
+Function descriptions, source docstrings, explanatory comments, help and usage text, diagnostics, warnings, prompts, completion descriptions, interactive labels, and test titles are human-facing technical copy.
 
 Load `human-facing-writing` whenever a Fish task creates, changes, or reviews human-facing text whose contract is in scope, including adjacent tests written in another language. Provide the Fish surface, required semantics, and relevant evidence, then let that skill select its applicable routes.
 
@@ -106,4 +107,4 @@ For configuration, prompts, completions, and events, validate the relevant inter
 2. Parse each script in the validation scope with `fish --no-config --no-execute <path>` when the project workflow does not already do so.
 3. Check formatting with the project formatter’s check mode or `fish_indent --check <path>` when no project formatter is established.
 4. Exercise the relevant behavioral checks above.
-5. Recheck every function in the validation scope against the [function-docstring contract](#function-documentation) and every human-facing string in that scope under the [human-facing text contract](#human-facing-text).
+5. Recheck every function in the validation scope against the [function-documentation contract](#function-documentation) and every human-facing string in that scope under the [human-facing text contract](#human-facing-text).

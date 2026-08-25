@@ -1,6 +1,4 @@
-# Runs `git clone` with `$argv` in `~/Projects` and enters the successfully
-# cloned repository
-function clone
+function clone --description 'Clone a repository into `~/Projects` and enter it'
     set --local target
 
     if contains -- (count $argv) 1 2

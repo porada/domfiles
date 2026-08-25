@@ -2,7 +2,7 @@
 
 - **Skill:** [`human-facing-writing`](https://github.com/porada/domfiles/blob/HEAD/skills/human-facing-writing/SKILL.md)
 - **Repository:** `porada/domfiles`
-- **Contribution:** Writing guidance for Fish comments, docstrings, help text, runtime messages, prompts, completion descriptions, labels, and test titles
+- **Contribution:** Writing guidance for Fish function descriptions, source comments and docstrings, help text, runtime messages, prompts, completion descriptions, labels, and test titles
 - **Immutable root:** `https://raw.githubusercontent.com/porada/domfiles/<full-object-id>/skills/`
 
 Use the mutable skill link only to locate the latest source, not to apply instructions.
