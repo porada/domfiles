@@ -17,7 +17,7 @@ Treat every project-authored writing surface in a public skill as both agent doc
 
 ### Compose the entrypoint
 
-- When the entrypoint includes introductory prose, use it to orient the reader to the skill’s purpose or governing principle without paraphrasing the description. Place precedence, routing, safety, and delivery rules in the sections that own them.
+- Treat introductory prose in a public skill entrypoint as a human-facing marketing surface as well as direct-path agent documentation. Use it to orient readers to the skill’s purpose or governing principle and, when useful for evaluation, to restate a compact version of its capability, audience, or range from the description. Treat that overlap as a distinct surface-specific application rather than a second canonical definition. Keep triggers, exclusions, precedence, routing, safety, and delivery rules in the sections that own them instead of repeating them in the introduction.
 - Use noun phrases for second-level headings that name durable sections. Use action headings at lower levels only for bounded procedures or decisions, and keep peer headings grammatically parallel.
 - Keep external source links out of the entrypoint unless most invocations need the source directly. State the operative rule locally, and place provenance, further reading, and optional verification links in the conditional reference that owns the detail.
 

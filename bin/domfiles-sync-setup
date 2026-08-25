@@ -13,8 +13,8 @@ done
 
 __print_heading_dimmed 'Linking agent instructions'
 
-for source in domfiles-agent-documentation domfiles-git-worktrees domfiles-github-cli \
-  domfiles-prompt-relays domfiles-release-notes domfiles-repository-harmonization \
+for source in agent-task-relay domfiles-agent-documentation domfiles-git-worktrees \
+  domfiles-github-cli domfiles-release-notes domfiles-repository-harmonization \
   fish-shell-scripting human-facing-writing; do
   name="$(__string_replace "$source" 'domfiles-' '')"
   source="$DOMFILES_SKILLS_DIR/$source"

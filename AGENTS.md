@@ -7,7 +7,7 @@
 
 ## Public repository boundary
 
-- **Public surfaces:** Treat every tracked file, proposed repository artifact, patch, and task relay as publicly disclosed.
+- **Public surfaces:** Treat every tracked file, proposed repository artifact, patch, and relay as publicly disclosed.
 - **Authentication review:** Before recommending or implementing an authenticated or privately configured tool, establish:
     - Which secrets or private values it requires.
     - How those values enter at runtime without appearing in command literals or repository files.

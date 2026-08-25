@@ -24,7 +24,7 @@ fi
 # Migrate agent instructions
 outdated_agent_instructions=false
 
-for skill in package-release-notes prose technical-copy; do
+for skill in package-release-notes prompt-relays prose technical-copy; do
   for path in "$HOME/.agents/skills/$skill" "$HOME/.claude/skills/$skill"; do
     if [ -L "$path" ]; then
       if [ "$outdated_agent_instructions" = false ]; then

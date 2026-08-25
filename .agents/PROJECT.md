@@ -204,6 +204,12 @@ Zed authorizes the `xargs` shell segment before standard input becomes child-com
 
 ## Agent integration
 
+### Agent task relay
+
+The public [`agent-task-relay` skill](../skills/agent-task-relay/SKILL.md) owns user-mediated task-relay flow confirmation, composition, delivery, complete revision, decision basis, and general evidence-only decision relays. Task-relay flow confirmation owns a self-contained isolation decision rather than routing to `git-worktrees`. The relay records only the confirmed requirement, while the receiving environment’s repository policy owns worktree creation, operation, and cleanup. It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. Generic relay behavior stays within the skill, split between its entrypoint and routed references, rather than in a standalone capture asset. This avoids a second normative copy. [`agent-documentation`](../skills/domfiles-agent-documentation/SKILL.md) keeps an explicit route for specialized relay-asset maintenance.
+
+The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for domfiles-managed automatic external-agent routing, non-interrupting in-client delegation, and the exact anti-drift assignment contract. The public `agent-task-relay` skill carries that assignment contract as required standalone context for independent installations and applies it to task relays and explicit user-requested subagent drafts without mediating autonomous delegation. Decision relays are always non-mutating. The global `release-notes` skill and repository-scoped `domfiles-zed-settings` skill provide standalone skill-improvement decision-capture profiles for completed work ([release notes](../skills/domfiles-release-notes/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These maintainer assets compare evidence with existing skills and report candidate improvements without authorizing edits, so ordinary skill invocations do not load them.
+
 ### Claude Agent integration
 
 The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
@@ -232,7 +238,7 @@ The `Collaboration` policy is the standing example of what does not move. Its de
 
 The global [`github-cli` skill](../skills/domfiles-github-cli/SKILL.md) owns conditional agent behavior for `gh`. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the machine-local authentication and remote-mutation authorization gates so they remain directly loaded across projects.
 
-`gh agent-task` remains [unsupported](../skills/domfiles-github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. User-requested external task relays use the [prompt-relays workflow](../skills/domfiles-prompt-relays/SKILL.md) with a separately selected delivery mechanism.
+`gh agent-task` remains [unsupported](../skills/domfiles-github-cli/SKILL.md#reject-unsupported-operations) because its preview flags and side effects can change without notice. User-requested external task relays use the [agent-task-relay workflow](../skills/agent-task-relay/SKILL.md) with a separately selected delivery mechanism.
 
 [Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The [shared permission-layering policy](skills/domfiles-zed-settings/references/permissions.md#apply-the-shared-permission-policy) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
@@ -251,10 +257,6 @@ In shell sessions configured by `domfiles` after synchronization, direct invocat
 ### Package release-note bullet marker
 
 The [release-note bullet-marker policy](../skills/domfiles-release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
-
-### Prompt relays
-
-The global [`prompt-relays` skill](../skills/domfiles-prompt-relays/SKILL.md) owns the relay delivery, complete-revision, composition, and evidence standard and a [generic task-relay prompt](../skills/domfiles-prompt-relays/assets/task-relay-prompt.md). It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. [`agent-documentation`](../skills/domfiles-agent-documentation/SKILL.md) keeps an explicit route for relay-asset maintenance. The global [collaboration policy](../.config/zed/AGENTS.md#collaboration) remains canonical for subagent delegation and the anti-drift prompt contract. The global `release-notes` skill and repository-scoped `domfiles-zed-settings` skill provide standalone decision-capture profiles for completed work ([release notes](../skills/domfiles-release-notes/assets/decision-capture-prompt.md), [Zed settings](skills/domfiles-zed-settings/assets/decision-capture-prompt.md)). These are maintainer assets rather than runtime guidance, so ordinary skill invocations do not load them.
 
 ### Protected skill mutation
 
@@ -280,7 +282,7 @@ The 1,024-byte figure in the [skill description policy](../skills/domfiles-agent
 
 The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public-disclosure boundary.
 
-[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills. The current `skills/domfiles-*` set is global, while `skills/fish-shell-scripting` and `skills/human-facing-writing` are public.
+[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills. The current `skills/domfiles-*` set is global, while `skills/agent-task-relay`, `skills/fish-shell-scripting`, and `skills/human-facing-writing` are public.
 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 

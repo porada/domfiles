@@ -3,15 +3,10 @@
 	"notGrouped": "bottom",
 	"groupings": [
 		{
-			"title": "Words",
+			"title": "Writing",
+			"description": "Bring meaning into focus and make technical writing easy to follow.",
 			"skills": [
 				"human-facing-writing"
-			]
-		},
-		{
-			"title": "Code",
-			"skills": [
-				"fish-shell-scripting"
 			]
 		}
 	]
