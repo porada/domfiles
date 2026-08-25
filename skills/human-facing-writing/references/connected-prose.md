@@ -1,6 +1,6 @@
 # Connected Prose
 
-Build on the entrypoint’s prose baseline to shape the reading experience without overriding factual, legal, structural, or submission constraints owned elsewhere. Apply any narrower surface workflow before these defaults.
+Build on [Writing Principles](../SKILL.md#writing-principles) to shape the reading experience without overriding factual, legal, structural, or submission constraints owned elsewhere. Apply any narrower surface workflow before these defaults.
 
 ## Working Method
 

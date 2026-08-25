@@ -1,6 +1,6 @@
 # Technical Copy
 
-Build on the entrypoint’s prose baseline to keep technical facts, reader-facing terminology, constraints, and observable behavior exact. In review-only work, report only evidence-backed problems with factual accuracy, clarity, consistency, or the established voice.
+Build on [Writing Principles](../SKILL.md#writing-principles) to keep technical facts, reader-facing terminology, constraints, and observable behavior exact. In review-only work, report only evidence-backed problems with factual accuracy, clarity, consistency, or the established voice.
 
 ## Workflow
 

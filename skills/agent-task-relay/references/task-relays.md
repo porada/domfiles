@@ -22,7 +22,7 @@ Ask the user to confirm or correct the flow, and do not include the task relay i
 
 ### Keep Confirmation Narrow
 
-Confirmation authorizes only what the flow states explicitly. It does not authorize unstated commits, remote submissions, publication, secret access, dependencies, or scope expansion.
+Confirmation authorizes only what the flow states explicitly and what applicable approval gates permit. It never grants commit authorization, and it does not authorize unstated remote submissions, publication, secret access, dependencies, or scope expansion.
 
 A confirmation grants dependency approval only when the flow names the exact addition or update. Only a direct user response can grant that approval. Do not infer it from intent, silence, an agent proposal, or permission for adjacent work. An agent or subagent cannot approve on the user’s behalf. A task relay may carry dependency approval only when it identifies the explicit user response that granted it. If the receiving agent later discovers an unapproved dependency addition or update, require it to stop and ask the user rather than treating the relay as authorization.
 
@@ -38,6 +38,8 @@ Before the guard, define the bounded assignment, owned scope, exclusions, source
 
 Every assignment inherits the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary. Require it to return any boundary request to its coordinator or the user rather than crossing it.
 
+For a repository the user works in, an assignment may authorize an operation that writes a commit only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working-tree changes only. This restriction does not apply to fixture commits in disposable repositories when the source task’s policy already exempts them.
+
 Use the guard only when the prompt assigns future work. Omit it from decision relays and other transfers of established data. A receiving action alone does not turn an evidence handoff into an assignment.
 
 ## Task Relay Composition
@@ -52,7 +54,7 @@ Include only the applicable parts of this sequence:
 4. Required result, mandatory process constraints, validation, and known limitations.
 5. Handoff mode, stopping point, and exact final anti-drift guard.
 
-Apply the [Assignment Contract](#assignment-contract), and carry only approvals established by the confirmed flow.
+Apply the [Assignment Contract](#assignment-contract), and carry only approvals whose applicable gate has been satisfied. Treat the confirmed flow as a record of those approvals rather than a substitute for their authorization source.
 
 Omit the receiving location by default. Include a repository, checkout, worktree, directory, host, or other execution location only when it is needed to find the inputs, distinguish possible targets, preserve isolation, or satisfy a submission or integration boundary. Material target paths may still be required.
 

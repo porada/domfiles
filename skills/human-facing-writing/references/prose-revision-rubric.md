@@ -4,6 +4,8 @@ Treat this rubric as a selective diagnostic rather than a checklist. Evaluate on
 
 ## Diagnostic Ratings
 
+The ratings progress from a broken reading path to a choice that strengthens the work.
+
 | Rating | Meaning |
 | --- | --- |
 | Breaks the reading path | The choice obscures purpose, weakens movement, creates avoidable friction, or damages trust. |

@@ -13,19 +13,21 @@ done
 
 __print_heading_dimmed 'Linking agent instructions'
 
-for source in agent-task-relay domfiles-agent-documentation domfiles-git-worktrees \
-  domfiles-github-cli domfiles-release-notes domfiles-repository-harmonization \
-  fish-shell-scripting human-facing-writing; do
-  name="$(__string_replace "$source" 'domfiles-' '')"
-  source="$DOMFILES_SKILLS_DIR/$source"
-
-  __suppress __symlink "$source" "$HOME/.agents/skills/$name"
-  __suppress __symlink "$source" "$HOME/.claude/skills/$name"
-  __print_confirmation "$source"
-done
-
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md"
 __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
+
+__print_heading_dimmed 'Linking agent skills'
+
+for source in agent-task-relay domfiles-agent-documentation domfiles-git-worktrees \
+  domfiles-release-notes domfiles-repository-harmonization fish-shell-scripting \
+  human-facing-writing simple-github-cli; do
+  name="$(__string_replace "$source" 'domfiles-' '')"
+  path="$DOMFILES_SKILLS_DIR/$source"
+
+  __suppress __symlink "$path" "$HOME/.agents/skills/$name"
+  __suppress __symlink "$path" "$HOME/.claude/skills/$name"
+  __print_confirmation "$source"
+done
 
 __print_heading_dimmed 'Provisioning additional files'
 

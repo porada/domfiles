@@ -20,7 +20,7 @@ Use universal variables for intentionally mutable, cross-session preferences man
 
 ## Function Contracts
 
-Apply the [function-documentation contract](../SKILL.md#function-documentation) to every explicit function on this surface. Use `$argv` for function arguments and `return` to report the function’s status.
+Apply the [function-documentation contract](../SKILL.md#function-documentation) to every explicit function on this surface.
 
 ## Function Autoloading
 

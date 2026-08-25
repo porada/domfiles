@@ -52,4 +52,4 @@ A domain profile is a standalone maintainer asset measured against this skill ra
 
 A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. It must preserve the entrypoint’s [Relay Contract](../SKILL.md#relay-contract), [Delivery](../SKILL.md#delivery), source-closed [Available Evidence](#available-evidence) workflow, and evidence-only non-mutation rule.
 
-A standalone decision-capture asset must implement the applicable delivery and full-revision behavior in its own output contract. Its output is always source-closed, evidence-only, and non-mutating. It cannot depend on the receiving agent loading this skill.
+A standalone decision-capture prompt must implement the applicable delivery and full-revision behavior in its own output contract. Its output is always source-closed, evidence-only, and non-mutating. It cannot depend on the receiving agent loading this skill.

@@ -18,7 +18,7 @@ Choose the route for the artifact, then apply revision or review behavior when r
 
 - **Task relay:** To assign work to an external agent, follow [External Handoffs](#external-handoffs), then [Task Relays](references/task-relays.md), and apply [Delivery](#delivery).
 - **Decision relay:** To pass results and decisions into another conversation, follow [Decision Relays](references/decision-relays.md), then apply [Delivery](#delivery). Include material decisions when any exist.
-- **Specialized prompts:** When the user explicitly asks for a subagent prompt, follow [User-Requested Subagent Prompts](references/task-relays.md#user-requested-subagent-prompts), then apply [Delivery](#delivery). When maintaining a standalone decision-capture asset, treat that asset as the change target and follow [Domain Profiles](references/decision-relays.md#domain-profiles).
+- **Specialized prompts:** When the user explicitly asks for a subagent prompt, follow [User-Requested Subagent Prompts](references/task-relays.md#user-requested-subagent-prompts), then apply [Delivery](#delivery). When maintaining a standalone decision-capture prompt, treat that prompt as the change target and follow [Domain Profiles](references/decision-relays.md#domain-profiles).
 - **Revision:** Follow the selected artifact route, then return every affected prompt in full under [Delivery](#delivery). Reconfirm a task handoff under [Task Relay Confirmation](references/task-relays.md#task-relay-confirmation) when the requested change materially alters the confirmed flow.
 - **Review or audit:** Use the selected artifact route as the review criteria, and keep the task read-only. Report findings against this entrypoint and the routed reference. Do not compose or deliver a replacement, and do not mutate anything.
 
@@ -27,7 +27,7 @@ Choose the route for the artifact, then apply revision or review behavior when r
 | Term | Meaning |
 | --- | --- |
 | **Agent task relay** | The user-mediated workflow for assigning work or passing established results and decisions to another agent or conversation. |
-| **Capture prompt** | A prompt that asks the current agent to turn context already available in the conversation into a relay without continuing the underlying task. |
+| **Decision-capture prompt** | A prompt that asks the current agent to turn context already available in the conversation into a decision relay without continuing the underlying task. |
 | **Decision relay** | An evidence-only handoff of completed results, supporting evidence, material decisions when any exist, and known limitations. |
 | **External agent** | An agent operating in another conversation or execution environment rather than as an in-client subagent. |
 | **Receiving action** | The exact action the next agent takes, including whether the handoff is evidence-only or assigns future work. |
@@ -55,7 +55,18 @@ Never use an in-client subagent to cross or circumvent an environment, access, a
 
 ## Delivery
 
+- **Workflow-owned delivery:** When another applicable workflow invokes this skill for confirmation and assignment composition and explicitly defines the assignment’s terminal delivery, return the composed assignment to that workflow instead of delivering it as a relay. Do not perform both.
 - **Task relays:** After confirmation, put each complete relay in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready to relay.
 - **User-requested subagent prompts:** Put each complete prompt in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Subagent Prompt` or a descriptive numbered `# Subagent Prompt …` heading.
 - **Verbatim handoffs:** When an entire response is a decision relay, evidence handoff, status return, completed-work report, or other response intended for verbatim relay, make the relay the whole response. Do not wrap it in an outer code block, add a relay heading, or append a readiness message.
 - **Revisions:** Return every affected prompt in full with the requested change applied. Do not provide a patch, fragment, or splice instructions. When one change affects a coordinated prompt set, replace the complete affected set, omit unrelated unchanged prompts, and preserve established decisions and untouched boundaries.
+
+## Stale Guidance
+
+Classify each part of this skill’s guidance used by the selected workflow as required, optional, or supporting. Treat missing local targets, malformed destinations, and HTTP responses that report a resource as missing or permanently unavailable as broken references. Broken references and verified conflicts with the current interface or behavior mean the guidance is stale. Use any failure response the guidance defines. Otherwise, report the stale guidance and evidence, recommend updating this skill, and follow the appropriate recovery below.
+
+When required guidance is stale, stop only the affected branch and use any complete fallback provided by the available guidance. Without one, ask whether to continue. The choice applies only to this conversation and to work independent of the stale guidance. Stale optional or supporting guidance does not stop the workflow.
+
+Access restrictions, authentication problems, network failures, and HTTP server errors are not evidence of staleness. Use any relevant access or retrieval guidance. If none applies, stop retrieving the resource and report the resource, attempted method, exact error, and smallest corrective action.
+
+Never infer missing content. Never substitute an unverified location. Never weaken scope, approval, mutation, or security boundaries.

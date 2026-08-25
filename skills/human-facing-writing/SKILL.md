@@ -14,30 +14,32 @@ Writing works when meaning, voice, and necessary complexity take a form that the
 
 ## Workflow
 
+Choose the route for the requested writing task. An explicit change takes precedence when the request also uses review or audit language.
+
 - **Drafting:** Produce the complete authorized writing unit from the user’s intent and available material.
 - **Editing:** Preserve the supplied writer’s meaning, material decisions, and recognizable voice while improving the requested dimensions.
 - **Implementation:** Apply the relevant writing route to task-owned human-facing wording as part of the feature.
 - **Review:** Keep review-only work read-only. Report only concrete problems under the applicable route, and do not rewrite the work or present optional preferences as defects.
 - **Consistency:** For an explicit consistency request, apply the relevant route across the named family without expanding into behaviorally distinct surfaces.
 
-## Prose Baseline
+## Writing Principles
 
-Start with the authorized writing unit, where it will appear, and the reader it must serve. Establish its immediate purpose and what should change in the reader’s understanding, feeling, judgment, or action. Bring the useful point, action, or experience into view soon enough to sustain attention. Do not force urgency or flatten necessary complexity.
+Start with the authorized writing unit: the exact writing the task permits you to create, change, or evaluate. Establish where it will appear, the reader it must serve, its immediate purpose, and what should change in the reader’s understanding, feeling, judgment, or action. Make its purpose and value clear early enough to earn attention, without manufacturing urgency or stripping away necessary complexity.
 
-Match the writing’s movement to the work it must do. Give an atomic string one clear job. In connected prose, let each sentence, paragraph, and section carry the thought forward.
+Make every part earn its place. An atomic unit is a self-contained writing element, such as a label, title, or short message. Give it one clear job. In connected prose, let each sentence, paragraph, and section move the idea, experience, or action forward rather than repeat what the reader already knows.
 
-Choose precise, familiar, concrete words. When clarity should be immediate, say who acts, what causes what, and which conditions, contrasts, or dependencies matter. Keep confidence proportional to the available material, and verify factual claims the writing makes.
+Use precise, familiar, concrete language. When clarity must be immediate, name who acts, what causes what, and which conditions, contrasts, or dependencies matter. Keep confidence proportional to the available material, and verify factual statements.
 
-Preserve the writer’s intended voice and the reader’s agency. Do not impose a house voice or technical conventions unless the context requires them. Apply the [typography conventions](references/typography.md) to every writing task.
+The result should sound like the writer, not the workflow. Preserve the writer’s intended voice and the reader’s agency. Do not impose a house voice or technical conventions unless the context requires them. Apply the [typography conventions](references/typography.md) to every writing task.
 
 ## Specialized Routes
 
-The prose baseline applies to every human-facing writing task. Load only the references the task requires.
+The [Writing Principles](#writing-principles) standard applies to every human-facing writing task. Load only the references the task requires.
 
 - **Connected Prose:** Load the [connected-prose workflow](references/connected-prose.md) when a reader must follow an idea across more than one atomic unit. This includes context, explanation, reasoning, causality, tradeoffs, consequences, narrative, and tone. Use it independently for nontechnical, creative, narrative, reflective, persuasive, personal, and other general writing.
 - **Technical Copy:** Load the [technical-copy overlay](references/technical-copy.md) when correctness depends on implementation or contract evidence. This includes package and repository descriptions, README and technical-document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and other technical or developer-facing strings.
 - **Revision Rubric:** For a substantive review, difficult revision, or work involving multiple reading units, load the relevant parts of the [prose revision rubric](references/prose-revision-rubric.md).
-- **GitHub Collaboration:** Apply the prose baseline and technical-copy overlay to every GitHub issue, pull request, and Discussion title, body, comment, or review. Add Connected Prose whenever the reader must follow more than an atomic fact or action, including most bodies, comments, and reviews.
+- **GitHub Collaboration:** Apply [Writing Principles](#writing-principles) and the technical-copy overlay to every GitHub issue, pull request, and Discussion title, body, comment, or review. Add Connected Prose whenever the reader must follow more than a single fact or action, including most bodies, comments, and reviews.
 
 When Connected Prose and Technical Copy both apply, Technical Copy owns factual accuracy, exact literal tokens, consistent reader-facing terminology, necessary technical distinctions, required actions, observable behavior, and document-level information architecture, including templates, headings, and section order. Connected Prose owns the reading path within that architecture, including reading-unit progression, paragraph movement, cohesion, cadence, and voice. Preserve the technical facts and structural constraints, then make the strongest prose possible within them.
 
@@ -62,3 +64,13 @@ That authorization does not extend to unrelated writing, document structure, cro
 When authorized, edit the contextual target directly. Without a file target, put the ready-to-use writing first and do not create a file. Provide one best version unless the user requests alternatives or material intent remains unresolved.
 
 Do not announce the skill or narrate the editorial process while applying it. Preserve the requested format, and explain only material uncertainties, constraints, or intentional departures that the user needs to assess.
+
+## Stale Guidance
+
+Classify each part of this skill’s guidance used by the selected workflow as required, optional, or supporting. Treat missing local targets, malformed destinations, and HTTP responses that report a resource as missing or permanently unavailable as broken references. Broken references and verified conflicts with the current interface or behavior mean the guidance is stale. Use any failure response the guidance defines. Otherwise, report the stale guidance and evidence, recommend updating this skill, and follow the appropriate recovery below.
+
+When required guidance is stale, stop only the affected branch and use any complete fallback provided by the available guidance. Without one, ask whether to continue. The choice applies only to this conversation and to work independent of the stale guidance. Stale optional or supporting guidance does not stop the workflow.
+
+Access restrictions, authentication problems, network failures, and HTTP server errors are not evidence of staleness. Use any relevant access or retrieval guidance. If none applies, stop retrieving the resource and report the resource, attempted method, exact error, and smallest corrective action.
+
+Never infer missing content. Never substitute an unverified location. Never weaken scope, approval, mutation, or security boundaries.
