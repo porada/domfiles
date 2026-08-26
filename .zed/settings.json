@@ -2,9 +2,8 @@
 	"file_scan_exclusions": [
 		".claude/skills",
 		".config/zed/prompts",
-		".DS_Store",
-		".git",
-		"bin/git-diff-highlight"
+		"bin/git-diff-highlight",
+		"..."
 	],
 	"format_on_save": "on",
 	"formatter": [

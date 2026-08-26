@@ -310,12 +310,6 @@ A global skill’s scripts stay hosted here. `domfiles sync` symlinks each globa
 
 Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
 
-### Zed project scan exclusions
-
-The repository-level `.zed/settings.json` intentionally replaces Zed’s complete default `file_scan_exclusions` array with the narrower tracked list because no other entries from the original default exclusion set are needed in this repository context. The short `.git` and `.DS_Store` entries are intentional rather than recursive `**/.git` and `**/.DS_Store` patterns.
-
-The `.claude/skills` entry prevents Zed from scanning the [Claude project skill bridge](#claude-agent-integration) as a second path to `.agents/skills`.
-
 ### Zed selection-to-new-thread key binding
 
 The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
