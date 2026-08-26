@@ -2922,6 +2922,22 @@
 							"case_sensitive": true
 						},
 						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm(?: --config[.][^ =]+=[^ ]+)? (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*shim --help$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )+--config[.][^ =]+=[^ ]+ shim --help$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm(?: --config[.][^ =]+=[^ ]+)? (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*shim (?:list|ls)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )+--config[.][^ =]+=[^ ]+ shim (?:list|ls)$",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?pnpx (?:-[hv]|-(?:help|version)|--(?:help|version))$",
 							"case_sensitive": true
 						},
@@ -3952,7 +3968,7 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:.* )?--config[.](?:block-exotic-subdeps|blockExoticSubdeps|git-checks|gitChecks|strict-ssl|strict-store-pkg-content-check|strictSsl|strictStorePkgContentCheck|trust-lockfile|trust-policy|trustLockfile|trustPolicy|verify-store-integrity|verifyStoreIntegrity)=[^ ]+(?: |$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:.* )?--config[.](?:block-exotic-subdeps|blockExoticSubdeps|git-checks|gitChecks|global-shims|globalShims|remote-side-effects-cache(?:[.][^ =]+)?|remoteSideEffectsCache(?:[.][^ =]+)?|strict-ssl|strict-store-pkg-content-check|strictSsl|strictStorePkgContentCheck|trust-lockfile|trust-policy|trustLockfile|trustPolicy|verify-store-integrity|verifyStoreIntegrity)=[^ ]+(?: |$))",
 							"case_sensitive": true
 						},
 						{
@@ -3968,7 +3984,23 @@
 							"case_sensitive": true
 						},
 						{
-							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:.* )?--config[.](?:allow-builds|allow-unused-patches|allowBuilds|allowUnusedPatches|allowed-deprecated-versions|allowedDeprecatedVersions|audit(?:[.][^ =]+)?|ignored-optional-dependencies|ignoredOptionalDependencies|overrides|package-configs|package-extensions|packageConfigs|packageExtensions|patched-dependencies|patchedDependencies|peer-dependency-rules|peerDependencyRules|required-scripts|requiredScripts|supported-architectures|supportedArchitectures|update(?:[.][^ =]+)?)=[^ ]+(?: |$))",
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:.* )?--config[.](?:allow-builds|allow-unused-patches|allowBuilds|allowUnusedPatches|allowed-deprecated-versions|allowedDeprecatedVersions|audit(?:[.][^ =]+)?|audit-ignore-prune|auditIgnorePrune|ignored-optional-dependencies|ignoredOptionalDependencies|overrides|package-configs|package-extensions|packageConfigs|packageExtensions|patched-dependencies|patchedDependencies|peer-dependency-rules|peerDependencyRules|required-scripts|requiredScripts|supported-architectures|supportedArchitectures|update(?:[.][^ =]+)?)=[^ ]+(?: |$))",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm(?: --config[.][^ =]+=[^ ]+)? (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*add (?:.* )?(?:bun|deno|node|npm|pnpm|yarn)(?:@[^ ]*)?(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )+--config[.][^ =]+=[^ ]+ add (?:.* )?(?:bun|deno|node|npm|pnpm|yarn)(?:@[^ ]*)?(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm(?: --config[.][^ =]+=[^ ]+)? (?:(?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*(?:v|version)(?: |$)|(?:--version|-v|-version)$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )+--config[.][^ =]+=[^ ]+ (?:v|version)(?: |$)",
 							"case_sensitive": true
 						},
 						{
@@ -4099,6 +4131,10 @@
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:(?:--(?:changed-files-ignore-pattern|color|config-dir|dir|filter|filter-prod|global-bin-dir|global-dir|loglevel|reporter|state-dir|store-dir|virtual-store-dir|workspace-concurrency)(?:=[^ ]+| [^-][^ ]*)|--(?:aggregate-output|fail-if-no-match|global|if-present|ignore-workspace|include-workspace-root|parallel|recursive|stream|use-stderr|workspace-root)(?:=[^ ]+)?|-[^-C][^ ]*|-C(?:[^ ]+| [^-][^ ]*)) )*--config[.](?:(?:block-exotic-subdeps|blockExoticSubdeps)=false|(?:minimum-release-age|minimumReleaseAge)=0|(?:strict-ssl|strictSsl)=false|(?:strict-store-pkg-content-check|strictStorePkgContentCheck)=false|(?:trust-lockfile|trustLockfile)=true|(?:trust-policy|trustPolicy)=off)(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?(?:corepack )?pnpm (?:.* )?--config[.](?:remote-side-effects-cache|remoteSideEffectsCache)[.](?:private-key|privateKey)=[^ ]*(?: |$)",
 							"case_sensitive": true
 						},
 						{
