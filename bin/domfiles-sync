@@ -57,11 +57,18 @@ if __is_callable git; then
         if ! __domfiles_is_clean; then
           __print_warning 'The repository contains uncommitted changes'
 
-          if __ git -C "$DOMFILES" stash; then
-            stashed_changes=true
-          else
+          if ! stash_list="$(git -C "$DOMFILES" stash list --format='%H')"; then
             __print_error 'Failed to stash uncommitted changes'
             stash_failed=true
+          elif ! __ git -C "$DOMFILES" stash; then
+            __print_error 'Failed to stash uncommitted changes'
+            stash_failed=true
+          elif ! updated_stash_list="$(git -C "$DOMFILES" stash list --format='%H')"; then
+            __print_error 'Failed to verify stashed changes'
+            stash_failed=true
+            stashed_changes=true
+          elif [ "$updated_stash_list" != "$stash_list" ]; then
+            stashed_changes=true
           fi
         fi
 

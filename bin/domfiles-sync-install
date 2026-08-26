@@ -39,13 +39,14 @@ install() {
 }
 
 # Install primary dependencies
-for formula in fish fisher git mole node@24 pnpm rust vim; do
+for formula in fish fisher git node@24 pnpm rust vim; do
   install "$formula"
 done
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in actionlint ast-grep claude-code codex fd gh jq just pandoc ripgrep shellcheck taplo yarn yq zizmor; do
+  for formula in actionlint ast-grep claude-code codex fd gh jq just mole \
+    pandoc ripgrep shellcheck taplo yarn yq zizmor; do
     install "$formula"
   done
 fi

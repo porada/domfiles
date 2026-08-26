@@ -206,7 +206,7 @@ __domfiles_is_callable() {
 
 # Returns success when domfiles have no tracked changes
 __domfiles_is_clean() {
-  git -C "$DOMFILES" diff-index --quiet HEAD
+  git -C "$DOMFILES" diff --quiet && git -C "$DOMFILES" diff --cached --quiet
 }
 
 # Prints executable files from the `bin` directory. Excludes symlinks and
@@ -519,7 +519,7 @@ __is_shell() {
 
 # Returns success when the SSH key pair is configured
 __is_ssh_configured() {
-  [ -f "$DOMFILES_SSH_KEY" ] && [ -f "$DOMFILES_SSH_KEY.pub" ]
+  [ -s "$DOMFILES_SSH_KEY" ] && [ -s "$DOMFILES_SSH_KEY.pub" ]
 }
 
 # Returns success when standard input is a terminal

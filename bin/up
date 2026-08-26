@@ -3,7 +3,7 @@
 # shellcheck source=bin/domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Don’t let the system go to sleep
+# Prevent the system and disk from idle sleeping
 if [ $# -gt 0 ]; then
   __ caffeinate -im "$@"
   exit $?

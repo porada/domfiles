@@ -322,7 +322,7 @@ The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeyst
 
 ### Synchronization checkout state
 
-`__domfiles_is_clean` intentionally checks only whether Git-visible tracked files differ from `HEAD`. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation. Repository-update safety handles assume-unchanged entries separately.
+`__domfiles_is_clean` intentionally compares the tracked working tree with the index and the index with `HEAD`. This keeps index stat metadata alone from making the checkout appear dirty. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation. Repository-update safety handles assume-unchanged entries separately.
 
 Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. While those entries are present, synchronization avoids rebases and hard resets because Git may overwrite their working tree contents.
 
@@ -358,11 +358,13 @@ The npm package adds a large platform-specific native package to every environme
 
 The `rust` row reports whether both `cargo` and `rustc` are available, matching the managed Homebrew formula rather than either executable name.
 
-`mole` and `vim` are intentionally omitted from the checklist even though synchronization installs them as primary Homebrew dependencies. Their availability does not affect the command’s output or exit status.
+`vim` is intentionally omitted from the checklist even though synchronization installs it as a primary Homebrew dependency. Its availability does not affect the command’s output or exit status.
 
 ### Development lint wrapper architecture
 
 The language-specific `bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands while sharing discovery and execution through `domlib`. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
+
+Default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git can C-quote control characters and, when `core.quotePath` is enabled, non-ASCII bytes. A quoted pathname is skipped because it does not resolve to the original file, so pass that path explicitly when linting it.
 
 The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
 
