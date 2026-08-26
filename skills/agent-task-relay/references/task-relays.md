@@ -32,7 +32,7 @@ This confirmation gate applies only to task relays. It does not apply to autonom
 
 ## Assignment Contract
 
-End every initial or follow-up prompt whose primary purpose is to assign future work with the exact standalone line `**Do not drift.**`. This applies to evidence gathering, review, and mutation assignments.
+End every initial or follow-up prompt that assigns future work with the exact standalone line `**Do not drift.**`. This applies to evidence gathering, review, and mutation assignments.
 
 Before the guard, define the bounded assignment, owned scope, exclusions, source and access constraints, stop conditions, and output contract. Put every required result, process, validation step, and handoff instruction before it.
 

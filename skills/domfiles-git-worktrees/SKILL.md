@@ -25,7 +25,7 @@ The global “Temporary files” policy owns the `.agent-<name>` namespace that 
 
 ## Operate inside a worktree
 
-- **Command location:** For Git commands intended to operate inside a registered `.agent-<name>` worktree, use `git -C .agent-<name> …` rather than relying only on process or tool working directory. Verify registration with `git --no-pager worktree list --porcelain`. Do not treat an ordinary task-specific `.agent-<name>` directory as a worktree. Run worktree-administration commands from the primary checkout unless the command requires another location.
+- **Command location:** Apply the global “Temporary files” policy’s “Git command location” rule to every Git command intended to operate inside a registered `.agent-<name>` worktree. Verify registration with `git --no-pager worktree list --porcelain`. Do not treat an ordinary task-specific `.agent-<name>` directory as a worktree. Run worktree-administration commands from the primary checkout unless the command requires another location.
 
 ## Dismantle a worktree
 

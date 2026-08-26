@@ -1,6 +1,6 @@
 ---
 name: domfiles-shell-scripts
-description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or evaluates whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
+description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles, and choose the form or location of command entrypoints. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or adds or reconsiders a command entrypoint in this repository, including whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
 metadata:
     internal: true
 ---
@@ -66,12 +66,18 @@ Apply these domfiles-specific constraints after those workflows:
 
 - Keep all functions defined in `domlib` alphabetized in natural order.
 - When a `domlib` function changes, keep its adjacent contract comment aligned with the resulting behavior.
-- When the design or contract of a reusable `domlib` helper is in scope, follow [shared helper design](references/shared-helper-design.md).
+- Whenever a reusable `domlib` helper or its Fish counterpart is in scope, follow [shared helper design](references/shared-helper-design.md).
 - Keep the set of `$DOMFILES_*` variables defined in `domlib` and `.config/fish/config.fish` in sync, with exactly matching names.
     - Exempt `$DOMFILES_DEFAULT_IFS`, `$DOMFILES_SSH_KEY`, `$DOMFILES_SUPPRESSED`, and `$DOMFILES_VIM_PLUG`.
 - Report unused functions or variables defined in `domlib`.
     - Do not treat variables as unused when they exist solely to maintain parity with `.config/fish/config.fish`.
 - Report every POSIX shell function prefixed with `__` when it is defined outside `domlib`.
+
+## Choose command form and location
+
+Do not report an existing command solely because another supported form could express it, except when [Git helper form](#choose-git-helper-form) applies.
+
+Before adding a command entrypoint or explicitly reconsidering an existing command’s form or location, follow [command form and location](references/command-form-and-location.md).
 
 ## Choose Git helper form
 

@@ -1,6 +1,6 @@
 ---
 name: domfiles-zed-settings
-description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json` plus project-authored maintainer assets, policy, and skill scripts for those settings. Use this skill whenever the resolved scope includes either settings file—even when the user did not name it—including agent permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal rules, tool or sandbox permissions, unexpected permission outcomes, or worktree permissions. Do not use it for other Zed files alone.
+description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json` plus project-authored policy and skill scripts for those settings. Use this skill whenever the resolved scope includes either settings file—even when the user did not name it—including agent permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal rules, tool or sandbox permissions, unexpected permission outcomes, or worktree permissions. Do not use it for other Zed files alone.
 metadata:
     internal: true
 ---

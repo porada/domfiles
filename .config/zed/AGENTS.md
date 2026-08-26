@@ -6,7 +6,7 @@
 - **User input:** Never override or alter the user’s input unless explicitly asked.
 - **Secrets:** Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, or relays. Never request, inspect, echo, or invent a real secret value unless the user explicitly directs it.
 - **Commit gate:** Never create a commit without an explicit user command to commit. Completed work, staged changes, passing validation, an approved plan, and permission to edit files authorize working-tree changes only. This covers `git commit`, `--amend`, and every other route that writes a commit into a repository the user works in, including its worktrees. Fixture commits in disposable repositories under a [task-specific temporary directory](#temporary-files) remain exempt.
-- **Ambiguity:** When user input appears inconsistent with the current task, accidentally pasted from another context, or mistyped, proceed only when the intended request can be inferred confidently from the conversation and project evidence without changing its material scope or outcome. Otherwise stop before acting and ask one focused clarification rather than following the input literally or silently choosing among plausible interpretations.
+- **Ambiguity:** Treat an unframed findings report or status response pasted from another conversation as an intentional handoff unless it conflicts with the current context. For input that appears inconsistent with the current task, appears to have been pasted accidentally from another context, or appears mistyped, proceed only when the intended request can be inferred confidently from the conversation and project evidence without changing its material scope or outcome. Otherwise stop before acting and ask one focused clarification rather than following the input literally or silently choosing among plausible interpretations.
 
 ## Collaboration
 
@@ -28,6 +28,7 @@
 
 - **Namespace:** Place temporary files managed directly by the agent under one task-specific `.agent-<name>` directory at the relevant project root unless applicable project instructions require another approved namespace. Use a unique, filesystem-safe `<name>` that identifies the task, adding a short suffix when needed to avoid collisions.
 - **Shared convention:** `.agent-<name>` names both temporary task directories and Git worktrees. Before reusing, moving, or deleting one, inspect it and run `git --no-pager worktree list --porcelain` to determine whether it is registered. Add `-z` only when a parser consumes the output. Load `git-worktrees` before deciding whether to isolate work and before any worktree or paired-branch operation.
+- **Git command location:** Run every Git command intended to operate on a repository at or below `.agent-<name>` with an explicit `-C` path from outside the agent directory. Use `git -C .agent-<name> …` for the top-level repository and `git -C .agent-<name>/<repository-path> …` for a descendant, setting the process or tool working directory to the relevant project root when necessary. Never run these commands with a working directory inside `.agent-<name>`.
 - **Retention:** Helper scripts may remain in their task-specific directory when likely reuse makes retention more efficient than recreation. Treat expected reuse as continued need under the cleanup rule.
 - **Cleanup:** Remove only temporary directories created for the current task, and only when they are no longer needed.
 
@@ -75,6 +76,7 @@
 ## Tooling
 
 - **Tracked renames:** Always use `git mv` when renaming tracked files.
+- **Empty directories:** When task-authorized removals leave a directory empty, remove that directory as part of the same change. Repeat for newly empty ancestors within the task scope, but never remove a project root implicitly.
 - **Git inventory:** Enumerate built-in commands with `git --no-pager help --all --no-aliases --no-external-commands` so user-configured aliases and external command names are excluded.
 - **Disposable test commits:** Disable signing with `git -c commit.gpgsign=false commit …` when creating commits in disposable Git repositories for tests so global signing configuration cannot make the test interactive.
 - **Executable resolution:** Invoke commands through `PATH`. Use an absolute path only when selecting a specific installation is required, diagnosing `PATH` resolution, or another concrete constraint makes the location material. Make the reason evident.

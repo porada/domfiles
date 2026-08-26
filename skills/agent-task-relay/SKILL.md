@@ -1,21 +1,22 @@
 ---
 name: agent-task-relay
 description: |-
-    Create, revise, review, and audit prompts for clear, bounded handoffs to another agent or conversation. Use it when work must continue with an external agent or in an environment with the required access, or when results and decisions need to move into another conversation.
+    Create, revise, review, and audit prompts for clear, bounded handoffs to another agent or conversation. Validate findings and status responses brought into the current conversation.
 
-    Use it to confirm a task handoff before drafting it, pass results and decisions without authorizing changes, keep user-requested subagent prompts within scope, and maintain reusable relay or decision-capture prompts.
+    Use this skill when work must continue with an external agent or in an environment with the required access, when results or decisions need to move between conversations, or when a user message primarily contains pasted findings or a status response, even without an explicit request to act. Also use it for explicitly requested subagent prompts, reusable relay maintenance, and decision-capture prompt maintenance.
 
-    Do not use for autonomous in-client delegation. Agent responses are not a trigger on their own.
+    Do not use for autonomous in-client delegation. Do not treat incidental, illustrative, archival, or explicitly deferred agent text as an inbound handoff.
 ---
 
 # Agent Task Relay
 
-A useful relay gives the next agent enough context to act without granting authority the user did not provide. This skill separates assignments from evidence-only handoffs, confirms external task handoffs before drafting their relays, and preserves each handoff’s scope, approval, access, and mutation boundaries.
+A useful relay lets work move between conversations without transferring unverified conclusions or authority the user did not provide. This skill validates inbound findings, separates assignments from evidence-only handoffs, confirms external task handoffs before drafting their relays, and preserves each handoff’s scope, approval, access, and mutation boundaries.
 
 ## Workflow
 
-Choose the route for the artifact, then apply revision or review behavior when requested. An explicit change takes precedence when the request also uses review or audit language.
+Choose the route for the artifact or inbound handoff, then apply revision or review behavior when requested. Automatically select the inbound route for an unframed handoff. When user framing requests an action whose result depends on the transferred findings, complete inbound validation first, then resume the route or workflow that owns the requested action with the validated results. Follow framing directly when it explicitly defers validation or requests an action independent of the findings’ validity. For every other route, an explicit change takes precedence when the request also uses review or audit language.
 
+- **Inbound findings:** To validate a pasted review, audit, findings report, or status response, follow [Inbound Findings](references/inbound-findings.md).
 - **Task relay:** To assign work to an external agent, follow [External Handoffs](#external-handoffs), then [Task Relays](references/task-relays.md), and apply [Delivery](#delivery).
 - **Decision relay:** To pass results and decisions into another conversation, follow [Decision Relays](references/decision-relays.md), then apply [Delivery](#delivery). Include material decisions when any exist.
 - **Specialized prompts:** When the user explicitly asks for a subagent prompt, follow [User-Requested Subagent Prompts](references/task-relays.md#user-requested-subagent-prompts), then apply [Delivery](#delivery). When maintaining a standalone decision-capture prompt, treat that prompt as the change target and follow [Domain Profiles](references/decision-relays.md#domain-profiles).
@@ -26,10 +27,11 @@ Choose the route for the artifact, then apply revision or review behavior when r
 
 | Term | Meaning |
 | --- | --- |
-| **Agent task relay** | The user-mediated workflow for assigning work or passing established results and decisions to another agent or conversation. |
+| **Agent task relay** | The user-mediated workflow for assigning work, passing established results and decisions, or bringing findings into a conversation for independent validation. |
 | **Decision-capture prompt** | A prompt that asks the current agent to turn context already available in the conversation into a decision relay without continuing the underlying task. |
 | **Decision relay** | An evidence-only handoff of completed results, supporting evidence, material decisions when any exist, and known limitations. |
 | **External agent** | An agent operating in another conversation or execution environment rather than as an in-client subagent. |
+| **Inbound findings handoff** | A user-mediated transfer of review findings or a status response into the current conversation for independent validation. |
 | **Receiving action** | The exact action the next agent takes, including whether the handoff is evidence-only or assigns future work. |
 | **Relay** | The complete prompt the user carries into another conversation. |
 | **Task relay** | A relay that assigns future work to another agent. |
