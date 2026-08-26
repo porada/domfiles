@@ -41,8 +41,6 @@
 [fetch]
 	prune = true
 
-[format]
-	pretty = format:%C(dim)%h%C(reset)%C(red)%d %C(reset)%s %C(dim)%cd / %an%C(reset)
 
 [gpg]
 	format = ssh
@@ -71,6 +69,9 @@
 	renames = false
 	show = git-diff-highlight | less --chop-long-lines
 	tags = false
+
+[pretty]
+	compact = format:%C(dim)%h%C(reset)%C(red)%d %C(reset)%s %C(dim)%cd / %an%C(reset)
 
 [pull]
 	rebase = true

@@ -15,7 +15,7 @@ if [ "${1-}" = '--all' ]; then
 fi
 
 print_log() {
-  git --no-pager log --no-notes --no-show-signature "$@"
+  git --no-pager log --no-notes --no-show-signature --pretty=compact "$@"
 }
 
 if [ $# -gt 0 ]; then
