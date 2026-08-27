@@ -5,10 +5,22 @@ Apply this branch with the shared [agent permission workflow](permissions.md).
 ## Apply the fetch and network permission policy
 
 - Preserve `agent.tool_permissions.tools.fetch.default` as `confirm`.
-- Restrict automatically allowed fetch patterns to `https://` and anchor hostname-wide patterns at the hostname boundary. Set `"case_sensitive": true` on every automatically allowed pattern, and scope `(?i:...)` to only the scheme and hostname so ports and later URL components remain case-sensitive.
-- Treat `*.domain.name` and `domain.name` as distinct `agent.sandbox_permissions.network_hosts` entries. A wildcard matches strict subdomains at any depth, not the apex.
-- Treat an explicit domain or hostname allowance as authorization for its corresponding persistent sandbox host scope. Each `network_hosts` entry covers every port and becomes part of the sandbox network floor available to later sandboxed terminal processes. The terminal command remains subject to independent terminal permission evaluation.
-- Keep hostname-wide fetch and sandbox scopes aligned, subject to the [path-qualified exception](../../../PROJECT.md#zed-fetch-and-sandbox-host-scope). A path-qualified URL allowance must not add hostname-wide sandbox access.
+- Keep exactly one generic `agent.tool_permissions.tools.fetch.always_allow` rule at `"case_sensitive": true` with this pattern:
+
+```regex
+^(?i:https://(?:[^./?#:@]+\.)*[^./?#:@]+)(?:[/?#]|$)
+```
+
+- Treat the generic rule as an initial-URL syntax gate, not a host trust inventory. It matches HTTPS authorities made from nonempty dot-separated labels without URL userinfo, an explicit port, a trailing dot, or bracketed IPv6 syntax. Paths, queries, and fragments remain unrestricted by this rule. It cannot determine whether those components contain secret material.
+- Treat a path-filtered fetch allowance as two independently approved scopes: persistent whole-host sandbox trust and the direct initial URL prefixes that remain prompt-free. Add an exact `network_hosts` entry only after the user explicitly accepts all-port access to that hostname for native fetch and sandboxed terminal actions.
+- Guard a path-qualified hostname with one same-host `always_confirm` complement. The generic rule already allows every approved initial path, so do not add redundant path-prefix allow rules. The confirmation rule must match the hostname boundary and every other initial path while excluding every approved case-sensitive prefix and its descendants. Confirmation precedence then overrides the generic allowance everywhere outside those paths.
+- Group every approved prefix for one hostname under the same confirmation complement. Adding or removing a prefix requires rebuilding and revalidating that complete hostname guard.
+- Treat `agent.sandbox_permissions.network_hosts` as the canonical persistent host trust inventory shared by native fetch and sandboxed terminal actions. Each entry covers every port and becomes part of the sandbox network floor available to later actions. Terminal commands remain subject to independent terminal permission evaluation.
+- Treat `*.domain.name` and `domain.name` as distinct `network_hosts` entries. A wildcard matches strict subdomains at any depth, not the apex.
+
+Automatic fetch execution requires both layers to allow the action. An initial HTTP URL, explicit-port URL, URL containing userinfo, trailing-dot hostname, or bracketed IPv6 literal remains `confirm` at the fetch-tool layer even when its hostname is trusted. A matching HTTPS URL for an untrusted hostname remains `confirm` at the sandbox layer. For a path-filtered hostname with persistent host trust, approved initial prefixes can run without either prompt, while every other direct initial path confirms at the fetch-tool layer. Without that host trust, an approved prefix still reaches sandbox confirmation. Loopback and IP-literal destinations require unsandboxed access rather than a persistent `network_hosts` entry.
+
+Zed applies the fetch rules only to the initial URL, then separately authorizes the initial hostname and every redirect hostname. It does not re-evaluate redirect schemes, ports, paths, queries, or fragments against the fetch regexes. The confirmation complement is therefore an initial-fetch prompt filter, not path-scoped network containment. Same-host redirect paths and sandboxed terminal traffic remain outside it. Treat redirects and subresources as outside the request unless their hosts were already approved. Do not make a live request merely to validate a settings change.
 
 ## Translate approved domains and URLs
 
@@ -16,47 +28,32 @@ When the user explicitly requests an allowance for a named domain or URL, apply 
 
 1. Parse the literal request without network access. Reject non-HTTPS URLs and URLs containing credentials, passwords, secret-bearing path, query, or fragment values, tokens, or userinfo. Never copy or normalize such material into settings or task artifacts. Ask for a credential-free URL or domain scope instead.
 2. For a domain or hostname request, require the request to select exact hostname, subdomains only, or exact hostname plus subdomains. Do not infer subdomain access from the word “domain.” The established authorization includes the corresponding persistent, all-port sandbox scope, so do not ask the user to reselect that boundary for each hostname.
-3. Apply the selected hostname coverage exactly:
-    - Exact hostname: `^(?i:https://domain\.example)(?:[/?#]|$)` and `domain.example`.
-    - Subdomains only: `^(?i:https://(?:[^./?#:@]+\.)+domain\.example)(?:[/?#]|$)` and `*.domain.example` only.
-    - Exact hostname plus subdomains: `^(?i:https://(?:[^./?#:@]+\.)*domain\.example)(?:[/?#]|$)` plus both `*.domain.example` and `domain.example`.
-4. For a URL request, preserve only the explicitly approved hostname, port, path, query, and fragment constraints. Allow descendants only when the request or an established pattern clearly selects a subtree. Omit `network_hosts` unless the user separately widens the request to hostname coverage.
-5. Reuse an equivalent existing allowance rather than adding a duplicate. Order the complete fetch array by the parent skill’s [represented-hostname rule](../SKILL.md#apply-the-general-policy), without grouping by hostname coverage. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname.
+3. For a path-qualified URL request, require a credential-free canonical ASCII HTTPS path prefix ending in `/`, with uppercase `%HH` escapes and no port, query, fragment, userinfo, encoded slash, backslash, or dot segment. Resolve both decisions together: authorization for the exact hostname and path subtree at the fetch-tool layer, and whether the exact hostname also receives persistent all-port sandbox trust. Do not infer the second decision from the first.
+4. Apply the approved scope exactly:
+    - Exact hostname: add `domain.example` to `network_hosts`.
+    - Subdomains only: add `*.domain.example` to `network_hosts`.
+    - Exact hostname plus subdomains: add both entries.
+    - Path subtree: build or update the same-host confirmation complement against the complete approved-prefix set. Add the exact hostname to `network_hosts` only when the separate whole-host decision approved it.
+5. Reuse equivalent existing coverage rather than adding a duplicate. Preserve wildcard and exact groups in `network_hosts`, alphabetizing each group by represented hostname. Order fetch arrays by the parent skill’s [represented-hostname rule](../SKILL.md#apply-the-general-policy).
 
-An explicit-port URL falls through the canonical hostname fetch pattern to `confirm` even though the persistent sandbox grant covers that hostname and port.
+Do not add or modify a fetch regex for a hostname allowance. A path-qualified allowance does not by itself add `network_hosts`. If the user does not separately authorize the persistent hostname scope, its approved path remains confirmable at the sandbox layer.
 
-Zed’s native fetch tool applies configured fetch patterns to the initial URL, then separately authorizes every redirect hostname. It does not re-evaluate redirect URLs against the original fetch regex. Treat redirects and subresources as outside the request unless their hosts and URL scopes were already approved. Do not make a live request merely to validate a settings change.
+Rust regex does not support look-around. Build each same-host confirmation complement from anchored prefix alternatives that match the first differing path byte, including every truncated prefix. Validate every alternative through the [fetch rule corpus](#fetch-rule-corpus), and do not use an unverified hand-written negation as a permission boundary.
 
-## Choose the fetch fast path
+## Build and validate a candidate
 
-Use `.agents/skills/domfiles-zed-settings/scripts/fetch_permissions.rs` for one canonical addition whenever the requested coverage is one of these:
+For a `network_hosts`-only change, follow [Build and promote a permission candidate](permission-candidate.md#build-and-promote-a-permission-candidate) with `/agent/sandbox_permissions/network_hosts` as the only captured scope and no selected patterns. For a fetch rule change, capture `/agent/tool_permissions/tools/fetch`. Capture both nonoverlapping scopes when one approved change affects both layers.
 
-- Exact hostname.
-- Exact hostname plus subdomains.
-- Path-qualified URL, given a credential-free canonical ASCII HTTPS path prefix ending in `/`, with uppercase `%HH` escapes and no port, query, fragment, userinfo, encoded slash, or dot segment.
-- Subdomains only.
+Evaluate the complete [fetch rule corpus](#fetch-rule-corpus) through a strict [`tool: "fetch"` configured-layer manifest](permission-evaluator.md#evaluate-a-configured-pattern-layer). Its `settings_file` must resolve to the exact candidate graph path. Include at least one independent pattern case for every configured fetch pattern. For each guarded-host complement, include every complement corpus input both as a pattern case for that `always_confirm` rule and as a settled input for the complete layer. Include aggregate cases when one operation contributes multiple inputs. The resulting `layer_decision` evidence must record the candidate SHA-256 and exact settings closure path.
 
-The fast path owns canonical pattern generation, candidate insertion, represented-hostname ordering, duplicate and equivalent-coverage detection, fetch and sandbox alignment, exact pattern artifacts, and the standard decision corpus. For supported inputs, its complete-array audit and candidate comparison satisfy the fetch branch’s ownership, matching, comparison, and configured-decision checks. Do not construct a terminal owner manifest, add an unrelated terminal sentinel, inventory terminal indexes, or prepare a separate task-local matcher suite.
+When replacing an existing rule set, also [compare baseline and candidate behavior](permission-evaluator.md#compare-baseline-and-candidate-behavior) and declare every intended bucket or decision transition. Continue through the scope-only permission candidate workflow with no selected terminal patterns, including the fetch layer result in its validation plan. A semantic change to fetch `always_allow`, `always_confirm`, `always_deny`, or `default` cannot seal without that result. A `network_hosts`-only candidate and a broad candidate whose four fetch values remain unchanged require no fetch evidence.
 
-The fast path can reuse an existing factored hostname pattern only when it can structurally expand the hostname expression into a complete finite represented-host set through supported noncapturing alternatives and optional groups. Expansion is capped at 256 represented hosts. It validates every represented host, the canonical path-pattern tail, and sandbox alignment before accepting the array.
+Verify the approved exact and wildcard coverage, complete-array ordering, participating settings layers, and effective fetch and terminal boundaries. Never use a live request as settings validation.
 
-Use the generic [permission evaluator](permission-evaluator.md) instead when the request or existing affected grammar includes an exact path rather than a prefix, a port-qualified or non-ASCII URL, query or fragment constraints, regex factoring outside the bounded finite hostname-expression contract above, an unclassifiable pattern, unresolved effective settings layers, or another shape outside the fast-path contract. Reject secret-bearing inputs rather than routing them through either workflow.
+## Fetch rule corpus
 
-When the fast path applies and the task authorizes mutation, follow the [fetch candidate](fetch-candidate.md) workflow to prepare, validate, and promote it. Every read-only fetch workflow skips that candidate workflow and still applies the [standard fetch corpus](#standard-fetch-corpus).
+The generic rule must match credential-free HTTPS URLs using an ordinary hostname, including scheme and hostname case variants plus path, query, and fragment starts at the hostname boundary. It must not match HTTP, explicit ports, URL userinfo, trailing-dot hostnames, bracketed IPv6 literals, or empty authorities.
 
-## Standard fetch corpus
+For each guarded hostname, independently verify the complete same-host confirmation complement. For every approved prefix, include the exact prefix, a descendant, every truncation, and one nonapproved path for each byte position after the leading `/`, with that position as the path’s first differing byte. Also include the hostname boundary, root path, a sibling path, a path case variant, and query and fragment starts. The confirmation rule must match every nonapproved case and none of the approved prefixes or descendants.
 
-The fast path always checks the selected pattern independently and reconstructs the complete configured fetch decision. Hostname coverage always includes:
-
-- Intended HTTPS hosts, including scheme and hostname case variants and material hostname-boundary suffixes.
-- HTTP, explicit ports, userinfo, lookalike broader hostnames, and every unapproved apex or subdomain form.
-
-Exact-hostname validation includes the apex plus path, query, and fragment starts at the hostname boundary. Subdomain coverage includes one and multiple descendant levels, with the apex classified according to the selected coverage. Path-qualified validation adds the exact prefix, a descendant, a sibling path, a path case variant when the path contains letters, and the hostname boundary cases above.
-
-For each boundary case, the complete baseline and candidate bucket states and final decision must remain equal. Every intended case must resolve to `allow` after deny and confirm precedence. This proves only the configured fetch-layer transition, subject to the independent execution boundaries above.
-
-## Run focused contract tests
-
-```sh
-cargo test --locked --test domfiles-zed-settings-fetch-permissions-test
-```
+Evaluate the complete configured fetch layer with confirmation precedence. Approved prefixes must resolve to `allow`, while every other initial path on a guarded hostname must resolve to `confirm`. Include IPv4-like authorities as generic-rule matches, then resolve their effective behavior through the independent sandbox rule that requires unsandboxed access for IP literals.

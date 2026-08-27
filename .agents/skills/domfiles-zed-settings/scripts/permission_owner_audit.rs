@@ -73,6 +73,7 @@ const HELP: &str = concat!(
     "        \"role\": \"discovery|direct|wrapped\",\n",
     "        \"pattern_sort_key\": \"<stable role-local key>\",\n",
     "        \"witness\": \"<one normalized permission input>\",\n",
+    "        \"lexically_invisible\": false,\n",
     "        \"case_insensitive_reason\": \"<verified command-specific requirement>\",\n",
     "        \"discovery_coverage\": \"complete_finite|representative\",\n",
     "        \"discovery_inputs\": [\"<normalized discovery input>\"]\n",
@@ -96,10 +97,16 @@ const HELP: &str = concat!(
     "  records bounded cases for variable grammar and leaves complete coverage to matcher suites.\n",
     "  `settings_sha256` must bind the exact settings bytes. `inventory_owner` must be a nonempty\n",
     "  top-level executable token, and `entries` must be nonempty. Entry and exclusion positions\n",
-    "  must be unique and disjoint. Their union must exactly classify the independently recomputed\n",
-    "  lexical inventory for `inventory_owner`. Every entry must infer to that owner group. Every\n",
-    "  exclusion requires a matching normalized witness that infers to its declared outside owner.\n",
-    "  Exclusion reasons must be nonempty. Sort tuples must be unique within a bucket.\n",
+    "  must be unique and disjoint. Visible entries and exclusions must exactly classify the\n",
+    "  independently recomputed lexical inventory for `inventory_owner`. Every entry must infer to\n",
+    "  that owner group. Every exclusion requires a matching normalized witness that infers to its\n",
+    "  declared outside owner. Exclusion reasons must be nonempty. Sort tuples must be unique within\n",
+    "  a bucket.\n",
+    "  `lexically_invisible` defaults to false. Set it when a pattern’s source hides its executable\n",
+    "  token, so the entry owns its position for ordering and span validation while staying outside\n",
+    "  lexical classification. Such an entry must not be a recomputed candidate, and its witness must\n",
+    "  still match the pattern at its declared position, so a genuinely unoccupied or outside-owner\n",
+    "  position still reports a span gap.\n",
     "  Omit `case_insensitive_reason` for case-sensitive patterns. A selected case-insensitive\n",
     "  pattern requires a nonempty reason recording its verified command-specific exception.\n",
     "  Each selected decoded pattern must contain at most 999 Unicode scalar values.\n",
@@ -205,6 +212,10 @@ struct ManifestEntry {
     role: Role,
     pattern_sort_key: String,
     witness: String,
+    /// A member whose regex source hides its executable token from the lexical scan. It owns its
+    /// position for ordering and span validation but is absent from the recomputed hit set
+    #[serde(default)]
+    lexically_invisible: bool,
     case_insensitive_reason: Option<String>,
     discovery_coverage: Option<DiscoveryCoverage>,
     discovery_inputs: Option<Vec<String>>,
@@ -949,9 +960,21 @@ fn inventory_json(
 }
 
 fn validate_manifest_coverage(settings: &Value, manifest: &Manifest) -> Result<(), String> {
+    // A lexically invisible entry is absent from the recomputed hit set by definition, so it never
+    // classifies a candidate. It still occupies its position for ordering and span validation
+    let invisible_positions = manifest
+        .entries
+        .iter()
+        .filter(|entry| entry.lexically_invisible)
+        .map(|entry| CandidatePosition {
+            bucket: entry.bucket,
+            index: entry.index,
+        })
+        .collect::<BTreeSet<_>>();
     let entry_positions = manifest
         .entries
         .iter()
+        .filter(|entry| !entry.lexically_invisible)
         .map(|entry| CandidatePosition {
             bucket: entry.bucket,
             index: entry.index,
@@ -972,9 +995,16 @@ fn validate_manifest_coverage(settings: &Value, manifest: &Manifest) -> Result<(
     let mut unexpected_positions = classified_positions.clone();
     let mut missing_count = 0;
     let mut missing_positions = Vec::with_capacity(MAX_REPORTED_FINDINGS);
+    let mut visible_invisible_count = 0;
+    let mut visible_invisible_positions = Vec::with_capacity(MAX_REPORTED_FINDINGS);
 
     for_each_inventory_candidate(settings, &manifest.inventory_owner, |hit| {
-        if !classified_positions.contains(&hit.position) {
+        if invisible_positions.contains(&hit.position) {
+            visible_invisible_count += 1;
+            if visible_invisible_positions.len() < MAX_REPORTED_FINDINGS {
+                visible_invisible_positions.push(hit.position);
+            }
+        } else if !classified_positions.contains(&hit.position) {
             missing_count += 1;
             if missing_positions.len() < MAX_REPORTED_FINDINGS {
                 missing_positions.push(hit.position);
@@ -982,6 +1012,23 @@ fn validate_manifest_coverage(settings: &Value, manifest: &Manifest) -> Result<(
         }
         unexpected_positions.remove(&hit.position);
     })?;
+
+    if visible_invisible_count > 0 {
+        let omitted = visible_invisible_count - visible_invisible_positions.len();
+        let recomputed = if visible_invisible_count == 1 {
+            "entry"
+        } else {
+            "entries"
+        };
+        return Err(format!(
+            "Manifest declares lexically invisible entries that the inventory recomputes as candidates: {visible_invisible_count} recomputed {recomputed} and {omitted} omitted from the reported positions. Positions: {}",
+            visible_invisible_positions
+                .iter()
+                .map(|position| position.id())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
 
     let unexpected_count = unexpected_positions.len();
     if missing_count == 0 && unexpected_count == 0 {
@@ -1213,7 +1260,7 @@ fn bind_position(
 }
 
 /// Confirm one declared classification against the exact pattern at its position, its normalized
-/// witness, and the independently inferred owner of that witness.
+/// witness, and the independently inferred owner of that witness
 fn verify_classification(
     settings: &Value,
     position: TerminalPosition,
@@ -1266,7 +1313,7 @@ fn verify_classification(
 }
 
 /// Prove that every deleted owner retains no owned entry in the candidate. Each recomputed lexical
-/// hit must be classified exactly once, so a nonzero hit count never stands in for the claim.
+/// hit must be classified exactly once, so a nonzero hit count never stands in for the claim
 pub(crate) fn verify_zero_owner(
     settings_json: &str,
     manifest_bytes: &[u8],
@@ -1389,7 +1436,7 @@ fn read_bound_graph_artifact(
 }
 
 /// Prove after promotion that a delete-all owner retains nothing, including every lexically hidden
-/// member, using byte-exact absence scans over the complete arrays.
+/// member, using byte-exact absence scans over the complete arrays
 pub(crate) fn verify_delete_all(
     settings_json: &str,
     manifest_bytes: &[u8],
@@ -2104,7 +2151,7 @@ fn report_success(stdout: &mut dyn Write, report: &AuditReport) -> Result<(), St
 }
 
 /// Apply a transient rebinding to a reviewed manifest in memory. Only snapshot-dependent positions
-/// and the settings hash change, so every semantic field keeps its reviewed value.
+/// and the settings hash change, so every semantic field keeps its reviewed value
 fn apply_manifest_binding(
     manifest_json: &str,
     binding: &ManifestBinding,
@@ -2202,7 +2249,7 @@ fn load_manifest_binding(path: Option<&PathBuf>) -> Result<Option<ManifestBindin
     Ok(Some(binding))
 }
 
-/// Record hash-bound reviewed workflow evidence for one audit route.
+/// Record hash-bound reviewed workflow evidence for one audit route
 fn record_audit_evidence(
     arguments: &Arguments,
     kind: ResultKind,

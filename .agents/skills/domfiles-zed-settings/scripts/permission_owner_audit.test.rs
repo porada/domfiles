@@ -3192,7 +3192,7 @@ fn bounds_finding_ids_before_writing_diagnostics() {
     assert!(!stderr.contains(&long_id));
 }
 
-/// A canonical fixture root, so closure resolution never traverses a symlinked temporary path.
+/// A canonical fixture root, so closure resolution never traverses a symlinked temporary path
 fn graph_root(fixture: &Fixture) -> PathBuf {
     fs::canonicalize(fixture.path("")).expect("Fixture root must resolve to a real directory")
 }
@@ -3210,7 +3210,7 @@ fn binding_for(settings: &str, entries: Value, positions: Value) -> String {
 fn applies_a_manifest_binding_to_moved_entry_positions() {
     let fixture = Fixture::new();
     // The reviewed manifest audits `always_allow[0]`, but the settings it now runs against hold the
-    // owned pattern at `always_allow[1]`.
+    // owned pattern at `always_allow[1]`
     let settings = settings(
         vec![
             pattern(r"^unrelated run$", true),
@@ -3315,7 +3315,7 @@ fn refuses_a_malformed_manifest_binding() {
     let (settings, reviewed) = valid_settings_and_manifest();
     let settings_path = fixture.write("settings.json", &settings);
     let manifest_path = fixture.write("manifest.json", &bind_manifest(&settings, &reviewed));
-    // A path overlay is not a manifest binding, so the strict schema must reject it.
+    // A path overlay is not a manifest binding, so the strict schema must reject it
     let binding_path = fixture.write("binding.json", &json!({"paths": []}).to_string());
 
     let (status, stdout, stderr) = run(vec![
@@ -3380,7 +3380,7 @@ fn records_hash_bound_evidence_for_a_manifest_audit() {
     assert_eq!(result["outcome"], json!("passed"));
     assert_eq!(result["bound_inputs"]["inventory_owner"], json!("foo"));
 
-    // The recorded closure must cover exactly the manifest and settings the audit read.
+    // The recorded closure must cover exactly the manifest and settings the audit read
     let recorded: Vec<String> = result["bound_inputs"]["input_closure"]["records"]
         .as_array()
         .expect("The closure must record its inputs")
@@ -3396,7 +3396,7 @@ fn records_hash_bound_evidence_for_a_manifest_audit() {
         "{recorded:?}"
     );
 
-    // Rewriting a recorded input must make the evidence stale.
+    // Rewriting a recorded input must make the evidence stale
     let recomputed = {
         let mut builder = helper::permission_patterns::InputClosureBuilder::new(&root).unwrap();
         helper::permission_patterns::resolve_audit_closure(
@@ -3526,5 +3526,196 @@ fn refuses_a_zero_owner_manifest_bound_to_other_settings() {
     assert!(
         stderr.contains("does not bind the exact candidate settings bytes"),
         "{stderr}"
+    );
+}
+
+/// A pattern whose source hides its executable token still owns its position. `fo[o]` never spells
+/// `foo` contiguously, so the lexical scan cannot see it while the compiled regex still matches
+fn invisible_entry(id: &str, index: usize, pattern_sort_key: &str, witness: &str) -> Value {
+    let mut entry = entry(
+        id,
+        "always_allow",
+        index,
+        "foo",
+        "foo",
+        "invented",
+        "direct",
+        pattern_sort_key,
+        witness,
+        None,
+    );
+    entry
+        .as_object_mut()
+        .expect("Entry must be an object")
+        .insert("lexically_invisible".to_owned(), json!(true));
+    entry
+}
+
+#[test]
+fn a_lexically_invisible_member_occupies_its_position() {
+    let settings = settings(
+        vec![
+            pattern(r"^foo one$", true),
+            pattern(r"^fo[o] two$", true),
+            pattern(r"^foo three$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "foo-one",
+            "always_allow",
+            0,
+            "foo",
+            "foo",
+            "invented",
+            "direct",
+            "a",
+            "foo one",
+            None,
+        ),
+        invisible_entry("foo-two", 1, "b", "foo two"),
+        entry(
+            "foo-three",
+            "always_allow",
+            2,
+            "foo",
+            "foo",
+            "invented",
+            "direct",
+            "c",
+            "foo three",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert_eq!(
+        report.finding_count, 0,
+        "A hidden member that occupies index 1 must not leave a span gap: {:?}",
+        report.findings
+    );
+}
+
+#[test]
+fn a_lexically_invisible_declaration_refuses_a_visible_candidate() {
+    let settings = settings(
+        vec![pattern(r"^foo one$", true), pattern(r"^foo two$", true)],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "foo-one",
+            "always_allow",
+            0,
+            "foo",
+            "foo",
+            "invented",
+            "direct",
+            "a",
+            "foo one",
+            None,
+        ),
+        invisible_entry("foo-two", 1, "b", "foo two"),
+    ]);
+
+    let error = audit_json(&settings, &manifest)
+        .expect_err("A visible pattern must not be declared lexically invisible");
+
+    assert!(
+        error.contains("lexically invisible entries that the inventory recomputes as candidates"),
+        "{error}"
+    );
+    assert!(
+        error.contains("1 recomputed entry and 0 omitted from the reported positions"),
+        "{error}"
+    );
+    assert!(error.contains("always_allow[1]"), "{error}");
+}
+
+#[test]
+fn a_lexically_invisible_refusal_bounds_positions_and_counts_every_entry() {
+    let settings = settings(
+        (0..12)
+            .map(|index| pattern(&format!(r"^foo case-{index}$"), true))
+            .collect(),
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(
+        (0..12)
+            .map(|index| {
+                invisible_entry(
+                    &format!("foo-{index}"),
+                    index,
+                    &format!("{index:02}"),
+                    &format!("foo case-{index}"),
+                )
+            })
+            .collect(),
+    );
+
+    let error = audit_json(&settings, &manifest)
+        .expect_err("Visible patterns declared lexically invisible must be refused");
+
+    assert!(
+        error.contains("12 recomputed entries and 2 omitted from the reported positions"),
+        "{error}"
+    );
+    assert_eq!(error.matches("always_allow[").count(), 10, "{error}");
+    assert!(error.contains("always_allow[9]"), "{error}");
+    assert!(!error.contains("always_allow[10]"), "{error}");
+}
+
+#[test]
+fn a_lexically_invisible_declaration_still_fails_an_outside_owner_position() {
+    let settings = settings(
+        vec![
+            pattern(r"^foo one$", true),
+            pattern(r"^bar run$", true),
+            pattern(r"^foo three$", true),
+        ],
+        vec![],
+        vec![],
+    );
+    let manifest = manifest(vec![
+        entry(
+            "foo-one",
+            "always_allow",
+            0,
+            "foo",
+            "foo",
+            "invented",
+            "direct",
+            "a",
+            "foo one",
+            None,
+        ),
+        invisible_entry("foo-two", 1, "b", "foo two"),
+        entry(
+            "foo-three",
+            "always_allow",
+            2,
+            "foo",
+            "foo",
+            "invented",
+            "direct",
+            "c",
+            "foo three",
+            None,
+        ),
+    ]);
+
+    let report = audit_json(&settings, &manifest).expect("Audit input must be valid");
+
+    assert!(
+        report.findings.iter().any(|finding| finding
+            .reason
+            .contains("pattern does not match its witness")),
+        "Claiming a position another owner holds must still fail: {:?}",
+        report.findings
     );
 }

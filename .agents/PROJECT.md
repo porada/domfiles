@@ -86,9 +86,11 @@ Terminal discovery forms require verified exit-only behavior regardless of spell
 
 ### Zed fetch and sandbox host scope
 
-An explicit domain or hostname allowance authorizes the corresponding persistent `agent.sandbox_permissions.network_hosts` scope. Zed matches those grants by case-insensitive hostname without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port persistence is intentional. Terminal commands remain subject to their independent terminal permissions, while explicit-port fetch URLs remain outside the canonical hostname fetch pattern unless separately allowed at the fetch-tool layer.
+`agent.tool_permissions.tools.fetch.always_allow` contains one generic HTTPS syntax rule. A path-filtered fetch allowance uses a same-host `always_confirm` complement for every other direct initial path and relies on the generic rule for its approved prefixes. Confirmation precedence makes those prefixes prompt-free at the fetch-tool layer without redundant allow rules. The generic rule excludes URL userinfo and explicit ports.
 
-URL patterns in `agent.tool_permissions.tools.fetch.always_allow` that require a path after the hostname intentionally omit that hostname from `network_hosts`. A hostname grant would broaden trust beyond the path-qualified fetch allowance.
+`agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed matches those grants case-insensitively without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal commands remain subject to their independent terminal permissions.
+
+The same-host complement is an initial-fetch prompt filter rather than a path-scoped network boundary. Zed does not re-evaluate a same-host redirect path against fetch patterns, and the complement does not filter sandboxed terminal networking.
 
 ### Zed Fish command-text help allowances
 

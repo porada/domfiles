@@ -81,12 +81,33 @@ The owner specification is consumed by `seal`, not `materialize`. Keep it unchan
 Validate every terminal-pattern graph through all three graph-wide evidence kinds:
 
 - [`comparison`](permission-evaluator.md#compare-baseline-and-candidate-behavior) for baseline/candidate bucket states and representative decision transitions.
-- [`layer_decision`](permission-evaluator.md#evaluate-a-configured-pattern-layer) for the complete supplied configured terminal arrays, precedence, default, settled normalized inputs, and aggregate cases.
-- [`matcher_suite`](permission-evaluator.md#compile-and-match-permission-patterns) for pattern expectations and configured decisions.
+- [`layer_decision`](permission-evaluator.md#evaluate-a-configured-pattern-layer) for bucket-and-index cases covering every configured pattern, plus settled normalized inputs and explicit aggregates resolved from the selected settings snapshot’s complete arrays, default, and precedence.
+- [`matcher_suite`](permission-evaluator.md#compile-and-match-permission-patterns) for ID-based cases against selected catalog-backed and ordinary pattern artifacts, plus configured single-input decisions.
 
-Also satisfy the [owner evidence requirements](permission-evaluator.md#audit-permission-ownership): one exclusion-aware `candidate_inventory` result for each `inventory_owner` token with one or more delete operations, covering every such operation that shares the token, and `owner_audit` evidence covering every operation retaining candidate members. A scope-only graph with no terminal-pattern change requires no generic terminal evidence. Every result is hash-bound reviewed workflow evidence. It binds the complete file closure and exact binding, manifest, or overlay, but it is not authenticated proof that the validator ran and does not authorize promotion.
+Also satisfy the [owner evidence requirements](permission-evaluator.md#audit-permission-ownership): one exclusion-aware `candidate_inventory` result for each `inventory_owner` token with one or more delete operations, covering every such operation that shares the token, and `owner_audit` evidence covering every retaining operation and every candidate member within it, including supplemental members. The evaluator defines the exact cross-artifact requirements for supplemental entries. A scope-only graph with no terminal-pattern change requires no generic terminal evidence.
 
-Create the strict validation manifest from those result paths, then seal one bundle:
+A semantic change to fetch `always_allow`, `always_confirm`, `always_deny`, or `default` requires `layer_decision` evidence whose manifest declares `tool: "fetch"`. An absent fetch pattern bucket and an explicit empty array represent the same permission state. The result must record the sealed candidate SHA-256 and bind exactly one settings closure record at that candidate’s exact graph path and SHA-256. Terminal-targeted layer evidence cannot satisfy this gate. A `network_hosts`-only candidate and a broader candidate whose four fetch values remain unchanged require no fetch evidence.
+
+Every result is hash-bound reviewed workflow evidence. It binds the complete file closure and exact binding, manifest, or overlay, but it is not authenticated proof that the validator ran and does not authorize promotion.
+
+Write one strict validation plan with this schema. Unknown fields are rejected:
+
+```json
+{
+    "results": [
+        {
+            "id": "<evidence-id>",
+            "kind": "candidate_inventory|comparison|layer_decision|matcher_suite|owner_audit",
+            "manifest": "<manifest-path>",
+            "result": "<result-path>"
+        }
+    ]
+}
+```
+
+`results` may be empty for a scope-only candidate that changes no terminal patterns or semantic fetch permission fields. Use the exact empty form `{"results":[]}`. Otherwise, keep IDs nonempty and unique, and use safe graph-relative paths. Add the optional `"overlay": "<overlay-or-binding-path>"` field only when the evidence uses a manifest binding or path overlay.
+
+Seal one bundle from the validation plan:
 
 ```sh
 cargo run --locked --quiet \
@@ -96,11 +117,11 @@ cargo run --locked --quiet \
     --state '<state-path>' \
     --catalog '<artifact-catalog-path>' \
     --owner-spec '<owner-spec-path>' \
-    --validation '<validation-manifest-path>' \
+    --validation '<validation-plan-path>' \
     --output '<graph-root>/candidate-bundle.json'
 ```
 
-`seal` binds the complete graph and evidence, derives each result’s covered owner operations, recomputes the full input closure, compiles every candidate regex, and refuses missing, stale, cross-owner, or mislabeled evidence. The bundle does not carry user approval.
+`seal` binds the complete graph and evidence, derives each result’s covered owner operations, recomputes the full input closure, compiles every candidate regex, and validates the exact serialized bundle before creating `--output`. It refuses missing, stale, cross-owner, or mislabeled evidence. A refusal leaves the destination absent, so a corrected seal can reuse the same path. The bundle does not carry user approval.
 
 Run a read-only rehearsal:
 
@@ -143,6 +164,8 @@ cargo run --locked --quiet \
 ```
 
 Refresh creates a new unsealed graph, path overlay, owner and zero-owner bindings, validation plan, ordered validation commands, and report. It preserves reviewed semantic manifests byte-for-byte. Candidate placement is replayed from reviewed candidate gaps. Start and end gaps use sentinels, while an interior gap requires both retained boundaries to relocate uniquely and remain ordered. Missing, duplicate, ambiguous, or reversed boundaries refuse refresh. Current outside-owner drift remains intact.
+
+For fetch permissions, refresh replays only the semantically changed values among `always_allow`, `always_confirm`, `always_deny`, and `default`. It preserves every unrelated current fetch field. The refreshed state records that field set so a later refresh retains both the replay and evidence obligations even when current settings already contain the reviewed values. Fresh fetch layer evidence must use the generated path overlay, and that overlay must explicitly redirect the refreshed candidate settings path.
 
 Inspect the refresh report, run its ordered fresh-validator commands, and seal the generated validation plan into a new bundle under the same graph root. The validators use `--artifact-root` or `--binding` without rewriting reviewed manifests. Each new result binds the refreshed graph and overlay. Then rerun preflight and promote the new bundle under the existing explicit semantic authorization. If refresh refuses because the reviewed transformation cannot be replayed, recapture from current settings and obtain renewed approval for the new candidate.
 

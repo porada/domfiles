@@ -7,15 +7,15 @@ use permission_patterns::load_bound_artifact_catalog;
 pub(crate) use permission_patterns::sha256_hex;
 pub(crate) use permission_patterns::{
     BoundArtifact, BoundInputs, BoundedIssues, Bucket, ClosureContext, CompiledPattern, Decision,
-    InputClosure, InputClosureBuilder, MatchState, OUTCOME_PASSED, PatternError, ResolvedOverlay,
-    ResultKind, TerminalPosition, ValidationResult, compile_pattern, parse_strict_json,
-    read_utf8_file, regex_error_summary, relative_within_root, resolve_comparison_closure,
-    resolve_layer_closure, resolve_suite_closure, sha256_hex as closure_sha256_hex,
-    terminal_bucket_array, terminal_pattern_at, write_validation_result,
+    InputClosure, InputClosureBuilder, LayerTool, MatchState, OUTCOME_PASSED, PatternError,
+    ResolvedOverlay, ResultKind, TerminalPosition, ValidationResult, compile_pattern,
+    parse_strict_json, read_utf8_file, regex_error_summary, relative_within_root,
+    resolve_comparison_closure, resolve_layer_closure, resolve_suite_closure,
+    sha256_hex as closure_sha256_hex, write_validation_result,
 };
 use serde::{Deserialize, Deserializer, de};
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     ffi::{OsStr, OsString},
     fs,
     io::{self, Write},
@@ -23,7 +23,7 @@ use std::{
 };
 
 /// Overlay-aware path resolution. Without an overlay this behaves exactly as manifest-relative
-/// resolution, so reviewed manifests never need editing to run against a refreshed graph.
+/// resolution, so reviewed manifests never need editing to run against a refreshed graph
 pub(crate) struct PathResolver {
     graph_root: Option<PathBuf>,
     overlay: Option<ResolvedOverlay>,
@@ -127,7 +127,11 @@ const HELP: &str = concat!(
     "  File pattern: {\"type\":\"file\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"case_sensitive\":true|false,\"pattern_file\":\"path\"}\n",
     "  Catalog pattern: {\"type\":\"catalog\",\"catalog_id\":\"...\",\"pattern_id\":\"...\"}\n",
     "  Catalog: {\"id\":\"...\",\"catalog_file\":\"path\",\"candidate_file\":\"path\",\"state_file\":\"path\"}\n",
-    "  Cases may add a complete `expected_transition` with baseline and candidate bucket booleans plus `final_decision`\n",
+    "  Inline case: {\"type\":\"inline\",\"input\":\"...\",\"expected_transition\":<transition>}\n",
+    "  File case: {\"type\":\"file\",\"input_file\":\"path\",\"expected_transition\":<transition>}\n",
+    "  Transition: {\"baseline\":<state>,\"candidate\":<state>}\n",
+    "  State: {\"always_allow\":true|false,\"always_confirm\":true|false,\"always_deny\":true|false,\"final_decision\":\"allow|confirm|deny\"}\n",
+    "  Cases carry no `id`. `expected_transition` is optional, and each state it declares is complete\n",
     "  Either pattern set may be empty. An empty set has no bucket matches and resolves each case from its configured default\n",
     "  Catalog declarations bind sources but do not add patterns to either set\n",
     "  Relative manifest paths resolve from the comparison file’s parent. Catalog artifact paths resolve from the catalog’s parent\n",
@@ -143,15 +147,19 @@ const HELP: &str = concat!(
     "  It does not reproduce full Zed permission evaluation or establish formal language equivalence\n",
     "\n",
     "Strict UTF-8 JSON configured-pattern-layer manifest (unknown fields are rejected):\n",
-    "  Root: {\"settings_file\":\"path\",\"default\":\"allow|confirm|deny\",\"raw_provenance\":[...],\"settled_inputs\":[...],\"aggregate_cases\":[...]}\n",
+    "  Root: {\"settings_file\":\"path\",\"tool\":\"fetch|terminal\",\"raw_provenance\":[...],\"pattern_cases\":[...],\"settled_inputs\":[...],\"aggregate_cases\":[...]}\n",
     "  Provenance: {\"id\":\"...\",\"command\":\"...\"} records the original shell line for review and is never evaluated\n",
+    "  Pattern case: {\"type\":\"inline\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0,\"input\":\"...\",\"expected_match\":true|false}\n",
+    "  Pattern case: {\"type\":\"file\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0,\"input_file\":\"path\",\"expected_match\":true|false}\n",
     "  Settled input: {\"type\":\"inline\",\"id\":\"...\",\"input\":\"...\",\"expected_decision\":\"allow|confirm|deny\"}\n",
     "  Settled input: {\"type\":\"file\",\"id\":\"...\",\"input_file\":\"path\",\"expected_decision\":\"allow|confirm|deny\"}\n",
     "  Aggregate case: {\"id\":\"...\",\"inputs\":[\"<settled-input-id>\",...],\"expected_decision\":\"allow|confirm|deny\"}\n",
-    "  The layer loads the complete terminal pattern arrays from the supplied snapshot and compiles each pattern once\n",
+    "  The layer reads the selected tool’s configured default, loads its complete configured arrays, and compiles each pattern once\n",
+    "  Terminal requires all three arrays. An absent fetch array is empty, while a present malformed array is invalid\n",
+    "  Every configured pattern requires at least one independent pattern case\n",
     "\n",
     "Configured-pattern-layer limitations:\n",
-    "  It establishes decisions from the supplied configured arrays, their precedence, the supplied default, settled normalized inputs, and explicit aggregate cases only\n",
+    "  It establishes individual pattern matches and decisions from the selected configured arrays, their precedence, the configured default, settled normalized inputs, and explicit aggregate cases only\n",
     "  It does not establish Zed shell parsing or command decomposition, input normalization or redirection extraction, pre-rule safety checks, settings discovery or layering, sandbox or Git-metadata permissions, prompt display behavior, or user acceptance\n",
     "  Keep raw-command provenance and settled normalized inputs distinct\n",
     "\n",
@@ -166,7 +174,7 @@ const HELP: &str = concat!(
     "  Successful case manifest verification writes the verified case count to standard output\n",
     "  Successful comparison writes corpus case, baseline pattern, and candidate pattern counts to standard output\n",
     "  Successful suite verification writes pattern case, decision case, and pattern counts to standard output\n",
-    "  Successful configured-pattern-layer evaluation writes settled input, aggregate case, and configured pattern counts plus its stated limitations\n",
+    "  Successful configured-pattern-layer evaluation writes pattern case, settled input, aggregate case, and configured pattern counts plus its stated limitations\n",
     "  Expectation failures and comparison mismatches write at most 10 details to standard error without echoing regexes or inputs\n",
     "  Argument, data, and I/O errors write a diagnostic to standard error\n",
     "\n",
@@ -474,7 +482,7 @@ enum InputMode {
 }
 
 /// One manifest-driven invocation together with its optional graph anchoring, overlay redirection,
-/// and evidence destination.
+/// and evidence destination
 pub(crate) struct ManifestRun {
     manifest: PathBuf,
     graph_root: Option<PathBuf>,
@@ -1918,6 +1926,52 @@ struct LayerProvenance {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
+enum LayerPatternCaseDefinition {
+    File {
+        id: String,
+        bucket: Bucket,
+        index: usize,
+        input_file: String,
+        expected_match: bool,
+    },
+    Inline {
+        id: String,
+        bucket: Bucket,
+        index: usize,
+        input: String,
+        expected_match: bool,
+    },
+}
+
+impl LayerPatternCaseDefinition {
+    fn id(&self) -> &str {
+        match self {
+            Self::File { id, .. } | Self::Inline { id, .. } => id,
+        }
+    }
+
+    fn position(&self) -> TerminalPosition {
+        match self {
+            Self::File { bucket, index, .. } | Self::Inline { bucket, index, .. } => {
+                TerminalPosition {
+                    bucket: *bucket,
+                    index: *index,
+                }
+            }
+        }
+    }
+
+    fn expected_match(&self) -> bool {
+        match self {
+            Self::File { expected_match, .. } | Self::Inline { expected_match, .. } => {
+                *expected_match
+            }
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
 enum LayerInputDefinition {
     File {
         id: String,
@@ -1962,31 +2016,40 @@ struct LayerAggregateCase {
 }
 
 /// A configured-pattern-layer manifest. `raw_provenance` records original shell lines for review and
-/// is never evaluated, keeping raw commands separate from settled normalized inputs.
+/// is never evaluated, keeping raw commands separate from settled normalized inputs
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LayerManifestDefinition {
     settings_file: String,
-    #[serde(deserialize_with = "deserialize_decision")]
-    default: Decision,
+    tool: LayerTool,
     #[serde(default)]
     raw_provenance: Vec<LayerProvenance>,
+    pattern_cases: Vec<LayerPatternCaseDefinition>,
     settled_inputs: Vec<LayerInputDefinition>,
     #[serde(default)]
     aggregate_cases: Vec<LayerAggregateCase>,
 }
 
-struct LayerFailure {
-    case: String,
-    expected: Decision,
-    observed: Decision,
-    matched: Vec<String>,
+enum LayerFailure {
+    Decision {
+        case: String,
+        expected: Decision,
+        observed: Decision,
+        matched: Vec<String>,
+    },
+    Pattern {
+        case: String,
+        expected_match: bool,
+        observed_match: bool,
+        pattern: String,
+    },
 }
 
 pub(crate) struct LayerResult {
     failures: BoundedIssues<LayerFailure>,
     aggregate_count: usize,
     input_count: usize,
+    pattern_case_count: usize,
     pattern_count: usize,
 }
 
@@ -1999,9 +2062,114 @@ fn matched_positions(state: MatchState, patterns: &[CompiledPattern], input: &st
         .collect()
 }
 
-/// Evaluate one settings snapshot’s complete configured terminal pattern arrays. This establishes
-/// configured-pattern-layer decisions only. It reproduces no shell parsing, input derivation,
-/// pre-rule check, settings layering, sandbox behavior, or prompt outcome.
+fn layer_tool_settings(
+    settings: &serde_json::Value,
+    tool: LayerTool,
+) -> Result<&serde_json::Map<String, serde_json::Value>, String> {
+    settings
+        .get("agent")
+        .and_then(serde_json::Value::as_object)
+        .and_then(|agent| agent.get("tool_permissions"))
+        .and_then(serde_json::Value::as_object)
+        .and_then(|permissions| permissions.get("tools"))
+        .and_then(serde_json::Value::as_object)
+        .and_then(|tools| tools.get(tool.label()))
+        .and_then(serde_json::Value::as_object)
+        .ok_or_else(|| {
+            format!(
+                "Settings must contain object `.agent.tool_permissions.tools.{}`",
+                tool.label()
+            )
+        })
+}
+
+fn layer_default(
+    settings: &serde_json::Map<String, serde_json::Value>,
+    tool: LayerTool,
+) -> Result<Decision, String> {
+    let configured = settings
+        .get("default")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| format!("Settings {} `default` must be a string", tool.label()))?;
+
+    Decision::parse(configured).ok_or_else(|| {
+        format!(
+            "Settings {} `default` must be `allow`, `confirm`, or `deny`",
+            tool.label()
+        )
+    })
+}
+
+fn layer_bucket_array(
+    settings: &serde_json::Map<String, serde_json::Value>,
+    tool: LayerTool,
+    bucket: Bucket,
+) -> Result<Option<&Vec<serde_json::Value>>, String> {
+    match settings.get(bucket.label()) {
+        None if tool == LayerTool::Fetch => Ok(None),
+        None => Err(format!(
+            "Settings {} bucket `{}` must be an array",
+            tool.label(),
+            bucket.label()
+        )),
+        Some(value) => value.as_array().map(Some).ok_or_else(|| {
+            format!(
+                "Settings {} bucket `{}` must be an array",
+                tool.label(),
+                bucket.label()
+            )
+        }),
+    }
+}
+
+fn compile_layer_pattern(
+    value: &serde_json::Value,
+    tool: LayerTool,
+    position: TerminalPosition,
+) -> Result<CompiledPattern, String> {
+    let label = position.label();
+    let object = value.as_object().ok_or_else(|| {
+        format!(
+            "Settings {} entry `{label}` must be an object",
+            tool.label()
+        )
+    })?;
+    let pattern = object
+        .get("pattern")
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| {
+            format!(
+                "Settings {} entry `{label}` must contain string `pattern`",
+                tool.label()
+            )
+        })?;
+    let case_sensitive = object
+        .get("case_sensitive")
+        .and_then(serde_json::Value::as_bool)
+        .ok_or_else(|| {
+            format!(
+                "Settings {} entry `{label}` must contain boolean `case_sensitive`",
+                tool.label()
+            )
+        })?;
+    let regex = compile_pattern(pattern, case_sensitive).map_err(|error| {
+        let detail = match error {
+            PatternError::Empty => "the pattern is empty".to_owned(),
+            PatternError::Invalid(error) => regex_error_summary(&error),
+        };
+        format!("Failed to compile configured pattern `{label}`. {detail}")
+    })?;
+
+    Ok(CompiledPattern {
+        id: label,
+        bucket: position.bucket,
+        regex,
+    })
+}
+
+/// Evaluate one settings snapshot’s selected configured tool arrays. This establishes individual
+/// pattern matches and configured-pattern-layer decisions only. It reproduces no input derivation,
+/// pre-rule check, settings layering, sandbox behavior, or prompt outcome
 fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerResult, String> {
     let manifest_bytes = fs::read(layer_file).map_err(|error| {
         format!(
@@ -2038,28 +2206,73 @@ fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerRes
         )
     })?;
 
+    let tool_settings = layer_tool_settings(&settings, definition.tool)?;
+    let default = layer_default(tool_settings, definition.tool)?;
     let mut patterns = Vec::new();
+    let mut pattern_positions = BTreeMap::new();
     for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
-        let values = terminal_bucket_array(&settings, bucket)?;
-        for index in 0..values.len() {
+        let Some(values) = layer_bucket_array(tool_settings, definition.tool, bucket)? else {
+            continue;
+        };
+        for (index, value) in values.iter().enumerate() {
             let position = TerminalPosition { bucket, index };
-            let entry = terminal_pattern_at(&settings, position)?;
-            let regex = compile_pattern(&entry.pattern, entry.case_sensitive).map_err(|error| {
-                let detail = match error {
-                    PatternError::Empty => "the pattern is empty".to_owned(),
-                    PatternError::Invalid(error) => regex_error_summary(&error),
-                };
-                format!(
-                    "Failed to compile configured pattern `{}`. {detail}",
-                    position.label()
-                )
-            })?;
-            patterns.push(CompiledPattern {
-                id: position.label(),
-                bucket,
-                regex,
+            pattern_positions.insert(position, patterns.len());
+            patterns.push(compile_layer_pattern(value, definition.tool, position)?);
+        }
+    }
+
+    let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
+    let mut pattern_case_ids = HashSet::new();
+    let mut covered_positions = BTreeSet::new();
+    for pattern_case in &definition.pattern_cases {
+        if pattern_case.id().is_empty() {
+            return Err("Layer pattern case IDs must be nonempty".to_owned());
+        }
+        if !pattern_case_ids.insert(pattern_case.id().to_owned()) {
+            return Err("Layer pattern case IDs must be unique".to_owned());
+        }
+        let position = pattern_case.position();
+        let Some(pattern_index) = pattern_positions.get(&position).copied() else {
+            return Err(format!(
+                "Layer pattern case `{}` references unknown configured pattern `{}`",
+                display_id(pattern_case.id()),
+                position.label()
+            ));
+        };
+        let value = match pattern_case {
+            LayerPatternCaseDefinition::Inline { input, .. } => {
+                if input.contains('\n') || input.contains('\r') {
+                    return Err(
+                        "Layer inline pattern-case inputs must be single-line. Use `input_file` instead"
+                            .to_owned(),
+                    );
+                }
+                input.clone()
+            }
+            LayerPatternCaseDefinition::File { input_file, .. } => {
+                let path = resolver.resolve(layer_file, input_file);
+                read_utf8_file(&path, "layer pattern-case input")?
+            }
+        };
+        let observed_match = patterns[pattern_index].regex.is_match(&value);
+        if observed_match != pattern_case.expected_match() {
+            failures.push(LayerFailure::Pattern {
+                case: display_id(pattern_case.id()),
+                expected_match: pattern_case.expected_match(),
+                observed_match,
+                pattern: position.label(),
             });
         }
+        covered_positions.insert(position);
+    }
+    if let Some(uncovered) = pattern_positions
+        .keys()
+        .find(|position| !covered_positions.contains(position))
+    {
+        return Err(format!(
+            "Layer pattern cases must cover configured pattern `{}`",
+            uncovered.label()
+        ));
     }
 
     let mut inputs = Vec::with_capacity(definition.settled_inputs.len());
@@ -2073,7 +2286,7 @@ fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerRes
         }
         let value = match settled {
             LayerInputDefinition::Inline { input, .. } => {
-                if input.contains('\n') {
+                if input.contains('\n') || input.contains('\r') {
                     return Err(
                         "Layer inline inputs must be single-line. Use `input_file` instead"
                             .to_owned(),
@@ -2089,13 +2302,12 @@ fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerRes
         inputs.push((settled.id().to_owned(), value, settled.expected_decision()));
     }
 
-    let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
     let mut states = HashMap::with_capacity(inputs.len());
     for (id, value, expected) in &inputs {
         let state = MatchState::evaluate(value, &patterns);
-        let observed = state.decision(definition.default);
+        let observed = state.decision(default);
         if observed != *expected {
-            failures.push(LayerFailure {
+            failures.push(LayerFailure::Decision {
                 case: display_id(id),
                 expected: *expected,
                 observed,
@@ -2147,10 +2359,10 @@ fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerRes
         } else if every_allow {
             Decision::Allow
         } else {
-            definition.default
+            default
         };
         if observed != aggregate.expected_decision {
-            failures.push(LayerFailure {
+            failures.push(LayerFailure::Decision {
                 case: display_id(&aggregate.id),
                 expected: aggregate.expected_decision,
                 observed,
@@ -2163,6 +2375,7 @@ fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerRes
         failures,
         aggregate_count: definition.aggregate_cases.len(),
         input_count: inputs.len(),
+        pattern_case_count: definition.pattern_cases.len(),
         pattern_count: patterns.len(),
     })
 }
@@ -2170,23 +2383,42 @@ fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerRes
 fn report_layer_failures(stderr: &mut dyn Write, result: &LayerResult) -> io::Result<()> {
     writeln!(
         stderr,
-        "pattern-match: {} configured-pattern-layer {} did not match the expected decision",
+        "pattern-match: {} configured-pattern-layer {} did not match the expected result",
         result.failures.total_count(),
         case_label(result.failures.total_count())
     )?;
     for failure in result.failures.issues() {
-        let matched = if failure.matched.is_empty() {
-            "no configured pattern".to_owned()
-        } else {
-            failure.matched.join(", ")
-        };
-        writeln!(
-            stderr,
-            "  {}: expected {}, observed {} via {matched}",
-            failure.case,
-            failure.expected.label(),
-            failure.observed.label()
-        )?;
+        match failure {
+            LayerFailure::Decision {
+                case,
+                expected,
+                observed,
+                matched,
+            } => {
+                let matched = if matched.is_empty() {
+                    "no configured pattern".to_owned()
+                } else {
+                    matched.join(", ")
+                };
+                writeln!(
+                    stderr,
+                    "  {case}: expected {}, observed {} via {matched}",
+                    expected.label(),
+                    observed.label()
+                )?;
+            }
+            LayerFailure::Pattern {
+                case,
+                expected_match,
+                observed_match,
+                pattern,
+            } => writeln!(
+                stderr,
+                "  {case}: expected {}, observed {} for {pattern}",
+                if *expected_match { "match" } else { "no match" },
+                if *observed_match { "match" } else { "no match" }
+            )?,
+        }
     }
     let omitted = result.failures.omitted_count();
     if omitted > 0 {
@@ -2199,7 +2431,9 @@ fn report_layer_failures(stderr: &mut dyn Write, result: &LayerResult) -> io::Re
 fn report_verified_layer(stdout: &mut dyn Write, result: &LayerResult) -> Result<(), String> {
     writeln!(
         stdout,
-        "Verified {} settled {} and {} aggregate {} against {} configured {}",
+        "Verified {} pattern {}, {} settled {}, and {} aggregate {} across {} configured {}",
+        result.pattern_case_count,
+        case_label(result.pattern_case_count),
         result.input_count,
         case_label(result.input_count),
         result.aggregate_count,
@@ -2210,13 +2444,13 @@ fn report_verified_layer(stdout: &mut dyn Write, result: &LayerResult) -> Result
     .map_err(|error| format!("Failed to write layer result to standard output:\n\n{error}"))?;
     writeln!(
         stdout,
-        "  Configured-pattern-layer decisions only. Shell parsing, input derivation, pre-rule checks, settings layering, sandbox behavior, and prompt outcomes are out of scope"
+        "  Configured-pattern-layer results only. Input derivation, pre-rule checks, settings layering, sandbox behavior, and prompt outcomes are out of scope"
     )
     .map_err(|error| format!("Failed to write layer result to standard output:\n\n{error}"))
 }
 
 /// Record hash-bound reviewed workflow evidence. The bindings show which graph and inputs a claim
-/// refers to. They never prove that this evaluator ran or make the record authentic.
+/// refers to. They never prove that this evaluator ran or make the record authentic
 fn write_evidence(
     path: &Path,
     kind: ResultKind,
@@ -2314,7 +2548,7 @@ fn report_verified_suite(stdout: &mut dyn Write, result: &SuiteResult) -> Result
 }
 
 /// Derive one evidence record from the same resolver that drove evaluation, so a recorded closure
-/// and a later recomputed closure cannot diverge.
+/// and a later recomputed closure cannot diverge
 fn record_evidence(
     resolver: &PathResolver,
     run: &ManifestRun,
@@ -2454,9 +2688,10 @@ where
                         ResultKind::LayerDecision,
                         "domfiles-zed-settings-pattern-match --layer-file",
                         counts_of([
-                            ("settled_inputs", result.input_count),
                             ("aggregate_cases", result.aggregate_count),
                             ("configured_patterns", result.pattern_count),
+                            ("pattern_cases", result.pattern_case_count),
+                            ("settled_inputs", result.input_count),
                         ]),
                     ) {
                         report_error(stderr, &error);

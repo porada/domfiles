@@ -4,16 +4,17 @@ pub(crate) mod permission_patterns;
 
 use permission_patterns::{
     ArtifactCatalog, ArtifactCatalogPattern, BoundArtifact, BoundEntryPosition, BoundPosition,
-    BoundedIssues, Bundle, ClosureContext, InputClosureBuilder, LoadedArtifactCatalog,
-    ManifestBinding, OUTCOME_PASSED, OwnerOperationKind, OwnerSpec, PATH_OVERLAY_FILE, PathOverlay,
-    PatternError, PositionRemap, ResolvedOverlay, ResultKind, StateDocument, StatePattern,
-    SupplementalSide, TerminalPosition, ValidationEntry, ValidationPlan, ValidationPlanEntry,
-    ValidationResult, compile_pattern, infer_witness_owner, is_valid_sha256,
-    load_bound_artifact_catalog, owner_source_matcher, parse_strict_json, read_utf8_file,
-    regex_error_summary, relative_within_root, resolve_audit_closure, resolve_comparison_closure,
-    resolve_layer_closure, resolve_suite_closure, serialize_pretty_json_bytes,
-    terminal_pattern_at as snapshot_pattern_at, validate_artifact_catalog, validate_owner_spec,
-    verify_input_closure, verify_visibility_transformation,
+    BoundedIssues, Bundle, ClosureContext, FetchPermissionField, InputClosureBuilder, LayerTool,
+    LoadedArtifactCatalog, ManifestBinding, OUTCOME_PASSED, OwnerOperationKind, OwnerSpec,
+    PATH_OVERLAY_FILE, PathOverlay, PatternError, PositionRemap, ResolvedOverlay, ResultKind,
+    StateDocument, StatePattern, SupplementalSide, TerminalPosition, ValidationEntry,
+    ValidationPlan, ValidationPlanEntry, ValidationResult, compile_pattern, infer_witness_owner,
+    is_valid_sha256, layer_tool_from_manifest, load_bound_artifact_catalog, owner_source_matcher,
+    parse_strict_json, read_utf8_file, regex_error_summary, relative_within_root,
+    resolve_audit_closure, resolve_comparison_closure, resolve_layer_closure,
+    resolve_suite_closure, serialize_pretty_json_bytes, terminal_pattern_at as snapshot_pattern_at,
+    validate_artifact_catalog, validate_owner_spec, verify_input_closure,
+    verify_visibility_transformation,
 };
 pub(crate) use permission_patterns::{Bucket, sha256_hex};
 use serde::{Deserialize, Serialize};
@@ -80,7 +81,7 @@ const HELP: &str = concat!(
     "  --selection <path>          Capture or materialization selection JSON selected by the mode\n",
     "  --settings <path>           Baseline or current settings for `capture`, `verify`, and `refresh`, or the live destination for `preflight` and `promote`\n",
     "  --state <path>              State manifest used by `materialize`, `verify`, and `seal`\n",
-    "  --validation <path>         Validation manifest listing the fresh evidence `seal` binds\n",
+    "  --validation <path>         Validation plan listing the fresh evidence `seal` binds\n",
     "  --write                     Required exact mutation guard for `promote`\n",
     "\n",
     "Capture selection JSON schema (unknown fields are rejected):\n",
@@ -96,8 +97,10 @@ const HELP: &str = concat!(
     "  Ownership is declared by the owner spec, not the selection. A selection carrying `owner_replacement` is rejected\n",
     "\n",
     "State JSON schema (unknown fields are rejected):\n",
-    "  {\"baseline_file\":\"relative path\",\"baseline_sha256\":\"64 lowercase hex characters\",\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
+    "  {\"baseline_file\":\"relative path\",\"baseline_sha256\":\"64 lowercase hex characters\",\"fetch_replay_fields\":[\"always_allow|always_confirm|always_deny|default\"],\"scopes\":[\"/json/pointer\"],\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
     "  `patterns` may be empty. A patternless state can promote scope-only changes or catalog-bound insertion-only owners\n",
+    "  `fetch_replay_fields` may be omitted or empty. Refreshed states use its sorted unique values to preserve fetch-change lineage\n",
+    "  A semantic fetch `always_allow`, `always_confirm`, `always_deny`, or `default` change still requires candidate-bound fetch layer evidence\n",
     "  Relative baseline and pattern paths resolve from the state manifest’s parent\n",
     "  The manifest records hashes but does not authenticate itself\n",
     "\n",
@@ -105,6 +108,62 @@ const HELP: &str = concat!(
     "  {\"candidate_sha256\":\"64 lowercase hex characters\",\"state_sha256\":\"64 lowercase hex characters\",\"patterns\":[{\"id\":\"nonempty\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"source_index\":0,\"case_sensitive\":true,\"sha256\":\"64 lowercase hex characters\",\"pattern_file\":\"relative path\"}]}\n",
     "  `patterns` may be empty. Relative pattern paths resolve from the catalog’s parent\n",
     "  Candidate, state, and artifact hashes provide integrity and freshness but not authenticity\n",
+    "\n",
+    "Owner specification JSON schema (unknown fields are rejected):\n",
+    "  {\n",
+    "    \"owners\": [\n",
+    "      {\n",
+    "        \"id\": \"<owner-operation-id>\",\n",
+    "        \"inventory_owner\": \"<top-level-executable>\",\n",
+    "        \"operation\": \"insert|replace|delete\",\n",
+    "        \"baseline_members\": [\"<state-member-id>\"],\n",
+    "        \"candidate_members\": [\"<catalog-member-id>\"]\n",
+    "      }\n",
+    "    ],\n",
+    "    \"overlaps\": [\"<overlap-catalog-member-id>\"],\n",
+    "    \"supplemental\": [\n",
+    "      {\n",
+    "        \"side\": \"baseline|candidate\",\n",
+    "        \"member_id\": \"<state-or-catalog-member-id>\",\n",
+    "        \"declared_owner\": \"<semantic-owner>\",\n",
+    "        \"declared_role\": \"discovery|direct|wrapped\",\n",
+    "        \"repository_scope\": \"agent_worktree|fixture_repository|general\",\n",
+    "        \"invisibility_reason\": \"<nonempty-reason>\",\n",
+    "        \"classification_evidence\": [\n",
+    "          {\"kind\": \"normalized_witness\", \"value\": \"<normalized-permission-input>\"},\n",
+    "          {\"kind\": \"validation_entry\", \"value\": \"<validation-entry-id>\"}\n",
+    "        ]\n",
+    "      }\n",
+    "    ],\n",
+    "    \"visibility_rewrites\": [\n",
+    "      {\n",
+    "        \"baseline_member_id\": \"<state-member-id>\",\n",
+    "        \"candidate_member_id\": \"<catalog-member-id>\",\n",
+    "        \"recovered_owner\": \"<top-level-executable>\",\n",
+    "        \"transformation\": {\n",
+    "          \"prefix\": \"<shared-prefix>\",\n",
+    "          \"baseline_middle\": \"<baseline-finite-literal-middle>\",\n",
+    "          \"candidate_middle\": \"<candidate-finite-literal-middle>\",\n",
+    "          \"suffix\": \"<shared-suffix>\"\n",
+    "        }\n",
+    "      }\n",
+    "    ]\n",
+    "  }\n",
+    "  Root `owners` and `overlaps` are required. `supplemental` and `visibility_rewrites` may be omitted and default to empty arrays\n",
+    "  Owner operation IDs must be nonempty and unique. `inventory_owner` and `recovered_owner` must match `[A-Za-z0-9_.+-]+`\n",
+    "  `insert` requires an empty baseline and nonempty candidate. `replace` requires both. `delete` requires a nonempty baseline and empty candidate\n",
+    "  Every state member belongs to one operation. Every catalog member belongs to one operation or `overlaps`\n",
+    "  Supplemental records are unique by side and member ID. Each requires nonempty owner and evidence values, a nonblank reason, at least one normalized witness, and at least one validation entry\n",
+    "  Visibility rewrite member IDs are unique on each side. Shared affixes may be empty and must not exceed 2,000 bytes. Each middle must be nonempty and must not exceed 200 bytes\n",
+    "  Middles accept only ASCII alphanumeric or `_` literals and nonnested `(?:a|b)` literal groups, each optionally followed by `?`. Each side may expand to at most 256 literals\n",
+    "  The four transformation strings must reconstruct the exact baseline and candidate members and pass the bounded finite-literal expansion proof\n",
+    "\n",
+    "Validation plan JSON schema (unknown fields are rejected):\n",
+    "  {\"results\":[{\"id\":\"nonempty\",\"kind\":\"candidate_inventory|comparison|layer_decision|matcher_suite|owner_audit\",\"manifest\":\"relative path\",\"result\":\"relative path\",\"overlay\":\"relative path\"}]}\n",
+    "  `results` may be empty for an eligible scope-only candidate. Use the exact form {\"results\":[]}\n",
+    "  Result IDs must be nonempty and unique. Only the five listed kinds are sealable\n",
+    "  Manifest, result, and overlay paths are safe relative paths resolved from the bundle’s parent\n",
+    "  Add `overlay` only when the result binds a path overlay or a manifest binding\n",
     "\n",
     "Capture contract:\n",
     "  Settings must parse as a JSON object and are retained byte-for-byte as immutable `baseline-settings.json`\n",
@@ -130,13 +189,29 @@ const HELP: &str = concat!(
     "  Successful output contains at most 10 moved `id -> bucket[index]` metadata lines, an omission summary when needed, and aggregate counts\n",
     "  Missing or duplicate refusal reports at most 10 exceptional IDs and counts every failure\n",
     "\n",
+    "Seal contract:\n",
+    "  `--validation` consumes a validation plan naming every fresh result the bundle binds\n",
+    "  The graph, its evidence, and the owner coverage each result establishes are validated before `--output` is created\n",
+    "  The validated bytes are the exact serialized bundle bytes written to the destination\n",
+    "  A refusal leaves the destination absent, so a corrected seal can reuse the same path\n",
+    "  An existing destination is refused rather than overwritten\n",
+    "\n",
+    "Refresh contract:\n",
+    "  Reviewed semantic changes to the four fetch permission fields replay onto current fetch settings while preserving unrelated current fields\n",
+    "  Refreshed state preserves the fetch replay field set even when current settings already contain the reviewed values\n",
+    "  Fresh fetch layer evidence must bind an overlay that redirects the refreshed candidate settings path\n",
+    "\n",
     "Promote contract:\n",
     "  `--bundle` and `--write` are mandatory. There is no force option\n",
     "  The sealed bundle supplies the candidate, state, catalog, owner specification, and bound validation evidence\n",
     "  Neither the bundle, a passing preflight, nor `--write` is user approval to promote\n",
     "  Promotion reruns the complete preflight in-process immediately before the mutation boundary\n",
     "  The bundle must bind the exact candidate and state bytes, every artifact, and every candidate source identity\n",
+    "  Every semantic fetch permission change and inherited fetch replay field requires passing `layer_decision` evidence for tool `fetch` at the exact candidate graph path and SHA-256\n",
     "  Every state pattern and every catalog entry must be claimed exactly once by an owner operation or a declared overlap\n",
+    "  Every retained candidate member, including supplemental members, must appear in owner-audit evidence at its exact catalog bucket and index\n",
+    "  A supplemental candidate member’s canonical audit entry must use the same stable member ID, set `lexically_invisible` to true, and independently infer the supplemental record’s semantic owner, role, and repository scope\n",
+    "  The audit and supplemental records may use different witnesses only when they infer the same classification. Preflight and promotion refuse omissions or disagreements\n",
     "  Per-owner accounting is independent, and ordered remainder equality plus per-bucket count reconciliation stop one owner cancelling another\n",
     "  An empty insertion catalog instead requires all terminal pattern arrays to remain semantically unchanged\n",
     "  Live values at every authorized scope must equal the captured baseline values\n",
@@ -1070,6 +1145,16 @@ pub(crate) fn validate_scopes(
     Ok(decoded)
 }
 
+fn fetch_permission_pointer(field: FetchPermissionField) -> Vec<String> {
+    vec![
+        "agent".to_owned(),
+        "tool_permissions".to_owned(),
+        "tools".to_owned(),
+        "fetch".to_owned(),
+        field.label().to_owned(),
+    ]
+}
+
 fn pattern_pointer(bucket: Bucket, index: usize) -> Vec<String> {
     vec![
         "agent".to_owned(),
@@ -1230,7 +1315,7 @@ fn validate_refresh_directory(path: &Path, metadata: &fs::Metadata) -> Result<()
 }
 
 /// Inspect the existing output prefix without following symlinks and project any missing suffix from
-/// its canonical parent. The projected path is safe for graph-root separation checks.
+/// its canonical parent. The projected path is safe for graph-root separation checks
 fn inspect_refresh_output_path(path: &Path) -> Result<PathBuf, AppError> {
     let mut current = PathBuf::new();
     let mut last_existing = PathBuf::new();
@@ -1505,7 +1590,7 @@ fn add_refresh_artifact(
 }
 
 /// Create each missing directory component beneath the validated output, recording what this refresh
-/// created so a partial failure rolls back, and refuse a symlinked component inside the output.
+/// created so a partial failure rolls back, and refuse a symlinked component inside the output
 fn create_refresh_parent(
     output: &Path,
     relative: &Path,
@@ -1575,7 +1660,7 @@ fn write_refresh_file(path: &Path, bytes: &[u8]) -> Result<CreatedRefreshArtifac
 }
 
 /// Commit every refreshed artifact as one unit. Refresh writes a nested graph, so it preflights its
-/// own destinations instead of reusing the flat generated-filename route.
+/// own destinations instead of reusing the flat generated-filename route
 pub(crate) fn commit_refresh_artifacts_with_hook<F>(
     output: &Path,
     artifacts: &BTreeMap<String, Vec<u8>>,
@@ -1722,6 +1807,7 @@ fn capture(arguments: &CaptureArguments, stdout: &mut dyn Write) -> Result<(), A
     let state = StateDocument {
         baseline_file: BASELINE_FILE.to_owned(),
         baseline_sha256: sha256_hex(&settings_bytes),
+        fetch_replay_fields: Vec::new(),
         scopes: selection.scopes,
         patterns: captured
             .iter()
@@ -2043,6 +2129,22 @@ fn validate_state(path: &Path) -> Result<ValidatedState, AppError> {
     }
     let baseline = parse_json_object(&baseline_bytes, "baseline artifact", &baseline_relative)?;
     let scopes = validate_scopes(&baseline, &document.scopes).map_err(invalid)?;
+    if document
+        .fetch_replay_fields
+        .windows(2)
+        .any(|fields| fields[0] >= fields[1])
+    {
+        return Err(invalid(
+            "State manifest fetch replay fields must be sorted and unique",
+        ));
+    }
+    for field in &document.fetch_replay_fields {
+        if !pattern_is_authorized(&fetch_permission_pointer(*field), &scopes) {
+            return Err(invalid(
+                "A state fetch replay field lies outside every authorized scope",
+            ));
+        }
+    }
 
     let mut ids = HashSet::new();
     let mut selections = HashSet::new();
@@ -2402,6 +2504,133 @@ pub(crate) fn semantic_json_equal(first: &Value, second: &Value) -> bool {
     }
 }
 
+fn tool_permission_object<'a>(
+    settings: &'a Value,
+    tool: &str,
+) -> Option<&'a serde_json::Map<String, Value>> {
+    settings
+        .get("agent")
+        .and_then(Value::as_object)
+        .and_then(|agent| agent.get("tool_permissions"))
+        .and_then(Value::as_object)
+        .and_then(|permissions| permissions.get("tools"))
+        .and_then(Value::as_object)
+        .and_then(|tools| tools.get(tool))
+        .and_then(Value::as_object)
+}
+
+fn tool_permission_object_mut<'a>(
+    settings: &'a mut Value,
+    tool: &str,
+) -> Option<&'a mut serde_json::Map<String, Value>> {
+    settings
+        .get_mut("agent")
+        .and_then(Value::as_object_mut)
+        .and_then(|agent| agent.get_mut("tool_permissions"))
+        .and_then(Value::as_object_mut)
+        .and_then(|permissions| permissions.get_mut("tools"))
+        .and_then(Value::as_object_mut)
+        .and_then(|tools| tools.get_mut(tool))
+        .and_then(Value::as_object_mut)
+}
+
+fn semantic_optional_json_equal(first: Option<&Value>, second: Option<&Value>) -> bool {
+    match (first, second) {
+        (Some(first), Some(second)) => semantic_json_equal(first, second),
+        (None, None) => true,
+        _ => false,
+    }
+}
+
+fn absent_or_empty_fetch_bucket(value: Option<&Value>) -> bool {
+    match value {
+        None => true,
+        Some(Value::Array(values)) => values.is_empty(),
+        Some(_) => false,
+    }
+}
+
+fn semantic_fetch_permission_equal(
+    field: FetchPermissionField,
+    first: Option<&Value>,
+    second: Option<&Value>,
+) -> bool {
+    if field.is_pattern_bucket()
+        && absent_or_empty_fetch_bucket(first)
+        && absent_or_empty_fetch_bucket(second)
+    {
+        return true;
+    }
+
+    semantic_optional_json_equal(first, second)
+}
+
+fn changed_fetch_permission_fields(
+    baseline: &Value,
+    candidate: &Value,
+) -> Vec<FetchPermissionField> {
+    let baseline_fetch = tool_permission_object(baseline, "fetch");
+    let candidate_fetch = tool_permission_object(candidate, "fetch");
+
+    FetchPermissionField::ALL
+        .into_iter()
+        .filter(|field| {
+            !semantic_fetch_permission_equal(
+                *field,
+                baseline_fetch.and_then(|fetch| fetch.get(field.label())),
+                candidate_fetch.and_then(|fetch| fetch.get(field.label())),
+            )
+        })
+        .collect()
+}
+
+fn fetch_evidence_fields(
+    state: &StateDocument,
+    baseline: &Value,
+    candidate: &Value,
+) -> BTreeSet<FetchPermissionField> {
+    state
+        .fetch_replay_fields
+        .iter()
+        .copied()
+        .chain(changed_fetch_permission_fields(baseline, candidate))
+        .collect()
+}
+
+pub(crate) fn fetch_permissions_changed(baseline: &Value, candidate: &Value) -> bool {
+    !changed_fetch_permission_fields(baseline, candidate).is_empty()
+}
+
+fn replay_fetch_permissions(
+    fields: &BTreeSet<FetchPermissionField>,
+    reviewed: &Value,
+    candidate: &mut Value,
+) -> Result<(), AppError> {
+    if fields.is_empty() {
+        return Ok(());
+    }
+    let reviewed_fetch = tool_permission_object(reviewed, "fetch").ok_or_else(|| {
+        invalid("Reviewed candidate fetch permissions must remain an object during refresh")
+    })?;
+    let candidate_fetch = tool_permission_object_mut(candidate, "fetch").ok_or_else(|| {
+        refused("Refresh refused because current fetch permissions are not an object")
+    })?;
+
+    for field in fields {
+        let field = field.label();
+        match reviewed_fetch.get(field) {
+            Some(value) => {
+                candidate_fetch.insert(field.to_owned(), value.clone());
+            }
+            None => {
+                candidate_fetch.remove(field);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn validate_catalog_candidate_sources(
     catalog: &LoadedArtifactCatalog,
     candidate: &Value,
@@ -2473,7 +2702,7 @@ fn remove_terminal_sources(
 
 /// Resolve declared owner membership against the captured state and materialized catalog. Every
 /// state pattern and every catalog entry must be claimed exactly once, so no member can be reused
-/// and none can be silently omitted.
+/// and none can be silently omitted
 struct OwnerGraph<'a> {
     spec: &'a OwnerSpec,
     state_by_id: BTreeMap<&'a str, &'a LoadedPattern>,
@@ -2577,7 +2806,7 @@ fn bucket_positions<'a>(
 
 /// Authorize the complete owner transformation. Per-owner accounting is independent, and ordered
 /// remainder equality plus per-bucket count reconciliation prevent one owner’s undeclared change
-/// from cancelling another’s.
+/// from cancelling another’s
 fn authorize_owner_operations(
     candidate: &Value,
     state: &ValidatedState,
@@ -2640,16 +2869,123 @@ fn authorize_owner_operations(
     }
 
     // Values outside the terminal arrays are governed by authorized-scope equality, so comparing the
-    // complete objects here would wrongly refuse a legitimate scope-only change.
+    // complete objects here would wrongly refuse a legitimate scope-only change
+    Ok(())
+}
+
+/// Require the canonical owner-audit entry covering one supplemental candidate member and confirm
+/// that it infers the same classification. The audit derives its evidence independently of the owner
+/// specification, so agreement between the two is what makes a hidden member’s ownership
+/// reproducible. Both records may witness the member differently as long as the inference agrees
+///
+/// The bound evidence may carry several owner-audit results, so exactly one aggregated entry may
+/// declare the member’s stable ID, exactly one may occupy its rebound catalog position, and both must
+/// be the same entry. Every decision here counts matches rather than selecting one, so no validation
+/// order can hide a conflicting duplicate behind a correct entry
+fn verify_supplemental_audit_entry(
+    record: &permission_patterns::SupplementalRecord,
+    position: TerminalPosition,
+    audited: &AuditedEntries,
+) -> Result<(), AppError> {
+    let by_id = audited
+        .entries
+        .iter()
+        .filter(|entry| entry.id == record.member_id)
+        .collect::<Vec<_>>();
+    let at_position = audited
+        .entries
+        .iter()
+        .filter(|entry| entry.position == position)
+        .collect::<Vec<_>>();
+
+    if by_id.len() > 1 {
+        return Err(invalid(format!(
+            "Supplemental candidate member `{}` has {} owner-audit entries declaring its member ID, so none of them is canonical",
+            display_id(&record.member_id),
+            by_id.len()
+        )));
+    }
+    if at_position.len() > 1 {
+        return Err(invalid(format!(
+            "Supplemental candidate member `{}` has {} owner-audit entries at its catalog position `{}`, so none of them is canonical",
+            display_id(&record.member_id),
+            at_position.len(),
+            position.label()
+        )));
+    }
+
+    // One entry carries the member ID and one occupies the position, so an entry that satisfies both
+    // is necessarily the same entry
+    let entry = match by_id.first() {
+        Some(entry) if entry.position == position => *entry,
+        Some(_) => {
+            return Err(invalid(format!(
+                "The owner-audit entry for supplemental candidate member `{}` sits outside its catalog position `{}`",
+                display_id(&record.member_id),
+                position.label()
+            )));
+        }
+        None => {
+            return Err(match at_position.first() {
+                Some(other) => invalid(format!(
+                    "The owner-audit entry at `{}` declares member `{}`, not supplemental candidate member `{}`",
+                    position.label(),
+                    display_id(&other.id),
+                    display_id(&record.member_id)
+                )),
+                None => invalid(format!(
+                    "Supplemental candidate member `{}` has no owner-audit entry at its catalog position `{}`",
+                    display_id(&record.member_id),
+                    position.label()
+                )),
+            });
+        }
+    };
+    if !entry.lexically_invisible {
+        return Err(invalid(format!(
+            "The owner-audit entry for supplemental candidate member `{}` at `{}` must declare `lexically_invisible`",
+            display_id(&record.member_id),
+            position.label()
+        )));
+    }
+    let Some(witness) = entry.witness.as_deref() else {
+        return Err(invalid(format!(
+            "The owner-audit entry for supplemental candidate member `{}` must declare a normalized witness",
+            display_id(&record.member_id)
+        )));
+    };
+    let inferred = infer_witness_owner(witness).map_err(|error| {
+        invalid(format!(
+            "The owner-audit entry for supplemental candidate member `{}` declares an unsupported or ambiguous witness. {error}",
+            display_id(&record.member_id)
+        ))
+    })?;
+    if inferred.owner != record.declared_owner
+        || inferred.repository_scope != record.repository_scope
+        || inferred.role != record.declared_role
+    {
+        return Err(invalid(format!(
+            "The owner-audit entry for supplemental candidate member `{}` infers owner `{}`, repository scope `{}`, and role `{}`, but its supplemental record declares owner `{}`, repository scope `{}`, and role `{}`",
+            display_id(&record.member_id),
+            display_id(&inferred.owner),
+            inferred.repository_scope.label(),
+            inferred.role.label(),
+            display_id(&record.declared_owner),
+            record.repository_scope.label(),
+            record.declared_role.label()
+        )));
+    }
+
     Ok(())
 }
 
 /// Verify every supplemental classification. Ordinary lexical inventory cannot supply this proof,
-/// so the shared wrapper-aware inference runs directly on each declared witness.
+/// so the shared wrapper-aware inference runs directly on each declared witness
 fn verify_supplemental_ownership(
     candidate: &Value,
     state: &ValidatedState,
     graph: &OwnerGraph<'_>,
+    audited: &AuditedEntries,
     validation_ids: &BTreeSet<String>,
 ) -> Result<(), AppError> {
     let owner_of_baseline = graph
@@ -2779,6 +3115,7 @@ fn verify_supplemental_ownership(
                     if inferred.owner == record.declared_owner
                         && inferred.inventory_owner == owner.inventory_owner
                         && inferred.repository_scope == record.repository_scope
+                        && inferred.role == record.declared_role
                     {
                         satisfied = true;
                     }
@@ -2787,16 +3124,20 @@ fn verify_supplemental_ownership(
         }
         if !satisfied {
             return Err(invalid(format!(
-                "No supplemental witness for `{}` independently infers owner `{}`, inventory owner `{}`, and repository scope `{}`",
+                "No supplemental witness for `{}` independently infers owner `{}`, inventory owner `{}`, repository scope `{}`, and role `{}`",
                 display_id(&record.member_id),
                 display_id(&record.declared_owner),
                 owner.inventory_owner,
-                record.repository_scope.label()
+                record.repository_scope.label(),
+                record.declared_role.label()
             )));
+        }
+        if record.side == SupplementalSide::Candidate {
+            verify_supplemental_audit_entry(record, position, audited)?;
         }
     }
 
-    // Every remaining owner member must be an ordinary lexical inventory hit on its own side.
+    // Every remaining owner member must be an ordinary lexical inventory hit on its own side
     for owner in &graph.spec.owners {
         let matcher = owner_source_matcher(&owner.inventory_owner).map_err(invalid)?;
         for member in &owner.baseline_members {
@@ -2842,7 +3183,7 @@ fn verify_supplemental_ownership(
 }
 
 /// Verify every optional candidate-only visibility rewrite. This proves only the supported
-/// syntactic transformation invariant, never general regex-language equivalence.
+/// syntactic transformation invariant, never general regex-language equivalence
 fn verify_visibility_rewrites(candidate: &Value, graph: &OwnerGraph<'_>) -> Result<(), AppError> {
     for rewrite in &graph.spec.visibility_rewrites {
         let owner = graph
@@ -3090,7 +3431,7 @@ where
     }
 }
 
-/// The complete sealed graph, loaded and hash-verified from one bundle.
+/// The complete sealed graph, loaded and hash-verified from one bundle
 struct LoadedBundle {
     root: PathBuf,
     bytes: Vec<u8>,
@@ -3123,9 +3464,16 @@ fn read_bound(
 }
 
 /// Bundle schema, artifact integrity, state and catalog validation, compilation, and owner-spec
-/// structure.
+/// structure
 fn load_bundle(path: &Path) -> Result<LoadedBundle, AppError> {
     let bundle_bytes = read_bytes(path, "bundle")?;
+    load_bundle_bytes(bundle_bytes, path)
+}
+
+/// Load exact bundle bytes as though they had been read from `path`. `seal` validates the serialized
+/// bundle through this route before it creates the destination, so the checked bytes are the written
+/// bytes and a refusal never leaves a bundle behind
+fn load_bundle_bytes(bundle_bytes: Vec<u8>, path: &Path) -> Result<LoadedBundle, AppError> {
     let document: Bundle = parse_strict_json(&bundle_bytes, "Bundle").map_err(invalid)?;
     let root = path
         .parent()
@@ -3159,7 +3507,7 @@ fn load_bundle(path: &Path) -> Result<LoadedBundle, AppError> {
         .map_err(invalid)?;
     let spec: OwnerSpec = parse_strict_json(&spec_bytes, "Owner spec").map_err(invalid)?;
 
-    // Every sealed candidate and captured regex must compile with the Zed-compatible engine.
+    // Every sealed candidate and captured regex must compile with the Zed-compatible engine
     for pattern in &catalog.patterns {
         compile_pattern(&pattern.pattern, pattern.definition.case_sensitive).map_err(|error| {
             let detail = match error {
@@ -3198,11 +3546,65 @@ fn load_bundle(path: &Path) -> Result<LoadedBundle, AppError> {
     })
 }
 
+fn verify_fetch_layer_binding(
+    bundle: &LoadedBundle,
+    entry: &ValidationEntry,
+    result: &ValidationResult,
+    overlay: Option<&ResolvedOverlay>,
+) -> Result<(), AppError> {
+    if result.bound_inputs.settings_sha256.as_deref()
+        != Some(bundle.document.candidate.sha256.as_str())
+    {
+        return Err(invalid(format!(
+            "Fetch layer validation entry `{}` must record the sealed candidate settings SHA-256",
+            display_id(&entry.id)
+        )));
+    }
+    let settings_records = result
+        .bound_inputs
+        .input_closure
+        .records
+        .iter()
+        .filter(|record| record.role == permission_patterns::ROLE_SETTINGS)
+        .collect::<Vec<_>>();
+    let [settings_record] = settings_records.as_slice() else {
+        return Err(invalid(format!(
+            "Fetch layer validation entry `{}` must bind exactly one settings input",
+            display_id(&entry.id)
+        )));
+    };
+    if settings_record.path != bundle.document.candidate.path
+        || settings_record.sha256 != bundle.document.candidate.sha256
+    {
+        return Err(invalid(format!(
+            "Fetch layer validation entry `{}` must target the sealed candidate settings path",
+            display_id(&entry.id)
+        )));
+    }
+    if !bundle.state.document.fetch_replay_fields.is_empty() && overlay.is_none() {
+        return Err(invalid(format!(
+            "Fetch layer validation entry `{}` for refreshed state must bind a path overlay",
+            display_id(&entry.id)
+        )));
+    }
+    if let Some(overlay) = overlay
+        && !overlay.overlay.redirects(&bundle.document.candidate.path)
+    {
+        return Err(invalid(format!(
+            "Fetch layer validation entry `{}` uses an overlay that does not redirect the sealed candidate settings path",
+            display_id(&entry.id)
+        )));
+    }
+
+    Ok(())
+}
+
 /// Evidence integrity. Required kinds must be present, every binding must match the sealed
-/// graph, and each recorded input closure is independently recomputed.
+/// graph, and each recorded input closure is independently recomputed
 fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> {
     let mut entry_ids = BTreeSet::new();
     let mut kinds: BTreeMap<ResultKind, Vec<&ValidationEntry>> = BTreeMap::new();
+    let mut layer_tools = BTreeSet::new();
 
     for entry in &bundle.document.validation {
         if entry.id.is_empty() || !entry_ids.insert(entry.id.clone()) {
@@ -3211,7 +3613,14 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
             ));
         }
         let manifest_path = bundle_artifact_path(&bundle.root, &entry.manifest)?;
-        read_bound(&bundle.root, &entry.manifest, "validation manifest")?;
+        let manifest_bytes = read_bound(&bundle.root, &entry.manifest, "validation manifest")?;
+        let layer_tool = if entry.kind == ResultKind::LayerDecision {
+            let manifest: Value =
+                parse_strict_json(&manifest_bytes, "Layer manifest").map_err(invalid)?;
+            Some(layer_tool_from_manifest(&manifest).map_err(invalid)?)
+        } else {
+            None
+        };
         let result_bytes = read_bound(&bundle.root, &entry.result, "validation result")?;
         let result: ValidationResult =
             parse_strict_json(&result_bytes, "Validation result").map_err(invalid)?;
@@ -3232,7 +3641,7 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
         }
 
         // The auxiliary artifact must be declared exactly when the recorded result used one. Audit
-        // kinds bind a manifest binding in this slot, while manifest-relative kinds bind an overlay.
+        // kinds bind a manifest binding in this slot, while manifest-relative kinds bind an overlay
         let binds_overlay = matches!(
             entry.kind,
             ResultKind::MatcherSuite | ResultKind::Comparison | ResultKind::LayerDecision
@@ -3265,7 +3674,7 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
             }
         };
         // Resolving an overlay loads `path-overlay.json` beside the declared artifact, so the bound
-        // bytes and the loaded overlay must be the same file.
+        // bytes and the loaded overlay must be the same file
         let overlay = match (binds_overlay, auxiliary) {
             (true, Some(declared)) => {
                 let path = bundle_artifact_path(&bundle.root, declared)?;
@@ -3355,6 +3764,12 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
                 ))
             },
         )?;
+        if let Some(tool) = layer_tool {
+            if tool == LayerTool::Fetch {
+                verify_fetch_layer_binding(bundle, entry, &result, overlay.as_ref())?;
+            }
+            layer_tools.insert(tool);
+        }
 
         kinds.entry(entry.kind).or_default().push(entry);
     }
@@ -3362,11 +3777,7 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
     let changes_patterns =
         !bundle.spec.owners.is_empty() || !bundle.catalog.document.patterns.is_empty();
     if changes_patterns {
-        for kind in [
-            ResultKind::Comparison,
-            ResultKind::LayerDecision,
-            ResultKind::MatcherSuite,
-        ] {
+        for kind in [ResultKind::Comparison, ResultKind::MatcherSuite] {
             if !kinds.contains_key(&kind) {
                 return Err(invalid(format!(
                     "A terminal-pattern change requires `{}` evidence",
@@ -3374,6 +3785,19 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
                 )));
             }
         }
+        if !layer_tools.contains(&LayerTool::Terminal) {
+            return Err(invalid(
+                "A terminal-pattern change requires `layer_decision` evidence for tool `terminal`",
+            ));
+        }
+    }
+    if (!bundle.state.document.fetch_replay_fields.is_empty()
+        || fetch_permissions_changed(&bundle.state.baseline, &bundle.candidate))
+        && !layer_tools.contains(&LayerTool::Fetch)
+    {
+        return Err(invalid(
+            "A fetch permission change requires candidate-bound `layer_decision` evidence for tool `fetch`",
+        ));
     }
 
     Ok(entry_ids)
@@ -3381,7 +3805,7 @@ fn verify_evidence(bundle: &LoadedBundle) -> Result<BTreeSet<String>, AppError> 
 
 /// Resolve where each audited entry sits in the settings the audit actually ran against. A refreshed
 /// graph keeps its reviewed manifest bytes, so its recorded positions are only meaningful once the
-/// bound rebinding is applied.
+/// bound rebinding is applied
 fn effective_audit_positions(
     view: &permission_patterns::AuditManifestView,
     binding: Option<&ManifestBinding>,
@@ -3403,7 +3827,7 @@ fn effective_audit_positions(
         .collect()
 }
 
-/// Load the manifest binding an audit entry declares, so its reviewed positions can be rebound.
+/// Load the manifest binding an audit entry declares, so its reviewed positions can be rebound
 fn entry_manifest_binding(
     root: &Path,
     entry: &ValidationEntry,
@@ -3425,9 +3849,27 @@ fn entry_manifest_binding(
     Ok(Some(binding))
 }
 
+/// One canonical owner-audit entry resolved to the position its own audit ran against
+struct AuditedEntry {
+    id: String,
+    lexically_invisible: bool,
+    position: TerminalPosition,
+    witness: Option<String>,
+}
+
+/// Every owner-audit entry the bound evidence declares. Supplemental verification reuses this, so
+/// one manifest read serves both owner coverage and the cross-artifact classification check
+#[derive(Default)]
+struct AuditedEntries {
+    entries: Vec<AuditedEntry>,
+}
+
 /// Derive each audit entry’s covered owners from the reviewed manifest and require the sealed
-/// record to equal that derivation. Authored labels are never trusted.
-fn verify_owner_coverage(bundle: &LoadedBundle, graph: &OwnerGraph<'_>) -> Result<(), AppError> {
+/// record to equal that derivation. Authored labels are never trusted
+fn verify_owner_coverage(
+    bundle: &LoadedBundle,
+    graph: &OwnerGraph<'_>,
+) -> Result<AuditedEntries, AppError> {
     let catalog_position = graph
         .catalog_by_id
         .iter()
@@ -3445,6 +3887,7 @@ fn verify_owner_coverage(bundle: &LoadedBundle, graph: &OwnerGraph<'_>) -> Resul
         })
         .collect::<BTreeMap<_, _>>();
 
+    let mut audited = AuditedEntries::default();
     let mut audited_owners = BTreeSet::new();
     let mut emptied_owners = BTreeSet::new();
 
@@ -3457,6 +3900,14 @@ fn verify_owner_coverage(bundle: &LoadedBundle, graph: &OwnerGraph<'_>) -> Resul
                     .map_err(invalid)?;
                 let binding = entry_manifest_binding(&bundle.root, entry)?;
                 let audited_positions = effective_audit_positions(&view, binding.as_ref())?;
+                for (declaration, position) in view.entries.iter().zip(&audited_positions) {
+                    audited.entries.push(AuditedEntry {
+                        id: declaration.id.clone(),
+                        lexically_invisible: declaration.lexically_invisible,
+                        position: *position,
+                        witness: declaration.witness.clone(),
+                    });
+                }
                 let mut derived = BTreeSet::new();
                 for position in &audited_positions {
                     let key = (position.bucket, position.index);
@@ -3488,6 +3939,9 @@ fn verify_owner_coverage(bundle: &LoadedBundle, graph: &OwnerGraph<'_>) -> Resul
                         .map(|record| record.member_id.as_str())
                         .collect::<BTreeSet<_>>();
                     for member in &owner.candidate_members {
+                        // A supplemental member’s audit entry carries a classification that only the
+                        // shared inference can check, so `verify_supplemental_ownership` requires it
+                        // at the preflight and promotion boundary rather than here
                         if supplemental.contains(member.as_str()) {
                             continue;
                         }
@@ -3551,11 +4005,11 @@ fn verify_owner_coverage(bundle: &LoadedBundle, graph: &OwnerGraph<'_>) -> Resul
         }
     }
 
-    Ok(())
+    Ok(audited)
 }
 
 /// Derive the owner coverage one evidence manifest establishes. `seal` records this derivation and
-/// `preflight` recomputes it, so an authored label is never trusted.
+/// `preflight` recomputes it, so an authored label is never trusted
 fn derive_entry_owner_ids(
     kind: ResultKind,
     manifest_path: &Path,
@@ -3633,7 +4087,7 @@ fn bound_graph_artifact(
 }
 
 /// Bind the reviewed graph and its fresh evidence into one bundle. Sealing establishes integrity and
-/// recorded workflow completion only, never user authorization.
+/// recorded workflow completion only, never user authorization
 fn seal(arguments: &SealArguments, stdout: &mut dyn Write) -> Result<(), AppError> {
     let root = arguments
         .output
@@ -3664,9 +4118,9 @@ fn seal(arguments: &SealArguments, stdout: &mut dyn Write) -> Result<(), AppErro
         .join(&state.document.baseline_file);
     let (baseline_artifact, _) = bound_graph_artifact(&root, &baseline_path, "baseline settings")?;
 
-    let plan_bytes = read_bytes(&arguments.validation, "validation manifest")?;
+    let plan_bytes = read_bytes(&arguments.validation, "validation plan")?;
     let plan: ValidationPlan =
-        parse_strict_json(&plan_bytes, "Validation manifest").map_err(invalid)?;
+        parse_strict_json(&plan_bytes, "Validation plan").map_err(invalid)?;
 
     let mut validation = Vec::with_capacity(plan.results.len());
     for entry in &plan.results {
@@ -3680,7 +4134,7 @@ fn seal(arguments: &SealArguments, stdout: &mut dyn Write) -> Result<(), AppErro
             bound_graph_artifact(&root, &manifest_path, "validation manifest")?;
         let (result_artifact, _) = bound_graph_artifact(&root, &result_path, "validation result")?;
         // Manifest-relative kinds bind a path overlay here. Audit kinds bind the manifest binding
-        // that rebinds their reviewed positions, so coverage is derived from the rebound positions.
+        // that rebinds their reviewed positions, so coverage is derived from the rebound positions
         let binds_overlay = matches!(
             entry.kind,
             ResultKind::MatcherSuite | ResultKind::Comparison | ResultKind::LayerDecision
@@ -3737,6 +4191,15 @@ fn seal(arguments: &SealArguments, stdout: &mut dyn Write) -> Result<(), AppErro
         lineage: None,
     };
     let bytes = serialize_pretty_json_bytes(&document, "bundle").map_err(invalid)?;
+
+    // Sealing fails closed: the exact serialized bundle is verified through the same route that
+    // preflight and promotion use, before the destination is created. Every refusal therefore leaves
+    // `--output` absent, so a corrected seal can reuse the same path
+    let sealed = load_bundle_bytes(bytes, &arguments.output)?;
+    let sealed_graph = resolve_owner_graph(&sealed.state, &sealed.catalog, &sealed.spec)?;
+    verify_evidence(&sealed)?;
+    verify_owner_coverage(&sealed, &sealed_graph)?;
+
     let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -3747,16 +4210,12 @@ fn seal(arguments: &SealArguments, stdout: &mut dyn Write) -> Result<(), AppErro
                 arguments.output.display()
             ))
         })?;
-    file.write_all(&bytes)
-        .map_err(|error| invalid(format!("Failed to write bundle:\n\n{error}")))?;
+    if let Err(error) = file.write_all(&sealed.bytes) {
+        drop(file);
+        let _ = fs::remove_file(&arguments.output);
+        return Err(invalid(format!("Failed to write bundle:\n\n{error}")));
+    }
     drop(file);
-
-    // Sealing fails closed: the freshly written bundle is verified through the same route that
-    // preflight and promotion use.
-    let sealed = load_bundle(&arguments.output)?;
-    let sealed_graph = resolve_owner_graph(&sealed.state, &sealed.catalog, &sealed.spec)?;
-    verify_evidence(&sealed)?;
-    verify_owner_coverage(&sealed, &sealed_graph)?;
 
     writeln!(
         stdout,
@@ -3793,15 +4252,21 @@ struct PreflightOutcome {
 }
 
 /// Run every deterministic promotion check up to the mutation boundary. `preflight` and
-/// `promote --write` share this sequence, so a passing rehearsal and the in-process run agree.
+/// `promote --write` share this sequence, so a passing rehearsal and the in-process run agree
 fn preflight_promotion(settings: &Path, bundle_path: &Path) -> Result<PreflightOutcome, AppError> {
     let bundle = load_bundle(bundle_path)?;
     let graph = resolve_owner_graph(&bundle.state, &bundle.catalog, &bundle.spec)?;
 
     validate_catalog_candidate_sources(&bundle.catalog, &bundle.candidate, &bundle.state.scopes)?;
     let validation_ids = verify_evidence(&bundle)?;
-    verify_owner_coverage(&bundle, &graph)?;
-    verify_supplemental_ownership(&bundle.candidate, &bundle.state, &graph, &validation_ids)?;
+    let audited = verify_owner_coverage(&bundle, &graph)?;
+    verify_supplemental_ownership(
+        &bundle.candidate,
+        &bundle.state,
+        &graph,
+        &audited,
+        &validation_ids,
+    )?;
     verify_visibility_rewrites(&bundle.candidate, &graph)?;
     authorize_candidate(&bundle.candidate, &bundle.state, "Promotion")?;
 
@@ -3896,7 +4361,7 @@ fn manifest_position(value: &Value) -> Result<TerminalPosition, AppError> {
 
 /// Build the transient rebinding one reviewed audit manifest needs against the refreshed candidate.
 /// Every snapshot-dependent position the audit binary rebinds is covered, so reviewed manifest bytes
-/// stay byte-identical and no hash, path, or index is edited by hand.
+/// stay byte-identical and no hash, path, or index is edited by hand
 fn build_manifest_binding(
     manifest_bytes: &[u8],
     source_settings_sha256: &str,
@@ -4053,7 +4518,7 @@ fn locate_unique(
 }
 
 /// Rebuild a reviewed candidate against current settings without a task-authored replay script.
-/// Placement replays the reviewed candidate’s own ordering relative to its unchanged remainder.
+/// Placement replays the reviewed candidate’s own ordering relative to its unchanged remainder
 fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), AppError> {
     let bundle = load_bundle(&arguments.bundle)?;
     let graph = resolve_owner_graph(&bundle.state, &bundle.catalog, &bundle.spec)?;
@@ -4076,7 +4541,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
 
     let (settings_bytes, settings) = read_json_object(&arguments.settings, "settings")?;
 
-    // Relocate every baseline member uniquely by exact decoded bytes and case setting.
+    // Relocate every baseline member uniquely by exact decoded bytes and case setting
     let mut relocated: HashMap<Bucket, BTreeMap<usize, &LoadedPattern>> = HashMap::new();
     let mut relocation_report = Vec::new();
     for pattern in &bundle.state.patterns {
@@ -4109,10 +4574,16 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
         ));
     }
 
+    let fetch_replay_fields = fetch_evidence_fields(
+        &bundle.state.document,
+        &bundle.state.baseline,
+        &bundle.candidate,
+    );
     let mut candidate = settings.clone();
+    replay_fetch_permissions(&fetch_replay_fields, &bundle.candidate, &mut candidate)?;
     let mut drift = Vec::new();
     // Reviewed candidate position -> refreshed candidate position, for every element whose origin
-    // the replay establishes. Reviewed audit manifests are rebound through this map.
+    // the replay establishes. Reviewed audit manifests are rebound through this map
     let mut position_remap: BTreeMap<TerminalPosition, TerminalPosition> = BTreeMap::new();
 
     for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
@@ -4126,7 +4597,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
             .map(|definition| definition.source_index)
             .collect::<BTreeSet<_>>();
 
-        // Reviewed gaps count the retained remainder elements preceding each candidate member.
+        // Reviewed gaps count the retained remainder elements preceding each candidate member
         let mut reviewed_remainder = Vec::new();
         let mut reviewed_remainder_source = Vec::new();
         let mut placements: Vec<(usize, usize, Value)> = Vec::new();
@@ -4191,7 +4662,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
         }
 
         // Map only identities that are unique on both sides. Unrelated count drift therefore keeps
-        // stable exclusions rebindable without guessing among duplicate or changed remainder entries.
+        // stable exclusions rebindable without guessing among duplicate or changed remainder entries
         let mut origins = vec![None; current_remainder.len()];
         for (reviewed_index, current_index) in
             unique_identity_mappings(&reviewed_remainder, &current_remainder)
@@ -4231,7 +4702,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
 
     let candidate_bytes = serialize_pretty_json(&candidate).map_err(invalid)?;
 
-    // Reproduce the reviewed graph-relative layout so reviewed manifests run through an overlay.
+    // Reproduce the reviewed graph-relative layout so reviewed manifests run through an overlay
     let mut artifacts = BTreeMap::new();
     let mut overlay_paths = BTreeSet::new();
     let mut replaced_paths = BTreeSet::new();
@@ -4268,6 +4739,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
     let state_document = StateDocument {
         baseline_file: bundle.state.document.baseline_file.clone(),
         baseline_sha256: sha256_hex(&settings_bytes),
+        fetch_replay_fields: fetch_replay_fields.into_iter().collect(),
         scopes: bundle.state.document.scopes.clone(),
         patterns: state_patterns,
     };
@@ -4348,7 +4820,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
     replaced_paths.insert(bundle.document.catalog.path.clone());
     overlay_paths.insert(bundle.document.catalog.path.clone());
 
-    // The owner spec carries stable semantics only, so it is copied byte-for-byte.
+    // The owner spec carries stable semantics only, so it is copied byte-for-byte
     let spec_bytes = read_bound(&bundle.root, &bundle.document.owner_spec, "owner spec")?;
     add_refresh_artifact(
         &mut artifacts,
@@ -4359,7 +4831,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
 
     // Every reviewed manifest is reproduced byte-for-byte at its graph-relative path, and every
     // audit manifest gains the binding that rebinds its snapshot-dependent positions. Sealing the
-    // refreshed graph therefore needs no manual hash, path, or index editing.
+    // refreshed graph therefore needs no manual hash, path, or index editing
     let candidate_sha256 = sha256_hex(&candidate_bytes);
     let mut plan_entries = Vec::with_capacity(bundle.document.validation.len());
     let mut source_results = Vec::with_capacity(bundle.document.validation.len());
@@ -4400,7 +4872,7 @@ fn refresh(arguments: &RefreshArguments, stdout: &mut dyn Write) -> Result<(), A
     }
 
     // Preserve every exact file-backed input from the sealed closures unless refresh intentionally
-    // regenerated that graph path. Repeated declarations collapse only when their bytes agree.
+    // regenerated that graph path. Repeated declarations collapse only when their bytes agree
     for result in &source_results {
         for record in &result.bound_inputs.input_closure.records {
             if record.role == permission_patterns::ROLE_OVERLAY
@@ -4524,7 +4996,7 @@ fn preflight(arguments: &PreflightArguments, stdout: &mut dyn Write) -> Result<(
 }
 
 fn promote(arguments: &PromoteArguments, stdout: &mut dyn Write) -> Result<(), AppError> {
-    // The authoritative run happens here, immediately before the mutation boundary.
+    // The authoritative run happens here, immediately before the mutation boundary
     let outcome = preflight_promotion(&arguments.settings, &arguments.bundle)?;
 
     if outcome.unchanged {

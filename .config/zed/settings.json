@@ -170,8 +170,10 @@
 				"*.skills.sh",
 				"*.typescriptlang.org",
 				"*.vim.org",
+				"*.w.org",
 				"*.w3.org",
 				"*.whatwg.org",
+				"*.wordpress.net",
 				"*.wordpress.org",
 				"*.yarnpkg.com",
 				"*.zizmor.sh",
@@ -209,6 +211,7 @@
 				"grep.app",
 				"iana.org",
 				"jqlang.org",
+				"keith.github.io",
 				"knip.dev",
 				"man.openbsd.org",
 				"man7.org",
@@ -238,7 +241,6 @@
 				"rust-lang.github.io",
 				"rust-lang.org",
 				"sass-lang.com",
-				"schemas.wp.org",
 				"shellcheck.net",
 				"shields.io",
 				"skills.sh",
@@ -257,6 +259,7 @@
 				"viteplus.dev",
 				"vitest.dev",
 				"w3.org",
+				"wordpress.org",
 				"yarnpkg.com",
 				"zed.dev",
 				"zizmor.sh"
@@ -280,375 +283,13 @@
 					"default": "confirm",
 					"always_allow": [
 						{
-							"pattern": "^(?i:https://add-skill\\.vercel\\.sh)(?:[/?#]|$)",
+							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*[^./?#:@]+)(?:[/?#]|$)",
 							"case_sensitive": true
-						},
+						}
+					],
+					"always_confirm": [
 						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*agentclientprotocol\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://agentskills\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+agentskills\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*apple\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*brew\\.sh)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://cdn\\.jsdelivr\\.net)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*chatgpt\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://claude\\.ai)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*claude\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://code\\.visualstudio\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*crates\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://curl\\.se)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://cursor\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*cve\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://cveawg\\.mitre\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+docker\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://docs\\.python\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://docs\\.rs)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://dom\\.engineering)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://e18e\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://editorconfig\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://eslint-react\\.xyz)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://eslint\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://eslint\\.style)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://ffmpeg\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://fishshell\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://git-scm\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://github\\.blog)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*github(?:usercontent)?\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*gnu\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*go\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*grep\\.app)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+home-assistant\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*iana\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://jqlang\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://keith\\.github\\.io)/xcode-man-pages/",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://knip\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://man\\.openbsd\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://man7\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://manp\\.gs)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://manpages\\.debian\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://modelcontextprotocol\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://mole\\.fit)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+mozilla\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://nextjs\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://nodejs\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*npmjs\\.(?:com|org))(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://npmx\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*openai\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://opensource\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://oxc\\.rs)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://pandoc\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://perfectionist\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+php\\.net)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*playwright\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://pnpm\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://porada\\.co)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://prettier\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://publint\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://pubs\\.opengroup\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://pypi\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://react\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*rfc-editor\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://rust-lang\\.github\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*rust-lang\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://sass-lang\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://schemas\\.wp\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+schemastore\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*shellcheck\\.net)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*shields\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*skills\\.sh)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://skillsmp\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://stylelint\\.io)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://svgo\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://taplo\\.tamasfe\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://tsdown\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://turbo\\.build)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://turborepo\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://turborepo\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+typescriptlang\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://unpkg\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://vercel\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*vim\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://vite\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://viteplus\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://vitest\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*w3\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+whatwg\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)+wordpress\\.org)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*yarnpkg\\.com)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://zed\\.dev)(?:[/?#]|$)",
-							"case_sensitive": true
-						},
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*zizmor\\.sh)(?:[/?#]|$)",
+							"pattern": "^(?i:https://keith\\.github\\.io)(?:[?#]|$|/(?:$|[^x]|x(?:$|[^c])|xc(?:$|[^o])|xco(?:$|[^d])|xcod(?:$|[^e])|xcode(?:$|[^-])|xcode-(?:$|[^m])|xcode-m(?:$|[^a])|xcode-ma(?:$|[^n])|xcode-man(?:$|[^-])|xcode-man-(?:$|[^p])|xcode-man-p(?:$|[^a])|xcode-man-pa(?:$|[^g])|xcode-man-pag(?:$|[^e])|xcode-man-page(?:$|[^s])|xcode-man-pages(?:$|[^/])))",
 							"case_sensitive": true
 						}
 					]

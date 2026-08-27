@@ -42,6 +42,61 @@ impl Bucket {
     }
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum FetchPermissionField {
+    AlwaysAllow,
+    AlwaysConfirm,
+    AlwaysDeny,
+    Default,
+}
+
+impl FetchPermissionField {
+    pub(crate) const ALL: [Self; 4] = [
+        Self::AlwaysAllow,
+        Self::AlwaysConfirm,
+        Self::AlwaysDeny,
+        Self::Default,
+    ];
+
+    pub(crate) fn is_pattern_bucket(self) -> bool {
+        self != Self::Default
+    }
+
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            Self::AlwaysAllow => "always_allow",
+            Self::AlwaysConfirm => "always_confirm",
+            Self::AlwaysDeny => "always_deny",
+            Self::Default => "default",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum LayerTool {
+    Fetch,
+    Terminal,
+}
+
+impl LayerTool {
+    pub(crate) fn parse(value: &str) -> Option<Self> {
+        match value {
+            "fetch" => Some(Self::Fetch),
+            "terminal" => Some(Self::Terminal),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            Self::Fetch => "fetch",
+            Self::Terminal => "terminal",
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub(crate) enum Decision {
     Allow,
@@ -513,9 +568,9 @@ impl<T> BoundedIssues<T> {
 }
 
 // One shared wrapper-aware owner model serves every binary. Supplemental ownership cannot reuse the
-// lexical audit, because a supplemental member is intentionally absent from its recomputed hit set.
+// lexical audit, because a supplemental member is intentionally absent from its recomputed hit set
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Role {
     Discovery,
@@ -570,6 +625,7 @@ pub(crate) struct InferredWitnessOwner {
     pub(crate) owner: String,
     pub(crate) inventory_owner: String,
     pub(crate) repository_scope: RepositoryScope,
+    pub(crate) role: Role,
 }
 
 pub(crate) fn manager_group(owner: &str) -> &str {
@@ -912,8 +968,9 @@ pub(crate) fn infer_owner_role(
     })
 }
 
-/// Resolve one normalized witness to its semantic owner, top-level inventory token, and repository
-/// scope through the shared inference model.
+/// Resolve one normalized witness to its semantic owner, top-level inventory token, repository
+/// scope, and role through the shared inference model. A witness carrying no recognized wrapper
+/// resolves to `direct`, because leading assignments never change the role
 pub(crate) fn infer_witness_owner(witness: &str) -> Result<InferredWitnessOwner, String> {
     let inferred = infer_owner_role(witness, &[])?;
     let inventory_owner = manager_group(&inferred.owner).to_owned();
@@ -922,6 +979,7 @@ pub(crate) fn infer_witness_owner(witness: &str) -> Result<InferredWitnessOwner,
         owner: inferred.owner,
         inventory_owner,
         repository_scope: infer_repository_scope(witness),
+        role: inferred.role,
     })
 }
 
@@ -1033,12 +1091,12 @@ pub(crate) fn owner_source_matcher(owner: &str) -> Result<Regex, String> {
 }
 
 /// Report whether one regex source text exposes `owner` under the inventory’s exact token-boundary
-/// rule. Source-text adjacency, not compiled matching, decides lexical visibility.
+/// rule. Source-text adjacency, not compiled matching, decides lexical visibility
 pub(crate) fn is_lexically_visible(pattern: &str, matcher: &Regex) -> bool {
     matcher.captures(pattern).is_some()
 }
 
-/// Recompute the complete lexical inventory position set for one top-level executable token.
+/// Recompute the complete lexical inventory position set for one top-level executable token
 pub(crate) fn lexical_inventory_positions(
     settings: &Value,
     owner: &str,
@@ -1078,7 +1136,7 @@ pub(crate) fn validate_safe_relative_path(path: &str) -> Result<PathBuf, String>
     Ok(candidate)
 }
 
-/// Resolve one safe-relative path beneath `root`, refusing traversal and symlinked components.
+/// Resolve one safe-relative path beneath `root`, refusing traversal and symlinked components
 pub(crate) fn resolve_within_root(root: &Path, relative: &str) -> Result<PathBuf, String> {
     let safe = validate_safe_relative_path(relative)?;
     let resolved = root.join(safe);
@@ -1100,7 +1158,7 @@ pub(crate) fn read_regular_file_within_root(
     read_regular_file_without_symlinks(&absolute, description)
 }
 
-/// Express one absolute path as a safe-relative path beneath `root`.
+/// Express one absolute path as a safe-relative path beneath `root`
 pub(crate) fn relative_within_root(root: &Path, absolute: &Path) -> Result<String, String> {
     let root_absolute = path_as_absolute(root)?;
     let target = path_as_absolute(absolute)?;
@@ -1148,7 +1206,7 @@ pub(crate) struct InputClosure {
 }
 
 /// Hash the sorted closure with an explicit length prefix on every field. Delimiter-only framing
-/// would let a crafted path forge a different record set that hashes identically.
+/// would let a crafted path forge a different record set that hashes identically
 pub(crate) fn input_closure_digest(records: &[InputClosureRecord]) -> String {
     let mut encoded = Vec::new();
     encoded.extend_from_slice(&(records.len() as u64).to_le_bytes());
@@ -1162,7 +1220,7 @@ pub(crate) fn input_closure_digest(records: &[InputClosureRecord]) -> String {
     sha256_hex(&encoded)
 }
 
-/// Accumulate every file an evaluator actually reads, anchored to the bundle graph root.
+/// Accumulate every file an evaluator actually reads, anchored to the bundle graph root
 pub(crate) struct InputClosureBuilder {
     root: PathBuf,
     records: BTreeMap<(String, String), String>,
@@ -1192,7 +1250,7 @@ impl InputClosureBuilder {
     }
 
     /// Record one already-read file. Repeated reads of the same role and path collapse, and a
-    /// conflicting hash for the same key means the file changed while it was being evaluated.
+    /// conflicting hash for the same key means the file changed while it was being evaluated
     pub(crate) fn record(
         &mut self,
         role: &str,
@@ -1221,7 +1279,7 @@ impl InputClosureBuilder {
         Ok(())
     }
 
-    /// Read one file beneath the graph root and record it in the closure.
+    /// Read one file beneath the graph root and record it in the closure
     pub(crate) fn read_recorded(
         &mut self,
         role: &str,
@@ -1254,7 +1312,7 @@ impl InputClosureBuilder {
     }
 }
 
-/// Summarize the difference between a recorded and a recomputed closure without emitting contents.
+/// Summarize the difference between a recorded and a recomputed closure without emitting contents
 pub(crate) fn describe_closure_difference(
     recorded: &InputClosure,
     recomputed: &InputClosure,
@@ -1355,6 +1413,7 @@ pub(crate) struct SupplementalRecord {
     pub(crate) side: SupplementalSide,
     pub(crate) member_id: String,
     pub(crate) declared_owner: String,
+    pub(crate) declared_role: Role,
     pub(crate) repository_scope: RepositoryScope,
     pub(crate) invisibility_reason: String,
     pub(crate) classification_evidence: Vec<ClassificationEvidence>,
@@ -1390,7 +1449,7 @@ pub(crate) struct OwnerSpec {
 }
 
 /// Check every owner-spec invariant that does not require the captured graph. Member existence and
-/// source identity are resolved separately against the state and catalog.
+/// source identity are resolved separately against the state and catalog
 pub(crate) fn validate_owner_spec(spec: &OwnerSpec) -> Result<(), String> {
     let mut owner_ids = HashSet::new();
     let mut baseline_members = HashSet::new();
@@ -1548,7 +1607,7 @@ fn is_expansion_literal(byte: u8) -> bool {
 }
 
 /// Parse one transformation middle under the supported literal-expansion grammar. Every construct
-/// outside the grammar refuses rather than being approximated.
+/// outside the grammar refuses rather than being approximated
 fn parse_expansion_middle(middle: &str) -> Result<Vec<ExpansionTerm>, String> {
     if middle.is_empty() {
         return Err("A transformation middle must be nonempty".to_owned());
@@ -1644,7 +1703,7 @@ fn expand_middle(terms: &[ExpansionTerm]) -> Result<BTreeSet<String>, String> {
 }
 
 /// Scan one complete pattern with a bounded construct model, reporting which byte offsets are safe
-/// split boundaries. Any construct the model does not represent exactly refuses.
+/// split boundaries. Any construct the model does not represent exactly refuses
 fn split_boundaries(pattern: &str) -> Result<Vec<bool>, String> {
     let bytes = pattern.as_bytes();
     let mut safe = vec![false; bytes.len() + 1];
@@ -1712,7 +1771,7 @@ fn split_boundaries(pattern: &str) -> Result<Vec<bool>, String> {
 }
 
 /// Verify the supported syntactic transformation invariant between one baseline and one candidate
-/// member. This proves only that invariant and never general regex-language equivalence.
+/// member. This proves only that invariant and never general regex-language equivalence
 pub(crate) fn verify_visibility_transformation(
     transformation: &VisibilityTransformation,
     baseline: &str,
@@ -1831,7 +1890,7 @@ pub(crate) struct BoundInputs {
 }
 
 /// Hash-bound reviewed workflow evidence. The bindings establish that a recorded claim refers to the
-/// exact graph and inputs. They never prove that the validator ran or make the record authentic.
+/// exact graph and inputs. They never prove that the validator ran or make the record authentic
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ValidationResult {
@@ -1893,7 +1952,7 @@ pub(crate) struct ValidationPlan {
 }
 
 /// Redirect exactly the graph-relative paths a refresh reproduced. Any other declared path keeps
-/// resolving from its manifest’s parent, so reviewed manifest bytes never need editing.
+/// resolving from its manifest’s parent, so reviewed manifest bytes never need editing
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct PathOverlay {
@@ -1952,7 +2011,7 @@ pub(crate) struct PositionRemap {
 }
 
 /// A transient rebinding applied in memory so a reviewed manifest’s semantic fields stay
-/// byte-identical while its snapshot-dependent positions follow a refreshed graph.
+/// byte-identical while its snapshot-dependent positions follow a refreshed graph
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ManifestBinding {
@@ -2024,6 +2083,8 @@ pub(crate) struct StatePattern {
 pub(crate) struct StateDocument {
     pub(crate) baseline_file: String,
     pub(crate) baseline_sha256: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) fetch_replay_fields: Vec<FetchPermissionField>,
     pub(crate) scopes: Vec<String>,
     pub(crate) patterns: Vec<StatePattern>,
 }
@@ -2050,7 +2111,7 @@ pub(crate) struct RetainedOwnerEntry {
 }
 
 /// Pre-seal proof that the deleted owners retain no owned entry in the candidate. Every recomputed
-/// lexical hit must be classified once, so a nonzero raw hit count never stands in for the claim.
+/// lexical hit must be classified once, so a nonzero raw hit count never stands in for the claim
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ZeroOwnerManifest {
@@ -2070,7 +2131,7 @@ pub(crate) struct AbsentMember {
 }
 
 /// Post-promotion delete-all verification. Absence is proved by byte-exact scans over the complete
-/// arrays, independently of any remainder comparison.
+/// arrays, independently of any remainder comparison
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct DeleteAllManifest {
@@ -2091,11 +2152,14 @@ pub(crate) struct DeleteAllManifest {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct AuditEntryView {
     pub(crate) id: String,
+    pub(crate) lexically_invisible: bool,
     pub(crate) position: TerminalPosition,
+    pub(crate) witness: Option<String>,
 }
 
-/// A bounded read-only view of the ordinary owner-audit manifest. Coverage derivation needs only
-/// entry identity and position, so the strict audit schema stays owned by the audit binary.
+/// A bounded read-only view of the ordinary owner-audit manifest. Coverage derivation needs entry
+/// identity and position, and the supplemental cross-check adds the invisibility declaration and the
+/// witness it infers from, so the strict audit schema stays owned by the audit binary
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct AuditManifestView {
     pub(crate) settings_sha256: String,
@@ -2137,9 +2201,29 @@ pub(crate) fn parse_audit_manifest_view(bytes: &[u8]) -> Result<AuditManifestVie
     {
         let id = declared_string(entry, "id")
             .ok_or_else(|| "An owner audit manifest entry must declare `id`".to_owned())?;
+        let lexically_invisible = match entry.get("lexically_invisible") {
+            None => false,
+            Some(declared) => declared.as_bool().ok_or_else(|| {
+                "An owner audit manifest entry must declare a boolean `lexically_invisible`"
+                    .to_owned()
+            })?,
+        };
+        let witness = match entry.get("witness") {
+            None => None,
+            Some(declared) => Some(
+                declared
+                    .as_str()
+                    .ok_or_else(|| {
+                        "An owner audit manifest entry must declare a string `witness`".to_owned()
+                    })?
+                    .to_owned(),
+            ),
+        };
         entries.push(AuditEntryView {
             id,
+            lexically_invisible,
             position: view_position(entry)?,
+            witness,
         });
     }
 
@@ -2162,7 +2246,7 @@ pub(crate) fn parse_audit_manifest_view(bytes: &[u8]) -> Result<AuditManifestVie
 }
 
 /// Compare a recorded closure against an independently recomputed one, reporting bounded path-only
-/// differences.
+/// differences
 pub(crate) fn verify_input_closure(
     recorded: &InputClosure,
     recomputed: &InputClosure,
@@ -2199,7 +2283,7 @@ pub(crate) const ROLE_PATTERN_FILE: &str = "pattern_file";
 pub(crate) const ROLE_SETTINGS: &str = "settings";
 
 /// A loaded `--artifact-root` overlay together with its own identity, so the overlay itself becomes
-/// part of every closure it influences.
+/// part of every closure it influences
 pub(crate) struct ResolvedOverlay {
     pub(crate) root: PathBuf,
     pub(crate) file: PathBuf,
@@ -2231,14 +2315,14 @@ impl ResolvedOverlay {
 }
 
 /// Shared resolution context. One implementation drives both the evaluator’s reads and the
-/// verifier’s recomputation, so a recorded closure and a recomputed closure cannot diverge.
+/// verifier’s recomputation, so a recorded closure and a recomputed closure cannot diverge
 pub(crate) struct ClosureContext<'a> {
     pub(crate) overlay: Option<&'a ResolvedOverlay>,
 }
 
 impl ClosureContext<'_> {
     /// Resolve one declared manifest-relative path, redirecting it only when the overlay lists its
-    /// graph-relative form.
+    /// graph-relative form
     pub(crate) fn resolve(
         &self,
         builder: &InputClosureBuilder,
@@ -2274,7 +2358,7 @@ fn parent_of(path: &Path) -> PathBuf {
     path.parent().unwrap_or_else(|| Path::new(".")).to_owned()
 }
 
-/// Resolve one declared pattern catalog and every artifact it binds.
+/// Resolve one declared pattern catalog and every artifact it binds
 fn resolve_catalog_closure(
     builder: &mut InputClosureBuilder,
     context: &ClosureContext<'_>,
@@ -2305,7 +2389,7 @@ fn resolve_catalog_closure(
     Ok(())
 }
 
-/// Resolve every file a matcher suite reads after overlay redirection.
+/// Resolve every file a matcher suite reads after overlay redirection
 pub(crate) fn resolve_suite_closure(
     builder: &mut InputClosureBuilder,
     context: &ClosureContext<'_>,
@@ -2319,7 +2403,7 @@ pub(crate) fn resolve_suite_closure(
 
     // Every record type splits exactly as the suite evaluator splits it. A file-bearing field is
     // parsed with the same bounded `splitn` arity, so a path containing a tab cannot leave one
-    // reader with a field the other silently drops.
+    // reader with a field the other silently drops
     for line in manifest.split_terminator('\n') {
         let Some((record_type, _)) = line.split_once('\t') else {
             return Err("A suite manifest record must contain a tab-separated type".to_owned());
@@ -2383,7 +2467,16 @@ fn declared_string(value: &Value, key: &str) -> Option<String> {
     value.get(key).and_then(Value::as_str).map(str::to_owned)
 }
 
-/// Resolve every file a baseline/candidate comparison reads after overlay redirection.
+pub(crate) fn layer_tool_from_manifest(manifest: &Value) -> Result<LayerTool, String> {
+    let Some(tool) = manifest.get("tool").and_then(Value::as_str) else {
+        return Err("A layer manifest must declare string `tool`".to_owned());
+    };
+
+    LayerTool::parse(tool)
+        .ok_or_else(|| "A layer manifest `tool` must be `fetch` or `terminal`".to_owned())
+}
+
+/// Resolve every file a baseline/candidate comparison reads after overlay redirection
 pub(crate) fn resolve_comparison_closure(
     builder: &mut InputClosureBuilder,
     context: &ClosureContext<'_>,
@@ -2447,7 +2540,7 @@ pub(crate) fn resolve_comparison_closure(
     Ok(())
 }
 
-/// Resolve every file a configured-pattern-layer evaluation reads after overlay redirection.
+/// Resolve every file a configured-pattern-layer evaluation reads after overlay redirection
 pub(crate) fn resolve_layer_closure(
     builder: &mut InputClosureBuilder,
     context: &ClosureContext<'_>,
@@ -2456,6 +2549,7 @@ pub(crate) fn resolve_layer_closure(
     record_overlay(builder, context)?;
     let manifest_bytes = builder.read_recorded(ROLE_MANIFEST, manifest_path, "layer manifest")?;
     let manifest: Value = parse_strict_json(&manifest_bytes, "Layer manifest")?;
+    layer_tool_from_manifest(&manifest)?;
     let base = parent_of(manifest_path);
 
     let Some(settings_file) = declared_string(&manifest, "settings_file") else {
@@ -2464,20 +2558,22 @@ pub(crate) fn resolve_layer_closure(
     let settings_path = context.resolve(builder, &base, &settings_file)?;
     builder.read_recorded(ROLE_SETTINGS, &settings_path, "layer settings")?;
 
-    if let Some(inputs) = manifest.get("settled_inputs").and_then(Value::as_array) {
-        for input in inputs {
-            let Some(input_file) = declared_string(input, "input_file") else {
-                continue;
-            };
-            let path = context.resolve(builder, &base, &input_file)?;
-            builder.read_recorded(ROLE_INPUT_FILE, &path, "layer input")?;
+    for field in ["pattern_cases", "settled_inputs"] {
+        if let Some(inputs) = manifest.get(field).and_then(Value::as_array) {
+            for input in inputs {
+                let Some(input_file) = declared_string(input, "input_file") else {
+                    continue;
+                };
+                let path = context.resolve(builder, &base, &input_file)?;
+                builder.read_recorded(ROLE_INPUT_FILE, &path, "layer input")?;
+            }
         }
     }
 
     Ok(())
 }
 
-/// Resolve every file an owner audit, zero-owner verification, or delete-all verification reads.
+/// Resolve every file an owner audit, zero-owner verification, or delete-all verification reads
 pub(crate) fn resolve_audit_closure(
     builder: &mut InputClosureBuilder,
     manifest_path: &Path,
@@ -2493,7 +2589,7 @@ pub(crate) fn resolve_audit_closure(
     Ok(())
 }
 
-/// Resolve the closure for a manifest-free inventory query.
+/// Resolve the closure for a manifest-free inventory query
 pub(crate) fn resolve_inventory_closure(
     builder: &mut InputClosureBuilder,
     settings_path: &Path,
@@ -2520,7 +2616,7 @@ pub(crate) fn serialize_pretty_json_bytes<T: Serialize>(
     Ok(bytes)
 }
 
-/// Write one evidence record with a create-new destination. Existing paths are never overwritten.
+/// Write one evidence record with a create-new destination. Existing paths are never overwritten
 pub(crate) fn write_validation_result(
     path: &Path,
     result: &ValidationResult,

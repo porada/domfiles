@@ -23,7 +23,7 @@ Each inventory page reports the exact settings SHA-256, at most 100 bucket and i
 
 Classify each lexical candidate through the applicable terminal and domain policy. Include candidates owned by the inventory owner in its complete semantic owner groups. Classify lexical hits owned by another command, such as a manager name inside a Corepack denial, as explicit exclusions. Treat every reported bucket and index as transient. It expires after an edit, rebase, integration, concurrent permission task, or other relevant-array change.
 
-Regex source text can hide an owner token that the compiled regex matches. Treat a known omission as supplemental ownership, not permission to rewrite live settings. Use bounded read-only evidence to identify and capture the exact source. Declare its side, member ID, semantic owner, repository scope, invisibility reason, matching witness, and bound validation entry in the owner specification. The candidate and owner-audit tools share one wrapper-aware semantic owner and repository-scope inference implementation, and promotion refuses supplemental evidence that does not infer exactly as declared.
+Regex source text can hide an owner token that the compiled regex matches. Treat a known omission as supplemental ownership, not permission to rewrite live settings. Use bounded read-only evidence to identify and capture the exact source. Declare its side, member ID, semantic owner, declared role, repository scope, invisibility reason, matching witness, and bound validation entry in the owner specification. The candidate and owner-audit tools share one wrapper-aware inference implementation for semantic owner, repository scope, and role, and preflight and promotion refuse supplemental evidence that does not infer exactly as declared. Leading assignments never change the inferred role, so an assignment-prefixed member is `direct` unless it also carries a recognized `nohup` or `xargs` wrapper.
 
 A behavior-preserving candidate-only rewrite may make a hidden owner lexically discoverable. Declare it separately as an optional visibility rewrite only when the tool’s bounded finite-literal expansion proof accepts the exact baseline and candidate forms. This is not general regex-language equivalence. When the proof does not apply, leave the source byte-identical and declare the candidate member supplemental too. A delete operation never needs a candidate rewrite.
 
@@ -46,6 +46,10 @@ Derive each witness from its own pattern and confirm the pattern accepts it befo
 Only `-C <path>`, `--no-optional-locks`, `--no-pager`, and the exact `-c commit.gpgsign=false` precede the subcommand during owner inference. Any other leading token ends the prefix and makes the inferred owner `git:root`, so declare that owner while keeping the entry’s domain-section key with the subcommand its pattern governs.
 
 Resolve semantic ownership through the [terminal command-owner policy](terminal-permissions.md#apply-the-terminal-permission-policy) and each selected domain policy. Apply the [Git owner partition](git-permissions.md#apply-the-git-permission-policy) to Git owner and section keys, the [Node manager boundaries](node-package-manager-permissions.md#apply-manager-boundaries) to Corepack mediation, and the terminal policy’s wrapper ownership to `xargs`.
+
+Set `lexically_invisible` on an entry whose regex source hides its executable token from the lexical scan. Such an entry stays outside lexical classification, so only visible entries and exclusions must equal the recomputed hit set, but it still owns its exact bucket and index for ordering and span validation. The audit refuses an entry declared invisible that the inventory recomputes as a candidate, and its witness must still match the pattern at its declared position, so a genuinely unoccupied or outside-owner position still reports a span gap. Declare the same member as `supplemental` in the owner specification.
+
+Every supplemental candidate member retained by an owner operation must have a canonical owner-audit entry with the same stable member ID and exact catalog bucket and index. That entry must set `lexically_invisible` to `true`, and its independently inferred semantic owner, role, and repository scope must agree with the supplemental record. The audit and supplemental records may use different normalized witnesses only when they infer the same classification. Preflight and promotion refuse an omitted entry or any owner, role, or repository scope disagreement.
 
 For a discovery entry, set `discovery_coverage` to one of these values and provide nonempty `discovery_inputs` containing the witness:
 
@@ -134,7 +138,7 @@ Suite decisions apply configured precedence to one normalized input only: deny, 
 
 ## Evaluate a configured pattern layer
 
-Use one strict layer manifest to evaluate settled normalized inputs against complete configured terminal arrays from a supplied settings snapshot:
+Use one strict layer manifest to evaluate individual pattern expectations and settled normalized inputs against complete configured arrays for exactly one selected tool:
 
 ```sh
 cargo run --locked --quiet \
@@ -144,9 +148,13 @@ cargo run --locked --quiet \
     --result-out '<layer-result-path>'
 ```
 
-The manifest separates review-only `raw_provenance` from evaluated `settled_inputs` and explicit aggregate cases. The mode compiles each configured pattern once and applies the supplied default plus deny, confirm, and allow precedence. After refresh, add `--artifact-root '<refresh-directory>'` so the reviewed manifest resolves the refreshed settings snapshot through the generated path overlay.
+Set the required `tool` to `fetch` or `terminal`, and point `settings_file` at the exact settings snapshot under evaluation. The manifest separates review-only `raw_provenance` from evaluated `pattern_cases`, `settled_inputs`, and explicit aggregate cases. The mode reads the selected tool’s `default` from that snapshot, compiles each configured pattern once, and applies deny, confirm, allow, then default precedence. Terminal requires all three pattern arrays. An absent fetch array is empty, while a present fetch array and each of its pattern objects must be well formed.
 
-This mode establishes configured-pattern-layer decisions only. It does not establish shell parsing, command decomposition, input derivation, pre-rule checks, participating settings layers, sandbox or Git-metadata permissions, displayed prompts, runtime behavior, or user acceptance. Complete effective-permission reasoning remains a separate workflow below.
+Every configured pattern requires at least one independent pattern case identified by bucket and index. Keep inline cases single-line, and use file-backed pattern or settled-input cases for multiline data. Every file-backed case enters the result’s complete input closure.
+
+After refresh, add `--artifact-root '<refresh-directory>'` so the reviewed manifest resolves the refreshed settings snapshot through the generated path overlay. Fetch evidence used to seal a permission candidate must bind exactly one settings closure record at the sealed candidate’s graph path and SHA-256. Fetch evidence from refreshed state must bind the generated overlay, which must explicitly redirect the sealed candidate path.
+
+This mode establishes individual pattern matches and configured-pattern-layer decisions only. It does not establish shell parsing, command decomposition, input derivation, pre-rule checks, participating settings layers, sandbox or Git-metadata permissions, displayed prompts, runtime behavior, or user acceptance. Complete effective-permission reasoning remains a separate workflow below.
 
 ## Compare baseline and candidate behavior
 

@@ -304,6 +304,46 @@ fn run_with_comparison(comparison_file: &Path) -> (u8, String, String) {
     )
 }
 
+fn run_with_layer(layer_file: &Path) -> (u8, String, String) {
+    let arguments = [
+        OsString::from("--layer-file"),
+        layer_file.as_os_str().to_owned(),
+    ];
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    (
+        status,
+        String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
+        String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
+    )
+}
+
+fn run_with_layer_evidence(
+    layer_file: &Path,
+    graph_root: &Path,
+    result_out: &Path,
+) -> (u8, String, String) {
+    let arguments = [
+        OsString::from("--layer-file"),
+        layer_file.as_os_str().to_owned(),
+        OsString::from("--graph-root"),
+        graph_root.as_os_str().to_owned(),
+        OsString::from("--result-out"),
+        result_out.as_os_str().to_owned(),
+    ];
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    (
+        status,
+        String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
+        String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
+    )
+}
+
 fn run_with_files(
     input_file: &Path,
     pattern_file: &Path,
@@ -2863,6 +2903,335 @@ fn rejects_catalog_backed_compile_errors_without_body_leakage() {
 }
 
 #[test]
+fn evaluates_terminal_and_fetch_configured_layers() {
+    let fixture = Fixture::new();
+    let settings = fixture.write_json(
+        "layer-settings.json",
+        &serde_json::json!({
+            "agent": {
+                "tool_permissions": {
+                    "tools": {
+                        "fetch": {
+                            "default": "confirm",
+                            "always_allow": [{
+                                "pattern": "^https://host/(?:approved|other)$",
+                                "case_sensitive": true
+                            }],
+                            "always_confirm": [{
+                                "pattern": "^https://host/other$",
+                                "case_sensitive": true
+                            }]
+                        },
+                        "terminal": {
+                            "default": "deny",
+                            "always_allow": [{
+                                "pattern": "^(?:allowed|shared)$",
+                                "case_sensitive": true
+                            }],
+                            "always_confirm": [{
+                                "pattern": "^shared$",
+                                "case_sensitive": true
+                            }],
+                            "always_deny": [{
+                                "pattern": "^denied$",
+                                "case_sensitive": true
+                            }]
+                        }
+                    }
+                }
+            }
+        }),
+    );
+    let settings_file = settings.file_name().unwrap().to_str().unwrap();
+    let terminal = fixture.write_json(
+        "terminal-layer.json",
+        &serde_json::json!({
+            "settings_file": settings_file,
+            "tool": "terminal",
+            "pattern_cases": [
+                {"type": "inline", "id": "allow-pattern", "bucket": "always_allow", "index": 0, "input": "allowed", "expected_match": true},
+                {"type": "inline", "id": "confirm-pattern", "bucket": "always_confirm", "index": 0, "input": "shared", "expected_match": true},
+                {"type": "inline", "id": "deny-pattern", "bucket": "always_deny", "index": 0, "input": "denied", "expected_match": true}
+            ],
+            "settled_inputs": [
+                {"type": "inline", "id": "allowed", "input": "allowed", "expected_decision": "allow"},
+                {"type": "inline", "id": "shared", "input": "shared", "expected_decision": "confirm"},
+                {"type": "inline", "id": "denied", "input": "denied", "expected_decision": "deny"},
+                {"type": "inline", "id": "defaulted", "input": "unmatched", "expected_decision": "deny"}
+            ],
+            "aggregate_cases": [{"id": "terminal-aggregate", "inputs": ["allowed", "shared"], "expected_decision": "confirm"}]
+        }),
+    );
+    let fetch = fixture.write_json(
+        "fetch-layer.json",
+        &serde_json::json!({
+            "settings_file": settings_file,
+            "tool": "fetch",
+            "pattern_cases": [
+                {"type": "inline", "id": "fetch-allow", "bucket": "always_allow", "index": 0, "input": "https://host/approved", "expected_match": true},
+                {"type": "inline", "id": "fetch-confirm", "bucket": "always_confirm", "index": 0, "input": "https://host/other", "expected_match": true}
+            ],
+            "settled_inputs": [
+                {"type": "inline", "id": "approved", "input": "https://host/approved", "expected_decision": "allow"},
+                {"type": "inline", "id": "other", "input": "https://host/other", "expected_decision": "confirm"},
+                {"type": "inline", "id": "fetch-default", "input": "http://host/approved", "expected_decision": "confirm"}
+            ],
+            "aggregate_cases": [{"id": "fetch-aggregate", "inputs": ["approved", "fetch-default"], "expected_decision": "confirm"}]
+        }),
+    );
+
+    let (terminal_status, terminal_stdout, terminal_stderr) = run_with_layer(&terminal);
+    assert_eq!(terminal_status, 0, "{terminal_stderr}");
+    assert!(terminal_stdout.contains(
+        "Verified 3 pattern cases, 4 settled cases, and 1 aggregate case across 3 configured patterns"
+    ));
+    let (fetch_status, fetch_stdout, fetch_stderr) = run_with_layer(&fetch);
+    assert_eq!(fetch_status, 0, "{fetch_stderr}");
+    assert!(fetch_stdout.contains(
+        "Verified 2 pattern cases, 3 settled cases, and 1 aggregate case across 2 configured patterns"
+    ));
+}
+
+#[test]
+fn requires_tool_and_rejects_legacy_layer_defaults() {
+    let fixture = Fixture::new();
+    fixture.write_json(
+        "settings.json",
+        &serde_json::json!({
+            "agent": {"tool_permissions": {"tools": {"terminal": {
+                "default": "confirm",
+                "always_allow": [],
+                "always_confirm": [],
+                "always_deny": []
+            }}}}
+        }),
+    );
+    let valid = serde_json::json!({
+        "settings_file": "settings.json",
+        "tool": "terminal",
+        "pattern_cases": [],
+        "settled_inputs": [{"type": "inline", "id": "default", "input": "input", "expected_decision": "confirm"}]
+    });
+    let mut missing_tool = valid.clone();
+    missing_tool.as_object_mut().unwrap().remove("tool");
+    let mut legacy_default = valid.clone();
+    legacy_default["default"] = serde_json::json!("confirm");
+    let mut invalid_tool = valid;
+    invalid_tool["tool"] = serde_json::json!("browser");
+
+    for (name, manifest) in [
+        ("missing-tool", missing_tool),
+        ("legacy-default", legacy_default),
+        ("invalid-tool", invalid_tool),
+    ] {
+        let path = fixture.write_json(&format!("{name}.json"), &manifest);
+        let (status, stdout, stderr) = run_with_layer(&path);
+        assert_eq!(status, 2, "{name}: {stderr}");
+        assert!(stdout.is_empty());
+        assert!(stderr.contains("required schema"), "{name}: {stderr}");
+    }
+}
+
+#[test]
+fn validates_only_the_selected_tool_and_rejects_malformed_fetch_values() {
+    let fixture = Fixture::new();
+    let valid_fetch = serde_json::json!({
+        "default": "confirm",
+        "always_allow": [],
+        "always_confirm": []
+    });
+    let settings = fixture.write_json(
+        "selected-tool-settings.json",
+        &serde_json::json!({
+            "agent": {"tool_permissions": {"tools": {
+                "fetch": valid_fetch,
+                "terminal": "private-malformed-terminal"
+            }}}
+        }),
+    );
+    let manifest = serde_json::json!({
+        "settings_file": settings.file_name().unwrap().to_str().unwrap(),
+        "tool": "fetch",
+        "pattern_cases": [],
+        "settled_inputs": [{"type": "inline", "id": "default", "input": "https://example.com/", "expected_decision": "confirm"}]
+    });
+    let manifest_path = fixture.write_json("selected-fetch.json", &manifest);
+    let (status, _, stderr) = run_with_layer(&manifest_path);
+    assert_eq!(status, 0, "{stderr}");
+
+    for (name, malformed_fetch) in [
+        ("missing-default", serde_json::json!({"always_allow": []})),
+        (
+            "malformed-bucket",
+            serde_json::json!({"default": "confirm", "always_allow": "private-malformed-fetch"}),
+        ),
+        (
+            "malformed-pattern",
+            serde_json::json!({"default": "confirm", "always_allow": ["private-malformed-pattern"]}),
+        ),
+        (
+            "malformed-pattern-object",
+            serde_json::json!({"default": "confirm", "always_allow": [{"pattern": 7, "case_sensitive": true}]}),
+        ),
+    ] {
+        fixture.write_json(
+            "selected-tool-settings.json",
+            &serde_json::json!({
+                "agent": {"tool_permissions": {"tools": {"fetch": malformed_fetch}}}
+            }),
+        );
+        let (status, stdout, stderr) = run_with_layer(&manifest_path);
+        assert_eq!(status, 2, "{name}: {stderr}");
+        assert!(stdout.is_empty());
+        assert!(!stderr.contains("private-malformed-fetch"));
+        assert!(!stderr.contains("private-malformed-pattern"));
+    }
+}
+
+#[test]
+fn requires_complete_layer_pattern_case_coverage() {
+    let fixture = Fixture::new();
+    fixture.write_json(
+        "coverage-settings.json",
+        &serde_json::json!({
+            "agent": {"tool_permissions": {"tools": {"fetch": {
+                "default": "confirm",
+                "always_allow": [{"pattern": "^https://example\\.com/$", "case_sensitive": true}]
+            }}}}
+        }),
+    );
+    let base = serde_json::json!({
+        "settings_file": "coverage-settings.json",
+        "tool": "fetch",
+        "pattern_cases": [],
+        "settled_inputs": [{"type": "inline", "id": "settled", "input": "https://example.com/", "expected_decision": "allow"}]
+    });
+    let missing = fixture.write_json("missing-coverage.json", &base);
+    let (status, _, stderr) = run_with_layer(&missing);
+    assert_eq!(status, 2);
+    assert!(stderr.contains("must cover configured pattern `always_allow[0]`"));
+
+    let mut unknown = base.clone();
+    unknown["pattern_cases"] = serde_json::json!([{
+        "type": "inline", "id": "unknown", "bucket": "always_allow", "index": 1,
+        "input": "https://example.com/", "expected_match": true
+    }]);
+    let unknown = fixture.write_json("unknown-position.json", &unknown);
+    let (status, _, stderr) = run_with_layer(&unknown);
+    assert_eq!(status, 2);
+    assert!(stderr.contains("unknown configured pattern `always_allow[1]`"));
+
+    let mut multiline = base;
+    multiline["pattern_cases"] = serde_json::json!([{
+        "type": "inline", "id": "multiline", "bucket": "always_allow", "index": 0,
+        "input": "private-layer-input\ncontinued", "expected_match": false
+    }]);
+    let multiline = fixture.write_json("multiline-pattern-case.json", &multiline);
+    let (status, _, stderr) = run_with_layer(&multiline);
+    assert_eq!(status, 2);
+    assert!(stderr.contains("pattern-case inputs must be single-line"));
+    assert!(!stderr.contains("private-layer-input"));
+}
+
+#[test]
+fn binds_file_backed_layer_pattern_cases_to_evidence() {
+    let fixture = Fixture::new();
+    let settings = fixture.write_json(
+        "evidence-settings.json",
+        &serde_json::json!({
+            "agent": {"tool_permissions": {"tools": {"fetch": {
+                "default": "confirm",
+                "always_allow": [{"pattern": "^https://example\\.com/$", "case_sensitive": true}]
+            }}}}
+        }),
+    );
+    fixture.write("pattern-case-input.txt", b"https://example.com/");
+    fixture.write("settled-input.txt", b"https://example.com/");
+    let manifest = fixture.write_json(
+        "evidence-layer.json",
+        &serde_json::json!({
+            "settings_file": settings.file_name().unwrap().to_str().unwrap(),
+            "tool": "fetch",
+            "pattern_cases": [{
+                "type": "file", "id": "pattern-case", "bucket": "always_allow", "index": 0,
+                "input_file": "pattern-case-input.txt", "expected_match": true
+            }],
+            "settled_inputs": [{
+                "type": "file", "id": "settled", "input_file": "settled-input.txt",
+                "expected_decision": "allow"
+            }]
+        }),
+    );
+    let result_path = fixture.path("layer-result.json");
+
+    let (status, stdout, stderr) = run_with_layer_evidence(&manifest, &fixture.root, &result_path);
+    assert_eq!(status, 0, "{stderr}");
+    assert!(stdout.contains("Verified 1 pattern case, 1 settled case"));
+    let result: serde_json::Value =
+        serde_json::from_slice(&fs::read(&result_path).unwrap()).unwrap();
+    assert_eq!(result["kind"], serde_json::json!("layer_decision"));
+    assert_eq!(result["counts"]["pattern_cases"], serde_json::json!(1));
+    assert_eq!(
+        result["bound_inputs"]["settings_sha256"],
+        serde_json::json!(helper::sha256_hex(&fs::read(&settings).unwrap()))
+    );
+    let input_paths = result["bound_inputs"]["input_closure"]["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|record| record["role"] == serde_json::json!("input_file"))
+        .map(|record| record["path"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(input_paths, ["pattern-case-input.txt", "settled-input.txt"]);
+}
+
+#[test]
+fn bounds_layer_failure_details_without_input_or_pattern_bodies() {
+    let fixture = Fixture::new();
+    fixture.write_json(
+        "bounded-settings.json",
+        &serde_json::json!({
+            "agent": {"tool_permissions": {"tools": {"fetch": {
+                "default": "confirm",
+                "always_allow": [{"pattern": "^private-layer-input$", "case_sensitive": true}]
+            }}}}
+        }),
+    );
+    let cases = (0..11)
+        .map(|index| {
+            serde_json::json!({
+                "type": "inline",
+                "id": format!("case-{index}"),
+                "bucket": "always_allow",
+                "index": 0,
+                "input": "private-layer-input",
+                "expected_match": false
+            })
+        })
+        .collect::<Vec<_>>();
+    let manifest = fixture.write_json(
+        "bounded-layer.json",
+        &serde_json::json!({
+            "settings_file": "bounded-settings.json",
+            "tool": "fetch",
+            "pattern_cases": cases,
+            "settled_inputs": [{
+                "type": "inline", "id": "decision", "input": "private-layer-input",
+                "expected_decision": "confirm"
+            }]
+        }),
+    );
+
+    let (status, stdout, stderr) = run_with_layer(&manifest);
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    assert_eq!(stderr.matches("  case-").count(), 10);
+    assert!(stderr.contains("… 2 additional case details omitted"));
+    assert!(!stderr.contains("private-layer-input"));
+    assert!(!stderr.contains("^private-layer-input$"));
+}
+
+#[test]
 fn returns_success_for_help() {
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
@@ -2909,5 +3278,65 @@ fn returns_success_for_help() {
     assert!(
         stdout.contains("--layer-file <path>       Evaluate configured-pattern-layer decisions")
     );
+    assert!(stdout.contains("\"tool\":\"fetch|terminal\""));
+    assert!(
+        stdout.contains("Every configured pattern requires at least one independent pattern case")
+    );
+    assert!(stdout.contains("reads the selected tool’s configured default"));
+    assert!(!stdout.contains("\"default\":\"allow|confirm|deny\",\"raw_provenance\""));
     assert!(stderr.is_empty());
+}
+
+#[test]
+fn comparison_help_documents_the_exact_case_schema_the_parser_accepts() {
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let status = helper::run(vec![OsString::from("--help")], &mut stdout, &mut stderr);
+    assert_eq!(status, 0);
+    let help = String::from_utf8(stdout).expect("Standard output must be valid UTF-8");
+
+    for shape in [
+        "Inline case: {\"type\":\"inline\",\"input\":\"...\",\"expected_transition\":<transition>}",
+        "File case: {\"type\":\"file\",\"input_file\":\"path\",\"expected_transition\":<transition>}",
+        "Transition: {\"baseline\":<state>,\"candidate\":<state>}",
+        "State: {\"always_allow\":true|false,\"always_confirm\":true|false,\"always_deny\":true|false,\"final_decision\":\"allow|confirm|deny\"}",
+        "Cases carry no `id`",
+    ] {
+        assert!(help.contains(shape), "Help must document `{shape}`");
+    }
+
+    // The documented inline shape, including a complete transition, must parse
+    let fixture = Fixture::new();
+    let pattern_file = fixture.write("comparison-help-pattern.txt", b"^fx run$");
+    let candidate_patterns = vec![serde_json::json!({
+        "type": "file",
+        "id": "fx",
+        "bucket": "always_allow",
+        "case_sensitive": true,
+        "pattern_file": pattern_file.to_string_lossy(),
+    })];
+    let documented = comparison_manifest(
+        "confirm",
+        vec![],
+        "confirm",
+        candidate_patterns.clone(),
+        vec![comparison_case_inline_with_transition(
+            "fx run",
+            Some(expected_transition(
+                comparison_state(false, false, false, "confirm"),
+                comparison_state(true, false, false, "allow"),
+            )),
+        )],
+    );
+    let accepted = fixture.write_json("comparison-help-accepted.json", &documented);
+    let (status, _, stderr) = run_with_comparison(&accepted);
+    assert_eq!(status, 0, "{stderr}");
+
+    // `id` is documented as absent, so the strict parser must reject it
+    let mut with_id = documented;
+    with_id["cases"][0]["id"] = serde_json::json!("case-1");
+    let rejected = fixture.write_json("comparison-help-rejected.json", &with_id);
+    let (status, _, stderr) = run_with_comparison(&rejected);
+    assert_eq!(status, 2, "A case `id` must be rejected");
+    assert!(stderr.contains("comparison schema"), "{stderr}");
 }

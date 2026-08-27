@@ -201,7 +201,7 @@ fn rejects_artifact_catalog_version_fields_as_unknown() {
 #[test]
 fn rejects_aggregate_ownership_metadata_on_an_artifact_catalog_pattern() {
     // Ownership belongs to the owner spec, so a catalog carrying the former aggregate field is
-    // rejected rather than silently accepted.
+    // rejected rather than silently accepted
     let mut document =
         serde_json::to_value(catalog(b"candidate", b"state", "pattern.regex", b"pattern"))
             .expect("Catalog must convert to JSON");
@@ -544,7 +544,7 @@ fn suite_closure_paths(root: &std::path::Path, manifest: &std::path::Path) -> Ve
 fn records_suite_inputs_whose_paths_contain_the_field_separator() {
     let fixture = Fixture::new();
     // The suite evaluator reads a case input with a bounded `splitn`, so a tab inside the path stays
-    // part of the path. The closure must record the same file rather than dropping the record.
+    // part of the path. The closure must record the same file rather than dropping the record
     let input = fixture.write("case\tone.txt", b"fx alpha");
     let pattern_file = fixture.write("pattern.regex", b"^fx alpha$");
     let manifest = fixture.write(
@@ -642,7 +642,7 @@ fn a_visibility_rewrite_refuses_a_different_literal_expansion() {
 
 #[test]
 fn a_visibility_rewrite_refuses_bare_alternation_in_a_middle() {
-    // `^x a|b$` is not equivalent to `^x (?:a|b)$`, so an ungrouped `|` must never expand.
+    // `^x a|b$` is not equivalent to `^x (?:a|b)$`, so an ungrouped `|` must never expand
     let transformation = transformation("^x ", "(?:a|b)", "a|b", "$");
 
     let error = helper::verify_visibility_transformation(&transformation, "^x (?:a|b)$", "^x a|b$")
@@ -653,7 +653,7 @@ fn a_visibility_rewrite_refuses_bare_alternation_in_a_middle() {
 
 #[test]
 fn a_visibility_rewrite_refuses_a_suffix_that_quantifies_the_middle() {
-    // `ab*` quantifies only `b`, while `(?:ab)*` quantifies the whole middle.
+    // `ab*` quantifies only `b`, while `(?:ab)*` quantifies the whole middle
     let transformation = transformation("", "ab", "(?:ab)", "*");
 
     let error = helper::verify_visibility_transformation(&transformation, "ab*", "(?:ab)*")
@@ -711,4 +711,57 @@ fn a_visibility_rewrite_refuses_an_unbounded_literal_expansion() {
         .expect_err("An expansion beyond the bound must refuse");
 
     assert!(error.contains("more than"), "{error}");
+}
+
+#[test]
+fn leading_assignments_stay_transparent_to_role_inference() {
+    for witness in [
+        "rg --no-config pattern",
+        "RIPGREP_CONFIG_PATH=/dev/null rg --no-config pattern",
+        "A=1 B=2 C=3 rg --no-config pattern",
+    ] {
+        let inferred =
+            helper::infer_owner_role(witness, &[]).expect("Witness must resolve an owner");
+
+        assert_eq!(inferred.owner, "rg", "{witness}");
+        assert_eq!(
+            inferred.role,
+            helper::Role::Direct,
+            "Assignment prefixes must not change the inferred role: {witness}"
+        );
+    }
+}
+
+#[test]
+fn recognized_wrappers_keep_the_wrapped_role_behind_assignments() {
+    for witness in [
+        "nohup rg --no-config pattern",
+        "A=1 nohup rg --no-config pattern",
+        "xargs rg --no-config pattern",
+        "A=1 xargs rg --no-config pattern",
+    ] {
+        let inferred =
+            helper::infer_owner_role(witness, &[]).expect("Witness must resolve an owner");
+
+        assert_eq!(inferred.owner, "rg", "{witness}");
+        assert_eq!(
+            inferred.role,
+            helper::Role::Wrapped,
+            "A recognized wrapper must keep the wrapped role: {witness}"
+        );
+    }
+}
+
+#[test]
+fn witness_owner_inference_reports_the_shared_role() {
+    let direct = helper::infer_witness_owner("A=1 rg --no-config pattern")
+        .expect("Witness must resolve an owner");
+    assert_eq!(direct.owner, "rg");
+    assert_eq!(direct.inventory_owner, "rg");
+    assert_eq!(direct.role, helper::Role::Direct);
+
+    let wrapped = helper::infer_witness_owner("A=1 nohup rg --no-config pattern")
+        .expect("Witness must resolve an owner");
+    assert_eq!(wrapped.owner, "rg");
+    assert_eq!(wrapped.role, helper::Role::Wrapped);
 }

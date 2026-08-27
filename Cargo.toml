@@ -17,12 +17,6 @@ toml = { version = "1.1.4", default-features = false, features = [
 ] }
 
 [[bin]]
-name = "domfiles-zed-settings-fetch-permissions"
-path = ".agents/skills/domfiles-zed-settings/scripts/fetch_permissions.rs"
-bench = false
-test = false
-
-[[bin]]
 name = "domfiles-zed-settings-pattern-match"
 path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.rs"
 bench = false
@@ -45,10 +39,6 @@ name = "domfiles-zed-settings-regex-dependency-audit"
 path = ".agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.rs"
 bench = false
 test = false
-
-[[test]]
-name = "domfiles-zed-settings-fetch-permissions-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/fetch_permissions.test.rs"
 
 [[test]]
 name = "domfiles-zed-settings-pattern-match-test"

@@ -22,6 +22,9 @@ const ALLOW_SCOPE: &str = "/agent/tool_permissions/tools/terminal/always_allow";
 const CONFIRM_SCOPE: &str = "/agent/tool_permissions/tools/terminal/always_confirm";
 const DEFAULT_SCOPE: &str = "/agent/tool_permissions/tools/terminal/default";
 const DENY_SCOPE: &str = "/agent/tool_permissions/tools/terminal/always_deny";
+const FETCH_SCOPE: &str = "/agent/tool_permissions/tools/fetch";
+const NETWORK_HOSTS_SCOPE: &str = "/agent/sandbox_permissions/network_hosts";
+const TOOLS_SCOPE: &str = "/agent/tool_permissions/tools";
 static NEXT_FIXTURE_ID: AtomicUsize = AtomicUsize::new(0);
 
 struct Fixture {
@@ -169,7 +172,7 @@ fn materialize_arguments(
 
 const FIXTURE_OWNER: &str = "fx";
 
-/// Strip the fixture-only ownership marker that drives owner-spec construction.
+/// Strip the fixture-only ownership marker that drives owner-spec construction
 fn strip_owner_marker(patterns: &[Value]) -> Vec<Value> {
     patterns
         .iter()
@@ -204,7 +207,7 @@ fn marked_ids(patterns: &[Value], owned: bool) -> Vec<String> {
         .collect()
 }
 
-/// Build the stable owner specification a fixture graph implies.
+/// Build the stable owner specification a fixture graph implies
 fn owner_spec_value(state: &Value, patterns: &[Value]) -> Value {
     let baseline_members = state["patterns"]
         .as_array()
@@ -299,6 +302,19 @@ fn settings(allow_patterns: Vec<Value>, generation: u64) -> Value {
     })
 }
 
+fn settings_with_fetch(generation: u64) -> Value {
+    let mut value = settings(vec![pattern("^fx alpha$", true)], generation);
+    value["agent"]["sandbox_permissions"] = json!({
+        "network_hosts": ["example.com"]
+    });
+    value["agent"]["tool_permissions"]["tools"]["fetch"] = json!({
+        "default": "confirm",
+        "always_allow": [pattern("^https://example\\.com/", true)],
+        "always_confirm": [pattern("^https://example\\.com/private", true)]
+    });
+    value
+}
+
 fn selection(id: &str, index: usize) -> Value {
     json!({
         "scopes": [ALLOW_SCOPE],
@@ -358,8 +374,74 @@ fn file_sha256(path: &Path) -> String {
     patterns::sha256_hex(&fs::read(path).expect("Fixture artifact must be readable"))
 }
 
+fn layer_pattern_cases(settings: &Value, tool: &str, input: &str) -> Vec<Value> {
+    let tool_settings = settings["agent"]["tool_permissions"]["tools"][tool]
+        .as_object()
+        .expect("Fixture tool settings must be an object");
+    let mut cases = Vec::new();
+    for bucket in ["always_allow", "always_confirm", "always_deny"] {
+        let Some(patterns) = tool_settings.get(bucket).and_then(Value::as_array) else {
+            continue;
+        };
+        for (index, configured) in patterns.iter().enumerate() {
+            let pattern = configured["pattern"]
+                .as_str()
+                .expect("Fixture pattern must be a string");
+            let case_sensitive = configured["case_sensitive"]
+                .as_bool()
+                .expect("Fixture case setting must be a boolean");
+            let regex = patterns::compile_pattern(pattern, case_sensitive)
+                .expect("Fixture layer pattern must compile");
+            cases.push(json!({
+                "type": "inline",
+                "id": format!("{bucket}-{index}"),
+                "bucket": bucket,
+                "index": index,
+                "input": input,
+                "expected_match": regex.is_match(input)
+            }));
+        }
+    }
+    cases
+}
+
+fn layer_decision(settings: &Value, tool: &str, input: &str) -> &'static str {
+    let tool_settings = settings["agent"]["tool_permissions"]["tools"][tool]
+        .as_object()
+        .expect("Fixture tool settings must be an object");
+    let default = patterns::Decision::parse(
+        tool_settings["default"]
+            .as_str()
+            .expect("Fixture default must be a string"),
+    )
+    .expect("Fixture default must be a decision");
+    let mut configured = Vec::new();
+    for (bucket_label, bucket) in [
+        ("always_allow", patterns::Bucket::Allow),
+        ("always_confirm", patterns::Bucket::Confirm),
+        ("always_deny", patterns::Bucket::Deny),
+    ] {
+        let Some(values) = tool_settings.get(bucket_label).and_then(Value::as_array) else {
+            continue;
+        };
+        for (index, value) in values.iter().enumerate() {
+            let pattern = value["pattern"].as_str().unwrap();
+            let case_sensitive = value["case_sensitive"].as_bool().unwrap();
+            configured.push(patterns::CompiledPattern {
+                id: format!("{bucket_label}[{index}]"),
+                bucket,
+                regex: patterns::compile_pattern(pattern, case_sensitive).unwrap(),
+            });
+        }
+    }
+
+    patterns::MatchState::evaluate(input, &configured)
+        .decision(default)
+        .label()
+}
+
 /// Record hash-bound workflow evidence for a fixture graph. Results are evidence, not proof that a
-/// validator ran, so the fixture computes the same closure the verifier recomputes.
+/// validator ran, so the fixture computes the same closure the verifier recomputes
 fn write_evidence(
     fixture: &Fixture,
     root: &Path,
@@ -384,15 +466,30 @@ fn write_evidence(
     }
     .expect("Fixture closure must resolve");
     let closure = builder.finish().expect("Fixture closure must finish");
+    let settings_sha256 = {
+        let mut settings = closure
+            .records
+            .iter()
+            .filter(|record| record.role == patterns::ROLE_SETTINGS)
+            .map(|record| record.sha256.clone());
+        let first = settings.next();
+        settings.next().is_none().then_some(first).flatten()
+    };
+    let mut bound_inputs = serde_json::Map::new();
+    bound_inputs.insert("manifest_sha256".to_owned(), json!(file_sha256(manifest)));
+    if let Some(settings_sha256) = settings_sha256 {
+        bound_inputs.insert("settings_sha256".to_owned(), json!(settings_sha256));
+    }
+    bound_inputs.insert(
+        "input_closure".to_owned(),
+        serde_json::to_value(&closure).expect("Closure must serialize"),
+    );
 
     let result = json!({
         "kind": kind,
         "evaluator": "fixture",
         "outcome": "passed",
-        "bound_inputs": {
-            "manifest_sha256": file_sha256(manifest),
-            "input_closure": serde_json::to_value(&closure).expect("Closure must serialize")
-        },
+        "bound_inputs": Value::Object(bound_inputs),
         "counts": {}
     });
     let result_path = fixture.write_json(&format!("{name}-result.json"), &result);
@@ -403,18 +500,68 @@ fn write_evidence(
     )
 }
 
-/// Seal one fixture graph with the evidence kinds the contract requires for its shape.
-fn seal_bundle(
+/// Rewrite or drop one derived owner-audit entry so a test can vary the evidence a supplemental
+/// member depends on. Returning `None` omits the entry entirely
+type AuditEntryOverride<'a> = &'a dyn Fn(&str, Value) -> Option<Value>;
+
+/// How a fixture graph varies the owner-audit evidence it binds. Extra results are independently
+/// valid owner-audit results, so a test can prove that aggregated entries are compared as a set
+/// rather than selected in validation order
+#[derive(Default)]
+struct AuditEvidence<'a> {
+    entry_override: Option<AuditEntryOverride<'a>>,
+    extra_results: &'a [Vec<Value>],
+    extras_first: bool,
+}
+
+/// One owner-audit entry as an extra result declares it. A witness also marks the entry lexically
+/// invisible, because only a supplemental member carries one
+fn audit_entry(id: &str, index: usize, witness: Option<&str>) -> Value {
+    let mut entry = json!({
+        "id": id,
+        "bucket": "always_allow",
+        "index": index
+    });
+    if let Some(witness) = witness {
+        let object = entry.as_object_mut().expect("Entry must be an object");
+        object.insert("lexically_invisible".to_owned(), json!(true));
+        object.insert("witness".to_owned(), json!(witness));
+    }
+
+    entry
+}
+
+/// Resolve the normalized witness a candidate-side supplemental record declares, which is also the
+/// witness its canonical owner-audit entry uses by default
+fn supplemental_witness(owner_spec: &Value, member: &str) -> Option<String> {
+    owner_spec
+        .get("supplemental")
+        .and_then(Value::as_array)?
+        .iter()
+        .find(|record| {
+            record["side"] == json!("candidate") && record["member_id"] == json!(member)
+        })?
+        .get("classification_evidence")
+        .and_then(Value::as_array)?
+        .iter()
+        .find(|evidence| evidence["kind"] == json!("normalized_witness"))
+        .and_then(|evidence| evidence["value"].as_str())
+        .map(str::to_owned)
+}
+
+/// Record the evidence kinds the contract requires for a fixture graph’s shape, ready for a
+/// validation plan
+fn bundle_results(
     fixture: &Fixture,
     prefix: &str,
     candidate: &Path,
     state: &Path,
     catalog: &Path,
     owner_spec: &Value,
-) -> PathBuf {
+    audit: &AuditEvidence<'_>,
+) -> Vec<Value> {
     let root = fixture.path("");
     let root = root.as_path();
-    let spec_path = fixture.write_json(&format!("{prefix}-owner-spec.json"), owner_spec);
     let candidate_relative = graph_relative(root, candidate);
     let state_relative = graph_relative(root, state);
     let catalog_relative = graph_relative(root, catalog);
@@ -426,6 +573,19 @@ fn seal_bundle(
     let catalog_document: Value =
         serde_json::from_slice(&fs::read(catalog).expect("Catalog must be readable"))
             .expect("Catalog must parse");
+    let candidate_document: Value =
+        serde_json::from_slice(&fs::read(candidate).expect("Candidate must be readable"))
+            .expect("Candidate must parse");
+    let state_document = state_value(state);
+    let baseline_path = state.parent().unwrap_or_else(|| Path::new(".")).join(
+        state_document["baseline_file"]
+            .as_str()
+            .expect("State baseline file must be a string"),
+    );
+    let baseline_document: Value =
+        serde_json::from_slice(&fs::read(baseline_path).expect("Baseline must be readable"))
+            .expect("Baseline must parse");
+    let changes_fetch = helper::fetch_permissions_changed(&baseline_document, &candidate_document);
     let changes_patterns = !owners.is_empty()
         || !catalog_document["patterns"]
             .as_array()
@@ -477,12 +637,13 @@ fn seal_bundle(
             &format!("{prefix}-layer.json"),
             &json!({
                 "settings_file": candidate_relative,
-                "default": "confirm",
+                "tool": "terminal",
+                "pattern_cases": layer_pattern_cases(&candidate_document, "terminal", "fx alpha"),
                 "settled_inputs": [{
                     "type": "file",
                     "id": "fixture-input",
                     "input_file": validation_input_relative,
-                    "expected_decision": "allow"
+                    "expected_decision": layer_decision(&candidate_document, "terminal", "fx alpha")
                 }]
             }),
         );
@@ -525,6 +686,7 @@ fn seal_bundle(
         }
 
         let candidate_sha256 = file_sha256(candidate);
+        let mut owner_results = Vec::new();
         for owner in &owners {
             let members = owner["candidate_members"]
                 .as_array()
@@ -544,19 +706,30 @@ fn seal_bundle(
             } else {
                 let entries = members
                     .iter()
-                    .map(|member| {
+                    .filter_map(|member| {
                         let id = member.as_str().expect("Member ID must be a string");
-                        let entry = catalog_document["patterns"]
+                        let definition = catalog_document["patterns"]
                             .as_array()
                             .expect("Catalog patterns must be an array")
                             .iter()
                             .find(|pattern| pattern["id"] == json!(id))
                             .expect("Owner member must exist in the catalog");
-                        json!({
+                        let mut entry = json!({
                             "id": id,
-                            "bucket": entry["bucket"],
-                            "index": entry["source_index"]
-                        })
+                            "bucket": definition["bucket"],
+                            "index": definition["source_index"]
+                        });
+                        // A supplemental member is absent from the lexical hit set, so its canonical
+                        // audit entry carries the invisibility declaration and its own witness
+                        if let Some(witness) = supplemental_witness(owner_spec, id) {
+                            let object = entry.as_object_mut().expect("Entry must be an object");
+                            object.insert("lexically_invisible".to_owned(), json!(true));
+                            object.insert("witness".to_owned(), json!(witness));
+                        }
+                        match audit.entry_override {
+                            Some(rewrite) => rewrite(id, entry),
+                            None => Some(entry),
+                        }
                     })
                     .collect::<Vec<_>>();
                 (
@@ -583,15 +756,105 @@ fn seal_bundle(
                 &manifest,
                 Some(candidate),
             );
-            results.push(json!({
+            owner_results.push(json!({
                 "id": format!("{prefix}-{owner_id}"),
                 "kind": kind,
                 "manifest": manifest_relative,
                 "result": result_relative
             }));
         }
+
+        let mut extra_results = Vec::new();
+        for (index, entries) in audit.extra_results.iter().enumerate() {
+            let name = format!("{prefix}-extra-audit-{index}");
+            let manifest = fixture.write_json(
+                &format!("{name}.json"),
+                &json!({
+                    "settings_sha256": candidate_sha256,
+                    "inventory_owner": FIXTURE_OWNER,
+                    "entries": entries,
+                    "excluded_candidates": []
+                }),
+            );
+            let (manifest_relative, result_relative) = write_evidence(
+                fixture,
+                root,
+                &name,
+                "owner_audit",
+                &manifest,
+                Some(candidate),
+            );
+            extra_results.push(json!({
+                "id": name,
+                "kind": "owner_audit",
+                "manifest": manifest_relative,
+                "result": result_relative
+            }));
+        }
+
+        if audit.extras_first {
+            results.append(&mut extra_results);
+            results.append(&mut owner_results);
+        } else {
+            results.append(&mut owner_results);
+            results.append(&mut extra_results);
+        }
     }
 
+    if changes_fetch {
+        let input = "https://example.com/";
+        let fetch_layer = fixture.write_json(
+            &format!("{prefix}-fetch-layer.json"),
+            &json!({
+                "settings_file": candidate_relative,
+                "tool": "fetch",
+                "pattern_cases": layer_pattern_cases(&candidate_document, "fetch", input),
+                "settled_inputs": [{
+                    "type": "inline",
+                    "id": "fetch-input",
+                    "input": input,
+                    "expected_decision": layer_decision(&candidate_document, "fetch", input)
+                }]
+            }),
+        );
+        let (manifest_relative, result_relative) = write_evidence(
+            fixture,
+            root,
+            &format!("{prefix}-fetch-layer"),
+            "layer_decision",
+            &fetch_layer,
+            None,
+        );
+        results.push(json!({
+            "id": format!("{prefix}-fetch-layer"),
+            "kind": "layer_decision",
+            "manifest": manifest_relative,
+            "result": result_relative
+        }));
+    }
+
+    results
+}
+
+/// Seal one fixture graph with the evidence kinds the contract requires for its shape
+fn seal_bundle(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+    catalog: &Path,
+    owner_spec: &Value,
+) -> PathBuf {
+    let spec_path = fixture.write_json(&format!("{prefix}-owner-spec.json"), owner_spec);
+    let results = bundle_results(
+        fixture,
+        prefix,
+        candidate,
+        state,
+        catalog,
+        owner_spec,
+        &AuditEvidence::default(),
+    );
     let plan = fixture.write_json(
         &format!("{prefix}-validation.json"),
         &json!({ "results": results }),
@@ -618,7 +881,7 @@ fn seal_bundle(
 }
 
 /// Attempt to seal a fixture graph, returning the raw result so tests can assert refusals that now
-/// happen when the bundle is created rather than when it is promoted.
+/// happen when the bundle is created rather than when it is promoted
 fn try_seal(
     fixture: &Fixture,
     prefix: &str,
@@ -628,10 +891,22 @@ fn try_seal(
     patterns: &[Value],
 ) -> RunResult {
     let spec = owner_spec_value(&state_value(state), patterns);
-    let spec_path = fixture.write_json(&format!("{prefix}-try-spec.json"), &spec);
+    try_seal_with_results(fixture, prefix, candidate, state, catalog, &spec, vec![])
+}
+
+fn try_seal_with_results(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+    catalog: &Path,
+    owner_spec: &Value,
+    results: Vec<Value>,
+) -> RunResult {
+    let spec_path = fixture.write_json(&format!("{prefix}-try-spec.json"), owner_spec);
     let plan = fixture.write_json(
         &format!("{prefix}-try-plan.json"),
-        &json!({ "results": [] }),
+        &json!({ "results": results }),
     );
     let bundle = fixture.path(&format!("{prefix}-try-bundle.json"));
 
@@ -652,7 +927,24 @@ fn try_seal(
     ])
 }
 
-/// Seal a hand-built catalog so tests can exercise promotion against the bundle surface.
+fn materialize_empty_catalog(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+) -> PathBuf {
+    let selection = fixture.write_json(
+        &format!("{prefix}-empty-materialization-selection.json"),
+        &materialization_selection(vec![]),
+    );
+    let output = fixture.path(&format!("{prefix}-empty-materialized"));
+    let result = run(materialize_arguments(candidate, state, &selection, &output));
+    assert_eq!(result.status, 0, "{}", result.stderr);
+
+    output.join("artifact-catalog.json")
+}
+
+/// Seal a hand-built catalog so tests can exercise promotion against the bundle surface
 fn seal_hand_catalog(
     fixture: &Fixture,
     prefix: &str,
@@ -665,7 +957,27 @@ fn seal_hand_catalog(
     seal_bundle(fixture, prefix, candidate, state, catalog, &spec)
 }
 
-/// Materialize a fixture graph and seal it, returning both the catalog and the sealed bundle.
+/// Materialize a fixture graph and return the catalog it binds
+fn materialize_catalog(
+    fixture: &Fixture,
+    prefix: &str,
+    candidate: &Path,
+    state: &Path,
+    patterns: &[Value],
+) -> PathBuf {
+    let selection = fixture.write_json(
+        &format!("{prefix}-materialization-selection.json"),
+        &materialization_selection(patterns.to_vec()),
+    );
+    let output = fixture.path(&format!("{prefix}-materialized"));
+    let result = run(materialize_arguments(candidate, state, &selection, &output));
+    assert_eq!(result.status, 0, "{}", result.stderr);
+    assert!(result.stderr.is_empty());
+
+    output.join("artifact-catalog.json")
+}
+
+/// Materialize a fixture graph and seal it, returning both the catalog and the sealed bundle
 fn materialize_and_seal(
     fixture: &Fixture,
     prefix: &str,
@@ -673,15 +985,7 @@ fn materialize_and_seal(
     state: &Path,
     patterns: Vec<Value>,
 ) -> (PathBuf, PathBuf) {
-    let selection = fixture.write_json(
-        &format!("{prefix}-materialization-selection.json"),
-        &materialization_selection(patterns.clone()),
-    );
-    let output = fixture.path(&format!("{prefix}-materialized"));
-    let result = run(materialize_arguments(candidate, state, &selection, &output));
-    assert_eq!(result.status, 0, "{}", result.stderr);
-    assert!(result.stderr.is_empty());
-    let catalog = output.join("artifact-catalog.json");
+    let catalog = materialize_catalog(fixture, prefix, candidate, state, &patterns);
     let spec = owner_spec_value(&state_value(state), &patterns);
     let bundle = seal_bundle(fixture, prefix, candidate, state, &catalog, &spec);
 
@@ -917,6 +1221,88 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     );
     assert!(result.stdout.contains("State JSON schema"));
     assert!(result.stdout.contains("Artifact catalog JSON schema"));
+    assert!(result.stdout.contains("Owner specification JSON schema"));
+    for fragment in [
+        "\"owners\": [",
+        "\"id\": \"<owner-operation-id>\"",
+        "\"inventory_owner\": \"<top-level-executable>\"",
+        "\"operation\": \"insert|replace|delete\"",
+        "\"baseline_members\": [\"<state-member-id>\"]",
+        "\"candidate_members\": [\"<catalog-member-id>\"]",
+        "\"overlaps\": [",
+        "\"supplemental\": [",
+        "\"side\": \"baseline|candidate\"",
+        "\"member_id\": \"<state-or-catalog-member-id>\"",
+        "\"declared_owner\": \"<semantic-owner>\"",
+        "\"invisibility_reason\": \"<nonempty-reason>\"",
+        "\"classification_evidence\": [",
+        "\"kind\": \"normalized_witness\"",
+        "\"kind\": \"validation_entry\"",
+        "\"visibility_rewrites\": [",
+        "\"baseline_member_id\": \"<state-member-id>\"",
+        "\"candidate_member_id\": \"<catalog-member-id>\"",
+        "\"recovered_owner\": \"<top-level-executable>\"",
+        "\"transformation\": {",
+        "\"prefix\": \"<shared-prefix>\"",
+        "\"candidate_middle\": \"<candidate-finite-literal-middle>\"",
+        "\"suffix\": \"<shared-suffix>\"",
+    ] {
+        assert!(result.stdout.contains(fragment), "missing `{fragment}`");
+    }
+    assert!(
+        result
+            .stdout
+            .contains("\"declared_role\": \"discovery|direct|wrapped\"")
+    );
+    assert!(
+        result
+            .stdout
+            .contains("\"repository_scope\": \"agent_worktree|fixture_repository|general\"")
+    );
+    assert!(
+        result
+            .stdout
+            .contains("\"baseline_middle\": \"<baseline-finite-literal-middle>\"")
+    );
+    assert!(result.stdout.contains(
+        "`supplemental` and `visibility_rewrites` may be omitted and default to empty arrays"
+    ));
+    assert!(
+        result
+            .stdout
+            .contains("Each middle must be nonempty and must not exceed 200 bytes")
+    );
+    assert!(
+        result.stdout.contains(
+            "each optionally followed by `?`. Each side may expand to at most 256 literals"
+        )
+    );
+    assert!(
+        result
+            .stdout
+            .contains("at least one normalized witness, and at least one validation entry")
+    );
+    assert!(result.stdout.contains("Validation plan JSON schema"));
+    assert!(result.stdout.contains(
+        "{\"results\":[{\"id\":\"nonempty\",\"kind\":\"candidate_inventory|comparison|layer_decision|matcher_suite|owner_audit\",\"manifest\":\"relative path\",\"result\":\"relative path\",\"overlay\":\"relative path\"}]}"
+    ));
+    assert!(result.stdout.contains(
+        "`results` may be empty for an eligible scope-only candidate. Use the exact form {\"results\":[]}"
+    ));
+    assert!(result.stdout.contains(
+        "Result IDs must be nonempty and unique. Only the five listed kinds are sealable"
+    ));
+    assert!(
+        result.stdout.contains(
+            "Add `overlay` only when the result binds a path overlay or a manifest binding"
+        )
+    );
+    assert!(
+        result
+            .stdout
+            .contains("Validation plan listing the fresh evidence `seal` binds")
+    );
+    assert!(!result.stdout.contains("Validation manifest listing"));
     assert!(result.stdout.contains("--catalog <artifact-catalog-path>"));
     assert!(result.stdout.contains("permission-candidate seal "));
     assert!(result.stdout.contains("permission-candidate preflight "));
@@ -946,6 +1332,20 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     assert!(result.stdout.contains(
         "reruns the complete preflight in-process immediately before the mutation boundary"
     ));
+    assert!(result.stdout.contains(
+        "Every retained candidate member, including supplemental members, must appear in owner-audit evidence at its exact catalog bucket and index"
+    ));
+    assert!(result.stdout.contains(
+        "canonical audit entry must use the same stable member ID, set `lexically_invisible` to true"
+    ));
+    assert!(result.stdout.contains(
+        "The audit and supplemental records may use different witnesses only when they infer the same classification"
+    ));
+    assert!(
+        result
+            .stdout
+            .contains("Preflight and promotion refuse omissions or disagreements")
+    );
     assert!(result.stdout.contains("{\"scopes\":[\"/json/pointer\"]"));
     assert!(
         result
@@ -960,6 +1360,35 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
             .contains("Ownership is declared by the owner spec, not the selection")
     );
     assert!(result.stdout.contains("`patterns` may be empty"));
+    assert!(result.stdout.contains(
+        "A semantic fetch `always_allow`, `always_confirm`, `always_deny`, or `default` change still requires candidate-bound fetch layer evidence"
+    ));
+    assert!(result.stdout.contains("Seal contract:"));
+    assert!(result.stdout.contains(
+        "`--validation` consumes a validation plan naming every fresh result the bundle binds"
+    ));
+    assert!(result.stdout.contains(
+        "The graph, its evidence, and the owner coverage each result establishes are validated before `--output` is created"
+    ));
+    assert!(result.stdout.contains(
+        "The validated bytes are the exact serialized bundle bytes written to the destination"
+    ));
+    assert!(result.stdout.contains(
+        "A refusal leaves the destination absent, so a corrected seal can reuse the same path"
+    ));
+    assert!(
+        result
+            .stdout
+            .contains("An existing destination is refused rather than overwritten")
+    );
+    assert!(result.stdout.contains("Refresh contract:"));
+    assert!(result.stdout.contains("fetch_replay_fields"));
+    assert!(result.stdout.contains(
+        "Fresh fetch layer evidence must bind an overlay that redirects the refreshed candidate settings path"
+    ));
+    assert!(result.stdout.contains(
+        "Every semantic fetch permission change and inherited fetch replay field requires passing `layer_decision` evidence for tool `fetch` at the exact candidate graph path and SHA-256"
+    ));
     assert!(result.stdout.contains("candidate-settings.json"));
     assert!(result.stdout.contains("does not authenticate itself"));
     assert!(result.stdout.contains(
@@ -994,6 +1423,73 @@ fn documents_all_modes_and_rejects_invalid_arguments() {
     let unknown = run(vec![OsString::from("repair")]);
     assert_eq!(unknown.status, 2);
     assert!(unknown.stderr.contains("Unknown mode"));
+}
+
+#[test]
+fn labels_unreadable_and_malformed_validation_plans() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let captured = capture_selected(
+        &fixture,
+        "validation-plan-diagnostics",
+        &baseline,
+        vec![NETWORK_HOSTS_SCOPE],
+        vec![],
+    );
+    let catalog = materialize_empty_catalog(
+        &fixture,
+        "validation-plan-diagnostics",
+        &captured.candidate,
+        &captured.state,
+    );
+    let spec = fixture.write_json(
+        "validation-plan-diagnostics-owner-spec.json",
+        &json!({"owners": [], "overlaps": []}),
+    );
+    let seal_with_plan = |plan: &Path, output: &Path| {
+        run(vec![
+            OsString::from("seal"),
+            OsString::from("--candidate"),
+            captured.candidate.as_os_str().to_owned(),
+            OsString::from("--state"),
+            captured.state.as_os_str().to_owned(),
+            OsString::from("--catalog"),
+            catalog.as_os_str().to_owned(),
+            OsString::from("--owner-spec"),
+            spec.as_os_str().to_owned(),
+            OsString::from("--validation"),
+            plan.as_os_str().to_owned(),
+            OsString::from("--output"),
+            output.as_os_str().to_owned(),
+        ])
+    };
+
+    let missing_plan = fixture.path("missing-validation-plan.json");
+    let missing_output = fixture.path("missing-validation-plan-bundle.json");
+    let missing = seal_with_plan(&missing_plan, &missing_output);
+
+    assert_eq!(missing.status, 2);
+    assert!(missing.stdout.is_empty());
+    assert!(missing.stderr.contains("Failed to read validation plan"));
+    assert!(!missing.stderr.contains("validation manifest"));
+    assert!(!missing.stderr.contains("Validation manifest"));
+    assert!(!missing_output.exists());
+
+    let malformed_plan = fixture.path("malformed-validation-plan.json");
+    fs::write(&malformed_plan, b"{malformed-plan").unwrap();
+    let malformed_output = fixture.path("malformed-validation-plan-bundle.json");
+    let malformed = seal_with_plan(&malformed_plan, &malformed_output);
+
+    assert_eq!(malformed.status, 2);
+    assert!(malformed.stdout.is_empty());
+    assert!(
+        malformed
+            .stderr
+            .contains("Validation plan JSON syntax is invalid")
+    );
+    assert!(!malformed.stderr.contains("validation manifest"));
+    assert!(!malformed.stderr.contains("Validation manifest"));
+    assert!(!malformed_output.exists());
 }
 
 #[test]
@@ -1142,6 +1638,48 @@ fn rejects_version_and_unknown_selection_and_state_fields() {
         version_result
             .stderr
             .contains("does not match the required schema")
+    );
+}
+
+#[test]
+fn rejects_unsorted_duplicate_and_out_of_scope_fetch_replay_fields() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let fetch = capture_selected(
+        &fixture,
+        "fetch-replay-state",
+        &baseline,
+        vec![FETCH_SCOPE],
+        vec![],
+    );
+    let original = state_value(&fetch.state);
+
+    for fields in [
+        json!(["default", "always_allow"]),
+        json!(["always_confirm", "always_confirm"]),
+    ] {
+        let mut state = original.clone();
+        state["fetch_replay_fields"] = fields;
+        fs::write(&fetch.state, serde_json::to_vec(&state).unwrap()).unwrap();
+        let result = run(verify_arguments(&fetch.settings, &fetch.state));
+        assert_eq!(result.status, 2, "{}", result.stderr);
+        assert!(
+            result
+                .stderr
+                .contains("fetch replay fields must be sorted and unique")
+        );
+    }
+
+    let terminal = capture_standard(&fixture, "terminal-replay-state", &baseline, "alpha");
+    let mut state = state_value(&terminal.state);
+    state["fetch_replay_fields"] = json!(["always_confirm"]);
+    fs::write(&terminal.state, serde_json::to_vec(&state).unwrap()).unwrap();
+    let result = run(verify_arguments(&terminal.settings, &terminal.state));
+    assert_eq!(result.status, 2, "{}", result.stderr);
+    assert!(
+        result
+            .stderr
+            .contains("fetch replay field lies outside every authorized scope")
     );
 }
 
@@ -2448,6 +2986,549 @@ fn supports_scope_only_capture_verification_materialization_and_promotion() {
 }
 
 #[test]
+fn requires_fetch_layer_evidence_for_each_semantic_fetch_field() {
+    for field in ["always_allow", "always_confirm", "always_deny", "default"] {
+        let fixture = Fixture::new();
+        let baseline = settings_with_fetch(1);
+        let prefix = format!("fetch-field-{}", field.replace('_', "-"));
+        let captured = capture_selected(&fixture, &prefix, &baseline, vec![FETCH_SCOPE], vec![]);
+        let mut candidate = baseline.clone();
+        match field {
+            "always_allow" => {
+                candidate["agent"]["tool_permissions"]["tools"]["fetch"][field] =
+                    json!([pattern("^https://changed\\.example/", true)]);
+            }
+            "always_confirm" => {
+                candidate["agent"]["tool_permissions"]["tools"]["fetch"][field] =
+                    json!([pattern("^https://example\\.com/guarded", true)]);
+            }
+            "always_deny" => {
+                candidate["agent"]["tool_permissions"]["tools"]["fetch"][field] =
+                    json!([pattern("^https://example\\.com/denied", true)]);
+            }
+            "default" => {
+                candidate["agent"]["tool_permissions"]["tools"]["fetch"][field] = json!("allow");
+            }
+            _ => unreachable!(),
+        }
+        fs::write(
+            &captured.candidate,
+            helper::serialize_pretty_json(&candidate).unwrap(),
+        )
+        .unwrap();
+        let catalog =
+            materialize_empty_catalog(&fixture, &prefix, &captured.candidate, &captured.state);
+
+        let result = try_seal(
+            &fixture,
+            &prefix,
+            &captured.candidate,
+            &captured.state,
+            &catalog,
+            &[],
+        );
+        assert_eq!(result.status, 2, "{field}: {}", result.stderr);
+        assert!(result.stdout.is_empty());
+        assert!(
+            result.stderr.contains(
+                "A fetch permission change requires candidate-bound `layer_decision` evidence for tool `fetch`"
+            ),
+            "{field}: {}",
+            result.stderr
+        );
+    }
+}
+
+#[test]
+fn treats_absent_and_empty_fetch_buckets_as_the_same_permission_state() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let mut explicit_empty = baseline.clone();
+    explicit_empty["agent"]["tool_permissions"]["tools"]["fetch"]["always_deny"] = json!([]);
+
+    assert!(!helper::fetch_permissions_changed(
+        &baseline,
+        &explicit_empty
+    ));
+    assert!(!helper::fetch_permissions_changed(
+        &explicit_empty,
+        &baseline
+    ));
+
+    let captured = capture_selected(
+        &fixture,
+        "fetch-empty-bucket",
+        &baseline,
+        vec![FETCH_SCOPE],
+        vec![],
+    );
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&explicit_empty).unwrap(),
+    )
+    .unwrap();
+    let catalog = materialize_empty_catalog(
+        &fixture,
+        "fetch-empty-bucket",
+        &captured.candidate,
+        &captured.state,
+    );
+    let bundle = seal_bundle(
+        &fixture,
+        "fetch-empty-bucket",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &json!({"owners": [], "overlaps": []}),
+    );
+    let bundle_value: Value = serde_json::from_slice(&fs::read(bundle).unwrap()).unwrap();
+    assert_eq!(bundle_value["validation"], json!([]));
+}
+
+#[test]
+fn keeps_empty_validation_for_network_hosts_and_unchanged_fetch_fields() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let network = capture_selected(
+        &fixture,
+        "network-only",
+        &baseline,
+        vec![NETWORK_HOSTS_SCOPE],
+        vec![],
+    );
+    let mut network_candidate = baseline.clone();
+    network_candidate["agent"]["sandbox_permissions"]["network_hosts"] =
+        json!(["example.com", "keith.github.io"]);
+    fs::write(
+        &network.candidate,
+        helper::serialize_pretty_json(&network_candidate).unwrap(),
+    )
+    .unwrap();
+    let network_catalog =
+        materialize_empty_catalog(&fixture, "network-only", &network.candidate, &network.state);
+    let network_bundle = seal_bundle(
+        &fixture,
+        "network-only",
+        &network.candidate,
+        &network.state,
+        &network_catalog,
+        &json!({"owners": [], "overlaps": []}),
+    );
+    let network_bundle_value: Value =
+        serde_json::from_slice(&fs::read(&network_bundle).unwrap()).unwrap();
+    assert_eq!(network_bundle_value["validation"], json!([]));
+
+    let broad = capture_selected(
+        &fixture,
+        "broad-unchanged-fetch",
+        &baseline,
+        vec![TOOLS_SCOPE],
+        vec![],
+    );
+    let mut broad_candidate = baseline.clone();
+    broad_candidate["agent"]["tool_permissions"]["tools"]["terminal"]["default"] = json!("allow");
+    fs::write(
+        &broad.candidate,
+        helper::serialize_pretty_json(&broad_candidate).unwrap(),
+    )
+    .unwrap();
+    let broad_catalog = materialize_empty_catalog(
+        &fixture,
+        "broad-unchanged-fetch",
+        &broad.candidate,
+        &broad.state,
+    );
+    let broad_bundle = seal_bundle(
+        &fixture,
+        "broad-unchanged-fetch",
+        &broad.candidate,
+        &broad.state,
+        &broad_catalog,
+        &json!({"owners": [], "overlaps": []}),
+    );
+    let broad_bundle_value: Value =
+        serde_json::from_slice(&fs::read(&broad_bundle).unwrap()).unwrap();
+    assert_eq!(broad_bundle_value["validation"], json!([]));
+}
+
+#[test]
+fn rejects_terminal_layer_evidence_for_a_fetch_change() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let captured = capture_selected(
+        &fixture,
+        "wrong-layer-tool",
+        &baseline,
+        vec![FETCH_SCOPE],
+        vec![],
+    );
+    let mut candidate = baseline.clone();
+    candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"] =
+        json!([pattern("^https://example\\.com/guarded", true)]);
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate).unwrap(),
+    )
+    .unwrap();
+    let catalog = materialize_empty_catalog(
+        &fixture,
+        "wrong-layer-tool",
+        &captured.candidate,
+        &captured.state,
+    );
+    let root = fixture.path("");
+    let candidate_relative = graph_relative(&root, &captured.candidate);
+    let manifest = fixture.write_json(
+        "wrong-layer-tool.json",
+        &json!({
+            "settings_file": candidate_relative,
+            "tool": "terminal",
+            "pattern_cases": layer_pattern_cases(&candidate, "terminal", "fx alpha"),
+            "settled_inputs": [{
+                "type": "inline", "id": "terminal-input", "input": "fx alpha",
+                "expected_decision": layer_decision(&candidate, "terminal", "fx alpha")
+            }]
+        }),
+    );
+    let (manifest, result) = write_evidence(
+        &fixture,
+        &root,
+        "wrong-layer-tool",
+        "layer_decision",
+        &manifest,
+        None,
+    );
+    let sealed = try_seal_with_results(
+        &fixture,
+        "wrong-layer-tool",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &json!({"owners": [], "overlaps": []}),
+        vec![json!({
+            "id": "wrong-layer-tool",
+            "kind": "layer_decision",
+            "manifest": manifest,
+            "result": result
+        })],
+    );
+
+    assert_eq!(sealed.status, 2, "{}", sealed.stderr);
+    assert!(sealed.stderr.contains("evidence for tool `fetch`"));
+}
+
+#[test]
+fn rejects_detached_or_unhashed_fetch_layer_evidence() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let captured = capture_selected(
+        &fixture,
+        "fetch-binding",
+        &baseline,
+        vec![FETCH_SCOPE],
+        vec![],
+    );
+    let mut candidate = baseline.clone();
+    candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"] =
+        json!([pattern("^https://example\\.com/guarded", true)]);
+    let candidate_bytes = helper::serialize_pretty_json(&candidate).unwrap();
+    fs::write(&captured.candidate, &candidate_bytes).unwrap();
+    let detached = fixture.write("detached-fetch-settings.json", &candidate_bytes);
+    let catalog = materialize_empty_catalog(
+        &fixture,
+        "fetch-binding",
+        &captured.candidate,
+        &captured.state,
+    );
+    let root = fixture.path("");
+
+    let detached_manifest = fixture.write_json(
+        "detached-fetch-layer.json",
+        &json!({
+            "settings_file": graph_relative(&root, &detached),
+            "tool": "fetch",
+            "pattern_cases": layer_pattern_cases(&candidate, "fetch", "https://example.com/"),
+            "settled_inputs": [{
+                "type": "inline", "id": "fetch-input", "input": "https://example.com/",
+                "expected_decision": layer_decision(&candidate, "fetch", "https://example.com/")
+            }]
+        }),
+    );
+    let (detached_manifest, detached_result) = write_evidence(
+        &fixture,
+        &root,
+        "detached-fetch-layer",
+        "layer_decision",
+        &detached_manifest,
+        None,
+    );
+    let detached_seal = try_seal_with_results(
+        &fixture,
+        "detached-fetch-layer",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &json!({"owners": [], "overlaps": []}),
+        vec![json!({
+            "id": "detached-fetch-layer",
+            "kind": "layer_decision",
+            "manifest": detached_manifest,
+            "result": detached_result
+        })],
+    );
+    assert_eq!(detached_seal.status, 2, "{}", detached_seal.stderr);
+    assert!(
+        detached_seal
+            .stderr
+            .contains("sealed candidate settings path")
+    );
+
+    let candidate_manifest = fixture.write_json(
+        "unhashed-fetch-layer.json",
+        &json!({
+            "settings_file": graph_relative(&root, &captured.candidate),
+            "tool": "fetch",
+            "pattern_cases": layer_pattern_cases(&candidate, "fetch", "https://example.com/"),
+            "settled_inputs": [{
+                "type": "inline", "id": "fetch-input", "input": "https://example.com/",
+                "expected_decision": layer_decision(&candidate, "fetch", "https://example.com/")
+            }]
+        }),
+    );
+    let (candidate_manifest, candidate_result) = write_evidence(
+        &fixture,
+        &root,
+        "unhashed-fetch-layer",
+        "layer_decision",
+        &candidate_manifest,
+        None,
+    );
+    let candidate_result_path = root.join(&candidate_result);
+    let mut result_value: Value =
+        serde_json::from_slice(&fs::read(&candidate_result_path).unwrap()).unwrap();
+    result_value["bound_inputs"]
+        .as_object_mut()
+        .unwrap()
+        .remove("settings_sha256");
+    fs::write(
+        &candidate_result_path,
+        serde_json::to_vec(&result_value).unwrap(),
+    )
+    .unwrap();
+    let unhashed_seal = try_seal_with_results(
+        &fixture,
+        "unhashed-fetch-layer",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &json!({"owners": [], "overlaps": []}),
+        vec![json!({
+            "id": "unhashed-fetch-layer",
+            "kind": "layer_decision",
+            "manifest": candidate_manifest,
+            "result": candidate_result
+        })],
+    );
+    assert_eq!(unhashed_seal.status, 2, "{}", unhashed_seal.stderr);
+    assert!(
+        unhashed_seal
+            .stderr
+            .contains("must record the sealed candidate settings SHA-256")
+    );
+}
+
+#[test]
+fn seals_and_promotes_candidate_bound_fetch_layer_evidence() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let captured = capture_selected(
+        &fixture,
+        "valid-fetch-layer",
+        &baseline,
+        vec![FETCH_SCOPE],
+        vec![],
+    );
+    let mut candidate = baseline.clone();
+    candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"] =
+        json!([pattern("^https://example\\.com/guarded", true)]);
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate).unwrap(),
+    )
+    .unwrap();
+    let catalog = materialize_empty_catalog(
+        &fixture,
+        "valid-fetch-layer",
+        &captured.candidate,
+        &captured.state,
+    );
+    let bundle = seal_bundle(
+        &fixture,
+        "valid-fetch-layer",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &json!({"owners": [], "overlaps": []}),
+    );
+    let live = fixture.write_pretty_json("valid-fetch-live.json", &baseline);
+
+    let promoted = run(promote_arguments(&live, &bundle, true));
+    assert_eq!(promoted.status, 0, "{}", promoted.stderr);
+    let promoted_settings: Value = serde_json::from_slice(&fs::read(live).unwrap()).unwrap();
+    assert_eq!(
+        promoted_settings["agent"]["tool_permissions"]["tools"]["fetch"],
+        candidate["agent"]["tool_permissions"]["tools"]["fetch"]
+    );
+}
+
+#[test]
+fn evidence_refusal_leaves_the_bundle_path_free_for_a_corrected_seal() {
+    let fixture = Fixture::new();
+    let baseline = settings_with_fetch(1);
+    let captured = capture_selected(
+        &fixture,
+        "absent-evidence",
+        &baseline,
+        vec![FETCH_SCOPE],
+        vec![],
+    );
+    let mut candidate = baseline.clone();
+    candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"] =
+        json!([pattern("^https://example\\.com/guarded", true)]);
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate).unwrap(),
+    )
+    .unwrap();
+    let catalog = materialize_empty_catalog(
+        &fixture,
+        "absent-evidence",
+        &captured.candidate,
+        &captured.state,
+    );
+    let bundle = fixture.path("absent-evidence-try-bundle.json");
+
+    let refused = try_seal(
+        &fixture,
+        "absent-evidence",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &[],
+    );
+
+    assert_eq!(refused.status, 2, "{}", refused.stderr);
+    assert!(refused.stdout.is_empty());
+    assert!(refused.stderr.contains(
+        "A fetch permission change requires candidate-bound `layer_decision` evidence for tool `fetch`"
+    ));
+    assert!(!bundle.exists());
+
+    // The refusal left the destination absent, so the corrected seal reuses the exact same path
+    let spec = json!({"owners": [], "overlaps": []});
+    let results = bundle_results(
+        &fixture,
+        "absent-evidence",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &spec,
+        &AuditEvidence::default(),
+    );
+    let corrected = try_seal_with_results(
+        &fixture,
+        "absent-evidence",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &spec,
+        results.clone(),
+    );
+
+    assert_eq!(corrected.status, 0, "{}", corrected.stderr);
+    let sealed_bytes = fs::read(&bundle).unwrap();
+
+    let repeated = try_seal_with_results(
+        &fixture,
+        "absent-evidence",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &spec,
+        results,
+    );
+
+    assert_eq!(repeated.status, 2, "{}", repeated.stderr);
+    assert!(repeated.stdout.is_empty());
+    assert!(repeated.stderr.contains("Failed to create bundle"));
+    assert_eq!(fs::read(&bundle).unwrap(), sealed_bytes);
+}
+
+#[test]
+fn owner_coverage_refusal_leaves_the_bundle_path_free_for_a_corrected_seal() {
+    let fixture = Fixture::new();
+    let baseline = settings(vec![pattern("^fx alpha$", true)], 1);
+    let captured = capture_standard(&fixture, "absent-coverage", &baseline, "alpha");
+    let patterns = [replacement_pattern("alpha", "always_allow", 0)];
+    let catalog = materialize_catalog(
+        &fixture,
+        "absent-coverage",
+        &captured.candidate,
+        &captured.state,
+        &patterns,
+    );
+    let spec = owner_spec_value(&state_value(&captured.state), &patterns);
+    let results = bundle_results(
+        &fixture,
+        "absent-coverage",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &spec,
+        &AuditEvidence::default(),
+    );
+    let without_owner_audit = results
+        .iter()
+        .filter(|entry| entry["kind"] != json!("owner_audit"))
+        .cloned()
+        .collect::<Vec<_>>();
+    let bundle = fixture.path("absent-coverage-try-bundle.json");
+
+    let refused = try_seal_with_results(
+        &fixture,
+        "absent-coverage",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &spec,
+        without_owner_audit,
+    );
+
+    assert_eq!(refused.status, 2, "{}", refused.stderr);
+    assert!(refused.stdout.is_empty());
+    assert!(
+        refused
+            .stderr
+            .contains("retains candidate members and requires owner-audit evidence")
+    );
+    assert!(!bundle.exists());
+
+    // The refusal left the destination absent, so the corrected seal reuses the exact same path
+    let corrected = try_seal_with_results(
+        &fixture,
+        "absent-coverage",
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &spec,
+        results,
+    );
+
+    assert_eq!(corrected.status, 0, "{}", corrected.stderr);
+    assert!(bundle.exists());
+}
+
+#[test]
 fn promotes_catalog_bound_owner_insertion_from_an_empty_capture() {
     let fixture = Fixture::new();
     let baseline = settings(vec![pattern("^fx retained$", true)], 1);
@@ -3048,7 +4129,7 @@ fn rejects_cross_candidate_and_invalid_catalog_files_and_artifacts() {
     assert!(missing.stderr.contains("bundle"));
     assert_eq!(fs::read(&live).unwrap(), original_live);
 
-    // Catalog schema and binding failures now refuse when the bundle is sealed.
+    // Catalog schema and binding failures now refuse when the bundle is sealed
     let mut versioned_catalog = catalog_value(catalog.parent().unwrap());
     versioned_catalog["version"] = json!(2);
     let versioned_catalog_path =
@@ -3143,7 +4224,7 @@ fn rejects_catalog_source_index_bytes_and_case_setting_mismatches() {
     let original_live = fs::read(&live).unwrap();
     let owner = [replacement_pattern("alpha", "always_allow", 0)];
 
-    // Source-identity mismatches now refuse when the bundle is sealed.
+    // Source-identity mismatches now refuse when the bundle is sealed
     let mut wrong_index = original_catalog.clone();
     wrong_index["patterns"][0]["source_index"] = json!(1);
     let wrong_index_path = catalog.parent().unwrap().join("wrong-index-catalog.json");
@@ -3635,11 +4716,11 @@ struct StaleGraph {
     state_relative: String,
 }
 
-/// Seal one replacement graph, then drift live settings so every captured position moves.
+/// Seal one replacement graph, then drift live settings so every captured position moves
 fn stale_replacement_graph(fixture: &Fixture, prefix: &str) -> StaleGraph {
     let root = fixture.path("");
     // The owner member trails the retained overlap, so drift appended after it moves its index and
-    // the reviewed manifest positions can only be resolved through a binding.
+    // the reviewed manifest positions can only be resolved through a binding
     let overlap = pattern("^fx overlap$", false);
     let baseline = settings(vec![overlap.clone(), pattern("^fx old-owner$", true)], 1);
     let mut candidate_value = baseline.clone();
@@ -3671,7 +4752,7 @@ fn stale_replacement_graph(fixture: &Fixture, prefix: &str) -> StaleGraph {
         ],
     );
 
-    // An unrelated allow pattern is appended, so the reviewed positions no longer describe reality.
+    // An unrelated allow pattern is appended, so the reviewed positions no longer describe reality
     let drifted = settings(
         vec![
             overlap,
@@ -3693,7 +4774,43 @@ fn stale_replacement_graph(fixture: &Fixture, prefix: &str) -> StaleGraph {
     }
 }
 
-/// Re-record fixture evidence for one refreshed plan entry through the artifacts refresh emitted.
+fn stale_fetch_graph(fixture: &Fixture, prefix: &str) -> StaleGraph {
+    let root = fixture.path("");
+    let baseline = settings_with_fetch(1);
+    let captured = capture_selected(fixture, prefix, &baseline, vec![FETCH_SCOPE], vec![]);
+    let mut candidate = baseline.clone();
+    candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"] =
+        json!([pattern("^https://example\\.com/guarded", true)]);
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate).unwrap(),
+    )
+    .unwrap();
+    let catalog = materialize_empty_catalog(fixture, prefix, &captured.candidate, &captured.state);
+    let bundle = seal_bundle(
+        fixture,
+        prefix,
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &json!({"owners": [], "overlaps": []}),
+    );
+    let mut drifted = settings_with_fetch(2);
+    drifted["agent"]["tool_permissions"]["tools"]["fetch"]["current_only"] = json!("preserve");
+    let live = fixture.write_pretty_json(&format!("{prefix}-live.json"), &drifted);
+
+    StaleGraph {
+        candidate_relative: graph_relative(&root, &captured.candidate),
+        catalog_relative: graph_relative(&root, &catalog),
+        owner_spec_relative: format!("{prefix}-owner-spec.json"),
+        state_relative: graph_relative(&root, &captured.state),
+        bundle,
+        drifted,
+        live,
+    }
+}
+
+/// Re-record fixture evidence for one refreshed plan entry through the artifacts refresh emitted
 fn write_refreshed_evidence(root: &Path, candidate_relative: &str, entry: &Value) {
     let kind = entry["kind"].as_str().expect("Plan kind must be a string");
     let manifest = root.join(
@@ -3711,7 +4828,7 @@ fn write_refreshed_evidence(root: &Path, candidate_relative: &str, entry: &Value
 
     let mut builder =
         patterns::InputClosureBuilder::new(root).expect("Refreshed graph root must be a directory");
-    let overlay = binds_overlay
+    let overlay = (binds_overlay && auxiliary.is_some())
         .then(|| patterns::ResolvedOverlay::load(root).expect("Refreshed overlay must load"));
     let context = patterns::ClosureContext {
         overlay: overlay.as_ref(),
@@ -3735,6 +4852,18 @@ fn write_refreshed_evidence(root: &Path, candidate_relative: &str, entry: &Value
 
     let mut bound_inputs = serde_json::Map::new();
     bound_inputs.insert("manifest_sha256".to_owned(), json!(file_sha256(&manifest)));
+    let settings_sha256 = {
+        let mut settings = closure
+            .records
+            .iter()
+            .filter(|record| record.role == patterns::ROLE_SETTINGS)
+            .map(|record| record.sha256.clone());
+        let first = settings.next();
+        settings.next().is_none().then_some(first).flatten()
+    };
+    if let Some(settings_sha256) = settings_sha256 {
+        bound_inputs.insert("settings_sha256".to_owned(), json!(settings_sha256));
+    }
     if let Some(relative) = &auxiliary {
         bound_inputs.insert(
             "overlay".to_owned(),
@@ -3809,7 +4938,7 @@ fn refreshes_a_stale_graph_into_a_sealable_directory() {
     assert!(refreshed.stdout.contains("unsealed"));
 
     // Refresh reproduces every reviewed manifest and emits a binding for each audit entry, so the
-    // refreshed graph seals without editing any reviewed hash, path, or index by hand.
+    // refreshed graph seals without editing any reviewed hash, path, or index by hand
     let (plan, refreshed_bundle) = seal_refreshed_graph(&root, &stale);
     let entries = plan["results"]
         .as_array()
@@ -3852,6 +4981,251 @@ fn refreshes_a_stale_graph_into_a_sealable_directory() {
     );
     let unchanged: Value = serde_json::from_slice(&fs::read(&stale.live).unwrap()).unwrap();
     assert!(helper::semantic_json_equal(&unchanged, &stale.drifted));
+}
+
+#[test]
+fn refresh_replays_fetch_fields_and_binds_evidence_to_the_refreshed_candidate() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_fetch_graph(&fixture, "fetch-refresh");
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+    let refreshed_candidate_path = root.join(&stale.candidate_relative);
+    let refreshed_candidate: Value =
+        serde_json::from_slice(&fs::read(&refreshed_candidate_path).unwrap()).unwrap();
+    assert_eq!(
+        refreshed_candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"],
+        json!([pattern("^https://example\\.com/guarded", true)])
+    );
+    assert_eq!(
+        refreshed_candidate["agent"]["tool_permissions"]["tools"]["fetch"]["current_only"],
+        json!("preserve")
+    );
+
+    let (plan, refreshed_bundle) = seal_refreshed_graph(&root, &stale);
+    let fetch_entry = plan["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| {
+            let manifest_path = root.join(entry["manifest"].as_str().unwrap());
+            let manifest: Value =
+                serde_json::from_slice(&fs::read(manifest_path).unwrap()).unwrap();
+            manifest["tool"] == json!("fetch")
+        })
+        .expect("The refreshed plan must retain fetch layer evidence");
+    assert_eq!(fetch_entry["overlay"], json!("path-overlay.json"));
+    let result: Value = serde_json::from_slice(
+        &fs::read(root.join(fetch_entry["result"].as_str().unwrap())).unwrap(),
+    )
+    .unwrap();
+    let settings_records = result["bound_inputs"]["input_closure"]["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|record| record["role"] == json!("settings"))
+        .collect::<Vec<_>>();
+    assert_eq!(settings_records.len(), 1);
+    assert_eq!(settings_records[0]["path"], json!(stale.candidate_relative));
+    assert_eq!(
+        settings_records[0]["sha256"],
+        json!(file_sha256(&refreshed_candidate_path))
+    );
+
+    let rehearsed = run(vec![
+        OsString::from("preflight"),
+        OsString::from("--settings"),
+        stale.live.as_os_str().to_owned(),
+        OsString::from("--bundle"),
+        refreshed_bundle.into_os_string(),
+    ]);
+    assert_eq!(rehearsed.status, 0, "{}", rehearsed.stderr);
+}
+
+#[test]
+fn retains_fetch_evidence_and_replay_across_a_converged_refresh() {
+    let fixture = Fixture::new();
+    let first_destination = Fixture::new();
+    let second_destination = Fixture::new();
+    let stale = stale_fetch_graph(&fixture, "fetch-converged");
+    let first_root = first_destination.path("");
+
+    let reviewed_candidate: Value =
+        serde_json::from_slice(&fs::read(fixture.path(&stale.candidate_relative)).unwrap())
+            .unwrap();
+    let mut converged = stale.drifted.clone();
+    converged["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"] =
+        reviewed_candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"].clone();
+    fs::write(
+        &stale.live,
+        helper::serialize_pretty_json(&converged).unwrap(),
+    )
+    .unwrap();
+
+    let refreshed = run(refresh_arguments(&stale.live, &stale.bundle, &first_root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+    let refreshed_state: Value =
+        serde_json::from_slice(&fs::read(first_root.join(&stale.state_relative)).unwrap()).unwrap();
+    assert_eq!(
+        refreshed_state["fetch_replay_fields"],
+        json!(["always_confirm"])
+    );
+
+    let (_, refreshed_bundle) = seal_refreshed_graph(&first_root, &stale);
+    let plan_path = first_root.join("validation-plan.json");
+    let mut plan: Value = serde_json::from_slice(&fs::read(&plan_path).unwrap()).unwrap();
+    plan["results"].as_array_mut().unwrap().retain(|entry| {
+        let manifest_path = first_root.join(entry["manifest"].as_str().unwrap());
+        let manifest: Value = serde_json::from_slice(&fs::read(manifest_path).unwrap()).unwrap();
+        manifest["tool"] != json!("fetch")
+    });
+    fs::write(&plan_path, helper::serialize_pretty_json(&plan).unwrap()).unwrap();
+    let missing_evidence = run(vec![
+        OsString::from("seal"),
+        OsString::from("--candidate"),
+        first_root.join(&stale.candidate_relative).into_os_string(),
+        OsString::from("--state"),
+        first_root.join(&stale.state_relative).into_os_string(),
+        OsString::from("--catalog"),
+        first_root.join(&stale.catalog_relative).into_os_string(),
+        OsString::from("--owner-spec"),
+        first_root.join(&stale.owner_spec_relative).into_os_string(),
+        OsString::from("--validation"),
+        plan_path.into_os_string(),
+        OsString::from("--output"),
+        first_root
+            .join("missing-evidence-bundle.json")
+            .into_os_string(),
+    ]);
+    assert_eq!(missing_evidence.status, 2, "{}", missing_evidence.stderr);
+    assert!(
+        missing_evidence
+            .stderr
+            .contains("evidence for tool `fetch`")
+    );
+
+    let second_live = fixture.write_pretty_json("fetch-converged-second-live.json", &stale.drifted);
+    let second_root = second_destination.path("");
+    let second_refresh = run(refresh_arguments(
+        &second_live,
+        &refreshed_bundle,
+        &second_root,
+    ));
+    assert_eq!(second_refresh.status, 0, "{}", second_refresh.stderr);
+    let second_candidate: Value =
+        serde_json::from_slice(&fs::read(second_root.join(&stale.candidate_relative)).unwrap())
+            .unwrap();
+    assert_eq!(
+        second_candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"],
+        reviewed_candidate["agent"]["tool_permissions"]["tools"]["fetch"]["always_confirm"]
+    );
+}
+
+#[test]
+fn rejects_refreshed_fetch_evidence_without_the_generated_overlay() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_fetch_graph(&fixture, "fetch-missing-overlay");
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+    let plan_path = root.join("validation-plan.json");
+    let mut plan: Value = serde_json::from_slice(&fs::read(&plan_path).unwrap()).unwrap();
+    let fetch_entry = plan["results"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|entry| {
+            let manifest_path = root.join(entry["manifest"].as_str().unwrap());
+            let manifest: Value =
+                serde_json::from_slice(&fs::read(manifest_path).unwrap()).unwrap();
+            manifest["tool"] == json!("fetch")
+        })
+        .expect("The refreshed plan must retain fetch layer evidence");
+    fetch_entry.as_object_mut().unwrap().remove("overlay");
+    fs::write(&plan_path, helper::serialize_pretty_json(&plan).unwrap()).unwrap();
+    for entry in plan["results"].as_array().unwrap() {
+        write_refreshed_evidence(&root, &stale.candidate_relative, entry);
+    }
+
+    let sealed = run(vec![
+        OsString::from("seal"),
+        OsString::from("--candidate"),
+        root.join(&stale.candidate_relative).into_os_string(),
+        OsString::from("--state"),
+        root.join(&stale.state_relative).into_os_string(),
+        OsString::from("--catalog"),
+        root.join(&stale.catalog_relative).into_os_string(),
+        OsString::from("--owner-spec"),
+        root.join(&stale.owner_spec_relative).into_os_string(),
+        OsString::from("--validation"),
+        plan_path.into_os_string(),
+        OsString::from("--output"),
+        root.join("missing-overlay-bundle.json").into_os_string(),
+    ]);
+
+    assert_eq!(sealed.status, 2, "{}", sealed.stderr);
+    assert!(sealed.stdout.is_empty());
+    assert!(
+        sealed
+            .stderr
+            .contains("for refreshed state must bind a path overlay")
+    );
+}
+
+#[test]
+fn rejects_a_refresh_overlay_that_does_not_redirect_the_candidate() {
+    let fixture = Fixture::new();
+    let destination = Fixture::new();
+    let stale = stale_fetch_graph(&fixture, "fetch-overlay");
+    let root = destination.path("");
+
+    let refreshed = run(refresh_arguments(&stale.live, &stale.bundle, &root));
+    assert_eq!(refreshed.status, 0, "{}", refreshed.stderr);
+    let overlay_path = root.join("path-overlay.json");
+    let mut overlay: Value = serde_json::from_slice(&fs::read(&overlay_path).unwrap()).unwrap();
+    let paths = overlay["paths"].as_array_mut().unwrap();
+    let original_len = paths.len();
+    paths.retain(|path| path != &json!(stale.candidate_relative));
+    assert_eq!(paths.len() + 1, original_len);
+    fs::write(
+        &overlay_path,
+        helper::serialize_pretty_json(&overlay).unwrap(),
+    )
+    .unwrap();
+
+    let plan: Value =
+        serde_json::from_slice(&fs::read(root.join("validation-plan.json")).unwrap()).unwrap();
+    for entry in plan["results"].as_array().unwrap() {
+        write_refreshed_evidence(&root, &stale.candidate_relative, entry);
+    }
+    let bundle = root.join("rejected-overlay-bundle.json");
+    let sealed = run(vec![
+        OsString::from("seal"),
+        OsString::from("--candidate"),
+        root.join(&stale.candidate_relative).into_os_string(),
+        OsString::from("--state"),
+        root.join(&stale.state_relative).into_os_string(),
+        OsString::from("--catalog"),
+        root.join(&stale.catalog_relative).into_os_string(),
+        OsString::from("--owner-spec"),
+        root.join(&stale.owner_spec_relative).into_os_string(),
+        OsString::from("--validation"),
+        root.join("validation-plan.json").into_os_string(),
+        OsString::from("--output"),
+        bundle.into_os_string(),
+    ]);
+
+    assert_eq!(sealed.status, 2, "{}", sealed.stderr);
+    assert!(sealed.stdout.is_empty());
+    assert!(
+        sealed
+            .stderr
+            .contains("does not redirect the sealed candidate settings path")
+    );
 }
 
 #[test]
@@ -4149,7 +5523,7 @@ struct GapGraph {
 
 /// Seal one replacement graph whose owner members sit between two retained overlaps, then drift live
 /// settings. Refreshed placement can only be resolved through the reviewed gap boundaries, so this
-/// fixture exercises the interior-gap branch rather than the start and end sentinels.
+/// fixture exercises the interior-gap branch rather than the start and end sentinels
 fn gap_graph(
     fixture: &Fixture,
     prefix: &str,
@@ -4217,7 +5591,7 @@ fn refresh_places_an_owner_member_between_its_relocated_gap_boundaries() {
     let fixture = Fixture::new();
     let destination = Fixture::new();
     // Drift inserts unrelated patterns before the left boundary and inside the reviewed gap, so a
-    // replay that trusted reviewed indexes would land the member in the wrong place.
+    // replay that trusted reviewed indexes would land the member in the wrong place
     let graph = gap_graph(
         &fixture,
         "interior",
@@ -4291,7 +5665,7 @@ fn refresh_keeps_the_reviewed_order_of_members_sharing_one_gap() {
 fn refresh_refuses_a_reviewed_gap_whose_boundaries_reordered() {
     let fixture = Fixture::new();
     let destination = Fixture::new();
-    // Live settings swap the boundaries, so no placement preserves the reviewed ordering.
+    // Live settings swap the boundaries, so no placement preserves the reviewed ordering
     let graph = gap_graph(
         &fixture,
         "reversed",
@@ -4344,4 +5718,644 @@ fn refresh_reports_outside_owner_remainder_drift() {
 
     assert_eq!(drift.len(), 1, "{drift:?}");
     assert_eq!(drift[0], json!("always_allow remainder 2 -> 3"));
+}
+
+/// One insertion-only owner holding a visible member and a supplemental member whose regex source
+/// hides its executable token behind a character class. The visible member keeps owner-audit
+/// coverage intact, so a test can vary the supplemental member’s own audit entry in isolation
+struct SupplementalFixture<'a> {
+    inventory_owner: &'a str,
+    visible_pattern: &'a str,
+    hidden_pattern: &'a str,
+    declared_owner: &'a str,
+    declared_role: &'a str,
+    repository_scope: &'a str,
+    witness: &'a str,
+}
+
+impl SupplementalFixture<'_> {
+    /// Hide the fixture owner behind a character class, which keeps repository scope `general`
+    fn hidden_fx(declared_role: &'static str) -> Self {
+        Self {
+            inventory_owner: FIXTURE_OWNER,
+            visible_pattern: "^fx visible-allow$",
+            hidden_pattern: "^f[x] hidden-allow(?: --quiet)?$",
+            declared_owner: FIXTURE_OWNER,
+            declared_role,
+            repository_scope: "general",
+            witness: "fx hidden-allow",
+        }
+    }
+
+    /// Hide `git` instead, because only a Git witness carries an inferred repository scope. The
+    /// pattern accepts a bare and a worktree-scoped form, so the two records can witness it
+    /// differently
+    fn hidden_git() -> Self {
+        Self {
+            inventory_owner: "git",
+            visible_pattern: "^git status$",
+            hidden_pattern: r"^g[i]t(?: -C \.agent-fixture)? diff$",
+            declared_owner: "git:diff",
+            declared_role: "direct",
+            repository_scope: "general",
+            witness: "git diff",
+        }
+    }
+
+    /// Build the owner specification. `bundle_results` needs the declared witness before the
+    /// evidence exists, so the entry that evidence binds is added once it does
+    fn owner_spec(&self, validation_entry: Option<&str>) -> Value {
+        let mut evidence = vec![json!({
+            "kind": "normalized_witness",
+            "value": self.witness
+        })];
+        if let Some(entry) = validation_entry {
+            evidence.push(json!({ "kind": "validation_entry", "value": entry }));
+        }
+
+        json!({
+            "owners": [{
+                "id": "fixture-owner",
+                "inventory_owner": self.inventory_owner,
+                "operation": "insert",
+                "baseline_members": [],
+                "candidate_members": ["visible-allow", "hidden-allow"]
+            }],
+            "overlaps": [],
+            "supplemental": [{
+                "side": "candidate",
+                "member_id": "hidden-allow",
+                "declared_owner": self.declared_owner,
+                "declared_role": self.declared_role,
+                "repository_scope": self.repository_scope,
+                "invisibility_reason": "The fixture pattern spells its executable token through a class.",
+                "classification_evidence": evidence
+            }]
+        })
+    }
+}
+
+/// Seal a supplemental fixture graph, optionally rewriting the owner-audit entries its evidence
+/// declares
+fn seal_supplemental(
+    fixture: &Fixture,
+    prefix: &str,
+    declared: &SupplementalFixture<'_>,
+    audit: &AuditEvidence<'_>,
+) -> (RunResult, Value) {
+    let baseline = settings(vec![pattern("^fx retained$", true)], 1);
+    let mut candidate = baseline.clone();
+    replace_allow_scope(
+        &mut candidate,
+        json!([
+            pattern(declared.visible_pattern, true),
+            pattern(declared.hidden_pattern, true),
+            pattern("^fx retained$", true)
+        ]),
+    );
+
+    let captured = capture_selected(fixture, prefix, &baseline, vec![ALLOW_SCOPE], vec![]);
+    fs::write(
+        &captured.candidate,
+        helper::serialize_pretty_json(&candidate).expect("Candidate fixture must serialize"),
+    )
+    .expect("Failed to write candidate fixture");
+
+    let catalog = materialize_catalog(
+        fixture,
+        prefix,
+        &captured.candidate,
+        &captured.state,
+        &[
+            replacement_pattern("visible-allow", "always_allow", 0),
+            replacement_pattern("hidden-allow", "always_allow", 1),
+        ],
+    );
+    let results = bundle_results(
+        fixture,
+        prefix,
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &declared.owner_spec(None),
+        audit,
+    );
+    let validation_entry = results
+        .first()
+        .and_then(|result| result["id"].as_str())
+        .expect("Fixture evidence must bind at least one validation entry")
+        .to_owned();
+
+    let sealed = try_seal_with_results(
+        fixture,
+        prefix,
+        &captured.candidate,
+        &captured.state,
+        &catalog,
+        &declared.owner_spec(Some(&validation_entry)),
+        results,
+    );
+
+    (sealed, baseline)
+}
+
+/// Seal the graph, then rehearse promotion, which is where supplemental ownership is verified
+fn preflight_supplemental(
+    fixture: &Fixture,
+    prefix: &str,
+    declared: &SupplementalFixture<'_>,
+    audit: &AuditEvidence<'_>,
+) -> RunResult {
+    let (sealed, baseline) = seal_supplemental(fixture, prefix, declared, audit);
+    assert_eq!(sealed.status, 0, "seal failed: {}", sealed.stderr);
+
+    let bundle = fixture.path(&format!("{prefix}-try-bundle.json"));
+    let live = fixture.write_pretty_json(&format!("{prefix}-live.json"), &baseline);
+
+    run(vec![
+        OsString::from("preflight"),
+        OsString::from("--settings"),
+        live.as_os_str().to_owned(),
+        OsString::from("--bundle"),
+        bundle.as_os_str().to_owned(),
+    ])
+}
+
+/// Seal the graph, then attempt a guarded promotion so the same cross-artifact contract can be
+/// observed at the mutation boundary. The live bytes are returned with the result
+fn promote_supplemental(
+    fixture: &Fixture,
+    prefix: &str,
+    declared: &SupplementalFixture<'_>,
+    audit: &AuditEvidence<'_>,
+) -> (RunResult, Vec<u8>, Vec<u8>) {
+    let (sealed, baseline) = seal_supplemental(fixture, prefix, declared, audit);
+    assert_eq!(sealed.status, 0, "seal failed: {}", sealed.stderr);
+
+    let bundle = fixture.path(&format!("{prefix}-try-bundle.json"));
+    let live = fixture.write_pretty_json(&format!("{prefix}-live.json"), &baseline);
+    let before = fs::read(&live).expect("Live fixture settings must be readable");
+    let result = run(promote_arguments(&live, &bundle, true));
+    let after = fs::read(&live).expect("Live fixture settings must be readable");
+
+    (result, before, after)
+}
+
+/// Rewrite only the supplemental member’s owner-audit entry, so the visible member’s entry keeps
+/// owner coverage intact through sealing
+fn rewrite_hidden_entry(
+    rewrite: impl Fn(Value) -> Option<Value>,
+) -> impl Fn(&str, Value) -> Option<Value> {
+    move |id, entry| {
+        if id == "hidden-allow" {
+            return rewrite(entry);
+        }
+
+        Some(entry)
+    }
+}
+
+/// Replace the supplemental member’s audit witness, which is the only field the shared inference
+/// reads
+fn rewrite_hidden_witness(witness: &'static str) -> impl Fn(&str, Value) -> Option<Value> {
+    rewrite_hidden_entry(move |mut entry| {
+        entry
+            .as_object_mut()
+            .expect("Entry must be an object")
+            .insert("witness".to_owned(), json!(witness));
+        Some(entry)
+    })
+}
+
+fn preflight_supplemental_role(
+    fixture: &Fixture,
+    prefix: &str,
+    declared_role: &'static str,
+) -> RunResult {
+    preflight_supplemental(
+        fixture,
+        prefix,
+        &SupplementalFixture::hidden_fx(declared_role),
+        &AuditEvidence::default(),
+    )
+}
+
+#[test]
+fn accepts_a_supplemental_member_whose_declared_role_matches_its_witness() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental_role(&fixture, "supplemental-role-match", "direct");
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
+}
+
+#[test]
+fn refuses_a_supplemental_member_whose_declared_role_differs_from_its_witness() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental_role(&fixture, "supplemental-role-mismatch", "wrapped");
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains("and role `wrapped`"),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_a_supplemental_member_omitted_from_owner_audit_evidence() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-omitted",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_entry(|_| None)),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(
+            "Supplemental candidate member `hidden-allow` has no owner-audit entry at its catalog position `always_allow[1]`"
+        ),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_entry_that_omits_the_invisibility_declaration() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-visible",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_entry(|mut entry| {
+                entry
+                    .as_object_mut()
+                    .expect("Entry must be an object")
+                    .insert("lexically_invisible".to_owned(), json!(false));
+                Some(entry)
+            })),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(
+            "member `hidden-allow` at `always_allow[1]` must declare `lexically_invisible`"
+        ),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_entry_that_declares_another_member_id() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-other-id",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_entry(|mut entry| {
+                entry
+                    .as_object_mut()
+                    .expect("Entry must be an object")
+                    .insert("id".to_owned(), json!("renamed-allow"));
+                Some(entry)
+            })),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(
+            "The owner-audit entry at `always_allow[1]` declares member `renamed-allow`, not supplemental candidate member `hidden-allow`"
+        ),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_entry_outside_its_catalog_position() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-position",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_entry(|mut entry| {
+                entry
+                    .as_object_mut()
+                    .expect("Entry must be an object")
+                    .insert("index".to_owned(), json!(0));
+                Some(entry)
+            })),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result
+            .stderr
+            .contains("member `hidden-allow` sits outside its catalog position `always_allow[1]`"),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_witness_that_infers_another_semantic_owner() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-owner",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_witness("other hidden-allow")),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result
+            .stderr
+            .contains("infers owner `other`, repository scope `general`, and role `direct`"),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_witness_that_infers_another_role() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-role",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_witness("nohup fx hidden-allow")),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result
+            .stderr
+            .contains("infers owner `fx`, repository scope `general`, and role `wrapped`"),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_witness_that_infers_another_repository_scope() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-scope",
+        &SupplementalFixture::hidden_git(),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_witness("git -C .agent-fixture diff")),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(
+            "infers owner `git:diff`, repository scope `agent worktree`, and role `direct`"
+        ),
+        "{}",
+        result.stderr
+    );
+}
+
+/// Run preflight in both validation orders with one extra owner-audit result, so a conflicting
+/// duplicate cannot be resolved by whichever result the plan happens to list first
+fn preflight_extra_audit_orders(prefix: &str, entries: Vec<Value>) -> Vec<RunResult> {
+    [false, true]
+        .into_iter()
+        .map(|extras_first| {
+            let fixture = Fixture::new();
+
+            preflight_supplemental(
+                &fixture,
+                prefix,
+                &SupplementalFixture::hidden_fx("direct"),
+                &AuditEvidence {
+                    extra_results: std::slice::from_ref(&entries),
+                    extras_first,
+                    ..AuditEvidence::default()
+                },
+            )
+        })
+        .collect()
+}
+
+const DUPLICATE_ID_REFUSAL: &str = "Supplemental candidate member `hidden-allow` has 2 owner-audit entries declaring its member ID, so none of them is canonical";
+
+#[test]
+fn refuses_an_exact_duplicate_of_the_supplemental_owner_audit_entry() {
+    for result in preflight_extra_audit_orders(
+        "supplemental-audit-exact-duplicate",
+        vec![
+            audit_entry("visible-allow", 0, None),
+            audit_entry("hidden-allow", 1, Some("fx hidden-allow")),
+        ],
+    ) {
+        assert_eq!(result.status, 2, "{}", result.stdout);
+        assert!(
+            result.stderr.contains(DUPLICATE_ID_REFUSAL),
+            "{}",
+            result.stderr
+        );
+    }
+}
+
+#[test]
+fn refuses_a_supplemental_owner_audit_duplicate_whose_witness_conflicts() {
+    for result in preflight_extra_audit_orders(
+        "supplemental-audit-conflicting-duplicate",
+        vec![
+            audit_entry("visible-allow", 0, None),
+            audit_entry("hidden-allow", 1, Some("nohup fx hidden-allow")),
+        ],
+    ) {
+        assert_eq!(result.status, 2, "{}", result.stdout);
+        assert!(
+            result.stderr.contains(DUPLICATE_ID_REFUSAL),
+            "{}",
+            result.stderr
+        );
+    }
+}
+
+#[test]
+fn refuses_a_second_supplemental_owner_audit_entry_at_another_position() {
+    for result in preflight_extra_audit_orders(
+        "supplemental-audit-duplicate-id",
+        vec![audit_entry("hidden-allow", 2, Some("fx hidden-allow"))],
+    ) {
+        assert_eq!(result.status, 2, "{}", result.stdout);
+        assert!(
+            result.stderr.contains(DUPLICATE_ID_REFUSAL),
+            "{}",
+            result.stderr
+        );
+    }
+}
+
+#[test]
+fn refuses_a_second_owner_audit_entry_at_the_supplemental_position() {
+    for result in preflight_extra_audit_orders(
+        "supplemental-audit-duplicate-position",
+        vec![
+            audit_entry("visible-allow", 0, None),
+            audit_entry("other-member", 1, Some("fx hidden-allow")),
+        ],
+    ) {
+        assert_eq!(result.status, 2, "{}", result.stdout);
+        assert!(
+            result.stderr.contains(
+                "Supplemental candidate member `hidden-allow` has 2 owner-audit entries at its catalog position `always_allow[1]`, so none of them is canonical"
+            ),
+            "{}",
+            result.stderr
+        );
+    }
+}
+
+#[test]
+fn refuses_a_supplemental_owner_audit_duplicate_before_promotion_writes() {
+    let fixture = Fixture::new();
+    let entries = vec![
+        audit_entry("visible-allow", 0, None),
+        audit_entry("hidden-allow", 1, Some("nohup fx hidden-allow")),
+    ];
+
+    let (result, before, after) = promote_supplemental(
+        &fixture,
+        "supplemental-audit-promote-duplicate",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            extra_results: std::slice::from_ref(&entries),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(DUPLICATE_ID_REFUSAL),
+        "{}",
+        result.stderr
+    );
+    assert_eq!(after, before);
+}
+
+#[test]
+fn accepts_multiple_owner_audit_results_without_a_supplemental_duplicate() {
+    let fixture = Fixture::new();
+    let entries = vec![audit_entry("outside-member", 2, None)];
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-extra-results",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            extra_results: std::slice::from_ref(&entries),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
+}
+
+#[test]
+fn refuses_an_owner_audit_entry_without_a_normalized_witness() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-absent-witness",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_entry(|mut entry| {
+                entry
+                    .as_object_mut()
+                    .expect("Entry must be an object")
+                    .remove("witness");
+                Some(entry)
+            })),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(
+            "The owner-audit entry for supplemental candidate member `hidden-allow` must declare a normalized witness"
+        ),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn refuses_an_owner_audit_witness_that_inference_cannot_resolve() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-unresolved-witness",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_witness("fx hidden-allow ")),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 2, "{}", result.stdout);
+    assert!(
+        result.stderr.contains(
+            "The owner-audit entry for supplemental candidate member `hidden-allow` declares an unsupported or ambiguous witness. Witness is empty or not normalized"
+        ),
+        "{}",
+        result.stderr
+    );
+}
+
+#[test]
+fn accepts_owner_audit_and_supplemental_witnesses_that_infer_one_classification() {
+    let fixture = Fixture::new();
+
+    let result = preflight_supplemental(
+        &fixture,
+        "supplemental-audit-shared-witnesses",
+        &SupplementalFixture::hidden_fx("direct"),
+        &AuditEvidence {
+            entry_override: Some(&rewrite_hidden_witness("fx hidden-allow --quiet")),
+            ..AuditEvidence::default()
+        },
+    );
+
+    assert_eq!(result.status, 0, "{}", result.stderr);
 }

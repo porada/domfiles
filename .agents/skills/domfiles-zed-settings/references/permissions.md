@@ -15,7 +15,7 @@ Do not read every permission reference by default. Select only the branches requ
 
 - For terminal commands and their permission patterns, read [Terminal permissions](terminal-permissions.md).
 - For Git commands or permission patterns, read both [Terminal permissions](terminal-permissions.md) and [Git permissions](git-permissions.md). The Git branch partitions command ownership within the terminal policy’s `git` executable family.
-- For fetch patterns, domains, URLs, and sandbox hosts, read [Fetch and network permissions](fetch-permissions.md), adding the [Fetch candidate](fetch-candidate.md) workflow only when the task authorizes mutation.
+- For fetch patterns, domains, URLs, and sandbox hosts, read [Fetch and network permissions](fetch-permissions.md).
 - For agent-directory-scoped terminal allowances, agent worktree permissions, or disposable fixture repository permissions, read [Agent repository permissions](agent-repository-permissions.md).
 - For pattern inventory, owner auditing, pattern compilation or matching, Zed regex compatibility, permission-decision reconstruction, or pattern-family comparison, read the [Permission evaluator](permission-evaluator.md).
 - For building, sealing, and promoting a permission change, read the [Permission candidate](permission-candidate.md) as well. Every read-only workflow can stop at the evaluator.
