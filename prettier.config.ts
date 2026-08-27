@@ -6,4 +6,15 @@ export default defineConfig({
 		'prettier-plugin-rust',
 		'prettier-plugin-toml',
 	],
+	overrides: [
+		{
+			files: [
+				/* prettier-ignore */
+				'skills/domfiles-posix-shell-scripting/references/*.md',
+			],
+			options: {
+				tabWidth: 2,
+			},
+		},
+	],
 });

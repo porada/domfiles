@@ -60,6 +60,7 @@ When applicable project or global policy requires alphabetization, apply it to o
 For new or materially rewritten commands:
 
 - Prefer a supported full-length option name such as `--all` over its short form such as `-a`. Keep the short form only when no equivalent long option exists or exact syntax is part of the interface being preserved.
+- Prefer the variable name `param` over `arg`. Exempt Fish’s built-in `$argv` variable.
 - Treat 100 columns, including indentation, as the default wrapping threshold when no project or formatter rule sets another limit. Do not reflow existing code solely for length. Break at a meaningful argument, operator, pipe, or redirection boundary. Rely on Fish’s grammatical continuation where available, and use `\` only when the line would otherwise terminate. Let the formatter own indentation, and allow an overlong line when no useful break exists.
 
 ## Function Documentation

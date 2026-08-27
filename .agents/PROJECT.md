@@ -288,7 +288,7 @@ The [skill distribution contract](../AGENTS.md#skills) defines project-authored 
 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 
-The public [`fish-shell-scripting`](../skills/fish-shell-scripting/SKILL.md) skill owns portable Fish authoring, review, audit, diagnosis, and validation guidance across scripts and configuration. The repository-internal [`domfiles-shell-scripts`](skills/domfiles-shell-scripts/SKILL.md) skill retains domfiles-specific shell invariants and integration policy. General wording remains owned by [`human-facing-writing`](../skills/human-facing-writing/SKILL.md), keeping Fish semantics separate from editorial guidance.
+The global [`posix-shell-scripting`](../skills/domfiles-posix-shell-scripting/SKILL.md) skill and public [`fish-shell-scripting`](../skills/fish-shell-scripting/SKILL.md) skill respectively own portable POSIX shell and Fish authoring, review, audit, diagnosis, and validation guidance. The repository-internal [`domfiles-shell-integration`](skills/domfiles-shell-integration/SKILL.md) skill retains domfiles-specific shell invariants and integration policy. General wording remains owned by [`human-facing-writing`](../skills/human-facing-writing/SKILL.md), keeping shell semantics separate from editorial guidance.
 
 The public `human-facing-writing` skill applies its [Writing Principles](../skills/human-facing-writing/SKILL.md#writing-principles) standard to every task, then routes connected prose and technical copy to separate references, giving overlapping work one precedence contract while preserving a complete nontechnical path. The global **Numbering** rule exists for Zed-specific behavior, remains owned by [`.config/zed/AGENTS.md`](../.config/zed/AGENTS.md#writing), and is intentionally excluded from the public typography contract. Synchronization removes the obsolete managed symlinks rather than retaining aliases, so clients discover the merged skill once.
 
@@ -352,7 +352,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 ### Dependency status labels
 
-`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell-script policy](skills/domfiles-shell-scripts/SKILL.md#check-supported-environment-compatibility) owns the row-inclusion rule.
+`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell-script policy](skills/domfiles-shell-integration/SKILL.md#check-supported-environment-compatibility) owns the row-inclusion rule.
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
@@ -424,6 +424,8 @@ Every peer dependency in workspace packages intentionally uses the version `"*"`
 
 `prettier-plugin-fish`, `prettier-plugin-rust`, and `prettier-plugin-toml` are intentionally thin whole-file wrappers around Homebrew-provided `fish_indent`, `rustfmt`, and `taplo`, respectively. Each native formatter’s output is preserved verbatim, and that formatter owns its language’s formatting semantics. Prettier options such as `tabWidth` and `useTabs` intentionally do not affect their output. The Fish and Rust wrappers declare the `fish` and `rust-script` interpreters so Prettier infers their parsers for extensionless files with matching hashbangs.
 
+Markdown files directly under `skills/domfiles-posix-shell-scripting/references/` use a two-space Prettier indentation override so embedded `sh` examples follow the skill’s POSIX indentation convention. The override intentionally excludes `skills/domfiles-posix-shell-scripting/SKILL.md` because applying the same indentation setting to the whole file would reindent its YAML frontmatter. The skill’s example-bearing guidance is therefore structured as references, while `SKILL.md` retains the rules and routes needed by every invocation.
+
 The Rust wrapper invokes `rustfmt --edition 2024 --emit stdout`. The explicit edition is required because direct stdin formatting otherwise defaults to Rust 2015. Native `rustfmt` defaults own all remaining Rust formatting policy, so the repository intentionally has no `rustfmt.toml` and exposes no duplicate Prettier options. The TOML wrapper invokes `taplo fmt -` and likewise relies on the native formatter’s defaults, so the repository has no Taplo configuration or duplicate Prettier options. Homebrew’s `fish`, `rust`, and `taplo` formulas provision all three native formatters, while `rustup` and `rust-analyzer` are intentionally unmanaged.
 
 Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. None of the native formatters has a range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged. Prettier’s standalone mode is also intentionally unsupported because these wrappers require a Node.js process to execute their external formatter binaries.
@@ -458,7 +460,7 @@ The `__string_*` helpers are optional conveniences rather than a mandatory abstr
 
 `__is_ci` overrides suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
 
-`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state rather than a path mirrored into Fish. The [`domlib` maintenance policy](skills/domfiles-shell-scripts/SKILL.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set.
+`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state rather than a path mirrored into Fish. The [`domlib` maintenance policy](skills/domfiles-shell-integration/references/domlib-integration.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set.
 
 A `.config/fish/config.fish` counterpart remains unwanted for a different reason than the other exemptions. Fish does not export `set -g`, which every `DOMFILES_*` entry in that file uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
 
