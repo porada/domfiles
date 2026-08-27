@@ -178,6 +178,7 @@
 				"*.yarnpkg.com",
 				"*.zizmor.sh",
 				"add-skill.vercel.sh",
+				"agent-browser.dev",
 				"agentclientprotocol.com",
 				"agentskills.io",
 				"apple.com",
@@ -320,6 +321,82 @@
 						},
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*actionlint(?: (?:--?(?:color|debug|no-color|oneline|verbose|version)(?:=(?:false|true))?|--?(?:config-file|format|ignore|stdin-filename)(?:=[^ ]+| [^-][^ ]*)|--?(?:pyflakes|shellcheck)=))*(?:(?: [^-][^ ]*)*| -| --(?: [^ ]+)*)$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --help| --version)?$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser (?:a11y|addinitscript|auth|back|batch|check|click|clipboard|close|confirm|connect|console|cookies|dashboard|dblclick|deny|dialog|diff|doctor|download|drag|errors|eval|exit|fill|find|focus|forward|frame|get|goto|highlight|hover|inspect|install|is|key|keyboard|keydown|keyup|mcp|mouse|navigate|network|open|pdf|plugin|press|profiler|profiles|pushstate|quit|react|read|record|reload|removeinitscript|screenshot|scroll|scrollinto|scrollintoview|select|session|set|skills|snapshot|state|storage|stream|swipe|tab|touch|trace|type|uncheck|upgrade|upload|vitals|wait|window) --help$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:a11y(?: [^ \\n-][^ \\n]*| --tags [^ \\n-][^ \\n]*| (?:-s|--selector) [^ \\n-][^ \\n]*)*|auth (?:list|show [^ \\n-][^ \\n]*)|back|check [^ \\n-][^ \\n]*|click(?: [^ \\n-][^ \\n]*| --new-tab)*|(?:close|exit|quit)|(?:console|errors)(?: --clear)*|cookies(?: (?:clear|get))?|cookies set(?: [^ \\n-][^ \\n]*| --(?:httpOnly|secure)| --(?:domain|expires|path|sameSite|url) [^ \\n-][^ \\n]*)*|dblclick [^ \\n-][^ \\n]*|deny [^ \\n-][^ \\n]*|dialog (?:accept|dismiss|status)(?: [^ \\n-][^ \\n]*)*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:diff (?:screenshot|snapshot|url)(?: [^ \\n-][^ \\n]*| (?:-c|--compact|--full|--screenshot)| (?:-d|--depth) [0-9]+| (?:-b|-o|-s|-t|--baseline|--output|--selector|--threshold|--wait-until) [^ \\n-][^ \\n]*)*|doctor(?: --(?:debug|headed|offline|quick|webgpu))*|download [^ \\n-][^ \\n]* [^ \\n-][^ \\n]*|drag [^ \\n-][^ \\n]* [^ \\n-][^ \\n]*|eval(?: [^ \\n-][^ \\n]*| (?:-b|--base64)| --stdin)*|fill(?: [^ \\n-][^ \\n]*)*|find (?:alt|first|label|last|nth|placeholder|role|testid|text|title)(?: [^ \\n-][^ \\n]*| --exact| --name [^ \\n-][^ \\n]*)*|focus [^ \\n-][^ \\n]*|forward|frame [^ \\n-][^ \\n]*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:get (?:attr|box|cdp-url|count|html|styles|text|title|url|value)(?: [^ \\n-][^ \\n]*)*|(?:goto|navigate|open)(?: [^ \\n-][^ \\n]*| --enable react-devtools| --headed)*|highlight [^ \\n-][^ \\n]*|hover [^ \\n-][^ \\n]*|is (?:checked|enabled|visible) [^ \\n-][^ \\n]*|(?:key|press) [^ \\n-][^ \\n]*|keyboard (?:inserttext|type)(?: [^ \\n-][^ \\n]*)*|(?:keydown|keyup) [^ \\n-][^ \\n]*|mouse (?:(?:down|up)(?: (?:left|middle|right))?|move -?[0-9]+ -?[0-9]+|wheel -?[0-9]+(?: -?[0-9]+)?))(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:network (?:har (?:start|stop)(?: [^ \\n-][^ \\n]*| --content [^ \\n-][^ \\n]*)*|request [^ \\n-][^ \\n]*|requests(?: --clear| --(?:filter|method|status|type) [^ \\n-][^ \\n]*)*|route [^ \\n-][^ \\n]*(?: --abort| --(?:body|resource-type) [^ \\n-][^ \\n]*)*|unroute(?: [^ \\n-][^ \\n]*)?)|pdf [^ \\n-][^ \\n]*|plugin(?: list| show [^ \\n-][^ \\n]*)?|profiler (?:start(?: --categories [^ \\n-][^ \\n]*)?|stop(?: [^ \\n-][^ \\n]*)?)|profiles|pushstate [^ \\n-][^ \\n]*|react (?:inspect [^ \\n-][^ \\n]*|renders (?:start|stop)(?: --json)?|suspense(?: --json| --only-dynamic)*|tree))(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:read(?: [^ \\n-][^ \\n]*| --(?:content-boundaries|outline|raw|require-md)| --(?:allowed-domains|filter|llms|max-output|timeout) [^ \\n-][^ \\n]*)*|record (?:(?:re)?start [^ \\n-][^ \\n]*(?: [^ \\n-][^ \\n]*)?|stop)|reload|screenshot(?: [^ \\n-][^ \\n]*| --(?:annotate|full)| -f| --screenshot-(?:dir|format|quality) [^ \\n-][^ \\n]*)*|scroll(?: (?:down|left|right|up))?(?: [0-9]+)?(?: (?:-s|--selector) [^ \\n-][^ \\n]*)?|scrollinto(?:view)? [^ \\n-][^ \\n]*|select(?: [^ \\n-][^ \\n]*)*|session(?: (?:info|list)| id(?: --prefix [^ \\n-][^ \\n]*| --scope (?:cwd|git-root|worktree))*)?)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:set (?:(?:device|media|offline)(?: [^ \\n-][^ \\n]*)*|geo -?[0-9.]+ -?[0-9.]+|viewport [0-9]+ [0-9]+(?: [0-9.]+)?)|skills(?: list| path(?: [^ \\n-][^ \\n]*)?| get(?: --all| --full| [^ \\n-][^ \\n]*)*)?|snapshot(?: (?:-c|-i|-u|--compact|--interactive|--urls)| (?:-d|--depth) [0-9]+| (?:-s|--selector) [^ \\n-][^ \\n]*)*|storage (?:local|session)(?: (?:clear|get|set))?(?: [^ \\n-][^ \\n]*)*|stream (?:disable|status)|tab(?: (?:close|list|new))?(?: [^ \\n-][^ \\n]*| --label [^ \\n-][^ \\n]*)*|trace (?:start|stop(?: [^ \\n-][^ \\n]*)?)|type(?: [^ \\n-][^ \\n]*)*|uncheck [^ \\n-][^ \\n]*|vitals(?: [^ \\n-][^ \\n]*)?)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^agent-browser(?: --(?:(?:debug|json|no-auto-dialog|no-pin-tab|pin-tab|webgpu)|(?:headed|hide-scrollbars)(?: (?:false|true))?|enable react-devtools|restore(?: [^ \\n-][^ \\n]*)?|(?:color-scheme|download-path|idle-timeout|restore-check-(?:fn|text|url)|restore-save|session(?:-name)?) [^ \\n-][^ \\n]*))* (?:wait(?: [^ \\n-][^ \\n]*| --download| --(?:fn|load|state|text|timeout|url) [^ \\n-][^ \\n]*)*|window new)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:a11y(?: [^ \\n-][^ \\n]*| --tags [^ \\n-][^ \\n]*| (?:-s|--selector) [^ \\n-][^ \\n]*)*|auth (?:list|show [^ \\n-][^ \\n]*)|back|check [^ \\n-][^ \\n]*|click(?: [^ \\n-][^ \\n]*| --new-tab)*|(?:close|exit|quit)|(?:console|errors)(?: --clear)*|cookies(?: (?:clear|get))?|cookies set(?: [^ \\n-][^ \\n]*| --(?:httpOnly|secure)| --(?:domain|expires|path|sameSite|url) [^ \\n-][^ \\n]*)*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:dblclick [^ \\n-][^ \\n]*|deny [^ \\n-][^ \\n]*|dialog (?:accept|dismiss|status)(?: [^ \\n-][^ \\n]*)*|diff (?:screenshot|snapshot|url)(?: [^ \\n-][^ \\n]*| (?:-c|--compact|--full|--screenshot)| (?:-d|--depth) [0-9]+| (?:-b|-o|-s|-t|--baseline|--output|--selector|--threshold|--wait-until) [^ \\n-][^ \\n]*)*|doctor(?: --(?:debug|headed|offline|quick|webgpu))*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:download [^ \\n-][^ \\n]* [^ \\n-][^ \\n]*|drag [^ \\n-][^ \\n]* [^ \\n-][^ \\n]*|eval(?: [^ \\n-][^ \\n]*| (?:-b|--base64)| --stdin)*|fill(?: [^ \\n-][^ \\n]*)*|find (?:alt|first|label|last|nth|placeholder|role|testid|text|title)(?: [^ \\n-][^ \\n]*| --exact| --name [^ \\n-][^ \\n]*)*|focus [^ \\n-][^ \\n]*|forward|frame [^ \\n-][^ \\n]*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:get (?:attr|box|cdp-url|count|html|styles|text|title|url|value)(?: [^ \\n-][^ \\n]*)*|(?:goto|navigate|open)(?: [^ \\n-][^ \\n]*| --enable react-devtools| --headed)*|highlight [^ \\n-][^ \\n]*|hover [^ \\n-][^ \\n]*|is (?:checked|enabled|visible) [^ \\n-][^ \\n]*|(?:key|press) [^ \\n-][^ \\n]*|keyboard (?:inserttext|type)(?: [^ \\n-][^ \\n]*)*|(?:keydown|keyup) [^ \\n-][^ \\n]*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:mouse (?:(?:down|up)(?: (?:left|middle|right))?|move -?[0-9]+ -?[0-9]+|wheel -?[0-9]+(?: -?[0-9]+)?)|network (?:har (?:start|stop)(?: [^ \\n-][^ \\n]*| --content [^ \\n-][^ \\n]*)*|request [^ \\n-][^ \\n]*|requests(?: --clear| --(?:filter|method|status|type) [^ \\n-][^ \\n]*)*|route [^ \\n-][^ \\n]*(?: --abort| --(?:body|resource-type) [^ \\n-][^ \\n]*)*|unroute(?: [^ \\n-][^ \\n]*)?))(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:pdf [^ \\n-][^ \\n]*|plugin(?: list| show [^ \\n-][^ \\n]*)?|profiler (?:start(?: --categories [^ \\n-][^ \\n]*)?|stop(?: [^ \\n-][^ \\n]*)?)|profiles|pushstate [^ \\n-][^ \\n]*|react (?:inspect [^ \\n-][^ \\n]*|renders (?:start|stop)(?: --json)?|suspense(?: --json| --only-dynamic)*|tree))(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:read(?: [^ \\n-][^ \\n]*| --(?:content-boundaries|outline|raw|require-md)| --(?:allowed-domains|filter|llms|max-output|timeout) [^ \\n-][^ \\n]*)*|record (?:(?:re)?start [^ \\n-][^ \\n]*(?: [^ \\n-][^ \\n]*)?|stop)|reload|screenshot(?: [^ \\n-][^ \\n]*| --(?:annotate|full)| -f| --screenshot-(?:dir|format|quality) [^ \\n-][^ \\n]*)*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:scroll(?: (?:down|left|right|up))?(?: [0-9]+)?(?: (?:-s|--selector) [^ \\n-][^ \\n]*)?|scrollinto(?:view)? [^ \\n-][^ \\n]*|select(?: [^ \\n-][^ \\n]*)*|session(?: (?:info|list)| id(?: --prefix [^ \\n-][^ \\n]*| --scope (?:cwd|git-root|worktree))*)?|set (?:(?:device|media|offline)(?: [^ \\n-][^ \\n]*)*|geo -?[0-9.]+ -?[0-9.]+|viewport [0-9]+ [0-9]+(?: [0-9.]+)?))(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:skills(?: list| path(?: [^ \\n-][^ \\n]*)?| get(?: --all| --full| [^ \\n-][^ \\n]*)*)?|snapshot(?: (?:-c|-i|-u|--compact|--interactive|--urls)| (?:-d|--depth) [0-9]+| (?:-s|--selector) [^ \\n-][^ \\n]*)*|storage (?:local|session)(?: (?:clear|get|set))?(?: [^ \\n-][^ \\n]*)*|stream (?:disable|status)|tab(?: (?:close|list|new))?(?: [^ \\n-][^ \\n]*| --label [^ \\n-][^ \\n]*)*)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:AGENT_BROWSER_(?:(?:ALLOWED_DOMAINS|ANNOTATE|CONFIRM_ACTIONS|CONTENT_BOUNDARIES|DEBUG|DOWNLOAD_PATH|HEADED|HIDE_SCROLLBARS|JSON|NO_(?:AUTO_DIALOG|XVFB)|PIN_TAB|RESTORE(?:_CHECK_(?:FN|TEXT|URL))?|SCREENSHOT_DIR|SESSION(?:_NAME)?|WEBGPU)=[^ \\n$*?`\\[\\]{}]*|(?:AUTOSAVE_INTERVAL_MS|DEFAULT_TIMEOUT|IDLE_TIMEOUT_MS|MAX_OUTPUT|SCREENSHOT_QUALITY|STREAM_(?:MAX_(?:HEIGHT|WIDTH)|QUALITY))=[0-9]+|COLOR_SCHEME=(?:dark|light|no-preference)|ENABLE=react-devtools|RESTORE_SAVE=(?:always|auto|never)|SCREENSHOT_FORMAT=(?:jpeg|png)) )+agent-browser (?:trace (?:start|stop(?: [^ \\n-][^ \\n]*)?)|type(?: [^ \\n-][^ \\n]*)*|uncheck [^ \\n-][^ \\n]*|vitals(?: [^ \\n-][^ \\n]*)?|wait(?: [^ \\n-][^ \\n]*| --download| --(?:fn|load|state|text|timeout|url) [^ \\n-][^ \\n]*)*|window new)(?: --download-path [^ \\n-][^ \\n]*| --json| --session [^ \\n-][^ \\n]*)*$",
 							"case_sensitive": true
 						},
 						{
@@ -3337,6 +3414,14 @@
 					],
 					"always_confirm": [
 						{
+							"pattern": "^(?:[^ ]+ )*agent-browser(?: [^ ]+)* [^ ]*[$*?`\\[\\]{}][^ ]*(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:[^ ]+ )*agent-browser(?: [^ ]+)* (?i:file):[^ ]*(?: |$)",
+							"case_sensitive": true
+						},
+						{
 							"pattern": "^(?:(?:HOMEBREW_NO_[A-Z0-9_]+=1|MANPAGER=cat|PAGER=cat) )*brew bundle check (?:.* )?--i(?:n(?:s(?:t(?:a(?:l(?:l)?)?)?)?)?)?(?:[ =]|$)",
 							"case_sensitive": true
 						},
@@ -3694,6 +3779,18 @@
 						}
 					],
 					"always_deny": [
+						{
+							"pattern": "^(?:[A-Za-z_][A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|[^ ]*) )*AGENT_BROWSER_CONFIG=(?:\"[^\"]*\"|'[^']*'|[^ ]*) (?:[A-Za-z_][A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|[^ ]*) )*agent-browser(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:[A-Za-z_][A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|[^ ]*) )*AI_GATEWAY_[A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|[^ ]*) (?:[A-Za-z_][A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|[^ ]*) )*agent-browser(?: |$)",
+							"case_sensitive": true
+						},
+						{
+							"pattern": "^(?:[A-Za-z_][A-Za-z0-9_]*=(?:\"[^\"]*\"|'[^']*'|[^ ]*) )*agent-browser(?: --(?:allow-file-access|annotate|auto-connect|confirm-interactive|content-boundaries|debug|ignore-https-errors|json|no-auto-dialog|no-ca-cert|no-pin-tab|pin-tab|quiet|verbose|webgpu)| -[qv]+| --(?:action-policy|allowed-domains|args|ca-cert|cdp|color-scheme|config|confirm-actions|device|download-path|enable|engine|executable-path|extension|headers|idle-timeout|init-script|max-output|model|namespace|profile|provider|proxy(?:-bypass)?|restore-(?:check-(?:fn|text|url)|save)|screenshot-(?:dir|format|quality)|session(?:-name)?|state|user-agent)(?:=[^ \\n]*| [^ \\n]+)| -p [^ \\n]+| --restore(?:=[^ \\n]*| [^ \\n]+)| --(?:headed|hide-scrollbars)(?:=(?:false|true)| (?:false|true))?)* chat(?: |$)",
+							"case_sensitive": true
+						},
 						{
 							"pattern": "^(?:CARGO_TARGET_DIR=[^ ]* )?(?:(?:MANPAGER|PAGER)=cat )*(?:CI=(?:1|true) )?(?:nohup )?cargo (?:(?:.* )?--token(?:=| )[^ ]+|(?:.* )?--config(?:=| )[^ ]*(?i:(?:registry|registries)[^ ]*token)[^ ]*|(?:(?:-q|-v|--color(?:=| )(?:always|auto|never)|--frozen|--locked|--offline|--quiet|--verbose) )*config get (?:registry[.]token|registries[.][^. ]+[.]token)(?: |$)|.* (?:(?i:[a-z][a-z0-9+.-]*)://[^ /@]*@|(?i:[a-z][a-z0-9+.-]*)://[^ ]*[?&](?i:access[_-]?token|api[_-]?key|auth|password|secret|token)=[^&# ]+|[^ ]+:[^ ]+@[^ ]+))",
 							"case_sensitive": true

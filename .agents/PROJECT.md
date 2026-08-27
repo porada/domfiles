@@ -20,6 +20,14 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
+### Agent-browser configuration isolation
+
+The [`agent-browser` shim](../bin/agent-browser) sets `AGENT_BROWSER_CONFIG` to the managed [`.config/agent-browser.json`](../.config/agent-browser.json) before resolving the repository-scoped CLI. Selecting one file suppresses upstream automatic discovery of `~/.agent-browser/config.json` and `./agent-browser.json`. A caller-supplied `AGENT_BROWSER_CONFIG` is rejected, while an explicit CLI `--config <path>` retains upstream’s higher precedence and is the supported route for project-local configuration.
+
+The managed configuration defaults to the `domfiles` namespace so daemon sockets and restore-state directories do not collide with direct or non-domfiles use. It also enables nonce-marked content boundaries around untrusted page output. These defaults complement rather than replace command permissions.
+
+Before exporting the managed configuration path, the shim rejects inherited `AGENT_BROWSER_*` variables that can select confirmed external state or hidden execution inputs. It preserves ordinary session, restore, rendering, output, timeout, and diagnostic controls along with standard proxy variables and `AGENT_BROWSER_ENCRYPTION_KEY`. Explicit options remain visible to Zed’s command-text permission review.
+
 ### Fish configuration isolation
 
 Fish reads startup configuration before evaluating a noninteractive command unless `--no-config` is present. In this repository, [`config.fish`](../.config/fish/config.fish) always configures shared paths and environment variables and sources the active machine-local [`local.fish`](#fish-local-configuration). Tracked aliases and colors load only for interactive sessions. A discovery-looking noninteractive command can therefore execute machine-local configuration before reaching its requested help surface.
@@ -440,7 +448,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 ### Repository-scoped commands
 
-`plugins` and `skills` intentionally remain in the root `dependencies`. They provide user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
+`agent-browser`, `plugins`, and `skills` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
 
 `domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
 

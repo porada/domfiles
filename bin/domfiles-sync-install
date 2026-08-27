@@ -62,6 +62,10 @@ if __is_callable node && __is_callable pnpm; then
 
   if __domfiles_is_clean; then
     __ pnpm --dir "$DOMFILES" --loglevel=error install --frozen-lockfile
+
+    if ! __is_ci; then
+      __ pnpm --dir "$DOMFILES" --config.verifyDepsBeforeRun=warn exec agent-browser install || true
+    fi
   else
     __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
   fi

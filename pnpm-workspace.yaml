@@ -1,6 +1,9 @@
 packages:
   - packages/*
 
+allowBuilds:
+  agent-browser: true
+
 autoInstallPeers: false
 
 catalog:
