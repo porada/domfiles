@@ -20,7 +20,7 @@ For a standalone audit in either language, follow the [repository audit process]
 ## Investigate the task
 
 1. Classify each in-scope shell file from its hashbang and syntax rather than its extension alone, then apply `fish-shell-scripting` or `posix-shell-scripting`.
-2. When changes to `.config/fish/config.fish` alter interactive guards or sourced files, keep [Fish configuration isolation](../../PROJECT.md#fish-configuration-isolation) and, when applicable, [Fish local configuration](../../PROJECT.md#fish-local-configuration) aligned.
+2. When changes to `.config/fish/config.fish` alter machine-local sourcing, keep [Fish local configuration](../../PROJECT.md#fish-local-configuration) aligned.
 3. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
 4. Evaluate `.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Do not report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
 

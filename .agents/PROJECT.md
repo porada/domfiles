@@ -24,19 +24,9 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 The [`agent-browser` shim](../bin/agent-browser) sets `AGENT_BROWSER_CONFIG` to the managed [`.config/agent-browser.json`](../.config/agent-browser.json) before resolving the repository-scoped CLI. Selecting one file suppresses upstream automatic discovery of `~/.agent-browser/config.json` and `./agent-browser.json`. A caller-supplied `AGENT_BROWSER_CONFIG` is rejected, while an explicit CLI `--config <path>` retains upstream’s higher precedence and is the supported route for project-local configuration.
 
-The managed configuration defaults to the `domfiles` namespace so daemon sockets and restore-state directories do not collide with direct or non-domfiles use. It also enables nonce-marked content boundaries around untrusted page output. These defaults complement rather than replace command permissions.
+The managed configuration defaults to the `domfiles` namespace so daemon sockets and restore-state directories do not collide with direct or non-domfiles use. It also enables nonce-marked content boundaries around untrusted page output.
 
-Before exporting the managed configuration path, the shim rejects inherited `AGENT_BROWSER_*` variables that can select confirmed external state or hidden execution inputs. It preserves ordinary session, restore, rendering, output, timeout, and diagnostic controls along with standard proxy variables and `AGENT_BROWSER_ENCRYPTION_KEY`. Explicit options remain visible to Zed’s command-text permission review.
-
-### Fish configuration isolation
-
-Fish reads startup configuration before evaluating a noninteractive command unless `--no-config` is present. In this repository, [`config.fish`](../.config/fish/config.fish) always configures shared paths and environment variables and sources the active machine-local [`local.fish`](#fish-local-configuration). Tracked aliases and colors load only for interactive sessions. A discovery-looking noninteractive command can therefore execute machine-local configuration before reaching its requested help surface.
-
-The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) therefore defaults agent uses of Fish as a noninteractive interpreter to `fish --no-config`. The default excludes tasks whose subject is startup configuration or configured runtime behavior, where the loaded configuration is part of the evidence. This isolates startup files. It does not make the process hermetic or establish the provenance of an autoloaded function. Fish builtins can be forced through `builtin`, while shipped autoloaded functions retain function-path resolution, so permission inventories classify those implementation classes separately.
-
-Fish’s shipped help renderer invokes `man`, whose pager may come from `MANPAGER` or `PAGER`. Setting both variables to `cat` bounds the intended renderer, but Zed’s [terminal normalization](skills/domfiles-zed-settings/references/terminal-permissions.md#close-the-parser-and-effect-model) can make a real assignment and a quoted assignment-looking command word indistinguishable.
-
-The same normalization removes ordinary argument quoting before permission matching. Single-quoted, double-quoted, and unquoted raw forms can therefore share one normalized permission input even when Fish assigns their arguments differently, so every raw form represented by that input must have the same safety classification.
+Before exporting the managed configuration path, the shim rejects inherited `AGENT_BROWSER_*` variables that can select external state or hidden execution inputs. It preserves standard proxy variables and `AGENT_BROWSER_ENCRYPTION_KEY`, along with diagnostic, output, rendering, restore, session, and timeout controls.
 
 ### GitHub CLI authentication boundary
 
@@ -46,171 +36,33 @@ GitHub CLI can fall back to storing a token in plaintext when secure credential 
 
 ### Permission pattern length bound
 
-The 1,000-scalar cap on decoded permission patterns in the [terminal permission policy](skills/domfiles-zed-settings/references/terminal-permissions.md#apply-the-terminal-permission-policy) is a self-imposed reviewability bound rather than a Zed or regex-engine constraint. It tracks no external limit and changes only by decision. The `domfiles-zed-settings-permission-owner-audit` binary enforces the same bound, so the policy figure and that enforcement change together.
-
-### Ripgrep configuration isolation
-
-`rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs an arbitrary program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) requires `--no-config` on every agent invocation.
-
-[Zed settings](../.config/zed/settings.json) enforce the same boundary independently, because every ripgrep search allowance requires the literal `--no-config` token and unflagged invocations fall through to the terminal’s confirm-by-default boundary. The permission layer matches command text and cannot observe the environment, so requiring the flag is the only reliable way to establish that no configuration file participates.
+The Zed settings workflow caps decoded permission patterns at 1,000 Unicode scalars as a self-imposed reviewability bound rather than a Zed or regex-engine constraint.
 
 ### Zed agent permission model
 
-Agent tool permissions intentionally use an allow-by-default baseline. The terminal tool overrides that baseline with confirm-by-default behavior, using explicit allowances for accepted forms and confirmation overrides for hazardous forms.
+Zed Agent tool permissions intentionally use `agent.tool_permissions.default: "allow"`. The `delete_path`, `move_path`, and terminal tools omit tool-specific configuration, so their actions inherit the global baseline at the configured-permission layer.
 
-### Zed agent-directory allowance scope
+The terminal intentionally has no configured command patterns. Command patterns classify normalized command text rather than semantic capabilities, so equivalent effects can remain available through another executable, generated code, or a native tool. Always-loaded agent policy governs intent and task authorization, while Zed Agent’s operating-system sandbox governs filesystem writes, protected Git metadata writes, and network access.
 
-Project-relative task-owned `.agent-<name>` directories are a standing user-approved namespace for operation-specific terminal-allowance variants. This lets permission work evaluate a scoped variant without asking the user to reapprove the namespace for each command family.
-
-The namespace neither authorizes a command family nor changes effective permissions on its own. The [agent-directory allowance policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#apply-the-agent-directory-allowance-policy) owns exact eligibility and preserves confirmation or denial for effects that path scope cannot contain, while [Zed settings](../.config/zed/settings.json) remain canonical for configured behavior.
-
-### Zed automatic terminal denials
-
-Configured `terminal.always_deny` rules cover forms whose purpose or verified behavior exposes ambient credentials or authentication capabilities, transports literal credentials, disables agent or operating-system security boundaries, or loads authentication identities and providers. The exact command inventory remains canonical in [Zed settings](../.config/zed/settings.json). Configured denials cannot be approved manually.
-
-Information-looking forms receive the same treatment when their actual behavior is more privileged than their spelling suggests:
-
-- `corepack` manager selectors can download the selected pnpm or Yarn release before displaying its help or version output.
-- Direct `git credential-* … get` calls invoke credential helpers and can print stored usernames and passwords.
-- Home Assistant CLI API-token, alternate-endpoint, and debug-logging forms can expose, transmit, or log Supervisor credentials. macOS `security` password-output and decrypted-dump flags print Keychain secrets.
-- Package-runner operands named like discovery commands can install and execute packages, while option-looking first arguments to known mutating pnpm or Yarn script shorthands are forwarded to those scripts instead of producing package-manager help.
-- `sort --compress-program` and its accepted abbreviated long forms execute an arbitrary compression helper.
-
-These forms are denied rather than left confirmable so a discovery-looking command cannot be approved under a false premise. Custom Home Assistant configuration selection remains confirmable because it changes credential and endpoint sources without inherently disclosing them.
-
-### Zed bulk configuration output
-
-Bulk value listings through `git config list`, its legacy `--list` and `-l` forms, `git var -l`, and `yarn config list` remain user-confirmable because configuration can contain credentials. Their higher-precedence confirmation overrides intentionally cover display options, including name-only output, rather than relying on a brittle complement expression. Targeted configuration reads retain their existing permission treatment.
-
-### Zed Cargo target directory
-
-`CARGO_TARGET_DIR` has an automatic terminal allowance only when it names the exact project-relative `.agent-<name>/target` directory and precedes an otherwise allowed Cargo form. This operation-specific use of the [agent-directory allowance scope](#zed-agent-directory-allowance-scope) confines generated artifacts to task-owned state without authorizing a Cargo command family or broadening its accepted options.
-
-Operational `cargo clean` and nightly or experimental execution remain confirmable when prefixed by the assignment. Credential-denial patterns intentionally accept any literal no-space `CARGO_TARGET_DIR` value so an unsupported target cannot turn a denied Cargo form into an approvable one. [Zed settings](../.config/zed/settings.json) remain canonical for exact command grammar.
-
-### Zed command discovery defaults
-
-Terminal discovery forms require verified exit-only behavior regardless of spelling because long and single-dash options can be operational flags or ordinary operands. This fail-closed boundary lets each executable own its discovery forms, with the exact qualifying test owned by the [terminal permission policy](skills/domfiles-zed-settings/references/terminal-permissions.md#apply-the-terminal-permission-policy).
+A tool-permission `allow` does not grant an effect outside the sandbox. The effect still requires the applicable sandbox grant, and neither permission layer authorizes work prohibited by agent policy. Fetch permissions retain their separate explicit prompt model. External Agent permissions remain independent, and Zed Agent’s sandbox does not govern External Agents.
 
 ### Zed fetch and sandbox host scope
 
 `agent.tool_permissions.tools.fetch.always_allow` contains one generic HTTPS syntax rule. A path-filtered fetch allowance uses a same-host `always_confirm` complement for every other direct initial path and relies on the generic rule for its approved prefixes. Confirmation precedence makes those prefixes prompt-free at the fetch-tool layer without redundant allow rules. The generic rule excludes URL userinfo and explicit ports.
 
-`agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed matches those grants case-insensitively without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal commands remain subject to their independent terminal permissions.
+`agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed matches those grants case-insensitively without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal actions independently inherit the global tool default and remain subject to task authorization and sandboxing.
 
 The same-host complement is an initial-fetch prompt filter rather than a path-scoped network boundary. Zed does not re-evaluate a same-host redirect path against fetch patterns, and the complement does not filter sandboxed terminal networking.
 
-### Zed Fish command-text help allowances
-
-[Zed settings](../.config/zed/settings.json) automatically allow Fish help commands supplied through `-c` or `--command`. Three families are covered: forced `builtin <name>` help, the shipped functions whose zero-argument form rejects before ordinary effects, and the direct `argparse` and `fish_add_path` compatibility forms. The exact name lists and accepted option grammar remain canonical in those settings.
-
-Fish source does not close these paths. Recognized help resolves an ordinary `__fish_print_help`, so each allowed form inherits the renderer, pager, function-path, and quote-normalization conditions recorded in [Fish configuration isolation](#fish-configuration-isolation). The allowance is therefore an accepted-limitation decision rather than a verified exit-only classification.
-
-The accepted grammar admits exactly one command option, at most one `-N` or `--no-config` option, and no residual child `$argv`. Repeated command or no-config options, `--` terminators, trailing operands, long-option abbreviations, and unrelated Fish options remain confirmable because each changes which command the child shell evaluates. Expansion-bearing forms that Zed classifies as unsafe or unsupported are instead denied before configured patterns are considered. Other excluded dynamic forms fall through to confirmation. A no-config token inside the command text normalizes identically to a real child option, so no pattern can establish that startup configuration was actually disabled.
-
-Direct `argparse` and `fish_add_path` help are a bounded compatibility exception. Quote removal makes their normalized input shared with a raw form whose child shell runs the bare command before Fish root help, and that bare form enters ordinary execution. The exception therefore covers those two names only. It does not extend to the other help-bearing shipped functions or to other direct builtin spellings, and forced `builtin <name>` help with `--no-config` remains the preferred form.
-
-The covered names are pinned to Fish 4.8. Refresh them when the supported Fish minor release changes or when an update changes the covered command surface, help behavior, or zero-argument behavior.
-
-### Zed fixture repository permissions
-
-Strict descendants of project-relative `.agent-<name>` directories are disposable fixture repository scope, distinct from top-level agent worktrees.
-
-Git’s repository discovery can walk from a descendant into an enclosing worktree when the descendant lacks its own repository. Permission regexes cannot verify repository boundaries, resolve gitfiles or symlinks, or neutralize user-managed Git configuration. The automatic boundary therefore treats existing descendant state and configuration-driven filters, hooks, lazy fetching, submodule behavior, and URL rewrites as trusted. Explicit command-line forms that select external or remote behavior remain outside the boundary. Zed’s sandbox, sensitive-path, and symlink-escape checks remain additional boundaries.
-
-### Zed generated-output deletion
-
-Entries named `.pnpm-store`, `build`, `coverage`, `dist`, or `node_modules` and paths beneath them are treated as disposable generated output at any path depth. Because permissions match paths lexically, a matching root is intentionally allowed whether it is a directory or a regular file. Native `delete_path` and bounded terminal `rm` and `rmdir` forms may remove a matching root or its descendants, with the exact accepted option and glob grammar canonical in [Zed settings](../.config/zed/settings.json).
-
-Brace expansion, broader deletion grammar, path traversal, paths outside those named roots, and similarly named entries remain confirmable. Shell substitutions and interpolations are instead denied by the [permission evaluator](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) before configured patterns are considered. Zed’s built-in sensitive-path and symlink-escape checks remain additional confirmation gates.
-
-### Zed Git permission ordering
-
-Git patterns for one subcommand can occupy several independently ordered sections. If an [owner-audit manifest](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-permission-ownership) uses only the subcommand as its section key, the audit collapses those sections and reports entries beyond the first boundary. The [Git permission policy](skills/domfiles-zed-settings/references/git-permissions.md#apply-the-git-permission-policy) owns section membership and ordering, while the owner-audit workflow owns the manifest contract.
-
-### Zed Git remote URL scope
-
-`ls-remote` is the only broadly allowed Git subcommand that reaches the network with an unconstrained destination, while `fetch` and `clone` remain confirmable by default. [Zed settings](../.config/zed/settings.json) keep its broad allowance and add a confirmation for operands carrying a URL scheme or an scp-style `<host>:<path>`, so `git ls-remote <remote-name>` stays automatic while an explicit destination requires approval. A separate denial covers URLs that embed credentials.
-
-The confirmation recognizes the operand shape rather than the host, so an explicit `github.com` URL confirms alongside any other. Exempting one host would require a complement expression the Rust-compatible engine cannot express, and the remote-name form already covers ordinary use.
-
-### Zed npm `--all` option
-
-npm’s exact `--all` is an ordinary scope option rather than a lifecycle-script override. It is safe for allowed npm command families such as `npm ls`, where it includes transitive dependencies. The ambiguous `--a` and `--al` forms and exact `--allow-scripts` remain behind confirmation. `npm approve-scripts --all` remains confirmable because `approve-scripts` is intentionally absent from the npm positive command alternatives and terminal defaults to confirmation.
-
 ### Zed permission regex compatibility
 
-The exact `regex` crate version pinned in `Cargo.toml` was verified against Zed as of commit `9e236090`. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) revalidates the direct version baseline against current Zed source.
-
-### Zed `printenv` exposure
-
-The automatic `printenv` allowance is limited to the explicit, alphabetized non-secret variable names in [Zed settings](../.config/zed/settings.json). Unlisted names outside the denial categories below remain confirmable because agent environments can contain credentials and capability-bearing endpoints.
-
-The automatic denial covers known credential-exposing names, secret-suffixed name patterns, wildcard-bearing variable operands, and zero-name environment dumps, with the exact denied names and suffixes canonical in the same settings. This denial remains necessary even though the positive allowlist excludes those forms so neither explicit approval nor a future allowance can expose them.
-
-### Zed `stty` device scope
-
-[Zed settings](../.config/zed/settings.json) allow `stty` only in its reporting forms. The bare invocation, `-a`, `-e`, `-g`, and the `all`, `everything`, and `size` operands display current characteristics, while every other operand modifies terminal state the agent and the user share. `stty` has no help or version option, and it opens its target before rejecting an unknown one, so this owner carries no discovery entry.
-
-The `-f` operand retargets the report at a named terminal, which is the only way to read settings when standard input is not a tty. Because `stty` opens that path, and opening a serial device can assert modem control even under `O_NONBLOCK`, the operand is held to `/dev/stdin`, `/dev/tty`, and numbered `/dev/ttys` pseudo-terminals. The allowance fixes `-f` ahead of the reporting option so the grammar stays one ordered sequence. The reverse order remains confirmable.
-
-### Zed temporary archive staging
-
-[Zed settings](../.config/zed/settings.json) provide publication audits a narrow terminal temporary namespace for staging tracked `HEAD` without modifying the checkout. The allowance covers Git’s built-in tar archive and extraction beneath that namespace. Alternate refs, formats, paths, and broader extraction options remain confirmable.
-
-macOS can expose the same terminal temporary area through canonical and noncanonical root spellings, so both are accepted. Each path requires a safe descendant and excludes traversal. The Rust-compatible permission engine cannot require the archive and destination to share one generated terminal-directory identifier, so each is constrained independently to the same temporary namespace.
-
-### Zed terminal permission limitations
-
-Zed applies `terminal.always_confirm` ahead of `terminal.always_allow`, and its Rust-compatible regular expressions do not support lookarounds. A narrower allowance therefore cannot exempt a command that a broader confirmation rule already matches. Trusted local package-manager `exec` binaries remain inside each manager’s positive command-family allowance with an `exec`-specific option grammar, while ordinary npm, pnpm, and Yarn workflows remain in positive command alternatives. Unlisted executable names then fall through the terminal’s confirm-by-default boundary. Broad `exec` confirmation overrides would make the allowlist require brittle complement expressions. Exact informational forms can be allowed separately.
-
-Terminal patterns cover wrapper ordering and option forms verified in the supported environment rather than every shell-equivalent permutation or speculative abbreviation. Command casing variants intentionally fall through the terminal’s confirm-by-default boundary. Version-dependent option abbreviations require revalidation when a package-manager major changes rather than speculative widening.
-
-Every `rust-lldb` invocation containing `--local-lldbinit` is denied. Zed’s regex engine cannot express the option’s ordering-sensitive `--no-lldbinit` neutralization without a brittle complement, so the intentional false positive preserves LLDB’s current-directory initialization boundary.
-
-Package-manager subcommand arguments are version-specific, so invocation tests rather than option-like spelling determine their behavior. pnpm 12 treats an option-looking first operand after `pnpm exec` as an executable name rather than a pnpm flag. Bare `--` remains a separator. Because pnpm 12 can reconcile the [package-manager environment lock](#repository-scoped-commands) before printing its version, pnpm version forms are not informational allowances. Yarn Classic 1 treats unknown `dlx` as a package-script invocation and passes an option-looking first operand to that script. Those option-leading forms are denied so they cannot be approved by mistake. The supported discovery forms are `pnpm help exec` and `yarn help <name>`.
-
-Fixed Git prefix values are limited to disabling optional behavior or interaction because arbitrary environment values can select alternate repositories, configuration, executables, credentials, or network behavior. The [Git prefix policy](skills/domfiles-zed-settings/references/git-permissions.md#apply-the-git-permission-policy) owns their selection and synchronized application across command groups.
-
-Unlisted assignments remain confirmable. This includes alternate attribute, index, object, reference, repository, or worktree locations, alternate config paths or config injection, and arbitrary diff, editor, helper, pager, proxy, or SSH executables. It also includes author, committer, and reflog metadata, CA, certificate, credential, key, and proxy-path selection, and every value of `GIT_SSL_NO_VERIFY`, including `0`. Generated, internal, test-only, or unknown variables and uncommon compatibility, debug, format, network-tuning, pathspec, or trace controls remain confirmable as well.
-
-Git subcommand discovery is restricted to compiled command names so aliases and external `git-*` helpers remain confirmable. Exact `--help` is allowed for the alphabetized names returned by `git --list-cmds=builtins`. Exact `-h` is allowed for the alphabetized names returned by `git --list-cmds=parseopt`, whose built-ins use Git’s parse-options framework, plus the explicitly verified `credential` exception. `git credential -h` prints usage and exits before reading credential protocol input. Both inventory commands are informational allowances. The [global Git inventory form](../.config/zed/AGENTS.md#tooling) cannot supply either list because it includes shipped scripts and guide names that are not compiled built-ins and omits some compiled names, while only `parseopt` identifies which built-ins accept `-h`. The lists require refresh when Git changes.
-
-Outside agent worktrees, an allowed commit that supplies a message takes it from a file rather than the command line. Because [quote stripping leaves message words indistinguishable from pathspec tokens](#zed-worktree-permission-coupling), an unscoped `-m` grammar would also permit committing matching working-tree paths while ignoring the index. A `-F` operand carries no message words, so its only variable token is a path, held to a traversal-free descendant of the [standing user-approved namespace](#zed-agent-directory-allowance-scope) by the terminal policy’s [lexical path-namespace rule](skills/domfiles-zed-settings/references/terminal-permissions.md#translate-terminal-behavior-into-regex). That namespace bounds an input here rather than containing the commit’s effect, so the [agent-directory eligibility rule](skills/domfiles-zed-settings/references/agent-repository-permissions.md#apply-the-agent-directory-allowance-policy) does not supply the basis. Message contents never reach the permission grammar, so punctuation and multiple lines remain available. Standard-input `-F -` and the editor-opening `-e` combination stay confirmable because each waits on input an automated commit cannot supply.
-
-Autosquash commit forms are classified by editor behavior rather than by their effect on later history. Plain `git commit --fixup=<commit>` composes its message from the target commit without an editor, while `--fixup=amend:<commit>`, `--fixup=reword:<commit>`, and `--squash=<commit>` open one and block an automated commit, so only the plain form is allowed.
-
-Neither general-scope commit form admits `--no-verify`, so each runs the target repository’s `commit-msg`, `post-commit`, `pre-commit`, and `prepare-commit-msg` hooks. Terminal matching does not expose the working directory, so that residual execution trust reaches every repository opened in the editor rather than this one alone.
-
-Commit signature verification runs `gpg.program` or `gpg.ssh.program`. Neither key is restricted to protected configuration, so a repository’s own config selects the executable. `--show-signature`, the `%G` pretty placeholders, and `for-each-ref`’s `%(signature)` fields all reach that verification, so each is confirmable across every command that interprets it. The guard is lexical and a `pretty.<name>` alias defined in the same repository config defeats it, because `git log --pretty=<name>` expands to a `%G` format string the normalized command never contains.
-
-### Zed `tput` capname namespace
-
-[Zed settings](../.config/zed/settings.json) allow `tput` to query any terminfo capability name rather than a finite list. A capname query reads the terminfo database and writes the capability’s value to standard output, so an unknown or misspelled name produces a diagnostic and a nonzero exit rather than a state change. Enumerating capnames would leave ordinary formatting and geometry queries confirmable while adding no safety, so this is the user-approved bounded namespace the [positive-branch rule](skills/domfiles-zed-settings/references/terminal-permissions.md#translate-terminal-behavior-into-regex) requires before an allowance may accept unknown future names.
-
-`init` and `reset` are subtracted from that namespace because they set tty driver delays and tab expansion in addition to writing strings. Zed’s regex engine has no lookarounds, so the allowance spells the exclusion as an explicit complement over the capname alphabet, accepting every differing or longer name such as `inits` and `rese` while rejecting the two exact operands. `-S` stays outside the namespace because it reads capability names from standard input and waits.
-
-Capability parameters are limited to non-negative integers. The few capabilities that take string parameters remain confirmable so no unconstrained operand reaches the allowance.
+`Cargo.toml` pins the Rust `regex` version used to validate Zed permission patterns. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) compares the direct version with current Zed source.
 
 ### Zed worktree permission coupling
 
-The global [`git-worktrees` skill](../skills/domfiles-git-worktrees/SKILL.md) pairs the project-relative `.agent-<name>` namespace with the branch namespace `agent/<name>`. [Zed settings](../.config/zed/settings.json) use those namespaces as the security boundary for native path tools and terminal Git and filesystem operations. This permits automated creation, maintenance, integration, and cleanup inside disposable agent scope without granting equivalent operations elsewhere.
+The global [`git-worktrees` skill](../skills/domfiles-git-worktrees/SKILL.md) defines the project-relative `.agent-<name>` directory and `agent/<name>` branch namespaces as agent-policy naming invariants. Zed Agent’s sandbox determines filesystem and Git metadata access independently of those names.
 
-Terminal permission matching evaluates normalized command inputs without exposing the invocation’s current working directory to configured regexes. Bare commands therefore cannot inherit agent-worktree trust from their execution directory. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) owns the resulting permission-pattern namespace requirement.
-
-Automatic task integration permits explicit staging, commit-time staging of tracked changes, and bounded noninteractive amendments inside agent worktrees, while merges from agent branches remain fast-forward-only. Because Zed strips ordinary shell quotes before permission matching, the commit grammar cannot distinguish normalized message words from non-option relative pathspec tokens. Both are trusted only inside agent worktrees, while option-looking tokens and broader operations remain confirmable. The allowed forms also trust repository-defined clean filters and commit or post-merge hooks within the user-managed repository.
-
-Permission patterns can require the worktree and branch namespaces independently but cannot compare their `<name>` suffixes, so pair equality remains an agent-level invariant. Forced operations remain namespace-bound. Non-forced branch deletion retains Git’s fully-merged check, while forced deletion bypasses it.
-
-Native `move_path`’s [multi-path permission evaluation](skills/domfiles-zed-settings/references/permission-evaluator.md#evaluate-permission-behavior) enables automatic strict-descendant moves within agent worktrees. Permission regexes constrain only lexical operands and cannot detect a permitted-looking parent symlink that resolves elsewhere inside an open worktree. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) leaves direct symbolic-link creation confirmable, so native path allowances treat existing worktree-internal symlinks as previously trusted repository state. Top-level worktree moves must also update Git’s administrative metadata, while Zed’s sensitive-settings and outside-worktree symlink-escape checks remain additional confirmation gates.
-
-Worktree pruning remains confirmable because it can mutate shared Git administrative state beyond the bounded agent namespaces. The [worktree permission policy](skills/domfiles-zed-settings/references/agent-repository-permissions.md#maintain-agent-worktree-permissions) owns the dry-run exception.
-
-### Zed xargs command ownership
-
-Per-command `xargs` ownership avoids a second pooled child inventory whose membership could drift from direct command owners. The [terminal command-owner policy](skills/domfiles-zed-settings/references/terminal-permissions.md#apply-the-terminal-permission-policy) owns the exact partition and repeated wrapper grammar.
-
-Zed authorizes the `xargs` shell segment before standard input becomes child-command arguments, so it cannot apply the child command’s normal confirmation overrides to injected options. Standard input can therefore activate hazardous child behavior after the shell segment has already been allowed. Complete nested `jq` and `ps` families require confirmation rather than denial so legitimate batching remains available with explicit approval.
+Files in open worktrees remain inside normal project write scope, while protected Git administrative metadata requires a separate sandbox grant, including for top-level worktree moves. Native path and terminal tools inherit the global `allow` but remain subject to Zed’s sandbox, sensitive-path, and symlink-escape checks. A path that looks like `.agent-<name>` neither expands sandbox access nor proves the current working directory or repository boundary.
 
 ## Agent integration
 
@@ -228,7 +80,7 @@ The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent docume
 
 The [`claude-acp` registry entry](../.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, permissions, sandbox, and native configuration independently of Zed Agent. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
 
-Zed’s OS sandbox applies only to Zed Agent and does not isolate Claude Agent. The tracked Zed sandbox and terminal permission settings therefore do not govern Claude Agent tools.
+Zed’s OS sandbox applies only to Zed Agent and does not isolate Claude Agent. The tracked Zed sandbox and tool permission settings therefore do not govern Claude Agent tools.
 
 ### Claude, Codex, and Zed global instructions
 
@@ -251,8 +103,6 @@ The `Collaboration` policy is the standing example of what does not move. Its de
 The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) owns conditional agent behavior for `gh`. It carries the authentication and remote-mutation rules its workflow needs plus the [command-specific standalone handoff fallback](#agent-task-relay) for `gh agent-task create`, so the skill remains independently usable. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the route and aligned domfiles-managed copies of those gates so they remain directly loaded across projects.
 
 `gh agent-task` and the other non-simple families in [Opt-In Operations](../skills/simple-github-cli/SKILL.md#opt-in-operations) are never chosen without a direct user request. The boundary is scope-based rather than tied to preview status. User-requested external task handoffs use `agent-task-relay` for confirmation and assignment composition when it is available, while `simple-github-cli` owns the selected `gh` interface and terminal command delivery for `gh agent-task create` and task-bearing `gh copilot` invocations. `simple-github-cli` declares `agent-task-relay` through one entrypoint route and one bundled [optional-peer reference](../skills/simple-github-cli/references/optional-peer-agent-task-relay.md). `agent-task-relay` carries a generic workflow-owned delivery deferral, and the `simple-github-cli` agent-task fallback preserves standalone behavior without the peer.
-
-[Zed settings](../.config/zed/settings.json) remain canonical for exact command permissions. The [shared permission-layering policy](skills/domfiles-zed-settings/references/permissions.md#apply-the-shared-permission-policy) records that those permissions track verified CLI inventory and prompt behavior rather than mirroring agent policy. Keeping the layers independent lets policy remain intentionally stricter without coupling documentation changes to version-sensitive regex maintenance. Permission revalidation follows changes to `gh` syntax or behavior instead.
 
 ### Global system-available tooling
 
