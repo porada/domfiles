@@ -1,180 +1,149 @@
 # Permission evaluator
 
-## Establish the graph root
+This reference owns the observable contracts for the retained fetch-pattern matcher and regex compatibility audit. It does not own fetch policy, runtime network behavior, sandbox-host approval, or settings mutation.
 
-Establish one graph root in the task-specific [`.agent-<name>` directory](../../../../.config/zed/AGENTS.md#temporary-files) before using any permission workflow. Pass this path as `--graph-root` wherever a validator requires it. Keep the complete workflow inside this root, including every bundle input, candidate artifact, file-backed matcher input, manifest, overlay, and result, so validators can bind the complete input closure without path or symlink escape.
+## Apply the matcher contract
 
-## Resolve CLI contract authority
+Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as the implementation basis. Its next implementation must be read-only and support exactly these routes:
 
-Apply the [CLI contract authority rule](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#make-the-interface-discoverable) to every permission binary. Use exact `--help` for ordinary invocation syntax. Inspect the exact implementation and relevant adjacent tests only when changing or reconciling a CLI projection, and limit that inspection to each affected combination, mode, option, or schema.
+- `--baseline-settings <baseline-settings-path> --candidate-settings <candidate-settings-path> --comparison-file <comparison-manifest-path>`
+- `--help`
+- `--layer-file <layer-manifest-path> --settings <settings-path>`
 
-## Inventory terminal patterns
+This is the target contract, not the current interface. Until the source, exact `--help` output, and adjacent `pattern_match.test.rs` contract tests match it and the focused target-contract test passes, stop the matcher branch and report contract drift rather than using a retired route. A passing legacy test does not clear this gate. The reconciliation pass must replace assertions for retired routes. After reconciliation, treat the source and exact `--help` output as the authority for implemented behavior.
 
-Never read or emit complete terminal permission arrays during a targeted task. Start with the owner-audit tool’s bounded lexical inventory:
+Require exactly one route. Reject combinations from different routes, missing values, positional arguments, repeated singleton options, and unknown options. Keep each help option list alphabetized.
 
-```sh
-cargo run --locked --quiet \
-    --bin domfiles-zed-settings-permission-owner-audit -- \
-    --settings .config/zed/settings.json \
-    --owner '<top-level-executable>'
-```
+The matcher reads only caller-selected regular UTF-8 files. It does not execute case inputs, load environment-selected configuration, make network requests, search for settings, or write files. Remove the former artifact catalog, artifact root, configured suite, graph root, hash-bound result, input closure, manifest binding, path overlay, result output, and single-pattern routes.
 
-Each inventory page reports the exact settings SHA-256, at most 100 bucket and index IDs, decoded Unicode-scalar counts, required boolean case settings, and bounded source-text previews. Its token-aware source search produces candidate evidence, not semantic ownership proof. When another page remains, rerun the same command with the reported opaque `--after '<inventory-cursor>'`. The cursor is bound to the exact settings bytes and inventory owner. Any settings change or different owner invalidates it and requires restarting from the first page.
+Both manifests are strict JSON objects. Reject duplicate keys, inputs containing a line break, invalid enum values, non-string inputs, and unknown fields. Treat every case input as inert text.
 
-Classify each lexical candidate through the applicable terminal and domain policy. Include candidates owned by the inventory owner in its complete semantic owner groups. Classify lexical hits owned by another command, such as a manager name inside a Corepack denial, as explicit exclusions. Treat every reported bucket and index as transient. It expires after an edit, rebase, integration, concurrent permission task, or other relevant-array change.
+The `--help` route exits with status `0`, writes only the exact help text to standard output, and leaves standard error empty. A successful layer or comparison route writes one bounded summary to standard output. For exit status `1`, aggregate every validation finding, write the total count and at most the first 100 findings to standard error, then write the omitted count. For exit status `2`, write one bounded diagnostic to standard error.
 
-Regex source text can hide an owner token that the compiled regex matches. Treat a known omission as supplemental ownership, not permission to rewrite live settings. Use bounded read-only evidence to identify and capture the exact source. Declare its side, member ID, semantic owner, declared role, repository scope, invisibility reason, matching witness, and bound validation entry in the owner specification. The candidate and owner-audit tools share one wrapper-aware inference implementation for semantic owner, repository scope, and role, and preflight and promotion refuse supplemental evidence that does not infer exactly as declared. Leading assignments never change the inferred role, so an assignment-prefixed member is `direct` unless it also carries a recognized `nohup` or `xargs` wrapper.
+For every failure, identify files by role, manifest cases by array and zero-based index, and settings patterns by bucket and zero-based index. Do not emit caller-selected paths, case inputs, manifest contents, pattern text, settings contents, or upstream diagnostic excerpts that could reproduce those values. Limit each rendered finding or diagnostic to `512` UTF-8 bytes and complete standard error to `64` KiB, truncating only at a Unicode-scalar boundary. Keep total and omitted counts within that bound. Select status-`1` findings in the deterministic route-specific order defined below.
 
-A behavior-preserving candidate-only rewrite may make a hidden owner lexically discoverable. Declare it separately as an optional visibility rewrite only when the tool’s bounded finite-literal expansion proof accepts the exact baseline and candidate forms. This is not general regex-language equivalence. When the proof does not apply, leave the source byte-identical and declare the candidate member supplemental too. A delete operation never needs a candidate rewrite.
+Select the single status-`2` diagnostic by this phase order: argument validation, file type and readability in each route’s displayed option order, UTF-8 decoding in that option order, JSON parsing and duplicate-key detection in that option order, manifest structural validation, settings projection in settings-file order, and cross-file reference or coverage validation. Stop at the first failing phase and the first error in its defined order.
 
-## Audit permission ownership
+Use these exit statuses:
 
-Run the owner-audit binary with exact `--help` for current invocation syntax. Keep every manifest and referenced file under the [graph root](#establish-the-graph-root).
+- `0` when every pattern compiles and every declared expectation passes.
+- `1` for a well-formed invocation that finds a configured decision, pattern case, pattern length, or regex failure.
+- `2` for contract-invalid input, invalid arguments, malformed input, or unreadable files.
 
-For an owner retaining candidate entries, bind the canonical audit manifest to the exact candidate settings. Declare every inventory-owned entry’s stable ID, bucket and current index, semantic owner, owner and domain-section sort keys, role, stable role-local sort key, and one normalized witness. Declare every excluded lexical candidate’s bucket, index, semantic outside owner, matching witness, and nonempty semantic reason. Derive this manifest independently from the candidate transformation.
+## Parse settings inputs
 
-The audit checks actual bucket order against the tuple (`owner_sort_key`, `section_sort_key`, role order `discovery`/`direct`/`wrapped`, `owner`, `pattern_sort_key`) and requires every tuple to be unique within its bucket.
+Parse every settings file as strict UTF-8 JSON, not JSONC, and require its root to be an object. Reject duplicate keys in every object. The `agent`, `tool_permissions`, `tools`, and `fetch` objects along the selected `agent.tool_permissions.tools.fetch` path must exist and have object values. Allow and ignore unrelated fields outside the selected fetch object.
 
-Derive each witness from its own pattern and confirm the pattern accepts it before declaring it. Hand-authoring is impractical for a large owner such as `git`, and these failure modes are not evident in the reported finding text:
+The fetch object permits exactly these fields:
 
-- A witness must match its pattern. Inferring the intended owner is not sufficient.
-- A witness that ends in a space is not normalized and fails owner inference. Prefer an alternative branch when the pattern accepts one.
-- An execution allowance witnessed through its `-h` or `--help` branch infers the discovery role and sorts ahead of its own group. Prefer a branch that shows the execution form.
-- An entry whose witness fails owner inference leaves the position map, which breaks the Git ordering-separation exception for every span crossing its index. One unparseable witness can surface as occupancy findings against unrelated owners.
-- An agent-namespace entry that binds its path positionally still infers `general` scope. Witness it through a `-C` worktree path when the pattern accepts one, so its span matches the run it belongs to.
+- `always_allow`, `always_confirm`, and `always_deny` are optional arrays. An absent array is empty.
+- `default` is required and must be `allow`, `confirm`, or `deny`.
 
-Only `-C <path>`, `--no-optional-locks`, `--no-pager`, and the exact `-c commit.gpgsign=false` precede the subcommand during owner inference. Any other leading token ends the prefix and makes the inferred owner `git:root`, so declare that owner while keeping the entry’s domain-section key with the subcommand its pattern governs.
+Every pattern-array entry must be an object containing exactly a Boolean `case_sensitive` field and a string `pattern` field. Reject missing required fields, null values, unknown fields within the fetch or pattern objects, and wrong types as contract-invalid input with exit status `2`.
 
-Resolve semantic ownership through the [terminal command-owner policy](terminal-permissions.md#apply-the-terminal-permission-policy) and each selected domain policy. Apply the [Git owner partition](git-permissions.md#apply-the-git-permission-policy) to Git owner and section keys, the [Node manager boundaries](node-package-manager-permissions.md#apply-manager-boundaries) to Corepack mediation, and the terminal policy’s wrapper ownership to `xargs`.
+Apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound) before compilation. Count each decoded `pattern` value in Unicode scalars. A pattern over `1,000` scalars is a validation finding with exit status `1` and must not be compiled. Compile every remaining pattern exactly once with its configured case setting. An invalid regex is a validation finding with exit status `1`.
 
-Set `lexically_invisible` on an entry whose regex source hides its executable token from the lexical scan. Such an entry stays outside lexical classification, so only visible entries and exclusions must equal the recomputed hit set, but it still owns its exact bucket and index for ordering and span validation. The audit refuses an entry declared invisible that the inventory recomputes as a candidate, and its witness must still match the pattern at its declared position, so a genuinely unoccupied or outside-owner position still reports a span gap. Declare the same member as `supplemental` in the owner specification.
+Within each settings file, process buckets in `always_allow`, `always_confirm`, then `always_deny` order and each bucket by ascending array index. If any pattern fails the length or compilation check, report all such configuration findings and skip manifest expectation evaluation for that route.
 
-Every supplemental candidate member retained by an owner operation must have a canonical owner-audit entry with the same stable member ID and exact catalog bucket and index. That entry must set `lexically_invisible` to `true`, and its independently inferred semantic owner, role, and repository scope must agree with the supplemental record. The audit and supplemental records may use different normalized witnesses only when they infer the same classification. Preflight and promotion refuse an omitted entry or any owner, role, or repository scope disagreement.
+## Validate a configured fetch layer
 
-For a discovery entry, set `discovery_coverage` to one of these values and provide nonempty `discovery_inputs` containing the witness:
-
-- `complete_finite` means the inputs are the complete finite normalized grammar represented by that entry. It enables finite duplicate-coverage findings against retained entries in the same `always_allow` manager group.
-- `representative` records bounded examples for variable-operand discovery grammar without claiming completeness. Validate the complete variable grammar, hazardous operands, and near misses through matcher suites instead.
-
-Direct and wrapped entries omit both discovery fields. Declare `nohup` and `xargs` child witnesses as `wrapped`. When a pattern is case-insensitive under the terminal policy’s verified command-specific exception, declare a nonempty `case_insensitive_reason`. Encode every entry’s final bucket position after applying the terminal owner-ordering policy and any selected domain order.
-
-The audit requires complete occupancy for each `(bucket, independently inferred semantic owner, inferred Git repository scope)` span. Repository scope is one of:
-
-- `general` for non-Git witnesses, absent or ambiguous Git `-C` paths, unsupported wrapper forms, multiple `-C` operands, absolute paths, malformed agent names, and paths containing empty, current-directory, or parent-directory components.
-- `agent worktree` for one exact traversal-free project-relative `-C .agent-<name>` path.
-- `fixture repository` for one traversal-free strict descendant `-C .agent-<name>/<path>`.
-
-One Git ordering exception permits a discovery entry to be separated from a later direct or wrapped entry when both have the same inferred Git owner and repository scope and every intervening manifest entry independently infers to a Git owner. Non-Git owner groups remain contiguous.
-
-Run a structural candidate audit and write bundle-ready evidence with:
-
-```sh
-cargo run --locked --quiet \
-    --bin domfiles-zed-settings-permission-owner-audit -- \
-    --settings '<candidate-settings-path>' \
-    --manifest '<owner-manifest-path>' \
-    --graph-root '<graph-root>' \
-    --result-out '<owner-audit-result-path>'
-```
-
-For each `inventory_owner` token with one or more delete operations, use one strict `--zero-owner-manifest` result covering every delete operation that shares that token. Its complete recomputed lexical inventory must classify every hit exactly once as an outside-owner exclusion or a retained entry of a same-token owner operation. Raw `--owner` inventory produces only `inventory_query` evidence and cannot satisfy the required `candidate_inventory` result.
-
-After refresh, keep reviewed semantic manifests byte-identical and pass the generated `--binding` overlay. The result binds that overlay and the complete post-binding input closure. Any changed binding or referenced file makes the evidence stale.
-
-After promotion, use one `--delete-all-manifest` for each `inventory_owner` token with one or more delete operations, covering every delete operation that shares that token. This mode binds the sealed bundle and promoted scopes, requires byte-exact absence of every declared and supplemental baseline member, and rechecks complete exclusion classification. Do not create an empty canonical owner manifest.
-
-The audit verifies the exact settings snapshot, complete lexical-candidate classification, wrapper-aware semantic owner and repository-scope inference, witnesses, case settings, decoded lengths, owner-group contiguity, declared bucket order, and complete finite discovery redundancy. It does not establish safety classifications, prove general regex-language equivalence, reproduce matcher coverage, or replace complete effective-permission evaluation.
-
-When a complete audit reports a structural issue outside the intended owner set, compare the exact baseline and candidate objects before changing anything. Classify it as baseline state, candidate-caused drift, or manifest error. Expanding the change to repair baseline state requires explicit user approval.
-
-Before adding a finite discovery object, test its complete normalized input set against every retained pattern in the owner group and add only uncovered forms. Before removing one as redundant, require every member of its complete finite grammar to remain covered. Do not use provisional owner metadata alone as duplicate-coverage evidence.
-
-## Compile and match permission patterns
-
-Use `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` for Zed-compatible regex compilation and matching. Do not use the dependency-audit tool as a pattern compiler, and do not substitute `rg`, which changes anchor and byte-matching behavior and wraps configured patterns before parsing.
-
-For one pattern and input, write both as exact UTF-8 bytes under the [graph root](#establish-the-graph-root) and run:
-
-```sh
-cargo run --locked --quiet \
-    --bin domfiles-zed-settings-pattern-match -- \
-    --case-sensitive \
-    --input-file '<input-path>' \
-    --pattern-file '<pattern-path>'
-```
-
-Omit `--case-sensitive` only when the pattern object resolves it to `false`. For multiple single-line cases against one pattern, use `--cases-file` with LF-delimited `match<TAB><input>` and `no-match<TAB><input>` records.
-
-For a changed or audited pattern set, prefer one suite invocation so shared patterns are read and compiled once. A suite manifest accepts these LF-delimited records in any order:
-
-```text
-decision-case<TAB>allow|confirm|deny<TAB><input>
-decision-case-file<TAB>allow|confirm|deny<TAB><input-file>
-default<TAB>allow|confirm|deny
-catalog-pattern<TAB><catalog-id><TAB><pattern-id>
-pattern<TAB><id><TAB>always_allow|always_confirm|always_deny<TAB>case-sensitive|case-insensitive<TAB><pattern-file>
-pattern-catalog<TAB><catalog-id><TAB><catalog-file><TAB><candidate-file><TAB><state-file>
-pattern-case<TAB><id><TAB>match|no-match<TAB><input>
-pattern-case-file<TAB><id><TAB>match|no-match<TAB><input-file>
-```
-
-A suite requires exactly one default, at least one ordinary or catalog-backed pattern, at least one decision case, and at least one pattern case for every pattern ID. Catalog-backed patterns obtain bucket, case setting, artifact path, and logical ID from the strict catalog. Ownership remains in the owner specification rather than the catalog.
-
-For every user-supplied command intended to become automatic, preserve the raw shell line and its input-derivation evidence outside the suite, then include each derived normalized input as a decision case. Resolve aggregate operations separately when one shell line produces multiple permission inputs. Include every changed pattern and unchanged participating pattern that may match a decision input, plus representative intended, hazardous, near-miss, and precedence cases. Use file-backed records for line-break-bearing inputs.
-
-Write bundle-ready suite evidence with:
-
-```sh
-cargo run --locked --quiet \
-    --bin domfiles-zed-settings-pattern-match -- \
-    --suite-file '<suite-path>' \
-    --graph-root '<graph-root>' \
-    --result-out '<suite-result-path>'
-```
-
-After refresh, add `--artifact-root '<refresh-directory>'`. The validator reads `<refresh-directory>/path-overlay.json` and redirects only the listed graph paths. It does not rewrite the reviewed suite.
-
-Suite decisions apply configured precedence to one normalized input only: deny, then confirm, then allow, then the declared default. They do not reproduce pre-rule denial checks, input derivation, settings-layer resolution, or complete multi-input permission evaluation. Keep matcher success, aggregate effective-permission reasoning, observed command behavior, observed prompt behavior, and explicit user acceptance as separate claims.
-
-## Evaluate a configured pattern layer
-
-Use one strict layer manifest to evaluate individual pattern expectations and settled normalized inputs against complete configured arrays for exactly one selected tool:
+Run:
 
 ```sh
 cargo run --locked --quiet \
     --bin domfiles-zed-settings-pattern-match -- \
     --layer-file '<layer-manifest-path>' \
-    --graph-root '<graph-root>' \
-    --result-out '<layer-result-path>'
+    --settings '<settings-path>'
 ```
 
-Set the required `tool` to `fetch` or `terminal`, and point `settings_file` at the exact settings snapshot under evaluation. The manifest separates review-only `raw_provenance` from evaluated `pattern_cases`, `settled_inputs`, and explicit aggregate cases. The mode reads the selected tool’s `default` from that snapshot, compiles each configured pattern once, and applies deny, confirm, allow, then default precedence. Terminal requires all three pattern arrays. An absent fetch array is empty, while a present fetch array and each of its pattern objects must be well formed.
+The layer manifest has this schema:
 
-Every configured pattern requires at least one independent pattern case identified by bucket and index. Keep inline cases single-line, and use file-backed pattern or settled-input cases for multiline data. Every file-backed case enters the result’s complete input closure.
+```json
+{
+    "decision_cases": [
+        {
+            "expected": {
+                "always_allow": true,
+                "always_confirm": false,
+                "always_deny": false,
+                "decision": "allow"
+            },
+            "input": "https://example.com/"
+        }
+    ],
+    "pattern_cases": [
+        {
+            "bucket": "always_allow",
+            "expected_match": true,
+            "index": 0,
+            "input": "https://example.com/"
+        }
+    ]
+}
+```
 
-After refresh, add `--artifact-root '<refresh-directory>'` so the reviewed manifest resolves the refreshed settings snapshot through the generated path overlay. Fetch evidence used to seal a permission candidate must bind exactly one settings closure record at the sealed candidate’s graph path and SHA-256. Fetch evidence from refreshed state must bind the generated overlay, which must explicitly redirect the sealed candidate path.
+Require both arrays and at least one entry in each. A pattern case identifies one configured fetch pattern by `bucket` and zero-based `index`, then declares whether that pattern must match the input. Every configured pattern requires at least one matching and one nonmatching single-line case. A manifest missing either polarity is contract-invalid input with exit status `2`. The matcher does not attempt to prove that a missing witness cannot exist. A configuration whose pattern cannot supply both polarities is unsupported by this workflow and must change before approval.
 
-This mode establishes individual pattern matches and configured-pattern-layer decisions only. It does not establish shell parsing, command decomposition, input derivation, pre-rule checks, participating settings layers, sandbox or Git-metadata permissions, displayed prompts, runtime behavior, or user acceptance. Complete effective-permission reasoning remains a separate workflow below.
+A decision case declares the complete matched-bucket state and final configured decision for one input. Accept `allow`, `confirm`, or `deny` as the decision. Use the patterns compiled with their configured case settings to resolve `always_deny`, `always_confirm`, `always_allow`, and the configured fetch default in that precedence order. Reject an expected state whose declared decision does not follow that precedence as contract-invalid input with exit status `2`.
 
-## Compare baseline and candidate behavior
+Decision-source coverage depends on the complete expected state rather than the final decision value alone:
 
-Use one strict JSON comparison manifest to compile each baseline and candidate pattern set once and evaluate one normalized representative corpus against both:
+- `always_allow` requires `always_allow: true`, `always_confirm: false`, `always_deny: false`, and `decision: "allow"`.
+- `always_confirm` requires `always_confirm: true`, `always_deny: false`, and `decision: "confirm"`. `always_allow` may be either value.
+- `always_deny` requires `always_deny: true` and `decision: "deny"`. The other bucket flags may be either value.
+- The configured default requires all three bucket flags to be `false` and `decision` to equal that default.
+
+Require at least one declared decision case for the configured default and for every nonempty bucket. Missing declared source coverage is contract-invalid input with exit status `2`. A valid declaration that disagrees with observed matches or the observed decision is a validation finding with exit status `1`.
+
+The planning workflow must identify a deciding-source witness before candidate mutation. A fully shadowed bucket or unreachable default is unsupported by the ordinary change workflow. Stop and report that state rather than changing other patterns without authorization. The matcher evaluates only declared cases and does not attempt a formal reachability proof.
+
+Apply the [settings-input contract](#parse-settings-inputs) to the selected settings file. Reject an out-of-range pattern index or unknown bucket in the manifest as contract-invalid input with exit status `2`.
+
+Order status-`1` findings from source validity to local expectations to final decisions: configured settings patterns in the settings-input order, pattern cases in manifest order, then decision cases in manifest order. On success, report counts of configured patterns, decision cases, and pattern cases. This route establishes configured fetch-pattern matches and decisions for the selected settings file only. It does not resolve displayed prompts, other settings layers, redirect behavior, runtime network access, or sandbox hosts.
+
+## Compare fetch permission states
+
+Run:
 
 ```sh
 cargo run --locked --quiet \
     --bin domfiles-zed-settings-pattern-match -- \
-    --comparison-file '<comparison-path>' \
-    --graph-root '<graph-root>' \
-    --result-out '<comparison-result-path>'
+    --baseline-settings '<baseline-settings-path>' \
+    --candidate-settings '<candidate-settings-path>' \
+    --comparison-file '<comparison-manifest-path>'
 ```
 
-`--help` summarizes the current strict schema. Resolve any discrepancy through [CLI contract authority](#resolve-cli-contract-authority). The manifest supports ordinary and catalog-backed patterns, separate defaults, inline and file-backed cases, complete equivalence cases, and intentional `expected_transition` declarations. Either pattern set may be empty. Every case checks the matched state of `always_allow`, `always_confirm`, and `always_deny` separately before resolving the final configured decision.
+The comparison manifest has this schema:
 
-A case without `expected_transition` requires complete baseline/candidate equivalence across all buckets and the final decision. An intentional transition declares both complete observed states. Declared final decisions must agree with deny, confirm, allow, then default precedence. Bucket drift remains visible even when precedence preserves the final decision.
+```json
+{
+    "cases": [
+        {
+            "baseline": {
+                "always_allow": false,
+                "always_confirm": false,
+                "always_deny": false,
+                "decision": "confirm"
+            },
+            "candidate": {
+                "always_allow": true,
+                "always_confirm": false,
+                "always_deny": false,
+                "decision": "allow"
+            },
+            "input": "https://example.com/"
+        }
+    ]
+}
+```
 
-After refresh, add `--artifact-root '<refresh-directory>'`. The comparison, reviewed manifest, file-backed cases, graph artifacts, and overlay are included in the result’s complete input closure. Any changed, added, removed, or redirected input makes the result stale.
+Require a nonempty `cases` array. Each `baseline` and `candidate` state is complete and must declare a decision consistent with deny, confirm, allow, then the corresponding settings file’s default. An inconsistent state is contract-invalid input with exit status `2`.
 
-A successful representative comparison is not formal regex-language equivalence or complete Zed permission evaluation. When a behavior-preserving visibility rewrite is needed, use the owner specification’s bounded literal-expansion proof rather than treating representative cases as equivalence proof.
+Apply the [settings-input contract](#parse-settings-inputs) to the baseline settings and then the candidate settings. Compile every valid fetch pattern once per file. If either settings file has pattern-length or compilation findings, report baseline findings before candidate findings and skip comparison-case evaluation. Otherwise, evaluate cases in manifest order. For each input, evaluate the complete matched-bucket state and final decision against both files, then require exact agreement with the declared `baseline` and `candidate` states.
+
+This route does not validate a repair from an invalid baseline. The ordinary candidate workflow must establish a valid baseline before mutation and stop for a separately authorized repair plan when it cannot.
+
+Include every intentional bucket or final-decision transition, each changed boundary, and representative unchanged near misses. On success, report counts of baseline patterns, candidate patterns, and comparison cases. A successful comparison establishes only the declared corpus. It is not formal regex-language equivalence and does not establish runtime or sandbox behavior.
 
 ## Audit Zed regex compatibility
 
@@ -190,46 +159,25 @@ cargo run --locked --quiet \
     --upstream-revision '<short-zed-revision>'
 ```
 
-The audit reads local files only and compares direct `regex` versions. Transitive versions, sources, checksums, and dependency edges may update independently. Treat a direct-version mismatch against current Zed `main` as compatibility drift from the documented maintenance baseline. Treat evidence that contradicts the recorded Zed revision or the local pin and lock state as a semantic-accuracy finding. Treat an unresolved, missing, ambiguous, or locally inconsistent direct version as a validation failure. Neither result authorizes a dependency or documentation change.
+The audit reads local files only and compares direct `regex` versions. Transitive versions, sources, checksums, and dependency edges may update independently. Treat a direct-version mismatch against current Zed `main` as compatibility drift from the documented maintenance baseline. Treat evidence that the retrieved lockfile does not belong to the reported upstream revision or that the local pin and lock state disagree as a semantic-accuracy finding. Treat an unresolved, missing, ambiguous, or locally inconsistent direct version as a validation failure. Neither result authorizes a dependency or documentation change.
 
-When the user explicitly authorizes a compatibility repair:
+The compatibility audit owns no repair route. Do not mutate `Cargo.toml` or `Cargo.lock` through this workflow. Treat a requested repair as a separate dependency change governed by the global “Dependencies” policy, including approval for the complete manifest and lockfile transition before mutation. After that separately authorized change, rerun the focused contract test, the audit against the same upstream lockfile, and root Rust validation.
 
-1. Verify the reported Zed revision and its locked `regex` version against the same upstream checkout.
-2. Update the exact `regex` pin in `Cargo.toml` and the root `Cargo.lock`, then update the short Zed commit reference in `.agents/PROJECT.md`.
-3. Run the focused contract test, the audit against that upstream lockfile, and root Rust validation.
+## Resolve effective permission behavior
+
+After resolving version-sensitive behavior through the parent [investigation workflow](../SKILL.md#investigate-and-plan):
+
+1. Identify every participating Zed settings layer and resolve the selected tool’s effective default and accumulated pattern arrays.
+2. For fetch, apply deny, confirm, allow, then default precedence to the initial URL. Evaluate sandbox authorization for the initial hostname and every redirect hostname independently.
+3. For native path and terminal tools, establish that this repository contributes no tool-specific override, then evaluate Zed’s built-in behavior, the inherited global default, task authorization, and sandbox effects separately.
+
+The matcher evaluates one selected settings file rather than constructing Zed’s complete effective configuration. When another participating layer contributes fetch rules or a different default, inspect and account for that layer separately.
 
 ## Run focused contract tests
 
 ```sh
-cargo test --locked --test domfiles-zed-settings-permission-patterns-test
 cargo test --locked --test domfiles-zed-settings-pattern-match-test
-cargo test --locked --test domfiles-zed-settings-permission-candidate-test
-cargo test --locked --test domfiles-zed-settings-permission-owner-audit-test
 cargo test --locked --test domfiles-zed-settings-regex-dependency-audit-test
 ```
 
-Select the applicable commands above and remaining focused and root checks through the [skill-owned script validation policy](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).
-
-## Evaluate permission behavior
-
-After resolving version-sensitive behavior through the parent [investigation workflow](../SKILL.md#investigate-and-plan), apply this sequence:
-
-1. Build the effective permission settings.
-    - Apply defaults, extension settings, the global-settings layer from `global_settings.json`, the conditional user-settings layer from `.config/zed/settings.json`, active profile settings, and server settings in that order. Within the user-settings layer, apply base user settings, user release-channel overrides, and user operating-system overrides in that order.
-    - Project settings do not participate in agent permission evaluation. The user-settings layer is included when no profile is active or the active profile uses `base: "user"`, and omitted when it uses `base: "default"`.
-    - Accumulate `always_deny`, `always_confirm`, and `always_allow` patterns across participating layers. A later layer cannot remove an accumulated pattern.
-    - Resolve the tool-specific `default`, when configured, and otherwise use `agent.tool_permissions.default`.
-2. Apply pre-rule denial checks in order.
-    - Apply terminal hardcoded security rules to each raw input and, for supported shells, its extracted subcommands.
-    - Deny the selected tool when any configured regex pattern is empty or failed to compile.
-    - Deny unsafe or unsupported terminal syntax before configured patterns unless the effective terminal default is `allow` and no `always_deny` or `always_confirm` restrictions exist.
-3. Derive every independently evaluated input.
-    - For terminal, extract normalized commands, nested commands, and non-`/dev/null` file redirections. If extraction or shell support is insufficient, disable `always_allow`. Deny an incompatible shell when allow patterns are configured.
-    - For native path tools, retain every raw path. Include both source and destination for `copy_path` and `move_path`.
-    - For other tools, use each original text input.
-4. Evaluate all derived inputs together. Any `always_deny` match denies. Otherwise, any `always_confirm` match confirms. Otherwise, `always_allow` allows only when allow matching is enabled and every input matches an allowance. Fall back to the resolved tool-specific or global default.
-5. For native path tools, repeat configured-rule evaluation against the lexically normalized path list when normalization changes an input, then use the most restrictive result across raw and normalized decisions: deny, then confirm, then allow.
-
-For Git, use one root command, direct subcommand, or compound workflow as the semantic comparison unit. Do not compare objects one-for-one when ownership moves between patterns.
-
-When confirmation precedence and Rust-compatible regex limits make a narrow allowance require a fragile complement expression, leave the form confirmable and record the durable rationale in `.agents/PROJECT.md`.
+Use the pattern-matcher test as target-contract evidence only after it replaces retired-route assertions and covers help-to-parser agreement, output bounds, schemas, and status behavior. Select remaining root checks through the [skill-owned script validation policy](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).

@@ -1,2805 +1,1355 @@
-#[allow(dead_code)]
-#[path = "helpers/permission_patterns.rs"]
-mod permission_patterns;
-
-use permission_patterns::load_bound_artifact_catalog;
-#[cfg(test)]
-pub(crate) use permission_patterns::sha256_hex;
-pub(crate) use permission_patterns::{
-    BoundArtifact, BoundInputs, BoundedIssues, Bucket, ClosureContext, CompiledPattern, Decision,
-    InputClosure, InputClosureBuilder, LayerTool, MatchState, OUTCOME_PASSED, PatternError,
-    ResolvedOverlay, ResultKind, TerminalPosition, ValidationResult, compile_pattern,
-    parse_strict_json, read_utf8_file, regex_error_summary, relative_within_root,
-    resolve_comparison_closure, resolve_layer_closure, resolve_suite_closure,
-    sha256_hex as closure_sha256_hex, write_validation_result,
-};
+use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Deserializer, de};
 use std::{
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     ffi::{OsStr, OsString},
-    fs,
+    fmt, fs,
     io::{self, Write},
     path::{Path, PathBuf},
 };
 
-/// Overlay-aware path resolution. Without an overlay this behaves exactly as manifest-relative
-/// resolution, so reviewed manifests never need editing to run against a refreshed graph
-pub(crate) struct PathResolver {
-    graph_root: Option<PathBuf>,
-    overlay: Option<ResolvedOverlay>,
-}
-
-impl PathResolver {
-    fn plain() -> Self {
-        Self {
-            graph_root: None,
-            overlay: None,
-        }
-    }
-
-    fn load(graph_root: Option<&Path>, artifact_root: Option<&Path>) -> Result<Self, String> {
-        if graph_root.is_none() && artifact_root.is_none() {
-            return Ok(Self::plain());
-        }
-        let overlay = match artifact_root {
-            Some(root) => Some(ResolvedOverlay::load(root)?),
-            None => None,
-        };
-
-        Ok(Self {
-            graph_root: graph_root.map(Path::to_owned),
-            overlay,
-        })
-    }
-
-    fn closure_context(&self) -> ClosureContext<'_> {
-        ClosureContext {
-            overlay: self.overlay.as_ref(),
-        }
-    }
-
-    fn resolve(&self, manifest_file: &Path, referenced_file: &str) -> PathBuf {
-        let direct = resolve_manifest_path(manifest_file, referenced_file);
-        let (Some(graph_root), Some(overlay)) = (self.graph_root.as_deref(), self.overlay.as_ref())
-        else {
-            return direct;
-        };
-        let Ok(relative) = relative_within_root(graph_root, &direct) else {
-            return direct;
-        };
-        if !overlay.overlay.redirects(&relative) {
-            return direct;
-        }
-
-        overlay
-            .root
-            .join(relative.replace('/', std::path::MAIN_SEPARATOR_STR))
-    }
-}
-
-const HELP: &str = concat!(
+const COMPARISON_CASE_FIELDS: [&str; 3] = ["baseline", "candidate", "input"];
+const COMPARISON_FIELDS: [&str; 1] = ["cases"];
+const DECISION_CASE_FIELDS: [&str; 2] = ["expected", "input"];
+const FETCH_FIELDS: [&str; 4] = ["always_allow", "always_confirm", "always_deny", "default"];
+/// Ordered segments from a settings root to the fetch permission object
+const FETCH_PATH: [&str; 4] = ["agent", "tool_permissions", "tools", "fetch"];
+pub(crate) const HELP: &str = concat!(
     "Usage:\n",
-    "  pattern-match [--case-sensitive] --input-file <path> --pattern-file <path>\n",
-    "  pattern-match [--case-sensitive] --cases-file <path> --pattern-file <path>\n",
-    "  pattern-match --comparison-file <path> [--artifact-root <dir>] [--graph-root <dir>] [--result-out <path>]\n",
-    "  pattern-match --layer-file <path> [--artifact-root <dir>] [--graph-root <dir>] [--result-out <path>]\n",
-    "  pattern-match --suite-file <path> [--artifact-root <dir>] [--graph-root <dir>] [--result-out <path>]\n",
+    "  pattern-match --baseline-settings <path> --candidate-settings <path> --comparison-file <path>\n",
     "  pattern-match --help\n",
+    "  pattern-match --layer-file <path> --settings <path>\n",
     "\n",
-    "Match one UTF-8 input, verify case, suite, and configured-pattern-layer expectations against Zed-compatible regex patterns, or compare configured pattern sets\n",
+    "Verify the configured Zed fetch permission layer of one settings file against a declared case manifest, or compare a baseline and candidate settings file across one declared corpus\n",
     "\n",
     "Options:\n",
-    "  --artifact-root <dir>     Redirect only the graph paths listed by <dir>/path-overlay.json. Requires `--graph-root` and never rewrites a manifest\n",
-    "  --case-sensitive          Match case-sensitively (default: case-insensitive)\n",
-    "  --cases-file <path>       Read LF-delimited `match<TAB><input>` and `no-match<TAB><input>` cases\n",
-    "  --comparison-file <path>  Compare baseline and candidate pattern sets over a representative corpus from a strict JSON manifest\n",
-    "  --graph-root <dir>        Anchor input-closure resolution and containment to one bundle graph root\n",
-    "  --help                    Print help. Must be used alone\n",
-    "  --input-file <path>       Read one complete UTF-8 input from this file\n",
-    "  --layer-file <path>       Evaluate configured-pattern-layer decisions from a strict JSON manifest\n",
-    "  --pattern-file <path>     Read the complete UTF-8 pattern from this file\n",
-    "  --result-out <path>       Write hash-bound reviewed workflow evidence to a new file. Requires `--graph-root`\n",
-    "  --suite-file <path>       Verify pattern and decision cases from an LF-delimited suite manifest\n",
+    "  --baseline-settings <path>   Read the baseline settings file of a comparison\n",
+    "  --candidate-settings <path>  Read the candidate settings file of a comparison\n",
+    "  --comparison-file <path>     Read the strict JSON comparison manifest\n",
+    "  --help                       Print help. Must be used alone\n",
+    "  --layer-file <path>          Read the strict JSON layer manifest\n",
+    "  --settings <path>            Read the settings file of a layer evaluation\n",
     "\n",
-    "LF-delimited UTF-8 suite manifest with records in any order:\n",
-    "  decision-case<TAB>allow|confirm|deny<TAB><input>\n",
-    "  decision-case-file<TAB>allow|confirm|deny<TAB><input-file>\n",
-    "  default<TAB>allow|confirm|deny\n",
-    "  catalog-pattern<TAB><catalog-id><TAB><pattern-id>\n",
-    "  pattern<TAB><id><TAB>always_allow|always_confirm|always_deny<TAB>case-sensitive|case-insensitive<TAB><pattern-file>\n",
-    "  pattern-catalog<TAB><catalog-id><TAB><catalog-file><TAB><candidate-file><TAB><state-file>\n",
-    "  pattern-case<TAB><id><TAB>match|no-match<TAB><input>\n",
-    "  pattern-case-file<TAB><id><TAB>match|no-match<TAB><input-file>\n",
-    "  Relative suite paths resolve from the suite file’s parent. Catalog artifact paths resolve from the catalog’s parent\n",
-    "  Pattern catalogs use the strict artifact catalog schema. Ownership lives in the owner spec, not the catalog\n",
+    "Settings input:\n",
+    "  Each settings file is strict UTF-8 JSON with an object root and no duplicate object keys\n",
+    "  Every object along the `agent.tool_permissions.tools.fetch` path must exist. Fields outside the selected fetch object are ignored\n",
+    "  Fetch object: {\"always_allow\":[<pattern>,…],\"always_confirm\":[<pattern>,…],\"always_deny\":[<pattern>,…],\"default\":\"allow|confirm|deny\"}\n",
+    "  Pattern: {\"case_sensitive\":true|false,\"pattern\":\"<regex>\"}\n",
+    "  `default` is required. Each bucket array is optional, and an absent array is empty\n",
+    "  A pattern over 1,000 Unicode scalars is a finding and is never compiled. Every remaining pattern compiles once with its configured case setting\n",
     "\n",
-    "Suite requirements:\n",
-    "  Define exactly one `default` record, at least one ordinary or catalog-backed pattern, and at least one `decision-case` or `decision-case-file` record. Catalog declarations do not count as patterns\n",
-    "  Define at least one `pattern-case` or `pattern-case-file` record for every pattern ID\n",
-    "  Keep inline inputs single-line. Use file-backed records for multiline inputs\n",
-    "  Each decision case applies configured pattern precedence to one input\n",
-    "  Suite verification does not reproduce full Zed permission evaluation\n",
+    "Strict UTF-8 JSON layer manifest:\n",
+    "  Root: {\"decision_cases\":[<decision-case>,…],\"pattern_cases\":[<pattern-case>,…]}\n",
+    "  Decision case: {\"expected\":<state>,\"input\":\"<url>\"}\n",
+    "  Pattern case: {\"bucket\":\"always_allow|always_confirm|always_deny\",\"expected_match\":true|false,\"index\":0,\"input\":\"<url>\"}\n",
+    "  State: {\"always_allow\":true|false,\"always_confirm\":true|false,\"always_deny\":true|false,\"decision\":\"allow|confirm|deny\"}\n",
+    "  Both arrays are required and nonempty. Unknown fields are rejected, and every input is single-line inert text\n",
+    "  Every configured pattern requires one matching and one nonmatching pattern case\n",
+    "  Every nonempty bucket and the configured default require one decision case that identifies them as the deciding source\n",
+    "  Each declared state must follow deny, confirm, allow, then default precedence\n",
     "\n",
-    "Strict UTF-8 JSON comparison manifest (unknown fields are rejected):\n",
-    "  Root: {\"catalogs\":[<catalog>,...],\"baseline\":<set>,\"candidate\":<set>,\"cases\":[<case>,...]}\n",
-    "  Set: {\"default\":\"allow|confirm|deny\",\"patterns\":[<pattern>,...]}\n",
-    "  Root requires `catalogs`, which may be empty, and uses explicitly tagged `file` or `catalog` patterns\n",
-    "  File pattern: {\"type\":\"file\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"case_sensitive\":true|false,\"pattern_file\":\"path\"}\n",
-    "  Catalog pattern: {\"type\":\"catalog\",\"catalog_id\":\"...\",\"pattern_id\":\"...\"}\n",
-    "  Catalog: {\"id\":\"...\",\"catalog_file\":\"path\",\"candidate_file\":\"path\",\"state_file\":\"path\"}\n",
-    "  Inline case: {\"type\":\"inline\",\"input\":\"...\",\"expected_transition\":<transition>}\n",
-    "  File case: {\"type\":\"file\",\"input_file\":\"path\",\"expected_transition\":<transition>}\n",
-    "  Transition: {\"baseline\":<state>,\"candidate\":<state>}\n",
-    "  State: {\"always_allow\":true|false,\"always_confirm\":true|false,\"always_deny\":true|false,\"final_decision\":\"allow|confirm|deny\"}\n",
-    "  Cases carry no `id`. `expected_transition` is optional, and each state it declares is complete\n",
-    "  Either pattern set may be empty. An empty set has no bucket matches and resolves each case from its configured default\n",
-    "  Catalog declarations bind sources but do not add patterns to either set\n",
-    "  Relative manifest paths resolve from the comparison file’s parent. Catalog artifact paths resolve from the catalog’s parent\n",
-    "\n",
-    "Comparison requirements:\n",
-    "  Define at least one case\n",
-    "  Keep pattern IDs nonempty and unique within each set\n",
-    "  Keep inline inputs single-line. Use file cases for multiline inputs\n",
-    "  For each case, comparison checks whether each bucket matched and compares the configured final decision\n",
-    "  Cases without `expected_transition` require complete equivalence. Declared transitions require both complete observed states\n",
-    "  Declared final decisions must agree with deny, confirm, allow, then default precedence. No-op transitions are invalid\n",
-    "  Comparison covers only the representative corpus\n",
-    "  It does not reproduce full Zed permission evaluation or establish formal language equivalence\n",
-    "\n",
-    "Strict UTF-8 JSON configured-pattern-layer manifest (unknown fields are rejected):\n",
-    "  Root: {\"settings_file\":\"path\",\"tool\":\"fetch|terminal\",\"raw_provenance\":[...],\"pattern_cases\":[...],\"settled_inputs\":[...],\"aggregate_cases\":[...]}\n",
-    "  Provenance: {\"id\":\"...\",\"command\":\"...\"} records the original shell line for review and is never evaluated\n",
-    "  Pattern case: {\"type\":\"inline\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0,\"input\":\"...\",\"expected_match\":true|false}\n",
-    "  Pattern case: {\"type\":\"file\",\"id\":\"...\",\"bucket\":\"always_allow|always_confirm|always_deny\",\"index\":0,\"input_file\":\"path\",\"expected_match\":true|false}\n",
-    "  Settled input: {\"type\":\"inline\",\"id\":\"...\",\"input\":\"...\",\"expected_decision\":\"allow|confirm|deny\"}\n",
-    "  Settled input: {\"type\":\"file\",\"id\":\"...\",\"input_file\":\"path\",\"expected_decision\":\"allow|confirm|deny\"}\n",
-    "  Aggregate case: {\"id\":\"...\",\"inputs\":[\"<settled-input-id>\",...],\"expected_decision\":\"allow|confirm|deny\"}\n",
-    "  The layer reads the selected tool’s configured default, loads its complete configured arrays, and compiles each pattern once\n",
-    "  Terminal requires all three arrays. An absent fetch array is empty, while a present malformed array is invalid\n",
-    "  Every configured pattern requires at least one independent pattern case\n",
-    "\n",
-    "Configured-pattern-layer limitations:\n",
-    "  It establishes individual pattern matches and decisions from the selected configured arrays, their precedence, the configured default, settled normalized inputs, and explicit aggregate cases only\n",
-    "  It does not establish Zed shell parsing or command decomposition, input normalization or redirection extraction, pre-rule safety checks, settings discovery or layering, sandbox or Git-metadata permissions, prompt display behavior, or user acceptance\n",
-    "  Keep raw-command provenance and settled normalized inputs distinct\n",
-    "\n",
-    "Evidence:\n",
-    "  `--result-out` records the evaluator, outcome, bound manifest, catalog, settings, overlay, and a complete input closure over every file read\n",
-    "  The closure hashes every resolved input with a length-prefixed encoding, so any added, removed, redirected, or byte-changed input invalidates the record\n",
-    "  Evidence is hash-bound reviewed workflow evidence. It does not prove that this evaluator ran and is not authenticated\n",
-    "  Existing result paths are never overwritten\n",
+    "Strict UTF-8 JSON comparison manifest:\n",
+    "  Root: {\"cases\":[<comparison-case>,…]}\n",
+    "  Comparison case: {\"baseline\":<state>,\"candidate\":<state>,\"input\":\"<url>\"}\n",
+    "  The `cases` array is required and nonempty. Each state is complete and resolves against its own settings file\n",
+    "  This route does not validate a repair from an invalid baseline\n",
     "\n",
     "Output:\n",
-    "  Single-input matching writes no output\n",
-    "  Successful case manifest verification writes the verified case count to standard output\n",
-    "  Successful comparison writes corpus case, baseline pattern, and candidate pattern counts to standard output\n",
-    "  Successful suite verification writes pattern case, decision case, and pattern counts to standard output\n",
-    "  Successful configured-pattern-layer evaluation writes pattern case, settled input, aggregate case, and configured pattern counts plus its stated limitations\n",
-    "  Expectation failures and comparison mismatches write at most 10 details to standard error without echoing regexes or inputs\n",
-    "  Argument, data, and I/O errors write a diagnostic to standard error\n",
+    "  A verified run writes one summary of the evaluated counts to standard output\n",
+    "  Findings write the total count, at most the first 100 findings, and the omitted count to standard error\n",
+    "  Contract-invalid input writes one diagnostic to standard error\n",
+    "  Findings and diagnostics identify files by role, manifest cases by array and zero-based index, and settings patterns by bucket and zero-based index\n",
+    "  They never echo a path, case input, manifest value, pattern, or settings value\n",
+    "  Each finding or diagnostic is limited to 512 UTF-8 bytes and complete standard error to 64 KiB\n",
+    "\n",
+    "Limitations:\n",
+    "  Every selected file is read once. Nothing is written, no configuration is read from the environment, no request is made, no settings are discovered, and no case input is executed\n",
+    "  Results establish the configured fetch layer of the selected files only. They do not establish Zed settings discovery or layering, redirect handling, sandbox host authorization, prompt display, or runtime network access\n",
+    "  A verified comparison establishes the declared corpus rather than formal regex-language equivalence\n",
     "\n",
     "Exit statuses:\n",
-    "  0  Pattern matched, every expectation passed, comparison found no mismatches, or help displayed\n",
-    "  1  Pattern did not match, an expectation failed, or comparison found mismatches\n",
-    "  2  Invalid arguments or data, or an I/O failure\n",
+    "  0  Every configured pattern and declared expectation passed, or help displayed\n",
+    "  1  A configured pattern or a declared expectation failed\n",
+    "  2  Contract-invalid input, invalid arguments, malformed input, or an unreadable file\n",
 );
-
-const MAX_REPORTED_FAILURES: usize = 10;
+const LAYER_FIELDS: [&str; 2] = ["decision_cases", "pattern_cases"];
+/// Every Unicode scalar that ends a line, so a manifest input stays one reviewable line under any
+/// reader that treats more than carriage return and line feed as a break
+const LINE_BREAKS: [char; 7] = [
+    '\u{a}', '\u{b}', '\u{c}', '\u{d}', '\u{85}', '\u{2028}', '\u{2029}',
+];
+const MAX_DETAIL_BYTES: usize = 512;
+const MAX_PATTERN_SCALARS: usize = 1_000;
+const MAX_REPORTED_FINDINGS: usize = 100;
+const MAX_STANDARD_ERROR_BYTES: usize = 64 * 1024;
+const NAME: &str = "pattern-match";
+const PATTERN_CASE_FIELDS: [&str; 4] = ["bucket", "expected_match", "index", "input"];
+const PATTERN_FIELDS: [&str; 2] = ["case_sensitive", "pattern"];
+const STATE_FIELDS: [&str; 4] = ["always_allow", "always_confirm", "always_deny", "decision"];
 const STATUS_ERROR: u8 = 2;
-const STATUS_MATCH: u8 = 0;
-const STATUS_NO_MATCH: u8 = 1;
+const STATUS_FINDINGS: u8 = 1;
+const STATUS_VERIFIED: u8 = 0;
 
-struct Arguments {
-    case_sensitive: bool,
-    input: InputMode,
-    pattern_file: PathBuf,
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Bucket {
+    Allow,
+    Confirm,
+    Deny,
 }
 
-struct BatchCase {
-    expected_match: bool,
-    input: String,
-    line_number: usize,
-}
+impl Bucket {
+    /// Ordered to match the documented settings-input processing order and the compiled bucket
+    /// indexes, so both stay in step with the reported finding order
+    pub(crate) const ALL: [Self; 3] = [Self::Allow, Self::Confirm, Self::Deny];
 
-struct BatchFailure {
-    expected_match: bool,
-    line_number: usize,
-}
-
-struct BatchResult {
-    cases_file: PathBuf,
-    failures: BoundedIssues<BatchFailure>,
-    total: usize,
-}
-
-#[derive(Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct CatalogDefinition {
-    id: String,
-    catalog_file: String,
-    candidate_file: String,
-    state_file: String,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ComparisonManifestDefinition {
-    baseline: ComparisonPatternSetDefinition,
-    candidate: ComparisonPatternSetDefinition,
-    cases: Vec<ComparisonCaseDefinition>,
-    catalogs: Vec<CatalogDefinition>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct ComparisonPatternSetDefinition {
-    #[serde(deserialize_with = "deserialize_decision")]
-    default: Decision,
-    patterns: Vec<ComparisonPatternDefinition>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum ComparisonPatternDefinition {
-    Catalog {
-        catalog_id: String,
-        pattern_id: String,
-    },
-    File {
-        bucket: Bucket,
-        case_sensitive: bool,
-        id: String,
-        pattern_file: String,
-    },
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum ComparisonCaseDefinition {
-    File {
-        input_file: String,
-        #[serde(default, deserialize_with = "deserialize_expected_transition")]
-        expected_transition: Option<ExpectedTransition>,
-    },
-    Inline {
-        input: String,
-        #[serde(default, deserialize_with = "deserialize_expected_transition")]
-        expected_transition: Option<ExpectedTransition>,
-    },
-}
-
-#[derive(Clone, Copy, Deserialize, Eq, PartialEq)]
-#[serde(deny_unknown_fields)]
-struct ExpectedTransition {
-    baseline: DeclaredComparisonState,
-    candidate: DeclaredComparisonState,
-}
-
-#[derive(Clone, Copy, Deserialize, Eq, PartialEq)]
-#[serde(deny_unknown_fields)]
-struct DeclaredComparisonState {
-    always_allow: bool,
-    always_confirm: bool,
-    always_deny: bool,
-    #[serde(deserialize_with = "deserialize_decision")]
-    final_decision: Decision,
-}
-
-impl DeclaredComparisonState {
-    fn observed(state: MatchState, default: Decision) -> Self {
-        Self {
-            always_allow: state.matched(Bucket::Allow),
-            always_confirm: state.matched(Bucket::Confirm),
-            always_deny: state.matched(Bucket::Deny),
-            final_decision: state.decision(default),
+    fn index(self) -> usize {
+        match self {
+            Self::Allow => 0,
+            Self::Confirm => 1,
+            Self::Deny => 2,
         }
     }
 
-    fn recomputed_decision(self, default: Decision) -> Decision {
-        MatchState {
-            allow: self.always_allow,
-            confirm: self.always_confirm,
-            deny: self.always_deny,
-        }
-        .decision(default)
-    }
-}
-
-#[derive(Clone, Default)]
-struct ComparisonDifferences {
-    allow_bucket: bool,
-    confirm_bucket: bool,
-    deny_bucket: bool,
-    final_decision: bool,
-}
-
-impl ComparisonDifferences {
-    fn between(
-        baseline: MatchState,
-        baseline_default: Decision,
-        candidate: MatchState,
-        candidate_default: Decision,
-    ) -> Self {
-        Self {
-            allow_bucket: baseline.matched(Bucket::Allow) != candidate.matched(Bucket::Allow),
-            confirm_bucket: baseline.matched(Bucket::Confirm) != candidate.matched(Bucket::Confirm),
-            deny_bucket: baseline.matched(Bucket::Deny) != candidate.matched(Bucket::Deny),
-            final_decision: baseline.decision(baseline_default)
-                != candidate.decision(candidate_default),
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            Self::Allow => "always_allow",
+            Self::Confirm => "always_confirm",
+            Self::Deny => "always_deny",
         }
     }
 
-    fn from_declared(observed: DeclaredComparisonState, expected: DeclaredComparisonState) -> Self {
-        Self {
-            allow_bucket: observed.always_allow != expected.always_allow,
-            confirm_bucket: observed.always_confirm != expected.always_confirm,
-            deny_bucket: observed.always_deny != expected.always_deny,
-            final_decision: observed.final_decision != expected.final_decision,
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        !self.allow_bucket && !self.confirm_bucket && !self.deny_bucket && !self.final_decision
+    fn parse(value: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|bucket| bucket.label() == value)
     }
 }
 
-enum ComparisonMismatch {
-    Equivalence {
-        case_position: usize,
-        differences: ComparisonDifferences,
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Decision {
+    Allow,
+    Confirm,
+    Deny,
+}
+
+impl Decision {
+    const ALL: [Self; 3] = [Self::Allow, Self::Confirm, Self::Deny];
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Allow => "allow",
+            Self::Confirm => "confirm",
+            Self::Deny => "deny",
+        }
+    }
+
+    fn parse(value: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|decision| decision.label() == value)
+    }
+}
+
+/// One complete matched-bucket state and the final configured decision it produces
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct State {
+    allow: bool,
+    confirm: bool,
+    decision: Decision,
+    deny: bool,
+}
+
+impl State {
+    fn follows_precedence(self, default: Decision) -> bool {
+        self.decision == resolve_decision(self.allow, self.confirm, self.deny, default)
+    }
+
+    /// Whether this state identifies `source` as the single deciding source. A more restrictive
+    /// bucket shadows a less restrictive one, so only the unshadowed flags are constrained
+    fn identifies(self, source: Source, default: Decision) -> bool {
+        match source {
+            Source::Bucket(Bucket::Allow) => {
+                self.allow && !self.confirm && !self.deny && self.decision == Decision::Allow
+            }
+            Source::Bucket(Bucket::Confirm) => {
+                self.confirm && !self.deny && self.decision == Decision::Confirm
+            }
+            Source::Bucket(Bucket::Deny) => self.deny && self.decision == Decision::Deny,
+            Source::Default => {
+                !self.allow && !self.confirm && !self.deny && self.decision == default
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Source {
+    Bucket(Bucket),
+    Default,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Role {
+    BaselineSettings,
+    CandidateSettings,
+    ComparisonManifest,
+    LayerManifest,
+    Settings,
+}
+
+impl Role {
+    fn label(self) -> &'static str {
+        match self {
+            Self::BaselineSettings => "baseline settings",
+            Self::CandidateSettings => "candidate settings",
+            Self::ComparisonManifest => "comparison manifest",
+            Self::LayerManifest => "layer manifest",
+            Self::Settings => "settings",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum RouteKind {
+    Comparison,
+    Layer,
+}
+
+impl RouteKind {
+    fn label(self) -> &'static str {
+        match self {
+            Self::Comparison => "comparison",
+            Self::Layer => "layer",
+        }
+    }
+}
+
+/// Alphabetized so the derived order matches the help option list a contract test compares
+/// against this set
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum Parameter {
+    BaselineSettings,
+    CandidateSettings,
+    ComparisonFile,
+    Help,
+    LayerFile,
+    Settings,
+}
+
+impl Parameter {
+    pub(crate) const ALL: [Self; 6] = [
+        Self::BaselineSettings,
+        Self::CandidateSettings,
+        Self::ComparisonFile,
+        Self::Help,
+        Self::LayerFile,
+        Self::Settings,
+    ];
+
+    pub(crate) fn option(self) -> &'static str {
+        match self {
+            Self::BaselineSettings => "--baseline-settings",
+            Self::CandidateSettings => "--candidate-settings",
+            Self::ComparisonFile => "--comparison-file",
+            Self::Help => "--help",
+            Self::LayerFile => "--layer-file",
+            Self::Settings => "--settings",
+        }
+    }
+
+    pub(crate) fn route(self) -> Option<RouteKind> {
+        match self {
+            Self::BaselineSettings | Self::CandidateSettings | Self::ComparisonFile => {
+                Some(RouteKind::Comparison)
+            }
+            Self::Help => None,
+            Self::LayerFile | Self::Settings => Some(RouteKind::Layer),
+        }
+    }
+
+    fn parse(token: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|parameter| parameter.option() == token)
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum Route {
+    Comparison {
+        baseline_settings: PathBuf,
+        candidate_settings: PathBuf,
+        comparison_file: PathBuf,
     },
-    Transition {
-        baseline_differences: ComparisonDifferences,
-        candidate_differences: ComparisonDifferences,
-        case_position: usize,
+    Help,
+    Layer {
+        layer_file: PathBuf,
+        settings: PathBuf,
     },
 }
 
-struct ComparisonResult {
-    baseline_pattern_count: usize,
-    candidate_pattern_count: usize,
-    case_count: usize,
-    comparison_file: PathBuf,
-    equivalence_case_count: usize,
-    mismatches: BoundedIssues<ComparisonMismatch>,
-    transition_case_count: usize,
+enum Report {
+    Findings(Vec<String>),
+    Help,
+    Verified(String),
 }
 
-struct PatternDefinition {
-    bucket: Bucket,
-    case_sensitive: bool,
-    id: String,
-    reported_id: String,
-    source: PatternSource,
+/// Retains every object entry, including repeats, so a later scan can reject duplicate keys that
+/// serde_json’s map types would otherwise collapse
+#[derive(Debug)]
+pub(crate) enum Json {
+    Array(Vec<Json>),
+    Bool(bool),
+    Null,
+    /// `Some` holds a nonnegative integer that fits in `u64`. Every other number is `None`, which
+    /// is all the schema needs to reject a noninteger array index
+    Number(Option<u64>),
+    Object(Vec<(String, Json)>),
+    String(String),
 }
 
-enum PatternSource {
-    Catalog(String),
-    File(PathBuf),
+impl Json {
+    fn entry(&self, key: &str) -> Option<&Self> {
+        match self {
+            Self::Object(entries) => field(entries, key),
+            _ => None,
+        }
+    }
+
+    fn kind(&self) -> &'static str {
+        match self {
+            Self::Array(_) => "an array",
+            Self::Bool(_) => "a Boolean",
+            Self::Null => "null",
+            Self::Number(_) => "a number",
+            Self::Object(_) => "an object",
+            Self::String(_) => "a string",
+        }
+    }
 }
 
-struct LoadedCatalogBinding {
-    patterns: HashMap<String, CatalogPattern>,
+impl<'de> Deserialize<'de> for Json {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_any(JsonVisitor)
+    }
 }
 
-struct CatalogPattern {
-    bucket: Bucket,
+struct JsonVisitor;
+
+impl<'de> de::Visitor<'de> for JsonVisitor {
+    type Value = Json;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("any JSON value")
+    }
+
+    fn visit_bool<E: de::Error>(self, value: bool) -> Result<Json, E> {
+        Ok(Json::Bool(value))
+    }
+
+    fn visit_f64<E: de::Error>(self, _value: f64) -> Result<Json, E> {
+        Ok(Json::Number(None))
+    }
+
+    fn visit_i64<E: de::Error>(self, value: i64) -> Result<Json, E> {
+        Ok(Json::Number(u64::try_from(value).ok()))
+    }
+
+    fn visit_u64<E: de::Error>(self, value: u64) -> Result<Json, E> {
+        Ok(Json::Number(Some(value)))
+    }
+
+    fn visit_str<E: de::Error>(self, value: &str) -> Result<Json, E> {
+        Ok(Json::String(value.to_owned()))
+    }
+
+    fn visit_string<E: de::Error>(self, value: String) -> Result<Json, E> {
+        Ok(Json::String(value))
+    }
+
+    fn visit_unit<E: de::Error>(self) -> Result<Json, E> {
+        Ok(Json::Null)
+    }
+
+    fn visit_seq<A>(self, mut access: A) -> Result<Json, A::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        let mut entries = Vec::new();
+        while let Some(entry) = access.next_element()? {
+            entries.push(entry);
+        }
+
+        Ok(Json::Array(entries))
+    }
+
+    fn visit_map<A>(self, mut access: A) -> Result<Json, A::Error>
+    where
+        A: de::MapAccess<'de>,
+    {
+        let mut entries = Vec::new();
+        while let Some(entry) = access.next_entry()? {
+            entries.push(entry);
+        }
+
+        Ok(Json::Object(entries))
+    }
+}
+
+pub(crate) struct FetchPattern {
     case_sensitive: bool,
     pattern: String,
 }
 
-enum SuitePatternDeclaration {
-    Catalog {
-        catalog_id: String,
-        line_number: usize,
-        pattern_id: String,
-    },
-    File {
-        bucket: Bucket,
-        case_sensitive: bool,
-        id: String,
-        line_number: usize,
-        pattern_file: PathBuf,
-    },
-}
-
-#[derive(Clone, Copy)]
-enum PatternCollection {
-    BaselineComparison,
-    CandidateComparison,
-    Suite,
-}
-
-impl PatternCollection {
-    fn owner_label(self) -> &'static str {
-        match self {
-            Self::BaselineComparison => "baseline comparison pattern",
-            Self::CandidateComparison => "candidate comparison pattern",
-            Self::Suite => "suite pattern",
-        }
-    }
-
-    fn read_description(self, id: &str) -> String {
-        match self {
-            Self::BaselineComparison => format!("baseline comparison pattern `{id}`"),
-            Self::CandidateComparison => format!("candidate comparison pattern `{id}`"),
-            Self::Suite => format!("pattern `{id}`"),
-        }
-    }
-}
-
-struct SuiteFailure {
-    expectation: SuiteFailureExpectation,
-    line_number: usize,
-}
-
-enum SuiteFailureExpectation {
-    Decision(Decision),
-    Pattern {
-        expected_match: bool,
-        pattern_id: String,
-    },
-}
-
-struct SuiteManifest {
+pub(crate) struct FetchLayer {
+    buckets: [Vec<FetchPattern>; 3],
     default: Decision,
-    expectations: Vec<SuiteExpectation>,
-    pattern_indices: HashMap<String, usize>,
-    pattern_report_ids: HashMap<String, String>,
-    patterns: Vec<PatternDefinition>,
 }
 
-enum SuiteExpectation {
-    DecisionCase {
-        expected: Decision,
-        input: String,
-        line_number: usize,
-    },
-    PatternCase {
-        expected_match: bool,
-        input: String,
-        line_number: usize,
-        pattern_id: String,
-    },
+impl FetchLayer {
+    pub(crate) fn patterns(&self, bucket: Bucket) -> &[FetchPattern] {
+        &self.buckets[bucket.index()]
+    }
+
+    pub(crate) fn total(&self) -> usize {
+        self.buckets.iter().map(Vec::len).sum()
+    }
 }
 
-struct SuiteResult {
-    decision_cases: usize,
-    failures: BoundedIssues<SuiteFailure>,
-    pattern_cases: usize,
-    pattern_count: usize,
-    suite_file: PathBuf,
+pub(crate) struct CompiledLayer {
+    buckets: [Vec<Regex>; 3],
+    default: Decision,
 }
 
-enum Evaluation {
-    Batch(BatchResult),
-    Single(bool),
+impl CompiledLayer {
+    pub(crate) fn patterns(&self, bucket: Bucket) -> &[Regex] {
+        &self.buckets[bucket.index()]
+    }
+
+    fn observe(&self, input: &str) -> State {
+        let matched = |bucket: Bucket| {
+            self.patterns(bucket)
+                .iter()
+                .any(|regex| regex.is_match(input))
+        };
+        let allow = matched(Bucket::Allow);
+        let confirm = matched(Bucket::Confirm);
+        let deny = matched(Bucket::Deny);
+
+        State {
+            allow,
+            confirm,
+            decision: resolve_decision(allow, confirm, deny, self.default),
+            deny,
+        }
+    }
 }
 
-enum InputMode {
-    Batch(PathBuf),
-    Single(PathBuf),
+struct DecisionCase {
+    expected: State,
+    input: String,
 }
 
-/// One manifest-driven invocation together with its optional graph anchoring, overlay redirection,
-/// and evidence destination
-pub(crate) struct ManifestRun {
-    manifest: PathBuf,
-    graph_root: Option<PathBuf>,
-    artifact_root: Option<PathBuf>,
-    result_out: Option<PathBuf>,
+struct PatternCase {
+    bucket: Bucket,
+    expected_match: bool,
+    index: usize,
+    input: String,
 }
 
-enum ParsedArguments {
-    Comparison(ManifestRun),
-    Help,
-    Layer(ManifestRun),
-    Run(Arguments),
-    Suite(ManifestRun),
+struct LayerManifest {
+    decision_cases: Vec<DecisionCase>,
+    pattern_cases: Vec<PatternCase>,
 }
 
-fn parse_arguments<I>(arguments: I) -> Result<ParsedArguments, String>
+struct ComparisonCase {
+    baseline: State,
+    candidate: State,
+    input: String,
+}
+
+struct ComparisonManifest {
+    cases: Vec<ComparisonCase>,
+}
+
+fn resolve_decision(allow: bool, confirm: bool, deny: bool, default: Decision) -> Decision {
+    if deny {
+        Decision::Deny
+    } else if confirm {
+        Decision::Confirm
+    } else if allow {
+        Decision::Allow
+    } else {
+        default
+    }
+}
+
+fn field<'a>(entries: &'a [(String, Json)], key: &str) -> Option<&'a Json> {
+    entries
+        .iter()
+        .find(|(name, _)| name == key)
+        .map(|(_, value)| value)
+}
+
+fn has_duplicate_key(value: &Json) -> bool {
+    match value {
+        Json::Array(entries) => entries.iter().any(has_duplicate_key),
+        Json::Object(entries) => {
+            let mut seen = BTreeSet::new();
+
+            entries.iter().any(|(key, _)| !seen.insert(key.as_str()))
+                || entries.iter().any(|(_, entry)| has_duplicate_key(entry))
+        }
+        _ => false,
+    }
+}
+
+fn join_terms<T: AsRef<str>>(terms: &[T], conjunction: &str) -> String {
+    match terms {
+        [] => String::new(),
+        [only] => only.as_ref().to_owned(),
+        [first, second] => format!("{} {conjunction} {}", first.as_ref(), second.as_ref()),
+        [leading @ .., last] => {
+            let head = leading
+                .iter()
+                .map(AsRef::as_ref)
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            format!("{head}, {conjunction} {}", last.as_ref())
+        }
+    }
+}
+
+fn count_of(count: usize, singular: &str) -> String {
+    if count == 1 {
+        format!("{count} {singular}")
+    } else {
+        format!("{count} {singular}s")
+    }
+}
+
+fn quoted(terms: &[&str], conjunction: &str) -> String {
+    let quoted = terms
+        .iter()
+        .map(|term| format!("`{term}`"))
+        .collect::<Vec<_>>();
+
+    join_terms(&quoted, conjunction)
+}
+
+pub(crate) fn truncate_bytes(text: &str, limit: usize) -> String {
+    if text.len() <= limit {
+        return text.to_owned();
+    }
+
+    let mut end = limit;
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+
+    text[..end].to_owned()
+}
+
+fn is_option_name(token: &str) -> bool {
+    token.strip_prefix("--").is_some_and(|name| {
+        name.starts_with(|character: char| character.is_ascii_lowercase())
+            && name
+                .chars()
+                .all(|character| character.is_ascii_lowercase() || character == '-')
+    })
+}
+
+fn unsupported_argument(argument: &OsStr) -> String {
+    // Classify the `--` prefix before requiring UTF-8, so a malformed option token is not reported
+    // as a positional argument
+    if !argument.to_string_lossy().starts_with("--") {
+        return "Positional arguments are not supported".to_owned();
+    }
+    let Some(token) = argument.to_str() else {
+        return format!("Unknown option. Run `{NAME} --help` for the supported options");
+    };
+    if token.contains('=') {
+        return "An option and its value must be separated by a space".to_owned();
+    }
+    if is_option_name(token) {
+        return format!("Unknown option `{token}`");
+    }
+
+    format!("Unknown option. Run `{NAME} --help` for the supported options")
+}
+
+fn route_options(route: RouteKind) -> Vec<&'static str> {
+    Parameter::ALL
+        .into_iter()
+        .filter(|parameter| parameter.route() == Some(route))
+        .map(Parameter::option)
+        .collect()
+}
+
+fn route_requirement(route: RouteKind) -> String {
+    format!(
+        "The {} route requires {}",
+        route.label(),
+        quoted(&route_options(route), "and")
+    )
+}
+
+pub(crate) fn parse_arguments<I>(arguments: I) -> Result<Route, String>
 where
     I: IntoIterator<Item = OsString>,
 {
-    let arguments: Vec<OsString> = arguments.into_iter().collect();
-
-    if arguments.len() == 1 && arguments[0].as_os_str() == OsStr::new("--help") {
-        return Ok(ParsedArguments::Help);
-    }
-
     let mut arguments = arguments.into_iter();
-    let mut artifact_root = None;
-    let mut case_sensitive = false;
-    let mut cases_file = None;
-    let mut comparison_file = None;
-    let mut graph_root = None;
-    let mut input_file = None;
-    let mut layer_file = None;
-    let mut pattern_file = None;
-    let mut result_out = None;
-    let mut suite_file = None;
+    let mut help = false;
+    let mut values: BTreeMap<Parameter, PathBuf> = BTreeMap::new();
 
     while let Some(argument) = arguments.next() {
-        let Some(option) = argument.to_str() else {
-            return Err("Option names must be valid UTF-8".to_owned());
+        let Some(parameter) = argument.to_str().and_then(Parameter::parse) else {
+            return Err(unsupported_argument(&argument));
         };
-
-        match option {
-            "--artifact-root" => {
-                if artifact_root.is_some() {
-                    return Err("Option `--artifact-root` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--artifact-root` requires a directory".to_owned());
-                };
-                artifact_root = Some(PathBuf::from(path));
+        if parameter == Parameter::Help {
+            if help {
+                return Err(repeated_option(parameter));
             }
-            "--graph-root" => {
-                if graph_root.is_some() {
-                    return Err("Option `--graph-root` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--graph-root` requires a directory".to_owned());
-                };
-                graph_root = Some(PathBuf::from(path));
-            }
-            "--layer-file" => {
-                if layer_file.is_some() {
-                    return Err("Option `--layer-file` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--layer-file` requires a path".to_owned());
-                };
-                layer_file = Some(PathBuf::from(path));
-            }
-            "--result-out" => {
-                if result_out.is_some() {
-                    return Err("Option `--result-out` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--result-out` requires a path".to_owned());
-                };
-                result_out = Some(PathBuf::from(path));
-            }
-            "--cases-file" => {
-                if cases_file.is_some() {
-                    return Err("Option `--cases-file` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--cases-file` requires a path".to_owned());
-                };
-                cases_file = Some(PathBuf::from(path));
-            }
-            "--case-sensitive" => {
-                if case_sensitive {
-                    return Err("Option `--case-sensitive` may be specified only once".to_owned());
-                }
-
-                case_sensitive = true;
-            }
-            "--comparison-file" => {
-                if comparison_file.is_some() {
-                    return Err("Option `--comparison-file` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--comparison-file` requires a path".to_owned());
-                };
-                comparison_file = Some(PathBuf::from(path));
-            }
-            "--help" => {
-                return Err("Option `--help` must be used alone".to_owned());
-            }
-            "--input-file" => {
-                if input_file.is_some() {
-                    return Err("Option `--input-file` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--input-file` requires a path".to_owned());
-                };
-                input_file = Some(PathBuf::from(path));
-            }
-            "--pattern-file" => {
-                if pattern_file.is_some() {
-                    return Err("Option `--pattern-file` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--pattern-file` requires a path".to_owned());
-                };
-                pattern_file = Some(PathBuf::from(path));
-            }
-            "--suite-file" => {
-                if suite_file.is_some() {
-                    return Err("Option `--suite-file` may be specified only once".to_owned());
-                }
-
-                let Some(path) = arguments.next() else {
-                    return Err("Option `--suite-file` requires a path".to_owned());
-                };
-                suite_file = Some(PathBuf::from(path));
-            }
-            _ => {
-                return Err(format!(
-                    "Unknown option `{option}`. Run `pattern-match --help` for usage"
-                ));
-            }
-        }
-    }
-
-    let manifest_count = [
-        comparison_file.is_some(),
-        layer_file.is_some(),
-        suite_file.is_some(),
-    ]
-    .into_iter()
-    .filter(|selected| *selected)
-    .count();
-    if manifest_count > 1 {
-        return Err(
-            "Options `--comparison-file`, `--layer-file`, and `--suite-file` are mutually exclusive"
-                .to_owned(),
-        );
-    }
-    if manifest_count == 0
-        && (artifact_root.is_some() || graph_root.is_some() || result_out.is_some())
-    {
-        return Err(
-            "Options `--artifact-root`, `--graph-root`, and `--result-out` require `--comparison-file`, `--layer-file`, or `--suite-file`"
-                .to_owned(),
-        );
-    }
-    if result_out.is_some() && graph_root.is_none() {
-        return Err("Option `--result-out` requires `--graph-root`".to_owned());
-    }
-    if artifact_root.is_some() && graph_root.is_none() {
-        return Err("Option `--artifact-root` requires `--graph-root`".to_owned());
-    }
-
-    if manifest_count == 1
-        && (case_sensitive
-            || cases_file.is_some()
-            || input_file.is_some()
-            || pattern_file.is_some())
-    {
-        return Err(
-            "A manifest mode is mutually exclusive with `--case-sensitive`, `--cases-file`, `--input-file`, and `--pattern-file`"
-                .to_owned(),
-        );
-    }
-
-    if let Some(comparison_file) = comparison_file {
-        return Ok(ParsedArguments::Comparison(ManifestRun {
-            manifest: comparison_file,
-            graph_root,
-            artifact_root,
-            result_out,
-        }));
-    }
-
-    if let Some(layer_file) = layer_file {
-        return Ok(ParsedArguments::Layer(ManifestRun {
-            manifest: layer_file,
-            graph_root,
-            artifact_root,
-            result_out,
-        }));
-    }
-
-    if let Some(suite_file) = suite_file {
-        return Ok(ParsedArguments::Suite(ManifestRun {
-            manifest: suite_file,
-            graph_root,
-            artifact_root,
-            result_out,
-        }));
-    }
-
-    let input = match (cases_file, input_file) {
-        (Some(_), Some(_)) => {
-            return Err(
-                "Options `--cases-file` and `--input-file` are mutually exclusive".to_owned(),
-            );
-        }
-        (Some(path), None) => InputMode::Batch(path),
-        (None, Some(path)) => InputMode::Single(path),
-        (None, None) => {
-            return Err(
-                "Missing required option. Specify either `--cases-file` or `--input-file`"
-                    .to_owned(),
-            );
-        }
-    };
-    let pattern_file =
-        pattern_file.ok_or_else(|| "Missing required option `--pattern-file`".to_owned())?;
-
-    Ok(ParsedArguments::Run(Arguments {
-        case_sensitive,
-        input,
-        pattern_file,
-    }))
-}
-
-fn invalid_case_line(path: &Path, line_number: usize) -> String {
-    format!(
-        "Invalid case manifest `{}` at line {line_number}. Expected `match<TAB><input>` or `no-match<TAB><input>`",
-        path.display()
-    )
-}
-
-fn parse_case_manifest(path: &Path, manifest: &str) -> Result<Vec<BatchCase>, String> {
-    if manifest.is_empty() {
-        return Err(format!("Case manifest `{}` is empty", path.display()));
-    }
-
-    manifest
-        .split_terminator('\n')
-        .enumerate()
-        .map(|(index, line)| {
-            let line_number = index + 1;
-            if line.contains('\r') {
-                return Err(invalid_case_line(path, line_number));
-            }
-
-            let Some((expectation, input)) = line.split_once('\t') else {
-                return Err(invalid_case_line(path, line_number));
-            };
-            let expected_match = match expectation {
-                "match" => true,
-                "no-match" => false,
-                _ => return Err(invalid_case_line(path, line_number)),
-            };
-
-            Ok(BatchCase {
-                expected_match,
-                input: input.to_owned(),
-                line_number,
-            })
-        })
-        .collect()
-}
-
-fn deserialize_decision<'de, D>(deserializer: D) -> Result<Decision, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = String::deserialize(deserializer)?;
-
-    Decision::parse(&value)
-        .ok_or_else(|| de::Error::unknown_variant(&value, &["allow", "confirm", "deny"]))
-}
-
-fn deserialize_expected_transition<'de, D>(
-    deserializer: D,
-) -> Result<Option<ExpectedTransition>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    ExpectedTransition::deserialize(deserializer).map(Some)
-}
-
-fn invalid_suite_line(path: &Path, line_number: usize) -> String {
-    format!(
-        "Invalid suite manifest `{}` at line {line_number}. Expected a record format shown by `pattern-match --help`",
-        path.display()
-    )
-}
-
-fn resolve_manifest_path(manifest_file: &Path, referenced_file: &str) -> PathBuf {
-    let referenced_file = Path::new(referenced_file);
-    if referenced_file.is_absolute() {
-        referenced_file.to_owned()
-    } else {
-        manifest_file
-            .parent()
-            .unwrap_or_else(|| Path::new(""))
-            .join(referenced_file)
-    }
-}
-
-fn display_id(id: &str) -> String {
-    let mut output = String::new();
-    let mut characters = id.chars();
-
-    for _ in 0..80 {
-        let Some(character) = characters.next() else {
-            return output;
-        };
-        if character.is_control() {
-            output.push('?');
-        } else {
-            output.push(character);
-        }
-    }
-    if characters.next().is_some() {
-        output.push('…');
-    }
-
-    output
-}
-
-fn read_catalog_source(
-    resolver: &PathResolver,
-    manifest_file: &Path,
-    catalog: &CatalogDefinition,
-) -> Result<LoadedCatalogBinding, String> {
-    let catalog_file = resolver.resolve(manifest_file, &catalog.catalog_file);
-    let candidate_file = resolver.resolve(manifest_file, &catalog.candidate_file);
-    let state_file = resolver.resolve(manifest_file, &catalog.state_file);
-    let candidate_bytes = fs::read(&candidate_file).map_err(|error| {
-        format!(
-            "Failed to read candidate file for pattern catalog `{}` at `{}`:\n\n{error}",
-            display_id(&catalog.id),
-            candidate_file.display()
-        )
-    })?;
-    let state_bytes = fs::read(&state_file).map_err(|error| {
-        format!(
-            "Failed to read state file for pattern catalog `{}` at `{}`:\n\n{error}",
-            display_id(&catalog.id),
-            state_file.display()
-        )
-    })?;
-    let loaded = load_bound_artifact_catalog(&catalog_file, &candidate_bytes, &state_bytes)
-        .map_err(|error| {
-            format!(
-                "Invalid pattern catalog `{}` at `{}`. {error}",
-                display_id(&catalog.id),
-                catalog_file.display()
-            )
-        })?;
-    let patterns = loaded
-        .patterns
-        .into_iter()
-        .map(|pattern| {
-            (
-                pattern.definition.id,
-                CatalogPattern {
-                    bucket: pattern.definition.bucket,
-                    case_sensitive: pattern.definition.case_sensitive,
-                    pattern: pattern.pattern,
-                },
-            )
-        })
-        .collect();
-
-    Ok(LoadedCatalogBinding { patterns })
-}
-
-fn load_catalogs(
-    resolver: &PathResolver,
-    manifest_file: &Path,
-    definitions: Vec<CatalogDefinition>,
-    owner: &str,
-) -> Result<HashMap<String, LoadedCatalogBinding>, String> {
-    validate_catalog_definitions(&definitions, owner)?;
-
-    let mut catalogs = HashMap::with_capacity(definitions.len());
-    for definition in definitions {
-        let loaded = read_catalog_source(resolver, manifest_file, &definition)?;
-        catalogs.insert(definition.id, loaded);
-    }
-
-    Ok(catalogs)
-}
-
-fn catalog_pattern_definition(
-    catalogs: &HashMap<String, LoadedCatalogBinding>,
-    catalog_id: &str,
-    pattern_id: &str,
-    owner: &str,
-) -> Result<PatternDefinition, String> {
-    let catalog = catalogs.get(catalog_id).ok_or_else(|| {
-        format!(
-            "Unknown pattern catalog ID `{}` in {owner}",
-            display_id(catalog_id)
-        )
-    })?;
-    let pattern = catalog.patterns.get(pattern_id).ok_or_else(|| {
-        format!(
-            "Unknown pattern ID `{}` in pattern catalog `{}` for {owner}",
-            display_id(pattern_id),
-            display_id(catalog_id)
-        )
-    })?;
-
-    Ok(PatternDefinition {
-        bucket: pattern.bucket,
-        case_sensitive: pattern.case_sensitive,
-        id: pattern_id.to_owned(),
-        reported_id: display_id(pattern_id),
-        source: PatternSource::Catalog(pattern.pattern.clone()),
-    })
-}
-
-fn suite_expected_match(value: &str) -> Option<bool> {
-    match value {
-        "match" => Some(true),
-        "no-match" => Some(false),
-        _ => None,
-    }
-}
-
-fn read_suite_input(
-    resolver: &PathResolver,
-    suite_file: &Path,
-    input_file: &str,
-) -> Result<String, String> {
-    let input_file = resolver.resolve(suite_file, input_file);
-
-    read_utf8_file(&input_file, "suite input")
-}
-
-fn parse_suite_manifest(
-    resolver: &PathResolver,
-    path: &Path,
-    manifest: &str,
-) -> Result<SuiteManifest, String> {
-    let mut catalog_definitions = Vec::new();
-    let mut catalog_ids = HashSet::new();
-    let mut declarations = Vec::new();
-    let mut declared_pattern_ids = HashSet::new();
-    let mut default = None;
-    let mut expectations = Vec::new();
-
-    for (index, line) in manifest.split_terminator('\n').enumerate() {
-        let line_number = index + 1;
-        if line.contains('\r') {
-            return Err(invalid_suite_line(path, line_number));
-        }
-
-        let record_type = line.split_once('\t').map(|(record_type, _)| record_type);
-        match record_type {
-            Some("default") => {
-                let fields: Vec<&str> = line.split('\t').collect();
-                if fields.len() != 2 {
-                    return Err(invalid_suite_line(path, line_number));
-                }
-                let Some(decision) = Decision::parse(fields[1]) else {
-                    return Err(invalid_suite_line(path, line_number));
-                };
-                if default.is_some() {
-                    return Err(format!(
-                        "Duplicate `default` record in suite manifest `{}` at line {line_number}",
-                        path.display()
-                    ));
-                }
-                default = Some(decision);
-            }
-            Some("pattern") => {
-                let fields: Vec<&str> = line.split('\t').collect();
-                if fields.len() != 5 || fields[1].is_empty() || fields[4].is_empty() {
-                    return Err(invalid_suite_line(path, line_number));
-                }
-                let Some(bucket) = Bucket::parse(fields[2]) else {
-                    return Err(invalid_suite_line(path, line_number));
-                };
-                let case_sensitive = match fields[3] {
-                    "case-insensitive" => false,
-                    "case-sensitive" => true,
-                    _ => return Err(invalid_suite_line(path, line_number)),
-                };
-                if !declared_pattern_ids.insert(fields[1].to_owned()) {
-                    return Err(format!(
-                        "Duplicate pattern ID `{}` in suite manifest `{}` at line {line_number}",
-                        display_id(fields[1]),
-                        path.display()
-                    ));
-                }
-
-                declarations.push(SuitePatternDeclaration::File {
-                    bucket,
-                    case_sensitive,
-                    id: fields[1].to_owned(),
-                    line_number,
-                    pattern_file: resolver.resolve(path, fields[4]),
-                });
-            }
-            Some("pattern-catalog") => {
-                let fields: Vec<&str> = line.split('\t').collect();
-                if fields.len() != 5
-                    || fields[1].is_empty()
-                    || fields[2].is_empty()
-                    || fields[3].is_empty()
-                    || fields[4].is_empty()
-                {
-                    return Err(invalid_suite_line(path, line_number));
-                }
-                if !catalog_ids.insert(fields[1].to_owned()) {
-                    return Err(format!(
-                        "Duplicate pattern catalog ID `{}` in suite manifest `{}` at line {line_number}",
-                        display_id(fields[1]),
-                        path.display()
-                    ));
-                }
-                catalog_definitions.push(CatalogDefinition {
-                    id: fields[1].to_owned(),
-                    catalog_file: fields[2].to_owned(),
-                    candidate_file: fields[3].to_owned(),
-                    state_file: fields[4].to_owned(),
-                });
-            }
-            Some("catalog-pattern") => {
-                let fields: Vec<&str> = line.split('\t').collect();
-                if fields.len() != 3 || fields[1].is_empty() || fields[2].is_empty() {
-                    return Err(invalid_suite_line(path, line_number));
-                }
-                if !declared_pattern_ids.insert(fields[2].to_owned()) {
-                    return Err(format!(
-                        "Duplicate pattern ID `{}` in suite manifest `{}` at line {line_number}",
-                        display_id(fields[2]),
-                        path.display()
-                    ));
-                }
-                declarations.push(SuitePatternDeclaration::Catalog {
-                    catalog_id: fields[1].to_owned(),
-                    line_number,
-                    pattern_id: fields[2].to_owned(),
-                });
-            }
-            Some("pattern-case") | Some("pattern-case-file") => {
-                let fields: Vec<&str> = line.splitn(4, '\t').collect();
-                if fields.len() != 4 || fields[1].is_empty() {
-                    return Err(invalid_suite_line(path, line_number));
-                }
-                let Some(expected_match) = suite_expected_match(fields[2]) else {
-                    return Err(invalid_suite_line(path, line_number));
-                };
-                let input = if record_type == Some("pattern-case-file") {
-                    if fields[3].is_empty() {
-                        return Err(invalid_suite_line(path, line_number));
-                    }
-                    read_suite_input(resolver, path, fields[3])?
-                } else {
-                    fields[3].to_owned()
-                };
-
-                expectations.push(SuiteExpectation::PatternCase {
-                    expected_match,
-                    input,
-                    line_number,
-                    pattern_id: fields[1].to_owned(),
-                });
-            }
-            Some("decision-case") | Some("decision-case-file") => {
-                let fields: Vec<&str> = line.splitn(3, '\t').collect();
-                if fields.len() != 3 {
-                    return Err(invalid_suite_line(path, line_number));
-                }
-                let Some(expected) = Decision::parse(fields[1]) else {
-                    return Err(invalid_suite_line(path, line_number));
-                };
-                let input = if record_type == Some("decision-case-file") {
-                    if fields[2].is_empty() {
-                        return Err(invalid_suite_line(path, line_number));
-                    }
-                    read_suite_input(resolver, path, fields[2])?
-                } else {
-                    fields[2].to_owned()
-                };
-
-                expectations.push(SuiteExpectation::DecisionCase {
-                    expected,
-                    input,
-                    line_number,
-                });
-            }
-            _ => return Err(invalid_suite_line(path, line_number)),
-        }
-    }
-
-    let default = default.ok_or_else(|| {
-        format!(
-            "Suite manifest `{}` must define exactly one `default` record",
-            path.display()
-        )
-    })?;
-    if declarations.is_empty() {
-        return Err(format!(
-            "Suite manifest `{}` must define at least one pattern",
-            path.display()
-        ));
-    }
-    let owner = format!("suite manifest `{}`", path.display());
-    let catalogs = load_catalogs(resolver, path, catalog_definitions, &owner)?;
-    let mut patterns = Vec::with_capacity(declarations.len());
-    let mut pattern_indices = HashMap::with_capacity(declarations.len());
-    for declaration in declarations {
-        let (line_number, pattern) = match declaration {
-            SuitePatternDeclaration::Catalog {
-                catalog_id,
-                line_number,
-                pattern_id,
-            } => (
-                line_number,
-                catalog_pattern_definition(&catalogs, &catalog_id, &pattern_id, &owner)?,
-            ),
-            SuitePatternDeclaration::File {
-                bucket,
-                case_sensitive,
-                id,
-                line_number,
-                pattern_file,
-            } => (
-                line_number,
-                PatternDefinition {
-                    bucket,
-                    case_sensitive,
-                    reported_id: display_id(&id),
-                    id,
-                    source: PatternSource::File(pattern_file),
-                },
-            ),
-        };
-        if pattern_indices
-            .insert(pattern.id.clone(), patterns.len())
-            .is_some()
-        {
-            return Err(format!(
-                "Duplicate pattern ID `{}` in suite manifest `{}` at line {line_number}",
-                display_id(&pattern.reported_id),
-                path.display()
-            ));
-        }
-        patterns.push(pattern);
-    }
-    let pattern_report_ids = patterns
-        .iter()
-        .map(|pattern| (pattern.id.clone(), pattern.reported_id.clone()))
-        .collect();
-    let mut pattern_case_coverage = vec![false; patterns.len()];
-    for expectation in &expectations {
-        let SuiteExpectation::PatternCase {
-            line_number,
-            pattern_id,
-            ..
-        } = expectation
-        else {
+            help = true;
             continue;
-        };
-        let Some(pattern_index) = pattern_indices.get(pattern_id) else {
+        }
+        let Some(value) = arguments.next() else {
             return Err(format!(
-                "Unknown pattern ID `{}` in suite manifest `{}` at line {line_number}",
-                display_id(pattern_id),
-                path.display()
+                "The `{}` option requires a value",
+                parameter.option()
             ));
         };
-        pattern_case_coverage[*pattern_index] = true;
+        if values.insert(parameter, PathBuf::from(value)).is_some() {
+            return Err(repeated_option(parameter));
+        }
     }
 
-    if !expectations
-        .iter()
-        .any(|expectation| matches!(expectation, SuiteExpectation::DecisionCase { .. }))
-    {
+    if help {
+        if values.is_empty() {
+            return Ok(Route::Help);
+        }
+
         return Err(format!(
-            "Suite manifest `{}` must include at least one `decision-case` or `decision-case-file` record",
-            path.display()
+            "The `{}` option must be used alone",
+            Parameter::Help.option()
         ));
     }
 
-    for (pattern, has_pattern_case) in patterns.iter().zip(pattern_case_coverage) {
-        if !has_pattern_case {
-            return Err(format!(
-                "Suite manifest `{}` must include at least one `pattern-case` or `pattern-case-file` record for pattern `{}`",
-                path.display(),
-                display_id(&pattern.reported_id)
-            ));
-        }
+    let selected = |route: RouteKind| {
+        values
+            .keys()
+            .filter(|parameter| parameter.route() == Some(route))
+            .count()
+    };
+    let comparison = selected(RouteKind::Comparison);
+    let layer = selected(RouteKind::Layer);
+
+    if comparison > 0 && layer > 0 {
+        return Err("Options from different routes must not be combined".to_owned());
     }
-
-    Ok(SuiteManifest {
-        default,
-        expectations,
-        pattern_indices,
-        pattern_report_ids,
-        patterns,
-    })
-}
-
-fn validate_comparison_pattern_set(
-    comparison_file: &Path,
-    label: &str,
-    definition: &ComparisonPatternSetDefinition,
-) -> Result<(), String> {
-    let mut ids = HashSet::with_capacity(definition.patterns.len());
-    for pattern in &definition.patterns {
-        let id = match pattern {
-            ComparisonPatternDefinition::Catalog {
-                catalog_id,
-                pattern_id,
-            } => {
-                if catalog_id.is_empty() || pattern_id.is_empty() {
-                    return Err(format!(
-                        "Comparison manifest `{}` contains a {label} catalog-backed pattern with an empty catalog or pattern ID",
-                        comparison_file.display()
-                    ));
-                }
-                pattern_id
-            }
-            ComparisonPatternDefinition::File {
-                id, pattern_file, ..
-            } => {
-                if id.is_empty() {
-                    return Err(format!(
-                        "Comparison manifest `{}` contains an empty {label} pattern ID",
-                        comparison_file.display()
-                    ));
-                }
-                if pattern_file.is_empty() {
-                    return Err(format!(
-                        "Comparison pattern `{}` in the {label} set of comparison manifest `{}` must define a nonempty `pattern_file`",
-                        display_id(id),
-                        comparison_file.display()
-                    ));
-                }
-                id
-            }
-        };
-        if !ids.insert(id.as_str()) {
-            return Err(format!(
-                "Duplicate pattern ID `{}` in the {label} set of comparison manifest `{}`",
-                display_id(id),
-                comparison_file.display()
-            ));
+    if comparison > 0 {
+        if comparison < route_options(RouteKind::Comparison).len() {
+            return Err(route_requirement(RouteKind::Comparison));
         }
+
+        return Ok(Route::Comparison {
+            baseline_settings: take(&mut values, Parameter::BaselineSettings)?,
+            candidate_settings: take(&mut values, Parameter::CandidateSettings)?,
+            comparison_file: take(&mut values, Parameter::ComparisonFile)?,
+        });
     }
-
-    Ok(())
-}
-
-fn validate_catalog_definitions(
-    definitions: &[CatalogDefinition],
-    owner: &str,
-) -> Result<(), String> {
-    let mut ids = HashSet::with_capacity(definitions.len());
-    for definition in definitions {
-        if definition.id.is_empty()
-            || definition.catalog_file.is_empty()
-            || definition.candidate_file.is_empty()
-            || definition.state_file.is_empty()
-        {
-            return Err(format!(
-                "{owner} contains a pattern catalog declaration with an empty ID or path"
-            ));
+    if layer > 0 {
+        if layer < route_options(RouteKind::Layer).len() {
+            return Err(route_requirement(RouteKind::Layer));
         }
-        if !ids.insert(definition.id.as_str()) {
-            return Err(format!(
-                "Duplicate pattern catalog ID `{}` in {owner}",
-                display_id(&definition.id)
-            ));
-        }
-    }
 
-    Ok(())
-}
-
-fn validate_declared_transition(
-    comparison_file: &Path,
-    case_position: usize,
-    transition: ExpectedTransition,
-    baseline_default: Decision,
-    candidate_default: Decision,
-) -> Result<(), String> {
-    for (side, state, default) in [
-        ("baseline", transition.baseline, baseline_default),
-        ("candidate", transition.candidate, candidate_default),
-    ] {
-        if state.recomputed_decision(default) != state.final_decision {
-            return Err(format!(
-                "Expected transition in comparison case {case_position} of `{}` declares a {side} final decision that contradicts configured precedence",
-                comparison_file.display()
-            ));
-        }
-    }
-    if transition.baseline == transition.candidate {
-        return Err(format!(
-            "Expected transition in comparison case {case_position} of `{}` is a no-op",
-            comparison_file.display()
-        ));
-    }
-
-    Ok(())
-}
-
-fn validate_comparison_manifest(
-    comparison_file: &Path,
-    definition: &ComparisonManifestDefinition,
-) -> Result<(), String> {
-    validate_comparison_pattern_set(comparison_file, "baseline", &definition.baseline)?;
-    validate_comparison_pattern_set(comparison_file, "candidate", &definition.candidate)?;
-    let owner = format!("comparison manifest `{}`", comparison_file.display());
-    validate_catalog_definitions(&definition.catalogs, &owner)?;
-
-    if definition.cases.is_empty() {
-        return Err(format!(
-            "Comparison manifest `{}` must define at least one case",
-            comparison_file.display()
-        ));
-    }
-
-    for (index, case) in definition.cases.iter().enumerate() {
-        let case_position = index + 1;
-        let (input_file, input, transition) = match case {
-            ComparisonCaseDefinition::File {
-                input_file,
-                expected_transition,
-            } => (Some(input_file), None, *expected_transition),
-            ComparisonCaseDefinition::Inline {
-                input,
-                expected_transition,
-            } => (None, Some(input), *expected_transition),
-        };
-        if input_file.is_some_and(|path| path.is_empty()) {
-            return Err(format!(
-                "File comparison case {case_position} in `{}` must define a nonempty `input_file`",
-                comparison_file.display()
-            ));
-        }
-        if input.is_some_and(|value| value.contains('\r') || value.contains('\n')) {
-            return Err(format!(
-                "Inline comparison case {case_position} in `{}` must not contain CR or LF. Use a file case for multiline input",
-                comparison_file.display()
-            ));
-        }
-        if let Some(transition) = transition {
-            validate_declared_transition(
-                comparison_file,
-                case_position,
-                transition,
-                definition.baseline.default,
-                definition.candidate.default,
-            )?;
-        }
-    }
-
-    Ok(())
-}
-
-fn resolve_pattern_definitions(
-    resolver: &PathResolver,
-    comparison_file: &Path,
-    definitions: Vec<ComparisonPatternDefinition>,
-    catalogs: &HashMap<String, LoadedCatalogBinding>,
-    owner: &str,
-) -> Result<Vec<PatternDefinition>, String> {
-    definitions
-        .into_iter()
-        .map(|definition| match definition {
-            ComparisonPatternDefinition::Catalog {
-                catalog_id,
-                pattern_id,
-            } => catalog_pattern_definition(catalogs, &catalog_id, &pattern_id, owner),
-            ComparisonPatternDefinition::File {
-                bucket,
-                case_sensitive,
-                id,
-                pattern_file,
-            } => Ok(PatternDefinition {
-                bucket,
-                case_sensitive,
-                reported_id: display_id(&id),
-                id,
-                source: PatternSource::File(resolver.resolve(comparison_file, &pattern_file)),
-            }),
-        })
-        .collect()
-}
-
-fn compile_patterns(
-    definitions: Vec<PatternDefinition>,
-    collection: PatternCollection,
-) -> Result<Vec<CompiledPattern>, String> {
-    let mut patterns = Vec::with_capacity(definitions.len());
-
-    for definition in definitions {
-        let description = collection.read_description(&definition.reported_id);
-        let (pattern, source_label) = match definition.source {
-            PatternSource::Catalog(pattern) => (pattern, None),
-            PatternSource::File(pattern_file) => {
-                let pattern = read_utf8_file(&pattern_file, &description)?;
-                (pattern, Some(pattern_file))
-            }
-        };
-        let regex = match compile_pattern(&pattern, definition.case_sensitive) {
-            Ok(regex) => regex,
-            Err(PatternError::Empty) => {
-                return Err(match source_label {
-                    Some(pattern_file) => format!(
-                        "Pattern file `{}` for {} `{}` is empty",
-                        pattern_file.display(),
-                        collection.owner_label(),
-                        definition.reported_id
-                    ),
-                    None => format!(
-                        "Catalog-backed {} `{}` is empty",
-                        collection.owner_label(),
-                        definition.reported_id
-                    ),
-                });
-            }
-            Err(PatternError::Invalid(error)) => {
-                let summary = regex_error_summary(&error);
-
-                return Err(match source_label {
-                    Some(pattern_file) => format!(
-                        "Failed to compile regex from pattern file `{}` for {} `{}`:\n\n{summary}",
-                        pattern_file.display(),
-                        collection.owner_label(),
-                        definition.reported_id
-                    ),
-                    None => format!(
-                        "Failed to compile regex from catalog-backed {} `{}`:\n\n{summary}",
-                        collection.owner_label(),
-                        definition.reported_id
-                    ),
-                });
-            }
-        };
-
-        patterns.push(CompiledPattern {
-            bucket: definition.bucket,
-            id: definition.id,
-            regex,
+        return Ok(Route::Layer {
+            layer_file: take(&mut values, Parameter::LayerFile)?,
+            settings: take(&mut values, Parameter::Settings)?,
         });
     }
 
-    Ok(patterns)
+    Err(format!(
+        "Select one route. Run `{NAME} --help` for the supported routes"
+    ))
 }
 
-fn read_comparison_input(
-    resolver: &PathResolver,
-    comparison_file: &Path,
-    case_position: usize,
-    case: ComparisonCaseDefinition,
-) -> Result<(String, Option<ExpectedTransition>), String> {
-    match case {
-        ComparisonCaseDefinition::File {
-            input_file,
-            expected_transition,
-        } => {
-            let input_file = resolver.resolve(comparison_file, &input_file);
-            let description = format!("comparison case {case_position} input");
-            let input = read_utf8_file(&input_file, &description)?;
+fn repeated_option(parameter: Parameter) -> String {
+    format!("The `{}` option must not be repeated", parameter.option())
+}
 
-            Ok((input, expected_transition))
-        }
-        ComparisonCaseDefinition::Inline {
-            input,
-            expected_transition,
-        } => Ok((input, expected_transition)),
+fn take(
+    values: &mut BTreeMap<Parameter, PathBuf>,
+    parameter: Parameter,
+) -> Result<PathBuf, String> {
+    values.remove(&parameter).ok_or_else(|| {
+        parameter
+            .route()
+            .map_or_else(String::new, route_requirement)
+    })
+}
+
+fn access_failure(kind: io::ErrorKind) -> &'static str {
+    match kind {
+        io::ErrorKind::NotFound => "does not exist",
+        io::ErrorKind::PermissionDenied => "cannot be read with the current permissions",
+        _ => "could not be read",
     }
 }
 
-fn comparison_json_error(error: &serde_json::Error) -> String {
+fn read_file(path: &Path, role: Role) -> Result<Vec<u8>, String> {
+    let label = role.label();
+    let metadata = fs::metadata(path)
+        .map_err(|error| format!("The {label} file {}", access_failure(error.kind())))?;
+    if !metadata.is_file() {
+        return Err(format!("The {label} file must be a regular file"));
+    }
+
+    fs::read(path).map_err(|error| format!("The {label} file {}", access_failure(error.kind())))
+}
+
+fn decode_utf8(bytes: Vec<u8>, role: Role) -> Result<String, String> {
+    String::from_utf8(bytes).map_err(|_| format!("The {} file is not valid UTF-8", role.label()))
+}
+
+/// Reports only the serde_json error category and position, because an upstream message can quote
+/// the offending field name or value
+fn json_failure(error: &serde_json::Error, role: Role) -> String {
+    let label = role.label();
     let summary = match error.classify() {
         serde_json::error::Category::Data => {
-            "JSON data does not match the required comparison schema"
+            format!("The {label} JSON does not match the required schema")
         }
-        serde_json::error::Category::Eof => "JSON input ended before the manifest was complete",
-        serde_json::error::Category::Io => "Failed to read JSON input",
-        serde_json::error::Category::Syntax => "JSON syntax is invalid",
+        serde_json::error::Category::Eof => {
+            format!("The {label} JSON ends before a complete value")
+        }
+        serde_json::error::Category::Io => format!("The {label} JSON could not be read"),
+        serde_json::error::Category::Syntax => format!("The {label} JSON syntax is invalid"),
     };
 
     format!(
-        "{summary} at line {} column {}",
+        "{summary} at line {}, column {}",
         error.line(),
         error.column()
     )
 }
 
-fn invalid_comparison_json(comparison_file: &Path, error: &serde_json::Error) -> String {
-    let summary = comparison_json_error(error);
-
-    format!(
-        "Invalid comparison manifest `{}`. {summary}",
-        comparison_file.display()
-    )
-}
-
-fn parse_comparison_manifest(
-    comparison_file: &Path,
-    manifest: &str,
-) -> Result<ComparisonManifestDefinition, String> {
-    let definition: ComparisonManifestDefinition = serde_json::from_str(manifest)
-        .map_err(|error| invalid_comparison_json(comparison_file, &error))?;
-    validate_comparison_manifest(comparison_file, &definition)?;
-
-    Ok(definition)
-}
-
-fn evaluate_comparison_manifest(
-    resolver: &PathResolver,
-    comparison_file: &Path,
-    definition: ComparisonManifestDefinition,
-) -> Result<ComparisonResult, String> {
-    let ComparisonManifestDefinition {
-        baseline,
-        candidate,
-        cases,
-        catalogs,
-    } = definition;
-    let baseline_default = baseline.default;
-    let candidate_default = candidate.default;
-    let owner = format!("comparison manifest `{}`", comparison_file.display());
-    let catalogs = load_catalogs(resolver, comparison_file, catalogs, &owner)?;
-    let baseline_patterns = compile_patterns(
-        resolve_pattern_definitions(
-            resolver,
-            comparison_file,
-            baseline.patterns,
-            &catalogs,
-            &owner,
-        )?,
-        PatternCollection::BaselineComparison,
-    )?;
-    let candidate_patterns = compile_patterns(
-        resolve_pattern_definitions(
-            resolver,
-            comparison_file,
-            candidate.patterns,
-            &catalogs,
-            &owner,
-        )?,
-        PatternCollection::CandidateComparison,
-    )?;
-    let baseline_pattern_count = baseline_patterns.len();
-    let candidate_pattern_count = candidate_patterns.len();
-    let case_count = cases.len();
-    let mut equivalence_case_count = 0;
-    let mut mismatches = BoundedIssues::new(MAX_REPORTED_FAILURES);
-    let mut transition_case_count = 0;
-
-    for (index, case) in cases.into_iter().enumerate() {
-        let case_position = index + 1;
-        let (input, expected_transition) =
-            read_comparison_input(resolver, comparison_file, case_position, case)?;
-        let baseline_state = MatchState::evaluate(&input, &baseline_patterns);
-        let candidate_state = MatchState::evaluate(&input, &candidate_patterns);
-
-        if let Some(expected) = expected_transition {
-            transition_case_count += 1;
-            let baseline_observed =
-                DeclaredComparisonState::observed(baseline_state, baseline_default);
-            let candidate_observed =
-                DeclaredComparisonState::observed(candidate_state, candidate_default);
-            let baseline_differences =
-                ComparisonDifferences::from_declared(baseline_observed, expected.baseline);
-            let candidate_differences =
-                ComparisonDifferences::from_declared(candidate_observed, expected.candidate);
-            if !baseline_differences.is_empty() || !candidate_differences.is_empty() {
-                mismatches.push(ComparisonMismatch::Transition {
-                    baseline_differences,
-                    candidate_differences,
-                    case_position,
-                });
-            }
-        } else {
-            equivalence_case_count += 1;
-            let differences = ComparisonDifferences::between(
-                baseline_state,
-                baseline_default,
-                candidate_state,
-                candidate_default,
-            );
-            if !differences.is_empty() {
-                mismatches.push(ComparisonMismatch::Equivalence {
-                    case_position,
-                    differences,
-                });
-            }
-        }
-    }
-
-    Ok(ComparisonResult {
-        baseline_pattern_count,
-        candidate_pattern_count,
-        case_count,
-        comparison_file: comparison_file.to_owned(),
-        equivalence_case_count,
-        mismatches,
-        transition_case_count,
-    })
-}
-
-fn evaluate_comparison(
-    resolver: &PathResolver,
-    comparison_file: &Path,
-) -> Result<ComparisonResult, String> {
-    let manifest = read_utf8_file(comparison_file, "comparison manifest")?;
-    let definition = parse_comparison_manifest(comparison_file, &manifest)?;
-
-    evaluate_comparison_manifest(resolver, comparison_file, definition)
-}
-
-fn evaluate_suite(resolver: &PathResolver, suite_file: &Path) -> Result<SuiteResult, String> {
-    let manifest = read_utf8_file(suite_file, "suite manifest")?;
-    let SuiteManifest {
-        default,
-        expectations,
-        pattern_indices,
-        pattern_report_ids,
-        patterns,
-    } = parse_suite_manifest(resolver, suite_file, &manifest)?;
-    let patterns = compile_patterns(patterns, PatternCollection::Suite)?;
-    let pattern_count = patterns.len();
-    let mut decision_cases = 0;
-    let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
-    let mut pattern_cases = 0;
-
-    for expectation in expectations {
-        match expectation {
-            SuiteExpectation::DecisionCase {
-                expected,
-                input,
-                line_number,
-            } => {
-                decision_cases += 1;
-                let state = MatchState::evaluate(&input, &patterns);
-                if state.decision(default) != expected {
-                    failures.push(SuiteFailure {
-                        expectation: SuiteFailureExpectation::Decision(expected),
-                        line_number,
-                    });
-                }
-            }
-            SuiteExpectation::PatternCase {
-                expected_match,
-                input,
-                line_number,
-                pattern_id,
-            } => {
-                pattern_cases += 1;
-                let pattern_index = pattern_indices[&pattern_id];
-                if patterns[pattern_index].regex.is_match(&input) != expected_match {
-                    let reported_pattern_id = pattern_report_ids[&pattern_id].clone();
-                    failures.push(SuiteFailure {
-                        expectation: SuiteFailureExpectation::Pattern {
-                            expected_match,
-                            pattern_id: reported_pattern_id,
-                        },
-                        line_number,
-                    });
-                }
-            }
-        }
-    }
-
-    Ok(SuiteResult {
-        decision_cases,
-        failures,
-        pattern_cases,
-        pattern_count,
-        suite_file: suite_file.to_owned(),
-    })
-}
-
-fn evaluate(arguments: &Arguments) -> Result<Evaluation, String> {
-    let pattern = read_utf8_file(&arguments.pattern_file, "pattern")?;
-    let regex = match compile_pattern(&pattern, arguments.case_sensitive) {
-        Ok(regex) => regex,
-        Err(PatternError::Empty) => {
-            return Err(format!(
-                "Pattern file `{}` is empty",
-                arguments.pattern_file.display()
-            ));
-        }
-        Err(PatternError::Invalid(error)) => {
-            let summary = regex_error_summary(&error);
-
-            return Err(format!(
-                "Failed to compile regex from pattern file `{}`:\n\n{summary}",
-                arguments.pattern_file.display()
-            ));
-        }
-    };
-
-    match &arguments.input {
-        InputMode::Batch(cases_file) => {
-            let manifest = read_utf8_file(cases_file, "case manifest")?;
-            let cases = parse_case_manifest(cases_file, &manifest)?;
-            let total = cases.len();
-            let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
-            for case in cases {
-                if regex.is_match(&case.input) != case.expected_match {
-                    failures.push(BatchFailure {
-                        expected_match: case.expected_match,
-                        line_number: case.line_number,
-                    });
-                }
-            }
-
-            Ok(Evaluation::Batch(BatchResult {
-                cases_file: cases_file.clone(),
-                failures,
-                total,
-            }))
-        }
-        InputMode::Single(input_file) => {
-            let input = read_utf8_file(input_file, "input")?;
-
-            Ok(Evaluation::Single(regex.is_match(&input)))
-        }
-    }
-}
-
-fn case_label(count: usize) -> &'static str {
-    if count == 1 { "case" } else { "cases" }
-}
-
-fn decision_label(count: usize) -> &'static str {
-    if count == 1 {
-        "decision case"
-    } else {
-        "decision cases"
-    }
-}
-
-fn failure_label(count: usize) -> &'static str {
-    if count == 1 { "failure" } else { "failures" }
-}
-
-fn mismatch_label(count: usize) -> &'static str {
-    if count == 1 { "mismatch" } else { "mismatches" }
-}
-
-fn pattern_label(count: usize) -> &'static str {
-    if count == 1 { "pattern" } else { "patterns" }
-}
-
-fn report_batch_failures(stderr: &mut dyn Write, result: &BatchResult) -> io::Result<()> {
-    writeln!(
-        stderr,
-        "pattern-match: {} of {} {} failed in `{}`",
-        result.failures.total_count(),
-        result.total,
-        case_label(result.total),
-        result.cases_file.display()
-    )?;
-    for failure in result.failures.issues() {
-        let expectation = if failure.expected_match {
-            "a match"
-        } else {
-            "no match"
-        };
-        writeln!(
-            stderr,
-            "  Line {} expected {expectation}",
-            failure.line_number
-        )?;
-    }
-
-    let omitted = result.failures.omitted_count();
-    if omitted > 0 {
-        writeln!(
-            stderr,
-            "  … {omitted} additional {} omitted",
-            failure_label(omitted)
-        )?;
-    }
-
-    Ok(())
-}
-
-fn report_suite_failures(stderr: &mut dyn Write, result: &SuiteResult) -> io::Result<()> {
-    let total = result.pattern_cases + result.decision_cases;
-    writeln!(
-        stderr,
-        "pattern-match: {} of {total} suite expectations failed in `{}`",
-        result.failures.total_count(),
-        result.suite_file.display()
-    )?;
-    for failure in result.failures.issues() {
-        match &failure.expectation {
-            SuiteFailureExpectation::Decision(expected) => {
-                writeln!(
-                    stderr,
-                    "  Line {} expected configured decision `{}`",
-                    failure.line_number,
-                    expected.label()
-                )?;
-            }
-            SuiteFailureExpectation::Pattern {
-                expected_match,
-                pattern_id,
-            } => {
-                let expectation = if *expected_match {
-                    "a match"
-                } else {
-                    "no match"
-                };
-                writeln!(
-                    stderr,
-                    "  Line {} pattern `{}` expected {expectation}",
-                    failure.line_number,
-                    display_id(pattern_id)
-                )?;
-            }
-        }
-    }
-
-    let omitted = result.failures.omitted_count();
-    if omitted > 0 {
-        writeln!(
-            stderr,
-            "  … {omitted} additional {} omitted",
-            failure_label(omitted)
-        )?;
-    }
-
-    Ok(())
-}
-
-fn comparison_dimension_labels(differences: &ComparisonDifferences) -> Vec<&'static str> {
-    let mut labels = Vec::with_capacity(4);
-    if differences.allow_bucket {
-        labels.push("`always_allow` bucket");
-    }
-    if differences.confirm_bucket {
-        labels.push("`always_confirm` bucket");
-    }
-    if differences.deny_bucket {
-        labels.push("`always_deny` bucket");
-    }
-    if differences.final_decision {
-        labels.push("final decision");
-    }
-
-    labels
-}
-
-fn report_comparison_mismatches(
-    stderr: &mut dyn Write,
-    result: &ComparisonResult,
-) -> io::Result<()> {
-    writeln!(
-        stderr,
-        "pattern-match: {} {} across {} comparison {} in `{}`",
-        result.mismatches.total_count(),
-        mismatch_label(result.mismatches.total_count()),
-        result.case_count,
-        case_label(result.case_count),
-        result.comparison_file.display()
-    )?;
-    for mismatch in result.mismatches.issues() {
-        match mismatch {
-            ComparisonMismatch::Equivalence {
-                case_position,
-                differences,
-            } => {
-                let dimensions = comparison_dimension_labels(differences).join(", ");
-                writeln!(
-                    stderr,
-                    "  Case {case_position} baseline/candidate differ in {dimensions}"
-                )?;
-            }
-            ComparisonMismatch::Transition {
-                baseline_differences,
-                candidate_differences,
-                case_position,
-            } => {
-                let baseline = comparison_dimension_labels(baseline_differences).join(", ");
-                let candidate = comparison_dimension_labels(candidate_differences).join(", ");
-                match (baseline.is_empty(), candidate.is_empty()) {
-                    (false, false) => writeln!(
-                        stderr,
-                        "  Case {case_position} baseline differs in {baseline}, and candidate differs in {candidate}"
-                    )?,
-                    (false, true) => writeln!(
-                        stderr,
-                        "  Case {case_position} baseline differs in {baseline}"
-                    )?,
-                    (true, false) => writeln!(
-                        stderr,
-                        "  Case {case_position} candidate differs in {candidate}"
-                    )?,
-                    (true, true) => unreachable!("Stored transition mismatches have differences"),
-                }
-            }
-        }
-    }
-
-    let omitted = result.mismatches.omitted_count();
-    if omitted > 0 {
-        writeln!(
-            stderr,
-            "  … {omitted} additional {} omitted",
-            mismatch_label(omitted)
-        )?;
-    }
-
-    Ok(())
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct LayerProvenance {
-    id: String,
-    command: String,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum LayerPatternCaseDefinition {
-    File {
-        id: String,
-        bucket: Bucket,
-        index: usize,
-        input_file: String,
-        expected_match: bool,
-    },
-    Inline {
-        id: String,
-        bucket: Bucket,
-        index: usize,
-        input: String,
-        expected_match: bool,
-    },
-}
-
-impl LayerPatternCaseDefinition {
-    fn id(&self) -> &str {
-        match self {
-            Self::File { id, .. } | Self::Inline { id, .. } => id,
-        }
-    }
-
-    fn position(&self) -> TerminalPosition {
-        match self {
-            Self::File { bucket, index, .. } | Self::Inline { bucket, index, .. } => {
-                TerminalPosition {
-                    bucket: *bucket,
-                    index: *index,
-                }
-            }
-        }
-    }
-
-    fn expected_match(&self) -> bool {
-        match self {
-            Self::File { expected_match, .. } | Self::Inline { expected_match, .. } => {
-                *expected_match
-            }
-        }
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields, rename_all = "snake_case", tag = "type")]
-enum LayerInputDefinition {
-    File {
-        id: String,
-        input_file: String,
-        #[serde(deserialize_with = "deserialize_decision")]
-        expected_decision: Decision,
-    },
-    Inline {
-        id: String,
-        input: String,
-        #[serde(deserialize_with = "deserialize_decision")]
-        expected_decision: Decision,
-    },
-}
-
-impl LayerInputDefinition {
-    fn id(&self) -> &str {
-        match self {
-            Self::File { id, .. } | Self::Inline { id, .. } => id,
-        }
-    }
-
-    fn expected_decision(&self) -> Decision {
-        match self {
-            Self::File {
-                expected_decision, ..
-            }
-            | Self::Inline {
-                expected_decision, ..
-            } => *expected_decision,
-        }
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct LayerAggregateCase {
-    id: String,
-    inputs: Vec<String>,
-    #[serde(deserialize_with = "deserialize_decision")]
-    expected_decision: Decision,
-}
-
-/// A configured-pattern-layer manifest. `raw_provenance` records original shell lines for review and
-/// is never evaluated, keeping raw commands separate from settled normalized inputs
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct LayerManifestDefinition {
-    settings_file: String,
-    tool: LayerTool,
-    #[serde(default)]
-    raw_provenance: Vec<LayerProvenance>,
-    pattern_cases: Vec<LayerPatternCaseDefinition>,
-    settled_inputs: Vec<LayerInputDefinition>,
-    #[serde(default)]
-    aggregate_cases: Vec<LayerAggregateCase>,
-}
-
-enum LayerFailure {
-    Decision {
-        case: String,
-        expected: Decision,
-        observed: Decision,
-        matched: Vec<String>,
-    },
-    Pattern {
-        case: String,
-        expected_match: bool,
-        observed_match: bool,
-        pattern: String,
-    },
-}
-
-pub(crate) struct LayerResult {
-    failures: BoundedIssues<LayerFailure>,
-    aggregate_count: usize,
-    input_count: usize,
-    pattern_case_count: usize,
-    pattern_count: usize,
-}
-
-fn matched_positions(state: MatchState, patterns: &[CompiledPattern], input: &str) -> Vec<String> {
-    patterns
-        .iter()
-        .filter(|pattern| state.matched(pattern.bucket) && pattern.regex.is_match(input))
-        .map(|pattern| pattern.id.clone())
-        .take(MAX_REPORTED_FAILURES)
-        .collect()
-}
-
-fn layer_tool_settings(
-    settings: &serde_json::Value,
-    tool: LayerTool,
-) -> Result<&serde_json::Map<String, serde_json::Value>, String> {
-    settings
-        .get("agent")
-        .and_then(serde_json::Value::as_object)
-        .and_then(|agent| agent.get("tool_permissions"))
-        .and_then(serde_json::Value::as_object)
-        .and_then(|permissions| permissions.get("tools"))
-        .and_then(serde_json::Value::as_object)
-        .and_then(|tools| tools.get(tool.label()))
-        .and_then(serde_json::Value::as_object)
-        .ok_or_else(|| {
-            format!(
-                "Settings must contain object `.agent.tool_permissions.tools.{}`",
-                tool.label()
-            )
-        })
-}
-
-fn layer_default(
-    settings: &serde_json::Map<String, serde_json::Value>,
-    tool: LayerTool,
-) -> Result<Decision, String> {
-    let configured = settings
-        .get("default")
-        .and_then(serde_json::Value::as_str)
-        .ok_or_else(|| format!("Settings {} `default` must be a string", tool.label()))?;
-
-    Decision::parse(configured).ok_or_else(|| {
-        format!(
-            "Settings {} `default` must be `allow`, `confirm`, or `deny`",
-            tool.label()
-        )
-    })
-}
-
-fn layer_bucket_array(
-    settings: &serde_json::Map<String, serde_json::Value>,
-    tool: LayerTool,
-    bucket: Bucket,
-) -> Result<Option<&Vec<serde_json::Value>>, String> {
-    match settings.get(bucket.label()) {
-        None if tool == LayerTool::Fetch => Ok(None),
-        None => Err(format!(
-            "Settings {} bucket `{}` must be an array",
-            tool.label(),
-            bucket.label()
-        )),
-        Some(value) => value.as_array().map(Some).ok_or_else(|| {
-            format!(
-                "Settings {} bucket `{}` must be an array",
-                tool.label(),
-                bucket.label()
-            )
-        }),
-    }
-}
-
-fn compile_layer_pattern(
-    value: &serde_json::Value,
-    tool: LayerTool,
-    position: TerminalPosition,
-) -> Result<CompiledPattern, String> {
-    let label = position.label();
-    let object = value.as_object().ok_or_else(|| {
-        format!(
-            "Settings {} entry `{label}` must be an object",
-            tool.label()
-        )
-    })?;
-    let pattern = object
-        .get("pattern")
-        .and_then(serde_json::Value::as_str)
-        .ok_or_else(|| {
-            format!(
-                "Settings {} entry `{label}` must contain string `pattern`",
-                tool.label()
-            )
-        })?;
-    let case_sensitive = object
-        .get("case_sensitive")
-        .and_then(serde_json::Value::as_bool)
-        .ok_or_else(|| {
-            format!(
-                "Settings {} entry `{label}` must contain boolean `case_sensitive`",
-                tool.label()
-            )
-        })?;
-    let regex = compile_pattern(pattern, case_sensitive).map_err(|error| {
-        let detail = match error {
-            PatternError::Empty => "the pattern is empty".to_owned(),
-            PatternError::Invalid(error) => regex_error_summary(&error),
-        };
-        format!("Failed to compile configured pattern `{label}`. {detail}")
-    })?;
-
-    Ok(CompiledPattern {
-        id: label,
-        bucket: position.bucket,
-        regex,
-    })
-}
-
-/// Evaluate one settings snapshot’s selected configured tool arrays. This establishes individual
-/// pattern matches and configured-pattern-layer decisions only. It reproduces no input derivation,
-/// pre-rule check, settings layering, sandbox behavior, or prompt outcome
-fn evaluate_layer(resolver: &PathResolver, layer_file: &Path) -> Result<LayerResult, String> {
-    let manifest_bytes = fs::read(layer_file).map_err(|error| {
-        format!(
-            "Failed to read layer manifest `{}`:\n\n{error}",
-            layer_file.display()
-        )
-    })?;
-    let definition: LayerManifestDefinition = parse_strict_json(&manifest_bytes, "Layer manifest")?;
-
-    if definition.settled_inputs.is_empty() {
-        return Err("A layer manifest must declare at least one settled input".to_owned());
-    }
-    let mut provenance_ids = HashSet::new();
-    for provenance in &definition.raw_provenance {
-        if provenance.id.is_empty() || provenance.command.is_empty() {
-            return Err("Layer raw provenance requires a nonempty ID and command".to_owned());
-        }
-        if !provenance_ids.insert(provenance.id.as_str()) {
-            return Err("Layer raw provenance IDs must be unique".to_owned());
-        }
-    }
-
-    let settings_path = resolver.resolve(layer_file, &definition.settings_file);
-    let settings_bytes = fs::read(&settings_path).map_err(|error| {
-        format!(
-            "Failed to read layer settings `{}`:\n\n{error}",
-            settings_path.display()
-        )
-    })?;
-    let settings: serde_json::Value = serde_json::from_slice(&settings_bytes).map_err(|error| {
-        format!(
-            "Invalid layer settings JSON `{}`:\n\n{error}",
-            settings_path.display()
-        )
-    })?;
-
-    let tool_settings = layer_tool_settings(&settings, definition.tool)?;
-    let default = layer_default(tool_settings, definition.tool)?;
-    let mut patterns = Vec::new();
-    let mut pattern_positions = BTreeMap::new();
-    for bucket in [Bucket::Allow, Bucket::Confirm, Bucket::Deny] {
-        let Some(values) = layer_bucket_array(tool_settings, definition.tool, bucket)? else {
-            continue;
-        };
-        for (index, value) in values.iter().enumerate() {
-            let position = TerminalPosition { bucket, index };
-            pattern_positions.insert(position, patterns.len());
-            patterns.push(compile_layer_pattern(value, definition.tool, position)?);
-        }
-    }
-
-    let mut failures = BoundedIssues::new(MAX_REPORTED_FAILURES);
-    let mut pattern_case_ids = HashSet::new();
-    let mut covered_positions = BTreeSet::new();
-    for pattern_case in &definition.pattern_cases {
-        if pattern_case.id().is_empty() {
-            return Err("Layer pattern case IDs must be nonempty".to_owned());
-        }
-        if !pattern_case_ids.insert(pattern_case.id().to_owned()) {
-            return Err("Layer pattern case IDs must be unique".to_owned());
-        }
-        let position = pattern_case.position();
-        let Some(pattern_index) = pattern_positions.get(&position).copied() else {
-            return Err(format!(
-                "Layer pattern case `{}` references unknown configured pattern `{}`",
-                display_id(pattern_case.id()),
-                position.label()
-            ));
-        };
-        let value = match pattern_case {
-            LayerPatternCaseDefinition::Inline { input, .. } => {
-                if input.contains('\n') || input.contains('\r') {
-                    return Err(
-                        "Layer inline pattern-case inputs must be single-line. Use `input_file` instead"
-                            .to_owned(),
-                    );
-                }
-                input.clone()
-            }
-            LayerPatternCaseDefinition::File { input_file, .. } => {
-                let path = resolver.resolve(layer_file, input_file);
-                read_utf8_file(&path, "layer pattern-case input")?
-            }
-        };
-        let observed_match = patterns[pattern_index].regex.is_match(&value);
-        if observed_match != pattern_case.expected_match() {
-            failures.push(LayerFailure::Pattern {
-                case: display_id(pattern_case.id()),
-                expected_match: pattern_case.expected_match(),
-                observed_match,
-                pattern: position.label(),
-            });
-        }
-        covered_positions.insert(position);
-    }
-    if let Some(uncovered) = pattern_positions
-        .keys()
-        .find(|position| !covered_positions.contains(position))
-    {
+pub(crate) fn parse_json(text: &str, role: Role) -> Result<Json, String> {
+    let document: Json = serde_json::from_str(text).map_err(|error| json_failure(&error, role))?;
+    if has_duplicate_key(&document) {
         return Err(format!(
-            "Layer pattern cases must cover configured pattern `{}`",
-            uncovered.label()
+            "The {} JSON contains a duplicate object key",
+            role.label()
         ));
     }
 
-    let mut inputs = Vec::with_capacity(definition.settled_inputs.len());
-    let mut input_ids = HashSet::new();
-    for settled in &definition.settled_inputs {
-        if settled.id().is_empty() {
-            return Err("Layer settled input IDs must be nonempty".to_owned());
-        }
-        if !input_ids.insert(settled.id().to_owned()) {
-            return Err("Layer settled input IDs must be unique".to_owned());
-        }
-        let value = match settled {
-            LayerInputDefinition::Inline { input, .. } => {
-                if input.contains('\n') || input.contains('\r') {
-                    return Err(
-                        "Layer inline inputs must be single-line. Use `input_file` instead"
-                            .to_owned(),
-                    );
-                }
-                input.clone()
-            }
-            LayerInputDefinition::File { input_file, .. } => {
-                let path = resolver.resolve(layer_file, input_file);
-                read_utf8_file(&path, "layer input")?
-            }
-        };
-        inputs.push((settled.id().to_owned(), value, settled.expected_decision()));
-    }
-
-    let mut states = HashMap::with_capacity(inputs.len());
-    for (id, value, expected) in &inputs {
-        let state = MatchState::evaluate(value, &patterns);
-        let observed = state.decision(default);
-        if observed != *expected {
-            failures.push(LayerFailure::Decision {
-                case: display_id(id),
-                expected: *expected,
-                observed,
-                matched: matched_positions(state, &patterns, value),
-            });
-        }
-        states.insert(id.clone(), (state, value.clone()));
-    }
-
-    let mut aggregate_ids = HashSet::new();
-    for aggregate in &definition.aggregate_cases {
-        if aggregate.id.is_empty() {
-            return Err("Layer aggregate case IDs must be nonempty".to_owned());
-        }
-        if !aggregate_ids.insert(aggregate.id.as_str()) {
-            return Err("Layer aggregate case IDs must be unique".to_owned());
-        }
-        if aggregate.inputs.is_empty() {
-            return Err(format!(
-                "Layer aggregate case `{}` must reference at least one settled input",
-                display_id(&aggregate.id)
-            ));
-        }
-
-        let mut any_deny = false;
-        let mut any_confirm = false;
-        let mut every_allow = true;
-        let mut matched = Vec::new();
-        for reference in &aggregate.inputs {
-            let Some((state, value)) = states.get(reference) else {
-                return Err(format!(
-                    "Layer aggregate case `{}` references unknown settled input `{}`",
-                    display_id(&aggregate.id),
-                    display_id(reference)
-                ));
-            };
-            any_deny |= state.deny;
-            any_confirm |= state.confirm;
-            every_allow &= state.allow;
-            if matched.len() < MAX_REPORTED_FAILURES {
-                matched.extend(matched_positions(*state, &patterns, value));
-                matched.truncate(MAX_REPORTED_FAILURES);
-            }
-        }
-        let observed = if any_deny {
-            Decision::Deny
-        } else if any_confirm {
-            Decision::Confirm
-        } else if every_allow {
-            Decision::Allow
-        } else {
-            default
-        };
-        if observed != aggregate.expected_decision {
-            failures.push(LayerFailure::Decision {
-                case: display_id(&aggregate.id),
-                expected: aggregate.expected_decision,
-                observed,
-                matched,
-            });
-        }
-    }
-
-    Ok(LayerResult {
-        failures,
-        aggregate_count: definition.aggregate_cases.len(),
-        input_count: inputs.len(),
-        pattern_case_count: definition.pattern_cases.len(),
-        pattern_count: patterns.len(),
-    })
+    Ok(document)
 }
 
-fn report_layer_failures(stderr: &mut dyn Write, result: &LayerResult) -> io::Result<()> {
-    writeln!(
-        stderr,
-        "pattern-match: {} configured-pattern-layer {} did not match the expected result",
-        result.failures.total_count(),
-        case_label(result.failures.total_count())
-    )?;
-    for failure in result.failures.issues() {
-        match failure {
-            LayerFailure::Decision {
-                case,
-                expected,
-                observed,
-                matched,
-            } => {
-                let matched = if matched.is_empty() {
-                    "no configured pattern".to_owned()
-                } else {
-                    matched.join(", ")
-                };
-                writeln!(
-                    stderr,
-                    "  {case}: expected {}, observed {} via {matched}",
-                    expected.label(),
-                    observed.label()
-                )?;
-            }
-            LayerFailure::Pattern {
-                case,
-                expected_match,
-                observed_match,
-                pattern,
-            } => writeln!(
-                stderr,
-                "  {case}: expected {}, observed {} for {pattern}",
-                if *expected_match { "match" } else { "no match" },
-                if *observed_match { "match" } else { "no match" }
-            )?,
-        }
+fn require_object<'a>(value: &'a Json, subject: &str) -> Result<&'a [(String, Json)], String> {
+    match value {
+        Json::Object(entries) => Ok(entries),
+        _ => Err(format!(
+            "The {subject} must be an object rather than {}",
+            value.kind()
+        )),
     }
-    let omitted = result.failures.omitted_count();
-    if omitted > 0 {
-        writeln!(stderr, "  … {omitted} additional case details omitted")?;
+}
+
+fn reject_unknown_fields(
+    entries: &[(String, Json)],
+    allowed: &[&str],
+    subject: &str,
+) -> Result<(), String> {
+    if entries
+        .iter()
+        .any(|(key, _)| !allowed.contains(&key.as_str()))
+    {
+        return Err(format!(
+            "The {subject} permits only {}",
+            quoted(allowed, "and")
+        ));
     }
 
     Ok(())
 }
 
-fn report_verified_layer(stdout: &mut dyn Write, result: &LayerResult) -> Result<(), String> {
-    writeln!(
-        stdout,
-        "Verified {} pattern {}, {} settled {}, and {} aggregate {} across {} configured {}",
-        result.pattern_case_count,
-        case_label(result.pattern_case_count),
-        result.input_count,
-        case_label(result.input_count),
-        result.aggregate_count,
-        case_label(result.aggregate_count),
-        result.pattern_count,
-        pattern_label(result.pattern_count)
-    )
-    .map_err(|error| format!("Failed to write layer result to standard output:\n\n{error}"))?;
-    writeln!(
-        stdout,
-        "  Configured-pattern-layer results only. Input derivation, pre-rule checks, settings layering, sandbox behavior, and prompt outcomes are out of scope"
-    )
-    .map_err(|error| format!("Failed to write layer result to standard output:\n\n{error}"))
+fn require_array<'a>(
+    entries: &'a [(String, Json)],
+    key: &str,
+    subject: &str,
+) -> Result<&'a [Json], String> {
+    match field(entries, key) {
+        Some(Json::Array(values)) if !values.is_empty() => Ok(values),
+        _ => Err(format!("The {subject} requires a nonempty `{key}` array")),
+    }
 }
 
-/// Record hash-bound reviewed workflow evidence. The bindings show which graph and inputs a claim
-/// refers to. They never prove that this evaluator ran or make the record authentic
-fn write_evidence(
-    path: &Path,
-    kind: ResultKind,
-    evaluator: &str,
-    closure: InputClosure,
-    bound: BoundInputs,
-    counts: BTreeMap<String, u64>,
-) -> Result<(), String> {
-    write_validation_result(
-        path,
-        &ValidationResult {
-            kind,
-            evaluator: evaluator.to_owned(),
-            outcome: OUTCOME_PASSED.to_owned(),
-            bound_inputs: BoundInputs {
-                input_closure: closure,
-                ..bound
-            },
-            counts,
-        },
-    )
+fn require_bool(entries: &[(String, Json)], key: &str, subject: &str) -> Result<bool, String> {
+    match field(entries, key) {
+        Some(Json::Bool(value)) => Ok(*value),
+        _ => Err(format!("The {subject} requires a Boolean `{key}` value")),
+    }
 }
 
-fn overlay_binding(resolver: &PathResolver) -> Result<Option<BoundArtifact>, String> {
-    let Some(overlay) = resolver.overlay.as_ref() else {
-        return Ok(None);
+fn require_bucket(entries: &[(String, Json)], subject: &str) -> Result<Bucket, String> {
+    match field(entries, "bucket").and_then(|value| match value {
+        Json::String(text) => Bucket::parse(text),
+        _ => None,
+    }) {
+        Some(bucket) => Ok(bucket),
+        None => Err(format!(
+            "The {subject} requires a `bucket` value of {}",
+            quoted(&Bucket::ALL.map(Bucket::label), "or")
+        )),
+    }
+}
+
+fn require_decision(entries: &[(String, Json)], subject: &str) -> Result<Decision, String> {
+    match field(entries, "decision").and_then(|value| match value {
+        Json::String(text) => Decision::parse(text),
+        _ => None,
+    }) {
+        Some(decision) => Ok(decision),
+        None => Err(format!(
+            "The {subject} requires a `decision` value of {}",
+            quoted(&Decision::ALL.map(Decision::label), "or")
+        )),
+    }
+}
+
+fn require_index(entries: &[(String, Json)], subject: &str) -> Result<usize, String> {
+    match field(entries, "index").and_then(|value| match value {
+        Json::Number(Some(number)) => usize::try_from(*number).ok(),
+        _ => None,
+    }) {
+        Some(index) => Ok(index),
+        None => Err(format!(
+            "The {subject} requires a nonnegative integer `index` value"
+        )),
+    }
+}
+
+fn require_input(entries: &[(String, Json)], subject: &str) -> Result<String, String> {
+    let input = match field(entries, "input") {
+        Some(Json::String(value)) => value,
+        _ => return Err(format!("The {subject} requires a string `input` value")),
     };
-    let Some(graph_root) = resolver.graph_root.as_deref() else {
-        return Ok(None);
-    };
-    let bytes = fs::read(&overlay.file)
-        .map_err(|error| format!("Failed to read the path overlay:\n\n{error}"))?;
+    if input.contains(LINE_BREAKS) {
+        return Err(format!(
+            "The {subject} `input` value must not contain a line break"
+        ));
+    }
 
-    Ok(Some(BoundArtifact {
-        path: relative_within_root(graph_root, &overlay.file)?,
-        sha256: closure_sha256_hex(&bytes),
-    }))
+    Ok(input.clone())
 }
 
-fn manifest_binding(graph_root: &Path, manifest: &Path) -> Result<(String, String), String> {
-    let bytes = fs::read(manifest)
-        .map_err(|error| format!("Failed to read the bound manifest:\n\n{error}"))?;
+fn require_state(value: &Json, subject: &str) -> Result<State, String> {
+    let entries = require_object(value, subject)?;
+    reject_unknown_fields(entries, &STATE_FIELDS, subject)?;
 
-    Ok((
-        relative_within_root(graph_root, manifest)?,
-        closure_sha256_hex(&bytes),
-    ))
-}
-
-fn report_error(stderr: &mut dyn Write, message: &str) {
-    let _ = writeln!(stderr, "pattern-match: {message}");
-}
-
-fn report_verified_comparison(
-    stdout: &mut dyn Write,
-    result: &ComparisonResult,
-) -> Result<(), String> {
-    writeln!(
-        stdout,
-        "Verified a representative comparison corpus with {} equivalence {}, {} matched {}, {} baseline {}, and {} candidate {}",
-        result.equivalence_case_count,
-        case_label(result.equivalence_case_count),
-        result.transition_case_count,
-        if result.transition_case_count == 1 {
-            "transition"
-        } else {
-            "transitions"
-        },
-        result.baseline_pattern_count,
-        pattern_label(result.baseline_pattern_count),
-        result.candidate_pattern_count,
-        pattern_label(result.candidate_pattern_count)
-    )
-    .map_err(|error| format!("Failed to write comparison result to standard output:\n\n{error}"))
-}
-
-fn report_verified_cases(stdout: &mut dyn Write, total: usize) -> Result<(), String> {
-    writeln!(stdout, "Verified {total} {}", case_label(total)).map_err(|error| {
-        format!("Failed to write case verification result to standard output:\n\n{error}")
+    Ok(State {
+        allow: require_bool(entries, "always_allow", subject)?,
+        confirm: require_bool(entries, "always_confirm", subject)?,
+        decision: require_decision(entries, subject)?,
+        deny: require_bool(entries, "always_deny", subject)?,
     })
 }
 
-fn report_verified_suite(stdout: &mut dyn Write, result: &SuiteResult) -> Result<(), String> {
-    writeln!(
-        stdout,
-        "Verified {} pattern {} and {} {} across {} {}",
-        result.pattern_cases,
-        case_label(result.pattern_cases),
-        result.decision_cases,
-        decision_label(result.decision_cases),
-        result.pattern_count,
-        pattern_label(result.pattern_count)
-    )
-    .map_err(|error| format!("Failed to write suite result to standard output:\n\n{error}"))
-}
+/// Validates the fetch object in unknown-field, `default`, then bucket order, and each bucket by
+/// ascending index, so the first reported projection error is deterministic
+pub(crate) fn project_fetch_layer(document: &Json, role: Role) -> Result<FetchLayer, String> {
+    let label = role.label();
+    let mut fetch = require_object(document, &format!("{label} JSON root"))?;
+    let mut current = document;
 
-/// Derive one evidence record from the same resolver that drove evaluation, so a recorded closure
-/// and a later recomputed closure cannot diverge
-fn record_evidence(
-    resolver: &PathResolver,
-    run: &ManifestRun,
-    kind: ResultKind,
-    evaluator: &str,
-    counts: BTreeMap<String, u64>,
-) -> Result<(), String> {
-    let Some(result_out) = run.result_out.as_deref() else {
-        return Ok(());
-    };
-    let Some(graph_root) = run.graph_root.as_deref() else {
-        return Err("Option `--result-out` requires `--graph-root`".to_owned());
-    };
-
-    let mut builder = InputClosureBuilder::new(graph_root)?;
-    let context = resolver.closure_context();
-    match kind {
-        ResultKind::MatcherSuite => resolve_suite_closure(&mut builder, &context, &run.manifest)?,
-        ResultKind::Comparison => {
-            resolve_comparison_closure(&mut builder, &context, &run.manifest)?;
-        }
-        ResultKind::LayerDecision => resolve_layer_closure(&mut builder, &context, &run.manifest)?,
-        _ => return Err("This evaluator cannot record that evidence kind".to_owned()),
+    for key in FETCH_PATH {
+        let next = current.entry(key).ok_or_else(|| {
+            format!("The {label} `agent.tool_permissions.tools.fetch` path is missing `{key}`")
+        })?;
+        fetch = require_object(next, &format!("{label} `{key}` value"))?;
+        current = next;
     }
-    let closure = builder.finish()?;
 
-    let single = |role: &str| {
-        let mut matching = closure
-            .records
-            .iter()
-            .filter(|record| record.role == role)
-            .map(|record| record.sha256.clone());
-        let first = matching.next();
-        matching.next().is_none().then_some(first).flatten()
-    };
-    let (_, manifest_sha256) = manifest_binding(graph_root, &run.manifest)?;
-    let bound = BoundInputs {
-        manifest_sha256: Some(manifest_sha256),
-        catalog_sha256: single(permission_patterns::ROLE_CATALOG),
-        settings_sha256: single(permission_patterns::ROLE_SETTINGS),
-        inventory_owner: None,
-        overlay: overlay_binding(resolver)?,
-        input_closure: InputClosure::default(),
-    };
+    reject_unknown_fields(fetch, &FETCH_FIELDS, &format!("{label} fetch object"))?;
 
-    write_evidence(result_out, kind, evaluator, closure, bound, counts)
+    let default = match field(fetch, "default").and_then(|value| match value {
+        Json::String(text) => Decision::parse(text),
+        _ => None,
+    }) {
+        Some(decision) => decision,
+        None => {
+            return Err(format!(
+                "The {label} fetch object requires a `default` value of {}",
+                quoted(&Decision::ALL.map(Decision::label), "or")
+            ));
+        }
+    };
+    let mut buckets: [Vec<FetchPattern>; 3] = [Vec::new(), Vec::new(), Vec::new()];
+
+    for bucket in Bucket::ALL {
+        let Some(value) = field(fetch, bucket.label()) else {
+            continue;
+        };
+        let Json::Array(entries) = value else {
+            return Err(format!(
+                "The {label} `{}` value must be an array rather than {}",
+                bucket.label(),
+                value.kind()
+            ));
+        };
+
+        for (index, entry) in entries.iter().enumerate() {
+            let subject = format!("{label} `{}[{index}]` entry", bucket.label());
+            let fields = require_object(entry, &subject)?;
+            reject_unknown_fields(fields, &PATTERN_FIELDS, &subject)?;
+            let case_sensitive = require_bool(fields, "case_sensitive", &subject)?;
+            let pattern = match field(fields, "pattern") {
+                Some(Json::String(value)) => value.clone(),
+                _ => return Err(format!("The {subject} requires a string `pattern` value")),
+            };
+            buckets[bucket.index()].push(FetchPattern {
+                case_sensitive,
+                pattern,
+            });
+        }
+    }
+
+    Ok(FetchLayer { buckets, default })
 }
 
-fn counts_of<const N: usize>(entries: [(&str, usize); N]) -> BTreeMap<String, u64> {
-    entries
-        .into_iter()
-        .map(|(key, value)| (key.to_owned(), value as u64))
-        .collect()
+fn parse_layer_manifest(document: &Json) -> Result<LayerManifest, String> {
+    let label = Role::LayerManifest.label();
+    let root = require_object(document, &format!("{label} JSON root"))?;
+    reject_unknown_fields(root, &LAYER_FIELDS, &format!("{label} root"))?;
+
+    let mut decision_cases = Vec::new();
+    for (index, value) in require_array(root, "decision_cases", label)?
+        .iter()
+        .enumerate()
+    {
+        let subject = format!("{label} `decision_cases[{index}]`");
+        let entries = require_object(value, &subject)?;
+        reject_unknown_fields(entries, &DECISION_CASE_FIELDS, &subject)?;
+        let expected = field(entries, "expected")
+            .ok_or_else(|| format!("The {subject} requires an `expected` state"))?;
+        decision_cases.push(DecisionCase {
+            expected: require_state(expected, &format!("{subject} `expected` state"))?,
+            input: require_input(entries, &subject)?,
+        });
+    }
+
+    let mut pattern_cases = Vec::new();
+    for (index, value) in require_array(root, "pattern_cases", label)?
+        .iter()
+        .enumerate()
+    {
+        let subject = format!("{label} `pattern_cases[{index}]`");
+        let entries = require_object(value, &subject)?;
+        reject_unknown_fields(entries, &PATTERN_CASE_FIELDS, &subject)?;
+        pattern_cases.push(PatternCase {
+            bucket: require_bucket(entries, &subject)?,
+            expected_match: require_bool(entries, "expected_match", &subject)?,
+            index: require_index(entries, &subject)?,
+            input: require_input(entries, &subject)?,
+        });
+    }
+
+    Ok(LayerManifest {
+        decision_cases,
+        pattern_cases,
+    })
+}
+
+fn parse_comparison_manifest(document: &Json) -> Result<ComparisonManifest, String> {
+    let label = Role::ComparisonManifest.label();
+    let root = require_object(document, &format!("{label} JSON root"))?;
+    reject_unknown_fields(root, &COMPARISON_FIELDS, &format!("{label} root"))?;
+
+    let mut cases = Vec::new();
+    for (index, value) in require_array(root, "cases", label)?.iter().enumerate() {
+        let subject = format!("{label} `cases[{index}]`");
+        let entries = require_object(value, &subject)?;
+        reject_unknown_fields(entries, &COMPARISON_CASE_FIELDS, &subject)?;
+        let baseline = field(entries, "baseline")
+            .ok_or_else(|| format!("The {subject} requires a `baseline` state"))?;
+        let candidate = field(entries, "candidate")
+            .ok_or_else(|| format!("The {subject} requires a `candidate` state"))?;
+        cases.push(ComparisonCase {
+            baseline: require_state(baseline, &format!("{subject} `baseline` state"))?,
+            candidate: require_state(candidate, &format!("{subject} `candidate` state"))?,
+            input: require_input(entries, &subject)?,
+        });
+    }
+
+    Ok(ComparisonManifest { cases })
+}
+
+/// Validates manifest references, then declared-state precedence, then witness coverage, so the
+/// first reported cross-file error is deterministic
+fn validate_layer_references(
+    manifest: &LayerManifest,
+    settings: &FetchLayer,
+) -> Result<(), String> {
+    let label = Role::LayerManifest.label();
+
+    for (index, case) in manifest.pattern_cases.iter().enumerate() {
+        if case.index >= settings.patterns(case.bucket).len() {
+            return Err(format!(
+                "The {label} `pattern_cases[{index}]` index is outside the configured `{}` array",
+                case.bucket.label()
+            ));
+        }
+    }
+
+    for (index, case) in manifest.decision_cases.iter().enumerate() {
+        if !case.expected.follows_precedence(settings.default) {
+            return Err(format!(
+                "The {label} `decision_cases[{index}]` expected state declares a decision that does not follow deny, confirm, allow, then default precedence"
+            ));
+        }
+    }
+
+    for bucket in Bucket::ALL {
+        for index in 0..settings.patterns(bucket).len() {
+            for expected_match in [true, false] {
+                let declared = manifest.pattern_cases.iter().any(|case| {
+                    case.bucket == bucket
+                        && case.index == index
+                        && case.expected_match == expected_match
+                });
+                if !declared {
+                    let polarity = if expected_match {
+                        "matching"
+                    } else {
+                        "nonmatching"
+                    };
+
+                    return Err(format!(
+                        "The {label} declares no {polarity} case for the configured `{}[{index}]` pattern. A pattern that cannot supply both polarities is unsupported by this workflow",
+                        bucket.label()
+                    ));
+                }
+            }
+        }
+    }
+
+    for bucket in Bucket::ALL {
+        if settings.patterns(bucket).is_empty() {
+            continue;
+        }
+        let declared = manifest.decision_cases.iter().any(|case| {
+            case.expected
+                .identifies(Source::Bucket(bucket), settings.default)
+        });
+        if !declared {
+            return Err(format!(
+                "The {label} declares no decision case with `{}` as the deciding source. A fully shadowed bucket is unsupported by the ordinary change workflow",
+                bucket.label()
+            ));
+        }
+    }
+
+    let declared = manifest
+        .decision_cases
+        .iter()
+        .any(|case| case.expected.identifies(Source::Default, settings.default));
+    if !declared {
+        return Err(format!(
+            "The {label} declares no decision case with the configured default as the deciding source. An unreachable default is unsupported by the ordinary change workflow"
+        ));
+    }
+
+    Ok(())
+}
+
+fn validate_comparison_states(
+    manifest: &ComparisonManifest,
+    baseline: &FetchLayer,
+    candidate: &FetchLayer,
+) -> Result<(), String> {
+    let label = Role::ComparisonManifest.label();
+
+    for (index, case) in manifest.cases.iter().enumerate() {
+        for (side, state, default) in [
+            ("baseline", case.baseline, baseline.default),
+            ("candidate", case.candidate, candidate.default),
+        ] {
+            if !state.follows_precedence(default) {
+                return Err(format!(
+                    "The {label} `cases[{index}]` {side} state declares a decision that does not follow deny, confirm, allow, then default precedence"
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn compilation_failure(error: &regex::Error) -> String {
+    match error {
+        regex::Error::CompiledTooBig(limit) => {
+            format!("exceeds the {limit}-byte compiled regex size limit")
+        }
+        _ => "is not valid regex syntax".to_owned(),
+    }
+}
+
+/// Compiles each configured pattern exactly once, in settings-input order. A pattern over the
+/// reviewability bound is never compiled, so a rejected layer reports every configuration finding
+/// instead of a compiled set whose indexes no longer align with the settings arrays
+pub(crate) fn compile_fetch_layer(
+    layer: &FetchLayer,
+    role: Role,
+) -> Result<CompiledLayer, Vec<String>> {
+    let label = role.label();
+    let mut buckets: [Vec<Regex>; 3] = [Vec::new(), Vec::new(), Vec::new()];
+    let mut findings = Vec::new();
+
+    for bucket in Bucket::ALL {
+        for (index, pattern) in layer.patterns(bucket).iter().enumerate() {
+            let subject = format!("{label} `{}[{index}]` pattern", bucket.label());
+            if pattern.pattern.chars().count() > MAX_PATTERN_SCALARS {
+                findings.push(format!(
+                    "The {subject} exceeds the 1,000-scalar reviewability bound"
+                ));
+                continue;
+            }
+            match RegexBuilder::new(&pattern.pattern)
+                .case_insensitive(!pattern.case_sensitive)
+                .build()
+            {
+                Ok(regex) => buckets[bucket.index()].push(regex),
+                Err(error) => {
+                    findings.push(format!("The {subject} {}", compilation_failure(&error)));
+                }
+            }
+        }
+    }
+
+    if findings.is_empty() {
+        Ok(CompiledLayer {
+            buckets,
+            default: layer.default,
+        })
+    } else {
+        Err(findings)
+    }
+}
+
+fn evaluate_layer(manifest: &LayerManifest, settings: &FetchLayer) -> Report {
+    let label = Role::LayerManifest.label();
+    let compiled = match compile_fetch_layer(settings, Role::Settings) {
+        Ok(compiled) => compiled,
+        Err(findings) => return Report::Findings(findings),
+    };
+    let mut findings = Vec::new();
+
+    for (index, case) in manifest.pattern_cases.iter().enumerate() {
+        let matched = compiled.patterns(case.bucket)[case.index].is_match(&case.input);
+        if matched != case.expected_match {
+            findings.push(format!(
+                "The {label} `pattern_cases[{index}]` declared expectation disagrees with the configured `{}[{}]` pattern result",
+                case.bucket.label(),
+                case.index
+            ));
+        }
+    }
+
+    for (index, case) in manifest.decision_cases.iter().enumerate() {
+        if compiled.observe(&case.input) != case.expected {
+            findings.push(format!(
+                "The {label} `decision_cases[{index}]` declared state disagrees with the configured result"
+            ));
+        }
+    }
+
+    if findings.is_empty() {
+        return Report::Verified(format!(
+            "Verified {}, {}, and {}",
+            count_of(settings.total(), "configured pattern"),
+            count_of(manifest.decision_cases.len(), "decision case"),
+            count_of(manifest.pattern_cases.len(), "pattern case")
+        ));
+    }
+
+    Report::Findings(findings)
+}
+
+fn evaluate_comparison(
+    manifest: &ComparisonManifest,
+    baseline: &FetchLayer,
+    candidate: &FetchLayer,
+) -> Report {
+    let label = Role::ComparisonManifest.label();
+    let compiled_baseline = compile_fetch_layer(baseline, Role::BaselineSettings);
+    let compiled_candidate = compile_fetch_layer(candidate, Role::CandidateSettings);
+    let (compiled_baseline, compiled_candidate) = match (compiled_baseline, compiled_candidate) {
+        (Ok(compiled_baseline), Ok(compiled_candidate)) => (compiled_baseline, compiled_candidate),
+        (baseline_result, candidate_result) => {
+            let mut findings = baseline_result.err().unwrap_or_default();
+            findings.extend(candidate_result.err().unwrap_or_default());
+
+            return Report::Findings(findings);
+        }
+    };
+    let mut findings = Vec::new();
+
+    for (index, case) in manifest.cases.iter().enumerate() {
+        for (side, declared, observed) in [
+            (
+                "baseline",
+                case.baseline,
+                compiled_baseline.observe(&case.input),
+            ),
+            (
+                "candidate",
+                case.candidate,
+                compiled_candidate.observe(&case.input),
+            ),
+        ] {
+            if declared != observed {
+                findings.push(format!(
+                    "The {label} `cases[{index}]` declared {side} state disagrees with the configured result"
+                ));
+            }
+        }
+    }
+
+    if findings.is_empty() {
+        return Report::Verified(format!(
+            "Verified {}, {}, and {}",
+            count_of(baseline.total(), "baseline pattern"),
+            count_of(candidate.total(), "candidate pattern"),
+            count_of(manifest.cases.len(), "comparison case")
+        ));
+    }
+
+    Report::Findings(findings)
+}
+
+/// Runs the validation phases in their documented order: arguments, file type and readability,
+/// UTF-8 decoding, JSON parsing with duplicate-key detection, manifest structure, settings
+/// projection, then cross-file references and coverage
+fn execute<I>(arguments: I) -> Result<Report, String>
+where
+    I: IntoIterator<Item = OsString>,
+{
+    match parse_arguments(arguments)? {
+        Route::Comparison {
+            baseline_settings,
+            candidate_settings,
+            comparison_file,
+        } => {
+            let baseline_bytes = read_file(&baseline_settings, Role::BaselineSettings)?;
+            let candidate_bytes = read_file(&candidate_settings, Role::CandidateSettings)?;
+            let manifest_bytes = read_file(&comparison_file, Role::ComparisonManifest)?;
+
+            let baseline_text = decode_utf8(baseline_bytes, Role::BaselineSettings)?;
+            let candidate_text = decode_utf8(candidate_bytes, Role::CandidateSettings)?;
+            let manifest_text = decode_utf8(manifest_bytes, Role::ComparisonManifest)?;
+
+            let baseline_json = parse_json(&baseline_text, Role::BaselineSettings)?;
+            let candidate_json = parse_json(&candidate_text, Role::CandidateSettings)?;
+            let manifest_json = parse_json(&manifest_text, Role::ComparisonManifest)?;
+
+            let manifest = parse_comparison_manifest(&manifest_json)?;
+
+            let baseline = project_fetch_layer(&baseline_json, Role::BaselineSettings)?;
+            let candidate = project_fetch_layer(&candidate_json, Role::CandidateSettings)?;
+
+            validate_comparison_states(&manifest, &baseline, &candidate)?;
+
+            Ok(evaluate_comparison(&manifest, &baseline, &candidate))
+        }
+        Route::Help => Ok(Report::Help),
+        Route::Layer {
+            layer_file,
+            settings,
+        } => {
+            let manifest_bytes = read_file(&layer_file, Role::LayerManifest)?;
+            let settings_bytes = read_file(&settings, Role::Settings)?;
+
+            let manifest_text = decode_utf8(manifest_bytes, Role::LayerManifest)?;
+            let settings_text = decode_utf8(settings_bytes, Role::Settings)?;
+
+            let manifest_json = parse_json(&manifest_text, Role::LayerManifest)?;
+            let settings_json = parse_json(&settings_text, Role::Settings)?;
+
+            let manifest = parse_layer_manifest(&manifest_json)?;
+
+            let layer = project_fetch_layer(&settings_json, Role::Settings)?;
+
+            validate_layer_references(&manifest, &layer)?;
+
+            Ok(evaluate_layer(&manifest, &layer))
+        }
+    }
+}
+
+fn diagnostic_line(text: &str) -> String {
+    format!("{}\n", truncate_bytes(text, MAX_DETAIL_BYTES))
+}
+
+/// Drops trailing findings until the total count, rendered findings, and omitted count fit the
+/// standard-error bound, so both counts survive truncation
+pub(crate) fn render_findings(findings: &[String]) -> String {
+    let total = findings.len();
+    let mut shown = total.min(MAX_REPORTED_FINDINGS);
+
+    loop {
+        let mut rendered = diagnostic_line(&format!("{NAME}: {}", count_of(total, "finding")));
+        for finding in &findings[..shown] {
+            rendered.push_str(&diagnostic_line(&format!("  {finding}")));
+        }
+        rendered.push_str(&diagnostic_line(&format!(
+            "{NAME}: {} omitted",
+            count_of(total - shown, "finding")
+        )));
+
+        if rendered.len() <= MAX_STANDARD_ERROR_BYTES || shown == 0 {
+            return rendered;
+        }
+        shown -= 1;
+    }
+}
+
+fn write_all(writer: &mut dyn Write, text: &str) -> bool {
+    writer.write_all(text.as_bytes()).is_ok()
 }
 
 pub(crate) fn run<I>(arguments: I, stdout: &mut dyn Write, stderr: &mut dyn Write) -> u8
 where
     I: IntoIterator<Item = OsString>,
 {
-    let parsed_arguments = match parse_arguments(arguments) {
-        Ok(parsed_arguments) => parsed_arguments,
-        Err(error) => {
-            report_error(stderr, &error);
-            return STATUS_ERROR;
+    match execute(arguments) {
+        Ok(Report::Findings(findings)) => {
+            write_all(stderr, &render_findings(&findings));
+
+            STATUS_FINDINGS
         }
-    };
+        Ok(Report::Help) => write_or_fail(stdout, stderr, HELP),
+        Ok(Report::Verified(summary)) => write_or_fail(stdout, stderr, &diagnostic_line(&summary)),
+        Err(diagnostic) => {
+            write_all(stderr, &diagnostic_line(&format!("{NAME}: {diagnostic}")));
 
-    match parsed_arguments {
-        ParsedArguments::Comparison(manifest_run) => {
-            let resolver = match PathResolver::load(
-                manifest_run.graph_root.as_deref(),
-                manifest_run.artifact_root.as_deref(),
-            ) {
-                Ok(resolver) => resolver,
-                Err(error) => {
-                    report_error(stderr, &error);
-                    return STATUS_ERROR;
-                }
-            };
-
-            match evaluate_comparison(&resolver, &manifest_run.manifest) {
-                Ok(result) if result.mismatches.total_count() == 0 => {
-                    if let Err(error) = record_evidence(
-                        &resolver,
-                        &manifest_run,
-                        ResultKind::Comparison,
-                        "domfiles-zed-settings-pattern-match --comparison-file",
-                        counts_of([
-                            (
-                                "cases",
-                                result.equivalence_case_count + result.transition_case_count,
-                            ),
-                            ("baseline_patterns", result.baseline_pattern_count),
-                            ("candidate_patterns", result.candidate_pattern_count),
-                        ]),
-                    ) {
-                        report_error(stderr, &error);
-                        return STATUS_ERROR;
-                    }
-                    if let Err(error) = report_verified_comparison(stdout, &result) {
-                        report_error(stderr, &error);
-                        return STATUS_ERROR;
-                    }
-
-                    STATUS_MATCH
-                }
-                Ok(result) => {
-                    if report_comparison_mismatches(stderr, &result).is_err() {
-                        return STATUS_ERROR;
-                    }
-
-                    STATUS_NO_MATCH
-                }
-                Err(error) => {
-                    report_error(stderr, &error);
-                    STATUS_ERROR
-                }
-            }
-        }
-        ParsedArguments::Layer(manifest_run) => {
-            let resolver = match PathResolver::load(
-                manifest_run.graph_root.as_deref(),
-                manifest_run.artifact_root.as_deref(),
-            ) {
-                Ok(resolver) => resolver,
-                Err(error) => {
-                    report_error(stderr, &error);
-                    return STATUS_ERROR;
-                }
-            };
-
-            match evaluate_layer(&resolver, &manifest_run.manifest) {
-                Ok(result) if result.failures.total_count() == 0 => {
-                    if let Err(error) = record_evidence(
-                        &resolver,
-                        &manifest_run,
-                        ResultKind::LayerDecision,
-                        "domfiles-zed-settings-pattern-match --layer-file",
-                        counts_of([
-                            ("aggregate_cases", result.aggregate_count),
-                            ("configured_patterns", result.pattern_count),
-                            ("pattern_cases", result.pattern_case_count),
-                            ("settled_inputs", result.input_count),
-                        ]),
-                    ) {
-                        report_error(stderr, &error);
-                        return STATUS_ERROR;
-                    }
-                    if let Err(error) = report_verified_layer(stdout, &result) {
-                        report_error(stderr, &error);
-                        return STATUS_ERROR;
-                    }
-
-                    STATUS_MATCH
-                }
-                Ok(result) => {
-                    if report_layer_failures(stderr, &result).is_err() {
-                        return STATUS_ERROR;
-                    }
-
-                    STATUS_NO_MATCH
-                }
-                Err(error) => {
-                    report_error(stderr, &error);
-                    STATUS_ERROR
-                }
-            }
-        }
-        ParsedArguments::Help => {
-            if let Err(error) = stdout.write_all(HELP.as_bytes()) {
-                report_error(
-                    stderr,
-                    &format!("Failed to write help to standard output:\n\n{error}"),
-                );
-                return STATUS_ERROR;
-            }
-
-            STATUS_MATCH
-        }
-        ParsedArguments::Run(arguments) => match evaluate(&arguments) {
-            Ok(Evaluation::Batch(result)) if result.failures.total_count() == 0 => {
-                if let Err(error) = report_verified_cases(stdout, result.total) {
-                    report_error(stderr, &error);
-                    return STATUS_ERROR;
-                }
-
-                STATUS_MATCH
-            }
-            Ok(Evaluation::Batch(result)) => {
-                if report_batch_failures(stderr, &result).is_err() {
-                    return STATUS_ERROR;
-                }
-
-                STATUS_NO_MATCH
-            }
-            Ok(Evaluation::Single(true)) => STATUS_MATCH,
-            Ok(Evaluation::Single(false)) => STATUS_NO_MATCH,
-            Err(error) => {
-                report_error(stderr, &error);
-                STATUS_ERROR
-            }
-        },
-        ParsedArguments::Suite(manifest_run) => {
-            let resolver = match PathResolver::load(
-                manifest_run.graph_root.as_deref(),
-                manifest_run.artifact_root.as_deref(),
-            ) {
-                Ok(resolver) => resolver,
-                Err(error) => {
-                    report_error(stderr, &error);
-                    return STATUS_ERROR;
-                }
-            };
-
-            match evaluate_suite(&resolver, &manifest_run.manifest) {
-                Ok(result) if result.failures.total_count() == 0 => {
-                    if let Err(error) = record_evidence(
-                        &resolver,
-                        &manifest_run,
-                        ResultKind::MatcherSuite,
-                        "domfiles-zed-settings-pattern-match --suite-file",
-                        counts_of([
-                            ("pattern_cases", result.pattern_cases),
-                            ("decision_cases", result.decision_cases),
-                            ("patterns", result.pattern_count),
-                        ]),
-                    ) {
-                        report_error(stderr, &error);
-                        return STATUS_ERROR;
-                    }
-                    if let Err(error) = report_verified_suite(stdout, &result) {
-                        report_error(stderr, &error);
-                        return STATUS_ERROR;
-                    }
-
-                    STATUS_MATCH
-                }
-                Ok(result) => {
-                    if report_suite_failures(stderr, &result).is_err() {
-                        return STATUS_ERROR;
-                    }
-
-                    STATUS_NO_MATCH
-                }
-                Err(error) => {
-                    report_error(stderr, &error);
-                    STATUS_ERROR
-                }
-            }
+            STATUS_ERROR
         }
     }
+}
+
+fn write_or_fail(stdout: &mut dyn Write, stderr: &mut dyn Write, text: &str) -> u8 {
+    if write_all(stdout, text) {
+        return STATUS_VERIFIED;
+    }
+    write_all(
+        stderr,
+        &diagnostic_line(&format!("{NAME}: Failed to write to standard output")),
+    );
+
+    STATUS_ERROR
 }
 
 #[cfg(not(test))]

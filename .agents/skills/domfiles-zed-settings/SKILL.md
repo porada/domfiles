@@ -1,15 +1,15 @@
 ---
 name: domfiles-zed-settings
-description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json` plus project-authored policy and skill scripts for those settings. Use this skill whenever the resolved scope includes either settings file—even when the user did not name it—including agent permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal rules, tool or sandbox permissions, unexpected permission outcomes, or worktree permissions. Do not use it for other Zed files alone.
+description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json` plus project-authored policy and skill scripts for those settings. Use this skill whenever the resolved scope includes either settings file—even when the user did not name it—including agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions. Do not use it for other Zed files alone.
 metadata:
     internal: true
 ---
 
 # Zed settings
 
-Use this skill as the entrypoint and canonical owner of settings-wide Zed policy and workflow. Do not copy the current command, domain, permission-pattern, or settings inventories into agent documentation.
+Use this skill as the entrypoint and canonical owner of settings-wide Zed policy and workflow. Do not copy the current domain, permission-pattern, or settings inventories into agent documentation.
 
-When agent repository permissions, agent tool or sandbox permissions, fetch or network allowances, native path-tool permissions, terminal rules, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/permissions.md) before investigation or planning. Read only the branch references it selects.
+When agent tool or sandbox permissions, fetch or network allowances, native path or terminal permission behavior, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/permissions.md) before investigation or planning. Read only the branch references it selects.
 
 ## Apply the general policy
 
@@ -24,7 +24,7 @@ When agent repository permissions, agent tool or sandbox permissions, fetch or n
 
 - For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object. Use the change-validation workflow below.
 - For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
-- During commit review, do not analyze or validate permission patterns in `.config/zed/settings.json` unless the user explicitly includes that analysis. Review surrounding non-pattern changes normally. If evaluating the patterns is necessary to complete the review, stop before that analysis and ask for permission.
+- During commit review, do not analyze or validate fetch permission patterns in `.config/zed/settings.json` unless the user explicitly includes that analysis. Review surrounding non-pattern changes normally. If evaluating the patterns is necessary to complete the review, stop before that analysis and ask for permission.
 - For a standalone review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 

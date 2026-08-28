@@ -6,47 +6,59 @@ Do not read every permission reference by default. Select only the branches requ
 
 ## Apply the shared permission policy
 
-- Treat Zed agent permissions as layered security boundaries.
-- Treat configured Zed terminal allowances as a prompt-friction inventory of verified command forms, not a mirror of agent policy or task authorization. Agent policy may intentionally be stricter and change independently.
-- For audits, do not report policy-to-allowance differences or align settings solely because documentation prohibits an automatically allowed form. Report a permission issue only when a pattern misstates verified command behavior, violates an explicit permission-layer invariant, or an applicable policy expressly requires `allow`, `confirm`, or `deny` enforcement.
 - Preserve `agent.tool_permissions.default` as `allow`.
+- Keep `delete_path`, `move_path`, and terminal free of repository-configured overrides unless the task explicitly changes the repository’s [permission model](../../../PROJECT.md#zed-agent-permission-model).
+- Treat the always-loaded global agent policy as the canonical owner of authentication handling, command intent, security-boundary restrictions, and task authorization. Do not encode those policies as terminal command patterns.
+- Treat configured tool permissions and Zed’s operating-system sandbox as independent layers. A tool-permission `allow` does not grant a filesystem, Git metadata, or network effect outside the sandbox.
+- Preserve fetch as the only tool with a separate repository-configured prompt model.
 
 ## Select a permission branch
 
-- For terminal commands and their permission patterns, read [Terminal permissions](terminal-permissions.md).
-- For Git commands or permission patterns, read both [Terminal permissions](terminal-permissions.md) and [Git permissions](git-permissions.md). The Git branch partitions command ownership within the terminal policy’s `git` executable family.
-- For fetch patterns, domains, URLs, and sandbox hosts, read [Fetch and network permissions](fetch-permissions.md).
-- For agent-directory-scoped terminal allowances, agent worktree permissions, or disposable fixture repository permissions, read [Agent repository permissions](agent-repository-permissions.md).
-- For pattern inventory, owner auditing, pattern compilation or matching, Zed regex compatibility, permission-decision reconstruction, or pattern-family comparison, read the [Permission evaluator](permission-evaluator.md).
-- For building, sealing, and promoting a permission change, read the [Permission candidate](permission-candidate.md) as well. Every read-only workflow can stop at the evaluator.
+- For fetch patterns, domains, URLs, redirects, or sandbox hosts, read [Fetch and network permissions](fetch-permissions.md).
+- For fetch pattern compilation, configured decisions, before-and-after comparison, or Zed regex compatibility, read the [Permission evaluator](permission-evaluator.md).
 
 ## Extend the parent workflow
 
 Apply the shared policy and every selected branch throughout the workflow chosen in the parent skill, with these additions:
 
-- For a permission-pattern change, follow [Build and promote a permission candidate](permission-candidate.md#build-and-promote-a-permission-candidate) instead of modifying live settings directly.
 - For an explicitly requested domain or URL allowance, follow [Translate approved domains and URLs](fetch-permissions.md#translate-approved-domains-and-urls) before any network access to the requested destination.
-- For a standalone documentation audit that includes the Zed permission regex compatibility rationale, follow [Audit Zed regex compatibility](permission-evaluator.md#audit-zed-regex-compatibility) read-only. Enter that reference’s repair steps only when the user explicitly authorizes a compatibility repair.
+- For a fetch pattern or fetch default change, [prepare a fetch settings candidate](#prepare-a-fetch-settings-candidate) instead of editing canonical settings directly.
+- For a standalone documentation audit that includes the Zed permission regex compatibility rationale, follow [Audit Zed regex compatibility](permission-evaluator.md#audit-zed-regex-compatibility) read-only. Treat any requested dependency change as a separate task under the global “Dependencies” policy.
+- For an unexpected native path or terminal permission outcome, first establish that no repository-configured override participates. Then distinguish Zed’s built-in tool behavior, the effective global default, task authorization, and the applicable sandbox decision.
 
-For every read-only workflow, treat terminal command candidates as inert strings and do not execute them. Use permission-pattern matching as one input to the complete effective-permission evaluation. Limit shell execution to the bounded, non-mutating inspection and validation utilities required by the selected branches.
+For every read-only workflow, treat configured regexes and proposed cases as inert strings. Do not make a live request merely to validate a permission setting.
 
 ## Plan a permission change
 
-1. Within the settings object selected by the parent workflow, identify the smallest permission object or command-owner group that owns the change.
-2. Enumerate the required syntactic variants before writing a regex.
+1. Identify the smallest permission or sandbox-host object that owns the change.
+2. For a fetch pattern or fetch default change, enumerate the required URL cases and expected configured decisions, including one deciding-source witness for the default and every nonempty bucket in both states. If a source is fully shadowed and no witness can be identified, report that the ordinary change workflow does not support the configuration and stop before creating a candidate. Do not change unrelated patterns merely to make a source reachable.
+
+## Prepare a fetch settings candidate
+
+For every fetch pattern or fetch default change:
+
+1. Check the evaluator’s [target-contract gate](permission-evaluator.md#apply-the-matcher-contract). While the gate remains closed, stop before creating a candidate or mutating canonical settings.
+2. In the task-specific directory selected through the global “Temporary files” policy, copy the exact current `.config/zed/settings.json` into separate immutable baseline and editable candidate files.
+3. Construct the baseline configured-layer manifest from the planned corpus, then validate the baseline’s [configured fetch layer](permission-evaluator.md#validate-a-configured-fetch-layer). Any decision-source, pattern, or settings finding makes the ordinary candidate workflow unavailable. Stop before candidate mutation, report the invalid baseline, and require a separately authorized repair plan.
+4. Apply the authorized change only to the candidate, then construct its configured-layer manifest and the comparison manifest from the planned cases.
+5. Validate the candidate’s [configured fetch layer](permission-evaluator.md#validate-a-configured-fetch-layer) and [compare it with the baseline](permission-evaluator.md#compare-fetch-permission-states).
+6. Immediately before promotion, verify that canonical settings remain byte-identical to the baseline. If they differ, stop and report the concurrent change rather than overwriting it.
+7. Promote the candidate contents to the canonical path while preserving its file type and mode. Verify that canonical settings are byte-identical to the candidate, then resume the parent change-validation workflow.
 
 ## Validate a permission change
 
-At the branch-specific step of the parent change-validation workflow, complete every applicable [permission evaluator](permission-evaluator.md) workflow and resolve [effective permission behavior](permission-evaluator.md#evaluate-permission-behavior) for each representative operation. Verify every shared and selected-branch invariant, then follow [Build and promote a permission candidate](permission-candidate.md#build-and-promote-a-permission-candidate) through its evidence, sealing, rehearsal, approval, promotion or refresh, and post-promotion checks. Resume the parent workflow against the promoted settings files.
+At the branch-specific step of the parent change-validation workflow:
+
+- For a fetch pattern or fetch default change, require the completed candidate workflow’s baseline-to-candidate and configured-layer results, then verify that canonical settings remain byte-identical to the promoted candidate.
+- For a `network_hosts`-only change, verify the approved exact and wildcard coverage plus complete-array ordering without invoking the pattern matcher.
+- Resolve fetch-tool and sandbox-host behavior as independent layers, then resume the parent workflow against the edited settings file.
 
 ## Validate a permission audit, review, or diagnosis
 
-At the branch-specific step of the parent read-only validation workflow, apply the relevant [permission evaluator](permission-evaluator.md) workflows to the in-scope patterns and complete owner groups, then resolve [effective permission behavior](permission-evaluator.md#evaluate-permission-behavior) for each representative operation. Compare baseline and candidate behavior only when the scope includes two settings states or a proposed transformation.
+Apply the relevant read-only branch to the in-scope fetch patterns or sandbox hosts. Use configured pattern matching as one input to the effective-permission analysis, not as evidence of network access or runtime behavior.
 
 ## Extend the report
 
-For a permission change, state which forms are now allowed, which forms require confirmation, which forms are denied, and the relevant unmatched or default behavior. Distinguish intentionally stricter requested forms and any material precedence override without repeating unchanged inventories.
+For a fetch permission change, state the direct initial URLs that become prompt-free, the URLs that remain confirmable at the fetch layer, and the independently approved sandbox hosts. Do not describe either layer as unconditional network access.
 
-For a permission diagnosis, state the observed result, evaluated inputs, matching precedence, root cause, and corrective action without applying it.
-
-When one operation crosses terminal, fetch, or sandbox network boundaries, evaluate and state each applicable layer’s result independently. Do not describe one layer’s allowance as unconditional execution or imply that a terminal allowance grants network access.
+For a permission diagnosis, state the observed result, participating settings layer, configured decision, sandbox decision, root cause, and corrective action without applying it.

@@ -124,9 +124,9 @@ The [release-note bullet-marker policy](../skills/domfiles-release-notes/SKILL.m
 
 At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository-root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
 
-The public `skills/human-facing-writing` source does not receive Zed’s agent-specific classification. Project policy protects it separately because changes to its writing contract can affect every public skill composed through it.
+The public `skills/human-facing-writing` source does not receive Zed’s agent-specific classification. Its staging boundary applies to every agent because changes to its writing contract can affect every public skill composed through it.
 
-The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-staging.md) gives both protected source types the same staging and reviewed-promotion boundary when native file tools expose the target repository as a current project root. Outside those roots, scoped terminal write approval is the operative boundary, so the policy requires guarded direct mutation without staged copies.
+The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-staging.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions. Registered `.agent-<name>` worktrees and task staging roots are peer uses of the shared namespace, which rules out nested staging roots.
 
 ### Repository harmonization
 
