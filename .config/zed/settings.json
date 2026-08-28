@@ -305,7 +305,6 @@
 					]
 				},
 				"terminal": {
-					"default": "confirm",
 					"always_allow": [
 						{
 							"pattern": "^(?:(?:MANPAGER|PAGER)=cat )*\\[ (?:--help|--version|-h|-help|-v|-version)$",
