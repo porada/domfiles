@@ -10,7 +10,7 @@ export default defineConfig({
 		{
 			files: [
 				/* prettier-ignore */
-				'skills/domfiles-posix-shell-scripting/references/*.md',
+				'skills/posix-shell-scripting/references/*.md',
 			],
 			options: {
 				tabWidth: 2,
