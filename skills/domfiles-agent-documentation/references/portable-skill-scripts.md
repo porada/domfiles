@@ -64,7 +64,7 @@ A query that successfully returns zero records is status `0`. Status `1` represe
 ## Preserve agent and target boundaries
 
 - Treat caller sandbox, permission, access, approval, mutation, and submission boundaries as part of the operation’s preconditions rather than obstacles to bypass.
-- Do not turn an operation requiring native confirmation or additional access into an indirect terminal mutation. A script may prepare or validate authorized external staging state, then must stop and report the native or user-authorized action still required.
+- Do not turn an operation requiring native confirmation or additional access into an indirect script or terminal mutation. A script may prepare or validate authorized external staging state, then must stop and report the native or user-authorized action still required.
 - On an access failure, report the selected target, attempted operation, and required boundary crossing. Do not copy the target, follow an alternate path, or reformulate the invocation merely to evade the boundary.
 - Do not infer mutation authority from target existence, writable permissions, an ignored destination, or a previous successful invocation.
 

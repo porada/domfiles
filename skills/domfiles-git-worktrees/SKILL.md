@@ -1,13 +1,13 @@
 ---
 name: git-worktrees
-description: Apply agent worktree isolation policy for Git repositories. Use this skill before deciding whether a task warrants an isolated worktree, before creating one or its paired branch, before running Git commands inside a registered worktree, before moving or removing either, and before materializing a historical revision. Covers isolation criteria, the paired worktree and branch namespaces, command location, and the destructive-operation gate. Do not use it for ordinary work in the current checkout, for task-specific temporary directories that are not worktrees, or for branch operations that involve no worktree.
+description: Apply agent worktree isolation policy for Git repositories. Use this skill before deciding whether a task warrants an isolated worktree, before creating one or its paired branch, before administering an existing worktree or its paired branch, before moving or removing either, and before materializing a historical revision. Covers isolation criteria, paired namespaces, repository targeting for administration, and the destructive-operation gate. Do not use it for ordinary Git commands in an existing worktree, ordinary work in the current checkout, task-specific temporary directories that are not worktrees, or branch operations that involve no worktree.
 metadata:
     internal: true
 ---
 
 # Git worktrees
 
-The global “Temporary files” policy owns the `.agent-<name>` namespace that worktrees share with ordinary task directories, and the global “Concurrent work” rule owns preserving existing changes and avoiding another agent’s write scope. This skill owns deciding, creating, operating, and dismantling isolation.
+The global “Temporary files” policy owns the `.agent-<name>` namespace that worktrees share with ordinary task directories, and the global “Concurrent work” rule owns preserving existing changes and avoiding another agent’s write scope. This skill owns deciding, creating, administering, and dismantling isolation.
 
 ## Decide whether to isolate
 
@@ -23,9 +23,9 @@ The global “Temporary files” policy owns the `.agent-<name>` namespace that 
 
 - **Pairing:** When a worktree is required, use a unique, filesystem-safe `<name>` containing a task slug and short unique suffix without path separators. Create it with `git worktree add -b agent/<name> .agent-<name> <start-point>`. Do not use `--detach`. Keep every worktree paired with its `agent/<name>` branch, and move the worktree and rename the branch together when changing `<name>`.
 
-## Operate inside a worktree
+## Administer a worktree
 
-- **Command location:** Apply the global “Temporary files” policy’s “Git command location” rule to every Git command intended to operate inside a registered `.agent-<name>` worktree. Verify registration with `git --no-pager worktree list --porcelain`. Do not treat an ordinary task-specific `.agent-<name>` directory as a worktree. Run worktree-administration commands from the primary checkout unless the command requires another location.
+- **Repository targeting:** When a worktree-administration decision depends on registration, verify it with `git --no-pager worktree list --porcelain`. Do not treat an ordinary task-specific `.agent-<name>` directory as a worktree. Run worktree-administration commands from the primary checkout unless the command requires another location.
 
 ## Dismantle a worktree
 

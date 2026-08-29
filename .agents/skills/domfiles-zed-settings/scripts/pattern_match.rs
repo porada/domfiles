@@ -8,12 +8,30 @@ use std::{
     path::{Path, PathBuf},
 };
 
+const BUCKET_SHAPE: Shape = Shape::Array(&Shape::Object(&[
+    ("case_sensitive", &LEAF_SHAPE),
+    ("pattern", &LEAF_SHAPE),
+]));
 const COMPARISON_CASE_FIELDS: [&str; 3] = ["baseline", "candidate", "input"];
 const COMPARISON_FIELDS: [&str; 1] = ["cases"];
+const COMPARISON_SHAPE: Shape = Shape::Object(&[(
+    "cases",
+    &Shape::Array(&Shape::Object(&[
+        ("baseline", &STATE_SHAPE),
+        ("candidate", &STATE_SHAPE),
+        ("input", &LEAF_SHAPE),
+    ])),
+)]);
 const DECISION_CASE_FIELDS: [&str; 2] = ["expected", "input"];
 const FETCH_FIELDS: [&str; 4] = ["always_allow", "always_confirm", "always_deny", "default"];
 /// Ordered segments from a settings root to the fetch permission object
 const FETCH_PATH: [&str; 4] = ["agent", "tool_permissions", "tools", "fetch"];
+const FETCH_SHAPE: Shape = Shape::Object(&[
+    ("always_allow", &BUCKET_SHAPE),
+    ("always_confirm", &BUCKET_SHAPE),
+    ("always_deny", &BUCKET_SHAPE),
+    ("default", &LEAF_SHAPE),
+]);
 pub(crate) const HELP: &str = concat!(
     "Usage:\n",
     "  pattern-match --baseline-settings <path> --candidate-settings <path> --comparison-file <path>\n",
@@ -36,17 +54,18 @@ pub(crate) const HELP: &str = concat!(
     "  Fetch object: {\"always_allow\":[<pattern>,…],\"always_confirm\":[<pattern>,…],\"always_deny\":[<pattern>,…],\"default\":\"allow|confirm|deny\"}\n",
     "  Pattern: {\"case_sensitive\":true|false,\"pattern\":\"<regex>\"}\n",
     "  `default` is required. Each bucket array is optional, and an absent array is empty\n",
-    "  A pattern over 1,000 Unicode scalars is a finding and is never compiled. Every remaining pattern compiles once with its configured case setting\n",
+    "  An empty pattern or a pattern over 1,000 Unicode scalars is a finding and is never compiled. Every remaining pattern compiles once with its configured case setting\n",
     "\n",
     "Strict UTF-8 JSON layer manifest:\n",
     "  Root: {\"decision_cases\":[<decision-case>,…],\"pattern_cases\":[<pattern-case>,…]}\n",
     "  Decision case: {\"expected\":<state>,\"input\":\"<url>\"}\n",
     "  Pattern case: {\"bucket\":\"always_allow|always_confirm|always_deny\",\"expected_match\":true|false,\"index\":0,\"input\":\"<url>\"}\n",
     "  State: {\"always_allow\":true|false,\"always_confirm\":true|false,\"always_deny\":true|false,\"decision\":\"allow|confirm|deny\"}\n",
-    "  Both arrays are required and nonempty. Unknown fields are rejected, and every input is single-line inert text\n",
+    "  Both arrays are required. `decision_cases` is nonempty, and `pattern_cases` is empty only when the settings configure no pattern\n",
+    "  Unknown fields are rejected, and every input is single-line inert text\n",
     "  Every configured pattern requires one matching and one nonmatching pattern case\n",
     "  Every nonempty bucket and the configured default require one decision case that identifies them as the deciding source\n",
-    "  Each declared state must follow deny, confirm, allow, then default precedence\n",
+    "  Each declared state must follow `deny`, `confirm`, `allow`, then `default` precedence\n",
     "\n",
     "Strict UTF-8 JSON comparison manifest:\n",
     "  Root: {\"cases\":[<comparison-case>,…]}\n",
@@ -56,10 +75,12 @@ pub(crate) const HELP: &str = concat!(
     "\n",
     "Output:\n",
     "  A verified run writes one summary of the evaluated counts to standard output\n",
-    "  Findings write the total count, at most the first 100 findings, and the omitted count to standard error\n",
+    "  Findings write the exact total, at most the first 100 finding details of the complete invocation, and the omitted count to standard error\n",
     "  Contract-invalid input writes one diagnostic to standard error\n",
+    "  A required write that fails exits with status 2, and its diagnostic appears only while standard error still accepts output\n",
     "  Findings and diagnostics identify files by role, manifest cases by array and zero-based index, and settings patterns by bucket and zero-based index\n",
     "  They never echo a path, case input, manifest value, pattern, or settings value\n",
+    "  A duplicate key names its containing object through declared field, array, and index segments alone\n",
     "  Each finding or diagnostic is limited to 512 UTF-8 bytes and complete standard error to 64 KiB\n",
     "\n",
     "Limitations:\n",
@@ -70,13 +91,33 @@ pub(crate) const HELP: &str = concat!(
     "Exit statuses:\n",
     "  0  Every configured pattern and declared expectation passed, or help displayed\n",
     "  1  A configured pattern or a declared expectation failed\n",
-    "  2  Contract-invalid input, invalid arguments, malformed input, or an unreadable file\n",
+    "  2  Contract-invalid input, invalid arguments, malformed input, a failed required write, or an unreadable file\n",
 );
 const LAYER_FIELDS: [&str; 2] = ["decision_cases", "pattern_cases"];
+const LAYER_SHAPE: Shape = Shape::Object(&[
+    (
+        "decision_cases",
+        &Shape::Array(&Shape::Object(&[
+            ("expected", &STATE_SHAPE),
+            ("input", &LEAF_SHAPE),
+        ])),
+    ),
+    (
+        "pattern_cases",
+        &Shape::Array(&Shape::Object(&[
+            ("bucket", &LEAF_SHAPE),
+            ("expected_match", &LEAF_SHAPE),
+            ("index", &LEAF_SHAPE),
+            ("input", &LEAF_SHAPE),
+        ])),
+    ),
+]);
+const LEAF_SHAPE: Shape = Shape::Leaf;
 /// Every Unicode scalar that ends a line, so a manifest input stays one reviewable line under any
 /// reader that treats more than carriage return and line feed as a break
-const LINE_BREAKS: [char; 7] = [
-    '\u{a}', '\u{b}', '\u{c}', '\u{d}', '\u{85}', '\u{2028}', '\u{2029}',
+pub(crate) const LINE_BREAKS: [char; 10] = [
+    '\u{a}', '\u{b}', '\u{c}', '\u{d}', '\u{1c}', '\u{1d}', '\u{1e}', '\u{85}', '\u{2028}',
+    '\u{2029}',
 ];
 const MAX_DETAIL_BYTES: usize = 512;
 const MAX_PATTERN_SCALARS: usize = 1_000;
@@ -85,7 +126,14 @@ const MAX_STANDARD_ERROR_BYTES: usize = 64 * 1024;
 const NAME: &str = "pattern-match";
 const PATTERN_CASE_FIELDS: [&str; 4] = ["bucket", "expected_match", "index", "input"];
 const PATTERN_FIELDS: [&str; 2] = ["case_sensitive", "pattern"];
+const SETTINGS_SHAPE: Shape = Shape::Path(&FETCH_PATH, &FETCH_SHAPE);
 const STATE_FIELDS: [&str; 4] = ["always_allow", "always_confirm", "always_deny", "decision"];
+const STATE_SHAPE: Shape = Shape::Object(&[
+    ("always_allow", &LEAF_SHAPE),
+    ("always_confirm", &LEAF_SHAPE),
+    ("always_deny", &LEAF_SHAPE),
+    ("decision", &LEAF_SHAPE),
+]);
 const STATUS_ERROR: u8 = 2;
 const STATUS_FINDINGS: u8 = 1;
 const STATUS_VERIFIED: u8 = 0;
@@ -205,6 +253,16 @@ impl Role {
             Self::Settings => "settings",
         }
     }
+
+    /// The schema this role’s document declares, which bounds every duplicate-key location to
+    /// declared names
+    fn shape(self) -> Shape {
+        match self {
+            Self::BaselineSettings | Self::CandidateSettings | Self::Settings => SETTINGS_SHAPE,
+            Self::ComparisonManifest => COMPARISON_SHAPE,
+            Self::LayerManifest => LAYER_SHAPE,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -286,8 +344,39 @@ pub(crate) enum Route {
     },
 }
 
+/// Counts every finding while retaining only the details that can be reported, so an input with
+/// many failures grows the exact total instead of the retained set
+#[derive(Debug, Default)]
+pub(crate) struct Findings {
+    details: Vec<String>,
+    total: usize,
+}
+
+impl Findings {
+    pub(crate) fn details(&self) -> &[String] {
+        &self.details
+    }
+
+    fn is_empty(&self) -> bool {
+        self.total == 0
+    }
+
+    /// Builds a detail only while the retained set has room, so a finding past the bound costs one
+    /// count rather than a materialized body
+    pub(crate) fn push(&mut self, detail: impl FnOnce() -> String) {
+        self.total += 1;
+        if self.details.len() < MAX_REPORTED_FINDINGS {
+            self.details.push(detail());
+        }
+    }
+
+    pub(crate) fn total(&self) -> usize {
+        self.total
+    }
+}
+
 enum Report {
-    Findings(Vec<String>),
+    Findings(Findings),
     Help,
     Verified(String),
 }
@@ -397,6 +486,77 @@ impl<'de> de::Visitor<'de> for JsonVisitor {
     }
 }
 
+/// The structure one document role declares. A duplicate-key location descends this shape so every
+/// rendered segment is a declared name rather than a key the inspected document supplies
+#[derive(Clone, Copy, Debug)]
+enum Shape {
+    Array(&'static Shape),
+    /// A declared value the schema does not descend into
+    Leaf,
+    Object(&'static [(&'static str, &'static Shape)]),
+    /// A chain of single-field objects ending at the target shape, so one ordered path constant
+    /// serves both projection and location
+    Path(&'static [&'static str], &'static Shape),
+}
+
+#[derive(Clone, Copy, Debug)]
+enum Segment {
+    Field(&'static str),
+    Index(usize),
+}
+
+/// Locates the object containing a duplicate key through declared field names, array names, and
+/// zero-based indexes alone
+#[derive(Debug)]
+struct Location {
+    /// Whether the schema declares every step from the document root, so the segments reach the
+    /// containing object itself rather than its nearest declared ancestor
+    declared: bool,
+    segments: Vec<Segment>,
+}
+
+impl Location {
+    /// The object being visited, before its ancestors prepend the segments that reach it
+    fn here() -> Self {
+        Self {
+            declared: true,
+            segments: Vec::new(),
+        }
+    }
+
+    /// Prepends the segment reaching this location from its parent. An undeclared step drops every
+    /// segment below it, so no location names a key the schema does not declare
+    fn below(mut self, segment: Option<Segment>) -> Self {
+        let Some(segment) = segment else {
+            return Self {
+                declared: false,
+                segments: Vec::new(),
+            };
+        };
+        self.segments.insert(0, segment);
+
+        self
+    }
+
+    fn render(&self) -> String {
+        let mut rendered = String::new();
+
+        for segment in &self.segments {
+            match segment {
+                Segment::Field(name) => {
+                    if !rendered.is_empty() {
+                        rendered.push('.');
+                    }
+                    rendered.push_str(name);
+                }
+                Segment::Index(index) => rendered.push_str(&format!("[{index}]")),
+            }
+        }
+
+        rendered
+    }
+}
+
 pub(crate) struct FetchPattern {
     case_sensitive: bool,
     pattern: String,
@@ -492,16 +652,83 @@ fn field<'a>(entries: &'a [(String, Json)], key: &str) -> Option<&'a Json> {
         .map(|(_, value)| value)
 }
 
-fn has_duplicate_key(value: &Json) -> bool {
+/// Resolves the declared name and child shape of one object key, so a location segment can never
+/// carry a name the schema does not declare at that position
+fn declared_field(shape: Shape, key: &str) -> Option<(&'static str, Shape)> {
+    match shape {
+        Shape::Object(fields) => fields
+            .iter()
+            .find(|(name, _)| *name == key)
+            .map(|(name, child)| (*name, **child)),
+        Shape::Path(segments, target) => match segments {
+            [name, rest @ ..] if *name == key => Some((
+                *name,
+                if rest.is_empty() {
+                    *target
+                } else {
+                    Shape::Path(rest, target)
+                },
+            )),
+            _ => None,
+        },
+        Shape::Array(_) | Shape::Leaf => None,
+    }
+}
+
+fn declared_entry(shape: Shape) -> Option<Shape> {
+    match shape {
+        Shape::Array(entry) => Some(*entry),
+        Shape::Leaf | Shape::Object(_) | Shape::Path(..) => None,
+    }
+}
+
+/// Finds the first duplicate object key in document order, checking each object’s own keys before
+/// descending into its entries, so the reported location is deterministic
+fn duplicate_key_location(value: &Json, shape: Option<Shape>) -> Option<Location> {
     match value {
-        Json::Array(entries) => entries.iter().any(has_duplicate_key),
+        Json::Array(entries) => {
+            let entry_shape = shape.and_then(declared_entry);
+
+            entries.iter().enumerate().find_map(|(index, entry)| {
+                let found = duplicate_key_location(entry, entry_shape)?;
+
+                Some(found.below(entry_shape.map(|_| Segment::Index(index))))
+            })
+        }
         Json::Object(entries) => {
             let mut seen = BTreeSet::new();
+            if entries.iter().any(|(key, _)| !seen.insert(key.as_str())) {
+                return Some(Location::here());
+            }
 
-            entries.iter().any(|(key, _)| !seen.insert(key.as_str()))
-                || entries.iter().any(|(_, entry)| has_duplicate_key(entry))
+            entries.iter().find_map(|(key, entry)| {
+                let declared = shape.and_then(|shape| declared_field(shape, key));
+                let found = duplicate_key_location(entry, declared.map(|(_, child)| child))?;
+
+                Some(found.below(declared.map(|(name, _)| Segment::Field(name))))
+            })
         }
-        _ => false,
+        _ => None,
+    }
+}
+
+/// Reports where a duplicate key sits without naming it, because the key itself, its object’s
+/// values, and any undeclared ancestor name could reproduce caller-selected content
+fn duplicate_key_failure(role: Role, location: &Location) -> String {
+    let label = role.label();
+    let rendered = location.render();
+
+    match (location.declared, rendered.is_empty()) {
+        (true, true) => format!("The {label} JSON root contains a duplicate object key"),
+        (true, false) => {
+            format!("The {label} JSON contains a duplicate object key in `{rendered}`")
+        }
+        (false, true) => format!(
+            "The {label} JSON contains a duplicate object key in an undeclared object below its root"
+        ),
+        (false, false) => format!(
+            "The {label} JSON contains a duplicate object key in an undeclared object below `{rendered}`"
+        ),
     }
 }
 
@@ -738,11 +965,8 @@ fn json_failure(error: &serde_json::Error, role: Role) -> String {
 
 pub(crate) fn parse_json(text: &str, role: Role) -> Result<Json, String> {
     let document: Json = serde_json::from_str(text).map_err(|error| json_failure(&error, role))?;
-    if has_duplicate_key(&document) {
-        return Err(format!(
-            "The {} JSON contains a duplicate object key",
-            role.label()
-        ));
+    if let Some(location) = duplicate_key_location(&document, Some(role.shape())) {
+        return Err(duplicate_key_failure(role, &location));
     }
 
     Ok(document)
@@ -782,8 +1006,19 @@ fn require_array<'a>(
     subject: &str,
 ) -> Result<&'a [Json], String> {
     match field(entries, key) {
-        Some(Json::Array(values)) if !values.is_empty() => Ok(values),
-        _ => Err(format!("The {subject} requires a nonempty `{key}` array")),
+        Some(Json::Array(values)) => Ok(values),
+        _ => Err(format!("The {subject} requires a `{key}` array")),
+    }
+}
+
+fn require_nonempty_array<'a>(
+    entries: &'a [(String, Json)],
+    key: &str,
+    subject: &str,
+) -> Result<&'a [Json], String> {
+    match require_array(entries, key, subject)? {
+        [] => Err(format!("The {subject} requires a nonempty `{key}` array")),
+        values => Ok(values),
     }
 }
 
@@ -926,7 +1161,7 @@ fn parse_layer_manifest(document: &Json) -> Result<LayerManifest, String> {
     reject_unknown_fields(root, &LAYER_FIELDS, &format!("{label} root"))?;
 
     let mut decision_cases = Vec::new();
-    for (index, value) in require_array(root, "decision_cases", label)?
+    for (index, value) in require_nonempty_array(root, "decision_cases", label)?
         .iter()
         .enumerate()
     {
@@ -941,6 +1176,8 @@ fn parse_layer_manifest(document: &Json) -> Result<LayerManifest, String> {
         });
     }
 
+    // An empty `pattern_cases` array is structurally valid because its coverage depends on the
+    // configured patterns, which the documented phase order resolves after settings projection
     let mut pattern_cases = Vec::new();
     for (index, value) in require_array(root, "pattern_cases", label)?
         .iter()
@@ -969,7 +1206,10 @@ fn parse_comparison_manifest(document: &Json) -> Result<ComparisonManifest, Stri
     reject_unknown_fields(root, &COMPARISON_FIELDS, &format!("{label} root"))?;
 
     let mut cases = Vec::new();
-    for (index, value) in require_array(root, "cases", label)?.iter().enumerate() {
+    for (index, value) in require_nonempty_array(root, "cases", label)?
+        .iter()
+        .enumerate()
+    {
         let subject = format!("{label} `cases[{index}]`");
         let entries = require_object(value, &subject)?;
         reject_unknown_fields(entries, &COMPARISON_CASE_FIELDS, &subject)?;
@@ -1007,7 +1247,7 @@ fn validate_layer_references(
     for (index, case) in manifest.decision_cases.iter().enumerate() {
         if !case.expected.follows_precedence(settings.default) {
             return Err(format!(
-                "The {label} `decision_cases[{index}]` expected state declares a decision that does not follow deny, confirm, allow, then default precedence"
+                "The {label} `decision_cases[{index}]` expected state declares a decision that does not follow `deny`, `confirm`, `allow`, then `default` precedence"
             ));
         }
     }
@@ -1079,7 +1319,7 @@ fn validate_comparison_states(
         ] {
             if !state.follows_precedence(default) {
                 return Err(format!(
-                    "The {label} `cases[{index}]` {side} state declares a decision that does not follow deny, confirm, allow, then default precedence"
+                    "The {label} `cases[{index}]` `{side}` state declares a decision that does not follow `deny`, `confirm`, `allow`, then `default` precedence"
                 ));
             }
         }
@@ -1097,24 +1337,35 @@ fn compilation_failure(error: &regex::Error) -> String {
     }
 }
 
-/// Compiles each configured pattern exactly once, in settings-input order. A pattern over the
-/// reviewability bound is never compiled, so a rejected layer reports every configuration finding
-/// instead of a compiled set whose indexes no longer align with the settings arrays
+/// Compiles each configured pattern exactly once, in settings-input order, recording every
+/// configuration finding in the caller’s budget. An empty pattern and a pattern over the
+/// reviewability bound never reach the regex builder, so a rejected layer reports every
+/// configuration finding instead of a compiled set whose indexes no longer align with the settings
+/// arrays. A layer that contributes a finding compiles to `None`, because its remaining patterns
+/// cannot answer an expectation
 pub(crate) fn compile_fetch_layer(
     layer: &FetchLayer,
     role: Role,
-) -> Result<CompiledLayer, Vec<String>> {
+    findings: &mut Findings,
+) -> Option<CompiledLayer> {
     let label = role.label();
     let mut buckets: [Vec<Regex>; 3] = [Vec::new(), Vec::new(), Vec::new()];
-    let mut findings = Vec::new();
+    let counted = findings.total();
 
     for bucket in Bucket::ALL {
         for (index, pattern) in layer.patterns(bucket).iter().enumerate() {
-            let subject = format!("{label} `{}[{index}]` pattern", bucket.label());
+            let subject = || format!("{label} `{}[{index}]` pattern", bucket.label());
+            if pattern.pattern.is_empty() {
+                findings.push(|| format!("The {} is empty", subject()));
+                continue;
+            }
             if pattern.pattern.chars().count() > MAX_PATTERN_SCALARS {
-                findings.push(format!(
-                    "The {subject} exceeds the 1,000-scalar reviewability bound"
-                ));
+                findings.push(|| {
+                    format!(
+                        "The {} exceeds the 1,000-scalar reviewability bound",
+                        subject()
+                    )
+                });
                 continue;
             }
             match RegexBuilder::new(&pattern.pattern)
@@ -1123,46 +1374,58 @@ pub(crate) fn compile_fetch_layer(
             {
                 Ok(regex) => buckets[bucket.index()].push(regex),
                 Err(error) => {
-                    findings.push(format!("The {subject} {}", compilation_failure(&error)));
+                    findings.push(|| format!("The {} {}", subject(), compilation_failure(&error)));
                 }
             }
         }
     }
 
-    if findings.is_empty() {
-        Ok(CompiledLayer {
-            buckets,
-            default: layer.default,
-        })
-    } else {
-        Err(findings)
-    }
+    (findings.total() == counted).then_some(CompiledLayer {
+        buckets,
+        default: layer.default,
+    })
+}
+
+/// Compiles both comparison layers against one retained-detail budget, so baseline findings consume
+/// it before candidate findings and no later finding body is built
+pub(crate) fn compile_comparison_layers(
+    baseline: &FetchLayer,
+    candidate: &FetchLayer,
+    findings: &mut Findings,
+) -> Option<(CompiledLayer, CompiledLayer)> {
+    let compiled_baseline = compile_fetch_layer(baseline, Role::BaselineSettings, findings);
+    let compiled_candidate = compile_fetch_layer(candidate, Role::CandidateSettings, findings);
+
+    compiled_baseline.zip(compiled_candidate)
 }
 
 fn evaluate_layer(manifest: &LayerManifest, settings: &FetchLayer) -> Report {
     let label = Role::LayerManifest.label();
-    let compiled = match compile_fetch_layer(settings, Role::Settings) {
-        Ok(compiled) => compiled,
-        Err(findings) => return Report::Findings(findings),
+    let mut findings = Findings::default();
+    let Some(compiled) = compile_fetch_layer(settings, Role::Settings, &mut findings) else {
+        return Report::Findings(findings);
     };
-    let mut findings = Vec::new();
 
     for (index, case) in manifest.pattern_cases.iter().enumerate() {
         let matched = compiled.patterns(case.bucket)[case.index].is_match(&case.input);
         if matched != case.expected_match {
-            findings.push(format!(
-                "The {label} `pattern_cases[{index}]` declared expectation disagrees with the configured `{}[{}]` pattern result",
-                case.bucket.label(),
-                case.index
-            ));
+            findings.push(|| {
+                format!(
+                    "The {label} `pattern_cases[{index}]` declared expectation disagrees with the configured `{}[{}]` pattern result",
+                    case.bucket.label(),
+                    case.index
+                )
+            });
         }
     }
 
     for (index, case) in manifest.decision_cases.iter().enumerate() {
         if compiled.observe(&case.input) != case.expected {
-            findings.push(format!(
-                "The {label} `decision_cases[{index}]` declared state disagrees with the configured result"
-            ));
+            findings.push(|| {
+                format!(
+                    "The {label} `decision_cases[{index}]` declared state disagrees with the configured result"
+                )
+            });
         }
     }
 
@@ -1184,18 +1447,12 @@ fn evaluate_comparison(
     candidate: &FetchLayer,
 ) -> Report {
     let label = Role::ComparisonManifest.label();
-    let compiled_baseline = compile_fetch_layer(baseline, Role::BaselineSettings);
-    let compiled_candidate = compile_fetch_layer(candidate, Role::CandidateSettings);
-    let (compiled_baseline, compiled_candidate) = match (compiled_baseline, compiled_candidate) {
-        (Ok(compiled_baseline), Ok(compiled_candidate)) => (compiled_baseline, compiled_candidate),
-        (baseline_result, candidate_result) => {
-            let mut findings = baseline_result.err().unwrap_or_default();
-            findings.extend(candidate_result.err().unwrap_or_default());
-
-            return Report::Findings(findings);
-        }
+    let mut findings = Findings::default();
+    let Some((compiled_baseline, compiled_candidate)) =
+        compile_comparison_layers(baseline, candidate, &mut findings)
+    else {
+        return Report::Findings(findings);
     };
-    let mut findings = Vec::new();
 
     for (index, case) in manifest.cases.iter().enumerate() {
         for (side, declared, observed) in [
@@ -1211,9 +1468,11 @@ fn evaluate_comparison(
             ),
         ] {
             if declared != observed {
-                findings.push(format!(
-                    "The {label} `cases[{index}]` declared {side} state disagrees with the configured result"
-                ));
+                findings.push(|| {
+                    format!(
+                        "The {label} `cases[{index}]` declared `{side}` state disagrees with the configured result"
+                    )
+                });
             }
         }
     }
@@ -1293,16 +1552,16 @@ fn diagnostic_line(text: &str) -> String {
     format!("{}\n", truncate_bytes(text, MAX_DETAIL_BYTES))
 }
 
-/// Drops trailing findings until the total count, rendered findings, and omitted count fit the
+/// Drops trailing details until the total count, rendered details, and omitted count fit the
 /// standard-error bound, so both counts survive truncation
-pub(crate) fn render_findings(findings: &[String]) -> String {
-    let total = findings.len();
-    let mut shown = total.min(MAX_REPORTED_FINDINGS);
+pub(crate) fn render_findings(findings: &Findings) -> String {
+    let total = findings.total();
+    let mut shown = findings.details().len();
 
     loop {
         let mut rendered = diagnostic_line(&format!("{NAME}: {}", count_of(total, "finding")));
-        for finding in &findings[..shown] {
-            rendered.push_str(&diagnostic_line(&format!("  {finding}")));
+        for detail in &findings.details()[..shown] {
+            rendered.push_str(&diagnostic_line(&format!("  {detail}")));
         }
         rendered.push_str(&diagnostic_line(&format!(
             "{NAME}: {} omitted",
@@ -1326,7 +1585,9 @@ where
 {
     match execute(arguments) {
         Ok(Report::Findings(findings)) => {
-            write_all(stderr, &render_findings(&findings));
+            if !write_all(stderr, &render_findings(&findings)) {
+                return report_write_failure(stderr, "standard error");
+            }
 
             STATUS_FINDINGS
         }
@@ -1344,9 +1605,16 @@ fn write_or_fail(stdout: &mut dyn Write, stderr: &mut dyn Write, text: &str) -> 
     if write_all(stdout, text) {
         return STATUS_VERIFIED;
     }
+
+    report_write_failure(stderr, "standard output")
+}
+
+/// Reports a failed required write as an operational failure, leaving the diagnostic unwritten when
+/// standard error is the stream that stopped accepting output
+fn report_write_failure(stderr: &mut dyn Write, stream: &str) -> u8 {
     write_all(
         stderr,
-        &diagnostic_line(&format!("{NAME}: Failed to write to standard output")),
+        &diagnostic_line(&format!("{NAME}: Failed to write to {stream}")),
     );
 
     STATUS_ERROR

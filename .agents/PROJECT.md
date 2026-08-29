@@ -40,17 +40,17 @@ The Zed settings workflow caps decoded permission patterns at 1,000 Unicode scal
 
 ### Zed agent permission model
 
-Zed Agent tool permissions intentionally use `agent.tool_permissions.default: "allow"`. The `delete_path`, `move_path`, and terminal tools omit tool-specific configuration, so their actions inherit the global baseline at the configured-permission layer.
+Zed Agent tool permissions intentionally use `agent.tool_permissions.default: "allow"`. `fetch` is the only tool with tool-specific configuration. A tool that invokes configured permission evaluation and has no tool-specific entry falls back to the global baseline. A tool that bypasses that evaluator receives no decision from this setting.
 
-The terminal intentionally has no configured command patterns. Command patterns classify normalized command text rather than semantic capabilities, so equivalent effects can remain available through another executable, generated code, or a native tool. Always-loaded agent policy governs intent and task authorization, while Zed Agent’s operating-system sandbox governs filesystem writes, protected Git metadata writes, and network access.
+The terminal intentionally has no configured command patterns. Command patterns classify normalized command text rather than semantic capabilities, so equivalent effects can remain available through another executable, generated code, or a native tool. Always-loaded agent policy governs intent and task authorization. At Zed commit `1662f5f3`, Zed wraps a terminal command in its operating-system sandbox only when the sandboxing feature is enabled, the project is local, the platform has a macOS, Linux, or Windows integration, and persistent `agent.sandbox_permissions.allow_unsandboxed` is false. An approved once-only or thread-wide unsandboxed grant runs the selected command without that wrapper while leaving the sandboxed tool surface available. The tracked settings do not persist `allow_unsandboxed`. Native `fetch` runs in Zed rather than inside the terminal sandbox and separately consumes the same per-host grants that authorize sandboxed terminal networking.
 
-A tool-permission `allow` does not grant an effect outside the sandbox. The effect still requires the applicable sandbox grant, and neither permission layer authorizes work prohibited by agent policy. Fetch permissions retain their separate explicit prompt model. External Agent permissions remain independent, and Zed Agent’s sandbox does not govern External Agents.
+When terminal sandboxing is active, a tool-permission `allow` does not grant an effect outside that sandbox. When sandboxing is unavailable, disabled, or bypassed by an approved unsandboxed grant, the selected command runs with Zed’s ambient process permissions. For native `fetch`, a tool-permission `allow` does not bypass the shared host-grant authorization. Native path tools do not run inside the operating-system sandbox. No permission layer authorizes work prohibited by agent policy. Fetch permissions retain their separate explicit prompt model. External Agents do not run inside Zed Agent’s operating-system sandbox. At Zed commit `1662f5f3`, native Zed Agent tools that call `ToolCallEventStream::authorize` use the configured tool-permission evaluator together with any built-in checks their implementations apply. Other native tools, including `diagnostics`, `find_path`, `grep`, `list_directory`, and `read_file`, do not call `decide_permission_from_settings` and instead use their built-in path, privacy, and safety checks. External Agent permission requests enter `AcpThread::request_tool_call_authorization`, which uses ACP-supplied permission options and does not consult the native evaluator.
 
 ### Zed fetch and sandbox host scope
 
 `agent.tool_permissions.tools.fetch.always_allow` contains one generic HTTPS syntax rule. A path-filtered fetch allowance uses a same-host `always_confirm` complement for every other direct initial path and relies on the generic rule for its approved prefixes. Confirmation precedence makes those prefixes prompt-free at the fetch-tool layer without redundant allow rules. The generic rule excludes URL userinfo and explicit ports.
 
-`agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed matches those grants case-insensitively without a port constraint, and every grant becomes part of the sandbox network floor available to later sandboxed terminal processes. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal actions independently inherit the global tool default and remain subject to task authorization and sandboxing.
+`agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed consumes those entries as host grants for native fetch and, while terminal sandboxing is active, as the sandbox network floor for terminal processes. It matches the grants case-insensitively without a port constraint, and each grant covers every port. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal actions independently inherit the global tool default and remain subject to task authorization and any active sandbox wrapper.
 
 The same-host complement is an initial-fetch prompt filter rather than a path-scoped network boundary. Zed does not re-evaluate a same-host redirect path against fetch patterns, and the complement does not filter sandboxed terminal networking.
 
@@ -60,11 +60,19 @@ The same-host complement is an initial-fetch prompt filter rather than a path-sc
 
 ### Zed worktree permission coupling
 
-The global [`git-worktrees` skill](../skills/domfiles-git-worktrees/SKILL.md) defines the project-relative `.agent-<name>` directory and `agent/<name>` branch namespaces as agent-policy naming invariants. Zed Agent’s sandbox determines filesystem and Git metadata access independently of those names.
+The global [temporary-file policy](../.config/zed/AGENTS.md#temporary-files) defines the project-relative `.agent-<name>` directory namespace. The global [`git-worktrees` skill](../skills/domfiles-git-worktrees/SKILL.md) applies that namespace to isolated worktrees and owns the paired `agent/<name>` branch namespace, isolation criteria, administration, and lifecycle. When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of those names.
 
-Files in open worktrees remain inside normal project write scope, while protected Git administrative metadata requires a separate sandbox grant, including for top-level worktree moves. Native path and terminal tools inherit the global `allow` but remain subject to Zed’s sandbox, sensitive-path, and symlink-escape checks. A path that looks like `.agent-<name>` neither expands sandbox access nor proves the current working directory or repository boundary.
+While terminal sandboxing is active, files in open worktrees are normal project write roots, while protected Git administrative metadata requires a separate sandbox grant, including for top-level worktree moves. Those sandbox limits do not apply to a command that runs without the wrapper. `terminal` actions still inherit the global `allow` and remain subject to task authorization. Native path actions that invoke configured permission evaluation inherit the same default and remain subject to their built-in checks. Native path actions that bypass the evaluator receive no configured decision and remain subject to the path, privacy, sensitive-settings, and symlink-escape checks their implementations apply. A path that looks like `.agent-<name>` neither expands terminal sandbox access nor proves the current working directory or repository boundary.
 
 ## Agent integration
+
+### Agent authorization model
+
+The global [authorization policy](../.config/zed/AGENTS.md#authorization) separates instruction authority from untrusted evidence so prompt injection cannot authorize its own effects.
+
+Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching decisions by coherent execution phase preserves the context needed for assessment without returning to command-level prompts.
+
+Git publication remains user-only because remote Git history cannot be recalled from every consumer.
 
 ### Agent task relay
 
@@ -78,9 +86,9 @@ The global [commit gate](../.config/zed/AGENTS.md#conduct) and [collaboration po
 
 The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
 
-The [`claude-acp` registry entry](../.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, permissions, sandbox, and native configuration independently of Zed Agent. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
+The [`claude-acp` registry entry](../.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
 
-Zed’s OS sandbox applies only to Zed Agent and does not isolate Claude Agent. The tracked Zed sandbox and tool permission settings therefore do not govern Claude Agent tools.
+Claude follows the [External Agent permission layering](#zed-agent-permission-model): Zed’s operating-system sandbox does not isolate it. At Zed commit `1662f5f3`, Claude Agent’s ACP permission requests and its own permission system govern its tools without passing through Zed’s native tool-permission evaluator.
 
 ### Claude, Codex, and Zed global instructions
 
@@ -126,7 +134,7 @@ At Zed commit `dd04a229`, native mutation tools force confirmation when a direct
 
 The public `skills/human-facing-writing` source does not receive Zed’s agent-specific classification. Its staging boundary applies to every agent because changes to its writing contract can affect every public skill composed through it.
 
-The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-staging.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions. Registered `.agent-<name>` worktrees and task staging roots are peer uses of the shared namespace, which rules out nested staging roots.
+The [protected skill mutation policy](../skills/domfiles-agent-documentation/references/protected-skill-mutation.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions. Registered `.agent-<name>` worktrees and task staging roots are peer uses of the shared namespace, which rules out nested staging roots.
 
 ### Repository harmonization
 
@@ -264,9 +272,15 @@ The [`clone`](../.config/fish/functions/clone.fish) helper intentionally support
 
 For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
 
+### Fish interactive configuration
+
+Tracked aliases and colors load only during interactive Fish sessions. `.config/fish/config.fish` keeps both sources inside its `status is-interactive` guard so noninteractive Fish invocations do not inherit interactive-only aliases or color configuration.
+
 ### Fish local configuration
 
 `.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.
+
+Fish sources this file through `.config/fish/config.fish` during noninteractive startup. A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command while suppressing its output. The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
 
 ### Git log search coloring
 
@@ -309,6 +323,10 @@ pnpm 12 persists an exact `packageManager` pin at major 12 or newer in a leading
 The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
 Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
+
+### Ripgrep configuration isolation
+
+`rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) requires `--no-config` on every agent invocation.
 
 ### String helper reuse
 

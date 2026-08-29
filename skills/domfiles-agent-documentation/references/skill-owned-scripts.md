@@ -27,7 +27,7 @@ Root ownership assumes the script runs inside its canonical repository. A skill 
 
 ## Change protected scripts
 
-Before changing a skill-owned script within a protected skill tree, follow the [protected skill mutation policy](protected-skill-staging.md), which defines those trees and selects in-bounds staging or out-of-bounds guarded direct mutation. For a staged change, keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts`, and promote only the reviewed staging unit. Scripts elsewhere under root `skills` use the ordinary direct-edit workflow. Do not apply protected-skill staging to them merely because `domfiles sync` exposes them through global symlinks.
+Before changing a skill-owned script within a protected skill tree, follow the [protected skill mutation policy](protected-skill-mutation.md), which defines those trees and selects the applicable route. For a staged change, keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts`, and promote only the reviewed staging unit. Scripts elsewhere under root `skills` use the ordinary direct-edit workflow. Do not apply protected-skill staging to them merely because `domfiles sync` exposes them through global symlinks.
 
 ## Apply human-facing copy policy
 

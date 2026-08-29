@@ -22,9 +22,8 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 ## Choose the workflow
 
-- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object. Use the change-validation workflow below.
+- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change-validation workflow below. A non-fetch tool-permission override has no supported mutation route. Stop that change until the agent permission branch defines a dedicated workflow and validation contract.
 - For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
-- During commit review, do not analyze or validate fetch permission patterns in `.config/zed/settings.json` unless the user explicitly includes that analysis. Review surrounding non-pattern changes normally. If evaluating the patterns is necessary to complete the review, stop before that analysis and ask for permission.
 - For a standalone review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 

@@ -116,13 +116,17 @@ where
     )
 }
 
-fn run_layer(layer_file: &Path, settings: &Path) -> (u8, String, String) {
-    run_arguments([
+fn layer_arguments(layer_file: &Path, settings: &Path) -> [OsString; 4] {
+    [
         OsString::from("--layer-file"),
         layer_file.as_os_str().to_owned(),
         OsString::from("--settings"),
         settings.as_os_str().to_owned(),
-    ])
+    ]
+}
+
+fn run_layer(layer_file: &Path, settings: &Path) -> (u8, String, String) {
+    run_arguments(layer_arguments(layer_file, settings))
 }
 
 fn run_comparison(
@@ -672,7 +676,10 @@ fn applies_deny_confirm_allow_then_default_precedence() {
 
         let (status, _, stderr) = run_layer(&manifest, &settings);
 
-        assert_eq!(status, 0, "{input} must resolve to {decision}: {stderr}");
+        assert_eq!(
+            status, 0,
+            "`{input}` must resolve to `{decision}`: {stderr}"
+        );
     }
 }
 
@@ -959,6 +966,56 @@ fn requires_a_deciding_source_for_the_configured_default() {
 }
 
 #[test]
+fn accepts_an_empty_pattern_cases_array_without_a_configured_pattern() {
+    let fixture = Fixture::new();
+    let settings = fixture.write("settings.json", &settings_json("confirm", &[]));
+    let manifest = fixture.write(
+        "layer.json",
+        &layer_manifest(
+            &[decision_case(
+                &state(false, false, false, "confirm"),
+                NONMATCHING_INPUT,
+            )],
+            &[],
+        ),
+    );
+
+    let (status, stdout, stderr) = run_layer(&manifest, &settings);
+
+    assert_eq!(status, 0, "{stderr}");
+    assert_eq!(
+        stdout, "Verified 0 configured patterns, 1 decision case, and 0 pattern cases\n",
+        "A pattern-free layer needs only the configured-default witness"
+    );
+    assert!(stderr.is_empty());
+}
+
+#[test]
+fn rejects_an_empty_pattern_cases_array_with_a_configured_pattern() {
+    let fixture = Fixture::new();
+    let settings = fixture.write("settings.json", &allow_settings());
+    let manifest = fixture.write(
+        "layer.json",
+        &layer_manifest(
+            &[
+                decision_case(&state(true, false, false, "allow"), MATCHING_INPUT),
+                decision_case(&state(false, false, false, "confirm"), NONMATCHING_INPUT),
+            ],
+            &[],
+        ),
+    );
+
+    let (status, stdout, stderr) = run_layer(&manifest, &settings);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr,
+        "pattern-match: The layer manifest declares no matching case for the configured `always_allow[0]` pattern. A pattern that cannot supply both polarities is unsupported by this workflow\n"
+    );
+}
+
+#[test]
 fn accepts_a_confirm_witness_that_also_matches_the_allow_bucket() {
     let fixture = Fixture::new();
     let manifest = fixture.write("layer.json", &full_manifest());
@@ -968,7 +1025,7 @@ fn accepts_a_confirm_witness_that_also_matches_the_allow_bucket() {
 
     assert_eq!(
         status, 0,
-        "A confirm witness may also match the allow bucket: {stderr}"
+        "A `confirm` witness may also match the `allow` bucket: {stderr}"
     );
 }
 
@@ -995,7 +1052,7 @@ fn rejects_a_declared_state_that_breaks_precedence() {
     assert_eq!(status, 2);
     assert_eq!(
         stderr,
-        "pattern-match: The layer manifest `decision_cases[0]` expected state declares a decision that does not follow deny, confirm, allow, then default precedence\n"
+        "pattern-match: The layer manifest `decision_cases[0]` expected state declares a decision that does not follow `deny`, `confirm`, `allow`, then `default` precedence\n"
     );
 }
 
@@ -1052,8 +1109,8 @@ fn reports_a_comparison_mismatch_for_each_side_without_disclosing_state() {
         stderr,
         concat!(
             "pattern-match: 2 findings\n",
-            "  The comparison manifest `cases[0]` declared baseline state disagrees with the configured result\n",
-            "  The comparison manifest `cases[0]` declared candidate state disagrees with the configured result\n",
+            "  The comparison manifest `cases[0]` declared `baseline` state disagrees with the configured result\n",
+            "  The comparison manifest `cases[0]` declared `candidate` state disagrees with the configured result\n",
             "pattern-match: 0 findings omitted\n",
         )
     );
@@ -1081,7 +1138,7 @@ fn reports_only_the_disagreeing_comparison_side() {
         stderr,
         concat!(
             "pattern-match: 1 finding\n",
-            "  The comparison manifest `cases[0]` declared candidate state disagrees with the configured result\n",
+            "  The comparison manifest `cases[0]` declared `candidate` state disagrees with the configured result\n",
             "pattern-match: 0 findings omitted\n",
         )
     );
@@ -1120,7 +1177,7 @@ fn rejects_a_comparison_state_that_breaks_precedence() {
         assert_eq!(
             stderr,
             format!(
-                "pattern-match: The comparison manifest `cases[0]` {side} state declares a decision that does not follow deny, confirm, allow, then default precedence\n"
+                "pattern-match: The comparison manifest `cases[0]` `{side}` state declares a decision that does not follow `deny`, `confirm`, `allow`, then `default` precedence\n"
             )
         );
     }
@@ -1131,11 +1188,11 @@ fn reports_baseline_configuration_findings_before_candidate_findings() {
     let fixture = Fixture::new();
     let baseline = fixture.write(
         "baseline.json",
-        &settings_json("confirm", &[("always_allow", &[("(", true)])]),
+        &settings_json("confirm", &[("always_allow", &[("(", true), ("", true)])]),
     );
     let candidate = fixture.write(
         "candidate.json",
-        &settings_json("confirm", &[("always_confirm", &[("[", true)])]),
+        &settings_json("confirm", &[("always_confirm", &[("", true), ("[", true)])]),
     );
     let comparison = fixture.write(
         "comparison.json",
@@ -1150,15 +1207,41 @@ fn reports_baseline_configuration_findings_before_candidate_findings() {
 
     assert_eq!(status, 1);
     assert!(stdout.is_empty());
-    let lines: Vec<&str> = stderr.lines().collect();
-    assert_eq!(lines[0], "pattern-match: 2 findings");
     assert_eq!(
-        lines[1],
-        "  The baseline settings `always_allow[0]` pattern is not valid regex syntax"
+        stderr,
+        concat!(
+            "pattern-match: 4 findings\n",
+            "  The baseline settings `always_allow[0]` pattern is not valid regex syntax\n",
+            "  The baseline settings `always_allow[1]` pattern is empty\n",
+            "  The candidate settings `always_confirm[0]` pattern is empty\n",
+            "  The candidate settings `always_confirm[1]` pattern is not valid regex syntax\n",
+            "pattern-match: 0 findings omitted\n",
+        ),
+        "Every baseline finding must precede every candidate finding in settings-input order"
     );
+}
+
+#[test]
+fn reports_an_empty_pattern_instead_of_evaluating_expectations() {
+    let fixture = Fixture::new();
+    let settings = fixture.write(
+        "settings.json",
+        &settings_json("confirm", &[("always_allow", &[("", true)])]),
+    );
+    let manifest = fixture.write("layer.json", &allow_manifest());
+
+    let (status, stdout, stderr) = run_layer(&manifest, &settings);
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
     assert_eq!(
-        lines[2],
-        "  The candidate settings `always_confirm[0]` pattern is not valid regex syntax"
+        stderr,
+        concat!(
+            "pattern-match: 1 finding\n",
+            "  The settings `always_allow[0]` pattern is empty\n",
+            "pattern-match: 0 findings omitted\n",
+        ),
+        "An empty pattern must be a configuration finding rather than a compiled rule"
     );
 }
 
@@ -1297,9 +1380,11 @@ fn compiles_each_valid_configured_pattern_once() {
     .expect("The settings document must parse");
     let layer = helper::project_fetch_layer(&document, Role::Settings)
         .expect("The fetch layer must project");
-    let compiled = helper::compile_fetch_layer(&layer, Role::Settings)
+    let mut findings = helper::Findings::default();
+    let compiled = helper::compile_fetch_layer(&layer, Role::Settings, &mut findings)
         .expect("Every configured pattern must compile");
 
+    assert_eq!(findings.total(), 0);
     assert_eq!(layer.total(), 3);
     for (bucket, expected) in [(Bucket::Allow, 2), (Bucket::Confirm, 1), (Bucket::Deny, 0)] {
         assert_eq!(
@@ -1321,7 +1406,7 @@ fn orders_configuration_findings_by_bucket_then_index() {
             &[
                 ("always_allow", &[("(", true), ("[", true)]),
                 ("always_confirm", &[("*", true), (overlong.as_str(), true)]),
-                ("always_deny", &[("(?P<", true)]),
+                ("always_deny", &[("", true), ("(?P<", true)]),
             ],
         ),
         Role::Settings,
@@ -1330,19 +1415,23 @@ fn orders_configuration_findings_by_bucket_then_index() {
     let layer = helper::project_fetch_layer(&document, Role::Settings)
         .expect("The fetch layer must project");
 
-    let findings = helper::compile_fetch_layer(&layer, Role::Settings)
-        .err()
-        .expect("Every configured pattern must produce a finding");
+    let mut findings = helper::Findings::default();
 
+    assert!(
+        helper::compile_fetch_layer(&layer, Role::Settings, &mut findings).is_none(),
+        "Every configured pattern must produce a finding"
+    );
+    assert_eq!(findings.total(), 6);
     assert_eq!(
-        findings,
-        vec![
+        findings.details(),
+        [
             "The settings `always_allow[0]` pattern is not valid regex syntax".to_owned(),
             "The settings `always_allow[1]` pattern is not valid regex syntax".to_owned(),
             "The settings `always_confirm[0]` pattern is not valid regex syntax".to_owned(),
             "The settings `always_confirm[1]` pattern exceeds the 1,000-scalar reviewability bound"
                 .to_owned(),
-            "The settings `always_deny[0]` pattern is not valid regex syntax".to_owned(),
+            "The settings `always_deny[0]` pattern is empty".to_owned(),
+            "The settings `always_deny[1]` pattern is not valid regex syntax".to_owned(),
         ],
         "Findings must follow `always_allow`, `always_confirm`, then `always_deny` order and ascending index"
     );
@@ -1365,13 +1454,15 @@ fn omits_an_overlong_pattern_from_the_compiled_layer() {
     let layer = helper::project_fetch_layer(&document, Role::Settings)
         .expect("The fetch layer must project");
 
-    let findings = helper::compile_fetch_layer(&layer, Role::Settings)
-        .err()
-        .expect("An overlong pattern must be a configuration finding");
+    let mut findings = helper::Findings::default();
 
+    assert!(
+        helper::compile_fetch_layer(&layer, Role::Settings, &mut findings).is_none(),
+        "An overlong pattern must be a configuration finding"
+    );
     assert_eq!(
-        findings,
-        vec![
+        findings.details(),
+        [
             "The settings `always_allow[1]` pattern exceeds the 1,000-scalar reviewability bound"
                 .to_owned()
         ]
@@ -1430,7 +1521,7 @@ fn rejects_duplicate_object_keys() {
     assert_eq!(status, 2);
     assert_eq!(
         stderr,
-        "pattern-match: The settings JSON contains a duplicate object key\n"
+        "pattern-match: The settings JSON contains a duplicate object key in `agent.tool_permissions.tools.fetch`\n"
     );
 
     let duplicated_manifest = fixture.write(
@@ -1441,26 +1532,124 @@ fn rejects_duplicate_object_keys() {
     assert_eq!(status, 2);
     assert_eq!(
         stderr,
-        "pattern-match: The layer manifest JSON contains a duplicate object key\n"
+        "pattern-match: The layer manifest JSON root contains a duplicate object key\n"
     );
+}
+
+#[test]
+fn locates_a_nested_duplicate_key_in_a_configured_pattern_object() {
+    let fixture = Fixture::new();
+    let manifest = fixture.write("layer.json", &allow_manifest());
+    let secret_pattern = "^https://example\\.com/private/token-abc123";
+    let settings = fixture.write(
+        "settings.json",
+        &wrap_fetch(&format!(
+            "{{\"always_allow\":[{{\"case_sensitive\":true,\"case_sensitive\":false,\"pattern\":{}}}],\"default\":\"confirm\"}}",
+            json_string(secret_pattern)
+        )),
+    );
+
+    let (status, stdout, stderr) = run_layer(&manifest, &settings);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr,
+        "pattern-match: The settings JSON contains a duplicate object key in `agent.tool_permissions.tools.fetch.always_allow[0]`\n"
+    );
+    for disclosure in ["case_sensitive", secret_pattern, "token-abc123"] {
+        assert!(
+            !stderr.contains(disclosure),
+            "A duplicate-key location must not disclose `{disclosure}`"
+        );
+    }
+}
+
+#[test]
+fn locates_a_nested_duplicate_key_in_a_layer_manifest() {
+    let fixture = Fixture::new();
+    let settings = fixture.write("settings.json", &allow_settings());
+    let allow_state = state(true, false, false, "allow");
+    let input = json_string(MATCHING_INPUT);
+
+    for (name, document, expected) in [
+        (
+            "case.json",
+            layer_manifest(
+                &[format!(
+                    "{{\"expected\":{allow_state},\"input\":{input},\"input\":{input}}}"
+                )],
+                &[pattern_case("always_allow", true, 0, MATCHING_INPUT)],
+            ),
+            "The layer manifest JSON contains a duplicate object key in `decision_cases[0]`",
+        ),
+        (
+            "state.json",
+            layer_manifest(
+                &[format!(
+                    "{{\"expected\":{{\"always_allow\":true,\"always_allow\":false,\"always_confirm\":false,\"always_deny\":false,\"decision\":\"allow\"}},\"input\":{input}}}"
+                )],
+                &[pattern_case("always_allow", true, 0, MATCHING_INPUT)],
+            ),
+            "The layer manifest JSON contains a duplicate object key in `decision_cases[0].expected`",
+        ),
+        (
+            "pattern-case.json",
+            layer_manifest(
+                &[decision_case(&allow_state, MATCHING_INPUT)],
+                &[format!(
+                    "{{\"bucket\":\"always_allow\",\"expected_match\":true,\"expected_match\":false,\"index\":0,\"input\":{input}}}"
+                )],
+            ),
+            "The layer manifest JSON contains a duplicate object key in `pattern_cases[0]`",
+        ),
+    ] {
+        let path = fixture.write(name, &document);
+
+        let (status, stdout, stderr) = run_layer(&path, &settings);
+
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
+        assert!(stdout.is_empty());
+        assert_eq!(stderr, format!("pattern-match: {expected}\n"));
+        for disclosure in [MATCHING_INPUT, "expected_match", "\"allow\""] {
+            assert!(
+                !stderr.contains(disclosure),
+                "A duplicate-key location must not disclose `{disclosure}`"
+            );
+        }
+    }
 }
 
 #[test]
 fn rejects_a_duplicate_key_nested_outside_the_fetch_object() {
     let fixture = Fixture::new();
     let manifest = fixture.write("layer.json", &allow_manifest());
-    let settings = fixture.write(
-        "settings.json",
-        "{\"editor\":{\"tab\":1,\"tab\":2},\"agent\":{\"tool_permissions\":{\"tools\":{\"fetch\":{\"default\":\"confirm\"}}}}}",
-    );
 
-    let (status, _, stderr) = run_layer(&manifest, &settings);
+    for (name, document, expected) in [
+        (
+            "root.json",
+            "{\"editor\":{\"tab\":1,\"tab\":2},\"agent\":{\"tool_permissions\":{\"tools\":{\"fetch\":{\"default\":\"confirm\"}}}}}",
+            "The settings JSON contains a duplicate object key in an undeclared object below its root",
+        ),
+        (
+            "declared.json",
+            "{\"agent\":{\"profiles\":{\"tab\":1,\"tab\":2},\"tool_permissions\":{\"tools\":{\"fetch\":{\"default\":\"confirm\"}}}}}",
+            "The settings JSON contains a duplicate object key in an undeclared object below `agent`",
+        ),
+    ] {
+        let settings = fixture.write(name, document);
 
-    assert_eq!(status, 2);
-    assert_eq!(
-        stderr,
-        "pattern-match: The settings JSON contains a duplicate object key\n"
-    );
+        let (status, _, stderr) = run_layer(&manifest, &settings);
+
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
+        assert_eq!(stderr, format!("pattern-match: {expected}\n"));
+        for disclosure in ["editor", "profiles", "tab"] {
+            assert!(
+                !stderr.contains(disclosure),
+                "An undeclared containing object must not be named through `{disclosure}`"
+            );
+        }
+    }
 }
 
 #[test]
@@ -1587,7 +1776,7 @@ fn rejects_a_malformed_settings_projection() {
 
         let (status, stdout, stderr) = run_layer(&manifest, &path);
 
-        assert_eq!(status, 2, "{name} must be contract-invalid");
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
         assert!(stdout.is_empty());
         assert_eq!(stderr, format!("pattern-match: {expected}\n"));
     }
@@ -1611,15 +1800,17 @@ fn rejects_a_malformed_layer_manifest() {
             "The layer manifest requires a nonempty `decision_cases` array",
         ),
         (
-            "empty-pattern-cases.json",
-            layer_manifest(
-                &[decision_case(
-                    &state(false, false, false, "confirm"),
-                    NONMATCHING_INPUT,
-                )],
-                &[],
+            "missing-decision-cases.json",
+            "{\"pattern_cases\":[]}".to_owned(),
+            "The layer manifest requires a `decision_cases` array",
+        ),
+        (
+            "missing-pattern-cases.json",
+            format!(
+                "{{\"decision_cases\":[{}]}}",
+                decision_case(&state(false, false, false, "confirm"), NONMATCHING_INPUT)
             ),
-            "The layer manifest requires a nonempty `pattern_cases` array",
+            "The layer manifest requires a `pattern_cases` array",
         ),
         (
             "expected.json",
@@ -1709,7 +1900,7 @@ fn rejects_a_malformed_layer_manifest() {
 
         let (status, stdout, stderr) = run_layer(&path, &settings);
 
-        assert_eq!(status, 2, "{name} must be contract-invalid");
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
         assert!(stdout.is_empty());
         assert_eq!(stderr, format!("pattern-match: {expected}\n"));
     }
@@ -1754,9 +1945,166 @@ fn rejects_a_malformed_comparison_manifest() {
 
         let (status, stdout, stderr) = run_comparison(&baseline, &candidate, &path);
 
-        assert_eq!(status, 2, "{name} must be contract-invalid");
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
         assert!(stdout.is_empty());
         assert_eq!(stderr, format!("pattern-match: {expected}\n"));
+    }
+}
+
+#[test]
+fn rejects_duplicate_object_keys_in_a_comparison_manifest() {
+    let fixture = Fixture::new();
+    let baseline = fixture.write("baseline.json", &allow_settings());
+    let candidate = fixture.write("candidate.json", &allow_settings());
+    let valid_state = state(true, false, false, "allow");
+
+    let duplicated_state = "{\"always_allow\":true,\"always_allow\":false,\"always_confirm\":false,\"always_deny\":false,\"decision\":\"allow\"}";
+
+    for (name, document, expected) in [
+        // An empty `cases` array would fail structural validation, so the duplicate diagnostic also
+        // establishes that duplicate-key detection precedes it
+        (
+            "root.json",
+            "{\"cases\":[],\"cases\":[]}".to_owned(),
+            "The comparison manifest JSON root contains a duplicate object key",
+        ),
+        (
+            "case.json",
+            format!(
+                "{{\"cases\":[{{\"baseline\":{valid_state},\"candidate\":{valid_state},\"input\":\"https://example.com/\",\"input\":\"https://example.com/\"}}]}}"
+            ),
+            "The comparison manifest JSON contains a duplicate object key in `cases[0]`",
+        ),
+        (
+            "state.json",
+            format!(
+                "{{\"cases\":[{{\"baseline\":{valid_state},\"candidate\":{duplicated_state},\"input\":\"https://example.com/\"}}]}}"
+            ),
+            "The comparison manifest JSON contains a duplicate object key in `cases[0].candidate`",
+        ),
+    ] {
+        let path = fixture.write(name, &document);
+
+        let (status, stdout, stderr) = run_comparison(&baseline, &candidate, &path);
+
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
+        assert!(stdout.is_empty());
+        assert_eq!(stderr, format!("pattern-match: {expected}\n"));
+        for disclosure in ["https://example.com/", "always_allow", "\"allow\""] {
+            assert!(
+                !stderr.contains(disclosure),
+                "A duplicate-key location must not disclose `{disclosure}`"
+            );
+        }
+    }
+}
+
+#[test]
+fn rejects_unknown_comparison_manifest_fields() {
+    let fixture = Fixture::new();
+    let baseline = fixture.write("baseline.json", &allow_settings());
+    let candidate = fixture.write("candidate.json", &allow_settings());
+    let valid_state = state(true, false, false, "allow");
+    let extended_state = "{\"always_allow\":true,\"always_confirm\":false,\"always_deny\":false,\"decision\":\"allow\",\"note\":\"x\"}";
+
+    for (name, document, expected) in [
+        (
+            "root.json",
+            "{\"cases\":[],\"notes\":[]}".to_owned(),
+            "The comparison manifest root permits only `cases`",
+        ),
+        (
+            "case.json",
+            format!(
+                "{{\"cases\":[{{\"baseline\":{valid_state},\"candidate\":{valid_state},\"input\":\"https://example.com/\",\"label\":\"x\"}}]}}"
+            ),
+            "The comparison manifest `cases[0]` permits only `baseline`, `candidate`, and `input`",
+        ),
+        (
+            "baseline-state.json",
+            format!(
+                "{{\"cases\":[{{\"baseline\":{extended_state},\"candidate\":{valid_state},\"input\":\"https://example.com/\"}}]}}"
+            ),
+            "The comparison manifest `cases[0]` `baseline` state permits only `always_allow`, `always_confirm`, `always_deny`, and `decision`",
+        ),
+        (
+            "candidate-state.json",
+            format!(
+                "{{\"cases\":[{{\"baseline\":{valid_state},\"candidate\":{extended_state},\"input\":\"https://example.com/\"}}]}}"
+            ),
+            "The comparison manifest `cases[0]` `candidate` state permits only `always_allow`, `always_confirm`, `always_deny`, and `decision`",
+        ),
+    ] {
+        let path = fixture.write(name, &document);
+
+        let (status, stdout, stderr) = run_comparison(&baseline, &candidate, &path);
+
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
+        assert!(stdout.is_empty());
+        assert_eq!(stderr, format!("pattern-match: {expected}\n"));
+    }
+}
+
+#[test]
+fn rejects_an_invalid_decision_on_each_comparison_side() {
+    let fixture = Fixture::new();
+    let baseline = fixture.write("baseline.json", &allow_settings());
+    let candidate = fixture.write("candidate.json", &allow_settings());
+    let valid_state = state(true, false, false, "allow");
+    let invalid_state = state(false, false, false, "prompt");
+
+    for (side, case) in [
+        (
+            "baseline",
+            comparison_case(&invalid_state, &valid_state, MATCHING_INPUT),
+        ),
+        (
+            "candidate",
+            comparison_case(&valid_state, &invalid_state, MATCHING_INPUT),
+        ),
+    ] {
+        let comparison = fixture.write("comparison.json", &comparison_manifest(&[case]));
+
+        let (status, stdout, stderr) = run_comparison(&baseline, &candidate, &comparison);
+
+        assert_eq!(
+            status, 2,
+            "An invalid `{side}` decision must be contract-invalid"
+        );
+        assert!(stdout.is_empty());
+        assert_eq!(
+            stderr,
+            format!(
+                "pattern-match: The comparison manifest `cases[0]` `{side}` state requires a `decision` value of `allow`, `confirm`, or `deny`\n"
+            ),
+            "Each side must name itself without echoing the declared value"
+        );
+    }
+}
+
+#[test]
+fn rejects_a_non_string_comparison_case_input() {
+    let fixture = Fixture::new();
+    let baseline = fixture.write("baseline.json", &allow_settings());
+    let candidate = fixture.write("candidate.json", &allow_settings());
+    let valid_state = state(true, false, false, "allow");
+
+    for (name, input) in [("number.json", "7"), ("null.json", "null")] {
+        let path = fixture.write(
+            name,
+            &format!(
+                "{{\"cases\":[{{\"baseline\":{valid_state},\"candidate\":{valid_state},\"input\":{input}}}]}}"
+            ),
+        );
+
+        let (status, stdout, stderr) = run_comparison(&baseline, &candidate, &path);
+
+        assert_eq!(status, 2, "`{name}` must be contract-invalid");
+        assert!(stdout.is_empty());
+        assert_eq!(
+            stderr,
+            "pattern-match: The comparison manifest `cases[0]` requires a string `input` value\n"
+        );
     }
 }
 
@@ -1766,9 +2114,16 @@ fn rejects_every_line_break_scalar_in_a_manifest_input() {
     let settings = fixture.write("settings.json", &allow_settings());
     let valid_state = state(false, false, false, "confirm");
 
-    for scalar in [
-        '\u{a}', '\u{b}', '\u{c}', '\u{d}', '\u{85}', '\u{2028}', '\u{2029}',
-    ] {
+    assert_eq!(
+        helper::LINE_BREAKS,
+        [
+            '\u{a}', '\u{b}', '\u{c}', '\u{d}', '\u{1c}', '\u{1d}', '\u{1e}', '\u{85}', '\u{2028}',
+            '\u{2029}',
+        ],
+        "The rejected scalars must match the documented line-break inventory"
+    );
+
+    for scalar in helper::LINE_BREAKS {
         let input = format!("https://example.com/{scalar}page");
         let manifest = fixture.write(
             "layer.json",
@@ -1783,7 +2138,7 @@ fn rejects_every_line_break_scalar_in_a_manifest_input() {
         assert_eq!(
             status,
             2,
-            "U+{:04X} must be contract-invalid input",
+            "`U+{:04X}` must be contract-invalid input",
             u32::from(scalar)
         );
         assert!(stdout.is_empty());
@@ -1802,39 +2157,43 @@ fn rejects_every_line_break_scalar_in_a_manifest_input() {
 fn applies_the_line_break_rule_to_every_manifest_input() {
     let fixture = Fixture::new();
     let settings = fixture.write("settings.json", &allow_settings());
-    let separated = format!("https://example.com/{}page", '\u{2028}');
 
-    let pattern_case_manifest = fixture.write(
-        "pattern-case.json",
-        &layer_manifest(
-            &[decision_case(
-                &state(false, false, false, "confirm"),
-                NONMATCHING_INPUT,
-            )],
-            &[pattern_case("always_allow", true, 0, &separated)],
-        ),
-    );
-    let (status, _, stderr) = run_layer(&pattern_case_manifest, &settings);
-    assert_eq!(status, 2);
-    assert_eq!(
-        stderr,
-        "pattern-match: The layer manifest `pattern_cases[0]` `input` value must not contain a line break\n"
-    );
+    for scalar in helper::LINE_BREAKS {
+        let separated = format!("https://example.com/{scalar}page");
+        let label = format!("U+{:04X}", u32::from(scalar));
 
-    let comparison = fixture.write(
-        "comparison.json",
-        &comparison_manifest(&[comparison_case(
-            &state(true, false, false, "allow"),
-            &state(true, false, false, "allow"),
-            &separated,
-        )]),
-    );
-    let (status, _, stderr) = run_comparison(&settings, &settings, &comparison);
-    assert_eq!(status, 2);
-    assert_eq!(
-        stderr,
-        "pattern-match: The comparison manifest `cases[0]` `input` value must not contain a line break\n"
-    );
+        let pattern_case_manifest = fixture.write(
+            "pattern-case.json",
+            &layer_manifest(
+                &[decision_case(
+                    &state(false, false, false, "confirm"),
+                    NONMATCHING_INPUT,
+                )],
+                &[pattern_case("always_allow", true, 0, &separated)],
+            ),
+        );
+        let (status, _, stderr) = run_layer(&pattern_case_manifest, &settings);
+        assert_eq!(status, 2, "`{label}` must be contract-invalid input");
+        assert_eq!(
+            stderr,
+            "pattern-match: The layer manifest `pattern_cases[0]` `input` value must not contain a line break\n"
+        );
+
+        let comparison = fixture.write(
+            "comparison.json",
+            &comparison_manifest(&[comparison_case(
+                &state(true, false, false, "allow"),
+                &state(true, false, false, "allow"),
+                &separated,
+            )]),
+        );
+        let (status, _, stderr) = run_comparison(&settings, &settings, &comparison);
+        assert_eq!(status, 2, "`{label}` must be contract-invalid input");
+        assert_eq!(
+            stderr,
+            "pattern-match: The comparison manifest `cases[0]` `input` value must not contain a line break\n"
+        );
+    }
 }
 
 #[test]
@@ -1922,6 +2281,24 @@ fn selects_the_first_failing_phase() {
     assert_eq!(
         stderr,
         "pattern-match: The layer manifest `pattern_cases[0]` index is outside the configured `always_allow` array\n"
+    );
+
+    // An empty `pattern_cases` array passes manifest structure, so settings projection still
+    // precedes the coverage decision that depends on the configured patterns
+    let uncovered = fixture.write(
+        "uncovered.json",
+        &layer_manifest(
+            &[decision_case(
+                &state(false, false, false, "confirm"),
+                NONMATCHING_INPUT,
+            )],
+            &[],
+        ),
+    );
+    let (_, _, stderr) = run_layer(&uncovered, &unprojectable);
+    assert_eq!(
+        stderr,
+        "pattern-match: The settings fetch object requires a `default` value of `allow`, `confirm`, or `deny`\n"
     );
 
     // A cross-file failure precedes any configuration or expectation finding
@@ -2071,9 +2448,94 @@ fn omits_manifest_and_settings_values_from_every_mismatch_diagnostic() {
     }
 }
 
+fn fetch_layer(role: Role, buckets: &[(&str, &[(&str, bool)])]) -> helper::FetchLayer {
+    let document = helper::parse_json(&settings_json("confirm", buckets), role)
+        .expect("The settings document must parse");
+
+    helper::project_fetch_layer(&document, role).expect("The fetch layer must project")
+}
+
+#[test]
+fn shares_one_retained_detail_budget_across_a_comparison() {
+    let invalid_baseline = vec![("(", true); 120];
+    let invalid_candidate = vec![("[", true); 50];
+    let baseline = fetch_layer(
+        Role::BaselineSettings,
+        &[("always_allow", invalid_baseline.as_slice())],
+    );
+    let candidate = fetch_layer(
+        Role::CandidateSettings,
+        &[("always_confirm", invalid_candidate.as_slice())],
+    );
+    let mut findings = helper::Findings::default();
+
+    assert!(
+        helper::compile_comparison_layers(&baseline, &candidate, &mut findings).is_none(),
+        "An invalid pattern must fail compilation on both sides"
+    );
+    assert_eq!(
+        findings.total(),
+        170,
+        "Every finding past the budget must still be counted exactly"
+    );
+    assert_eq!(
+        findings.details().len(),
+        100,
+        "One retained-detail budget must cover both settings files"
+    );
+    assert!(
+        findings
+            .details()
+            .iter()
+            .all(|detail| detail.starts_with("The baseline settings ")),
+        "No candidate finding body may be built once baseline findings exhaust the budget"
+    );
+    assert_eq!(
+        findings.details()[99],
+        "The baseline settings `always_allow[99]` pattern is not valid regex syntax"
+    );
+}
+
+fn findings_from(details: &[String]) -> helper::Findings {
+    let mut findings = helper::Findings::default();
+    for detail in details {
+        findings.push(|| detail.clone());
+    }
+
+    findings
+}
+
+#[test]
+fn retains_no_finding_body_beyond_the_reported_bound() {
+    let mut findings = helper::Findings::default();
+
+    for index in 0..250 {
+        findings.push(|| {
+            assert!(
+                index < 100,
+                "A finding body beyond the retained bound must never be built"
+            );
+
+            format!("Finding {index}")
+        });
+    }
+
+    assert_eq!(findings.total(), 250, "The total must count every finding");
+    assert_eq!(
+        findings.details().len(),
+        100,
+        "Retention must stop at the reported bound rather than at rendering"
+    );
+    assert_eq!(findings.details()[99], "Finding 99");
+}
+
 #[test]
 fn bounds_reported_findings_and_reports_the_omitted_count() {
-    let findings: Vec<String> = (0..250).map(|index| format!("Finding {index}")).collect();
+    let findings = findings_from(
+        &(0..250)
+            .map(|index| format!("Finding {index}"))
+            .collect::<Vec<_>>(),
+    );
 
     let rendered = helper::render_findings(&findings);
     let lines: Vec<&str> = rendered.lines().collect();
@@ -2090,7 +2552,7 @@ fn bounds_reported_findings_and_reports_the_omitted_count() {
 fn bounds_each_finding_to_512_bytes_at_a_scalar_boundary() {
     let finding = format!("x{}", "€".repeat(300));
 
-    let rendered = helper::render_findings(std::slice::from_ref(&finding));
+    let rendered = helper::render_findings(&findings_from(std::slice::from_ref(&finding)));
     let detail = rendered.lines().nth(1).expect("The finding must render");
 
     assert!(detail.len() <= 512);
@@ -2103,9 +2565,11 @@ fn bounds_each_finding_to_512_bytes_at_a_scalar_boundary() {
 
 #[test]
 fn bounds_standard_error_to_64_kibibytes() {
-    let findings: Vec<String> = (0..250)
-        .map(|index| format!("{index} {}", "x".repeat(900)))
-        .collect();
+    let findings = findings_from(
+        &(0..250)
+            .map(|index| format!("{index} {}", "x".repeat(900)))
+            .collect::<Vec<_>>(),
+    );
 
     let rendered = helper::render_findings(&findings);
 
@@ -2115,6 +2579,98 @@ fn bounds_standard_error_to_64_kibibytes() {
     for line in rendered.lines() {
         assert!(line.len() <= 512, "Every rendered line must fit the bound");
     }
+}
+
+#[test]
+fn bounds_retained_layer_mismatches() {
+    let fixture = Fixture::new();
+    let settings = fixture.write("settings.json", &allow_settings());
+    let mut pattern_cases = vec![
+        pattern_case("always_allow", true, 0, MATCHING_INPUT),
+        pattern_case("always_allow", false, 0, NONMATCHING_INPUT),
+    ];
+    pattern_cases
+        .extend((0..150).map(|_| pattern_case("always_allow", true, 0, NONMATCHING_INPUT)));
+    let manifest = fixture.write(
+        "layer.json",
+        &layer_manifest(
+            &[
+                decision_case(&state(true, false, false, "allow"), MATCHING_INPUT),
+                decision_case(&state(false, false, false, "confirm"), NONMATCHING_INPUT),
+            ],
+            &pattern_cases,
+        ),
+    );
+
+    let (status, stdout, stderr) = run_layer(&manifest, &settings);
+
+    assert_eq!(status, 1);
+    assert!(stdout.is_empty());
+    let lines: Vec<&str> = stderr.lines().collect();
+    assert_eq!(lines[0], "pattern-match: 150 findings");
+    assert_eq!(lines.len(), 102);
+    assert!(lines[1].contains("`pattern_cases[2]`"));
+    assert!(lines[100].contains("`pattern_cases[101]`"));
+    assert_eq!(lines[101], "pattern-match: 50 findings omitted");
+}
+
+#[test]
+fn bounds_retained_comparison_findings() {
+    let fixture = Fixture::new();
+    let invalid_baseline = vec![("(", true); 80];
+    let invalid_candidate = vec![("[", true); 50];
+    let baseline = fixture.write(
+        "baseline.json",
+        &settings_json("confirm", &[("always_allow", invalid_baseline.as_slice())]),
+    );
+    let candidate = fixture.write(
+        "candidate.json",
+        &settings_json(
+            "confirm",
+            &[("always_confirm", invalid_candidate.as_slice())],
+        ),
+    );
+    let unchanged = comparison_case(
+        &state(false, false, false, "confirm"),
+        &state(false, false, false, "confirm"),
+        MATCHING_INPUT,
+    );
+    let comparison = fixture.write(
+        "comparison.json",
+        &comparison_manifest(std::slice::from_ref(&unchanged)),
+    );
+
+    let (status, _, stderr) = run_comparison(&baseline, &candidate, &comparison);
+
+    assert_eq!(status, 1);
+    let lines: Vec<&str> = stderr.lines().collect();
+    assert_eq!(lines[0], "pattern-match: 130 findings");
+    assert_eq!(lines.len(), 102);
+    assert_eq!(
+        lines[80],
+        "  The baseline settings `always_allow[79]` pattern is not valid regex syntax"
+    );
+    assert_eq!(
+        lines[100],
+        "  The candidate settings `always_confirm[19]` pattern is not valid regex syntax",
+        "The bound must retain candidate details only after every baseline detail"
+    );
+    assert_eq!(lines[101], "pattern-match: 30 findings omitted");
+
+    let settings = fixture.write("settings.json", &allow_settings());
+    let mismatching = fixture.write(
+        "mismatching.json",
+        &comparison_manifest(&vec![unchanged; 60]),
+    );
+
+    let (status, _, stderr) = run_comparison(&settings, &settings, &mismatching);
+
+    assert_eq!(status, 1);
+    let lines: Vec<&str> = stderr.lines().collect();
+    assert_eq!(lines[0], "pattern-match: 120 findings");
+    assert_eq!(lines.len(), 102);
+    assert!(lines[100].contains("`cases[49]`"));
+    assert_eq!(lines[101], "pattern-match: 20 findings omitted");
 }
 
 #[test]
@@ -2156,5 +2712,42 @@ fn reports_a_standard_output_write_failure() {
     assert_eq!(
         String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
         "pattern-match: Failed to write to standard output\n"
+    );
+}
+
+#[test]
+fn reports_a_standard_error_write_failure() {
+    let fixture = Fixture::new();
+    let manifest = fixture.write("layer.json", &allow_manifest());
+    let settings = fixture.write(
+        "settings.json",
+        &settings_json("confirm", &[("always_allow", &[("(", true)])]),
+    );
+    let mut stdout = Vec::new();
+
+    let status = helper::run(
+        layer_arguments(&manifest, &settings),
+        &mut stdout,
+        &mut FailingWriter,
+    );
+
+    assert_eq!(
+        status, 2,
+        "A failed findings write must replace the finding status"
+    );
+    assert!(
+        stdout.is_empty(),
+        "A findings run must leave standard output empty"
+    );
+
+    let status = helper::run(
+        [OsString::from("--help")],
+        &mut FailingWriter,
+        &mut FailingWriter,
+    );
+
+    assert_eq!(
+        status, 2,
+        "A diagnostic must be skipped rather than retried when standard error rejects it"
     );
 }

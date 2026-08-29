@@ -1,34 +1,36 @@
 # Permission evaluator
 
-This reference owns the observable contracts for the retained fetch-pattern matcher and regex compatibility audit. It does not own fetch policy, runtime network behavior, sandbox-host approval, or settings mutation.
+This reference owns the observable contracts for the retained fetch-pattern matcher and regex compatibility audit. It does not own fetch policy, runtime network behavior, host-grant approval, or settings mutation.
 
 ## Apply the matcher contract
 
-Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as the implementation basis. Its next implementation must be read-only and support exactly these routes:
+Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as the read-only implementation. It supports exactly these routes:
 
 - `--baseline-settings <baseline-settings-path> --candidate-settings <candidate-settings-path> --comparison-file <comparison-manifest-path>`
 - `--help`
 - `--layer-file <layer-manifest-path> --settings <settings-path>`
 
-This is the target contract, not the current interface. Until the source, exact `--help` output, and adjacent `pattern_match.test.rs` contract tests match it and the focused target-contract test passes, stop the matcher branch and report contract drift rather than using a retired route. A passing legacy test does not clear this gate. The reconciliation pass must replace assertions for retired routes. After reconciliation, treat the source and exact `--help` output as the authority for implemented behavior.
+Treat the source and configuration as the authority for implemented behavior, the exact `--help` output as the CLI projection, and adjacent `pattern_match.test.rs` tests as corroborating contract evidence. Before using either non-help route, require the focused contract test to pass. Stop and report contract drift when it fails.
 
 Require exactly one route. Reject combinations from different routes, missing values, positional arguments, repeated singleton options, and unknown options. Keep each help option list alphabetized.
 
-The matcher reads only caller-selected regular UTF-8 files. It does not execute case inputs, load environment-selected configuration, make network requests, search for settings, or write files. Remove the former artifact catalog, artifact root, configured suite, graph root, hash-bound result, input closure, manifest binding, path overlay, result output, and single-pattern routes.
+The matcher reads only caller-selected regular UTF-8 files. It does not execute case inputs, load environment-selected configuration, make network requests, search for settings, or write files.
 
-Both manifests are strict JSON objects. Reject duplicate keys, inputs containing a line break, invalid enum values, non-string inputs, and unknown fields. Treat every case input as inert text.
+Both manifests are strict JSON objects. Reject duplicate keys, invalid enum values, non-string inputs, and unknown fields. Reject inputs containing U+000A, U+000B, U+000C, U+000D, U+001C, U+001D, U+001E, U+0085, U+2028, or U+2029 as line breaks. Treat every case input as inert text.
 
-The `--help` route exits with status `0`, writes only the exact help text to standard output, and leaves standard error empty. A successful layer or comparison route writes one bounded summary to standard output. For exit status `1`, aggregate every validation finding, write the total count and at most the first 100 findings to standard error, then write the omitted count. For exit status `2`, write one bounded diagnostic to standard error.
+The `--help` route exits with status `0`, writes only the exact help text to standard output, and leaves standard error empty. A successful layer or comparison route writes one bounded summary to standard output. For exit status `1`, count every validation finding while retaining only the first 100 reportable details, write the exact total and retained findings to standard error, then write the omitted count. Apply one retention budget across the complete invocation, including baseline and candidate settings in the comparison route. Count later findings without materializing their bodies. For exit status `2`, write one bounded diagnostic to standard error when that stream accepts output. If any required standard-output or standard-error write fails, return status `2` even when the computed route result was status `0` or `1`.
 
-For every failure, identify files by role, manifest cases by array and zero-based index, and settings patterns by bucket and zero-based index. Do not emit caller-selected paths, case inputs, manifest contents, pattern text, settings contents, or upstream diagnostic excerpts that could reproduce those values. Limit each rendered finding or diagnostic to `512` UTF-8 bytes and complete standard error to `64` KiB, truncating only at a Unicode-scalar boundary. Keep total and omitted counts within that bound. Select status-`1` findings in the deterministic route-specific order defined below.
+For every failure, identify files by role, manifest cases by array and zero-based index, and settings patterns by bucket and zero-based index. For a duplicate key, identify the containing object through a safe structural location formed only from schema-owned field names, an array or bucket name, and a zero-based index when applicable. Do not emit the duplicated key or any value. Do not emit caller-selected paths, case inputs, manifest contents, pattern text, settings contents, or upstream diagnostic excerpts that could reproduce those values. Limit each rendered finding or diagnostic to `512` UTF-8 bytes and complete standard error to `64` KiB, truncating only at a Unicode-scalar boundary. Keep total and omitted counts within that bound. Select status-`1` findings in the deterministic route-specific order defined below.
 
-Select the single status-`2` diagnostic by this phase order: argument validation, file type and readability in each route’s displayed option order, UTF-8 decoding in that option order, JSON parsing and duplicate-key detection in that option order, manifest structural validation, settings projection in settings-file order, and cross-file reference or coverage validation. Stop at the first failing phase and the first error in its defined order.
+Select the single status-`2` diagnostic by this phase order: argument validation, file type and readability in each route’s displayed option order, UTF-8 decoding in that option order, JSON parsing and duplicate-key detection in that option order, manifest structural validation, settings projection in settings-file order, cross-file reference or coverage validation, and required output writing. Stop at the first failing phase and the first error in its defined order.
 
 Use these exit statuses:
 
 - `0` when every pattern compiles and every declared expectation passes.
 - `1` for a well-formed invocation that finds a configured decision, pattern case, pattern length, or regex failure.
-- `2` for contract-invalid input, invalid arguments, malformed input, or unreadable files.
+- `2` for contract-invalid input, invalid arguments, malformed input, operational output failure, or unreadable files.
+
+An exit status is not a recovery classification. A configured-pattern finding identifies a settings defect. A pattern-case, decision-case, or comparison disagreement establishes only that a well-formed declaration and observed behavior differ. The caller must determine whether the declaration is wrong or the selected settings must change. Status `2` identifies invalid input or an operational failure rather than a settings defect.
 
 ## Parse settings inputs
 
@@ -41,9 +43,9 @@ The fetch object permits exactly these fields:
 
 Every pattern-array entry must be an object containing exactly a Boolean `case_sensitive` field and a string `pattern` field. Reject missing required fields, null values, unknown fields within the fetch or pattern objects, and wrong types as contract-invalid input with exit status `2`.
 
-Apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound) before compilation. Count each decoded `pattern` value in Unicode scalars. A pattern over `1,000` scalars is a validation finding with exit status `1` and must not be compiled. Compile every remaining pattern exactly once with its configured case setting. An invalid regex is a validation finding with exit status `1`.
+Apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound) before compilation. Count each decoded `pattern` value in Unicode scalars. An empty pattern or a pattern over `1,000` scalars is a validation finding with exit status `1` and must not be compiled. Compile every remaining pattern exactly once with its configured case setting. An invalid regex is a validation finding with exit status `1`.
 
-Within each settings file, process buckets in `always_allow`, `always_confirm`, then `always_deny` order and each bucket by ascending array index. If any pattern fails the length or compilation check, report all such configuration findings and skip manifest expectation evaluation for that route.
+Within each settings file, process buckets in `always_allow`, `always_confirm`, then `always_deny` order and each bucket by ascending array index. If any pattern is empty or fails the length or compilation check, report all such configuration findings and skip manifest expectation evaluation for that route.
 
 ## Validate a configured fetch layer
 
@@ -82,7 +84,7 @@ The layer manifest has this schema:
 }
 ```
 
-Require both arrays and at least one entry in each. A pattern case identifies one configured fetch pattern by `bucket` and zero-based `index`, then declares whether that pattern must match the input. Every configured pattern requires at least one matching and one nonmatching single-line case. A manifest missing either polarity is contract-invalid input with exit status `2`. The matcher does not attempt to prove that a missing witness cannot exist. A configuration whose pattern cannot supply both polarities is unsupported by this workflow and must change before approval.
+Require both arrays and at least one `decision_cases` entry. Permit an empty `pattern_cases` array only when the selected settings contain no configured patterns. An empty array with any configured pattern is missing coverage and contract-invalid input with exit status `2`. A pattern case identifies one configured fetch pattern by `bucket` and zero-based `index`, then declares whether that pattern must match the input. Every configured pattern requires at least one matching and one nonmatching single-line case. A manifest missing either polarity is contract-invalid input with exit status `2`. The matcher does not attempt to prove that a missing witness cannot exist. A configuration whose pattern cannot supply both polarities is unsupported by this workflow and must change before approval.
 
 A decision case declares the complete matched-bucket state and final configured decision for one input. Accept `allow`, `confirm`, or `deny` as the decision. Use the patterns compiled with their configured case settings to resolve `always_deny`, `always_confirm`, `always_allow`, and the configured fetch default in that precedence order. Reject an expected state whose declared decision does not follow that precedence as contract-invalid input with exit status `2`.
 
@@ -99,7 +101,7 @@ The planning workflow must identify a deciding-source witness before candidate m
 
 Apply the [settings-input contract](#parse-settings-inputs) to the selected settings file. Reject an out-of-range pattern index or unknown bucket in the manifest as contract-invalid input with exit status `2`.
 
-Order status-`1` findings from source validity to local expectations to final decisions: configured settings patterns in the settings-input order, pattern cases in manifest order, then decision cases in manifest order. On success, report counts of configured patterns, decision cases, and pattern cases. This route establishes configured fetch-pattern matches and decisions for the selected settings file only. It does not resolve displayed prompts, other settings layers, redirect behavior, runtime network access, or sandbox hosts.
+Order status-`1` findings from source validity to local expectations to final decisions: configured settings patterns in the settings-input order, pattern cases in manifest order, then decision cases in manifest order. On success, report counts of configured patterns, decision cases, and pattern cases. This route establishes configured fetch-pattern matches and decisions for the selected settings file only. It does not resolve displayed prompts, other settings layers, redirect behavior, runtime network access, or host grants.
 
 ## Compare fetch permission states
 
@@ -139,11 +141,11 @@ The comparison manifest has this schema:
 
 Require a nonempty `cases` array. Each `baseline` and `candidate` state is complete and must declare a decision consistent with deny, confirm, allow, then the corresponding settings file’s default. An inconsistent state is contract-invalid input with exit status `2`.
 
-Apply the [settings-input contract](#parse-settings-inputs) to the baseline settings and then the candidate settings. Compile every valid fetch pattern once per file. If either settings file has pattern-length or compilation findings, report baseline findings before candidate findings and skip comparison-case evaluation. Otherwise, evaluate cases in manifest order. For each input, evaluate the complete matched-bucket state and final decision against both files, then require exact agreement with the declared `baseline` and `candidate` states.
+Apply the [settings-input contract](#parse-settings-inputs) to the baseline settings and then the candidate settings. Compile every valid fetch pattern once per file. Baseline and candidate compilation share the invocation-wide retained-detail budget. After the first 100 reportable details, count every remaining finding without constructing its body. If either settings file has pattern-length or compilation findings, report baseline findings before candidate findings and skip comparison-case evaluation. Otherwise, evaluate cases in manifest order. For each input, evaluate the complete matched-bucket state and final decision against both files, then require exact agreement with the declared `baseline` and `candidate` states.
 
-This route does not validate a repair from an invalid baseline. The ordinary candidate workflow must establish a valid baseline before mutation and stop for a separately authorized repair plan when it cannot.
+This route does not validate a repair from baseline configuration findings. The ordinary candidate workflow requires status `0` from baseline-layer validation before mutation. A baseline expectation disagreement does not by itself establish invalid baseline settings.
 
-Include every intentional bucket or final-decision transition, each changed boundary, and representative unchanged near misses. On success, report counts of baseline patterns, candidate patterns, and comparison cases. A successful comparison establishes only the declared corpus. It is not formal regex-language equivalence and does not establish runtime or sandbox behavior.
+Include every intentional bucket or final-decision transition, each changed boundary, and representative unchanged near misses. On success, report counts of baseline patterns, candidate patterns, and comparison cases. A successful comparison establishes only the declared corpus. It is not formal regex-language equivalence and does not establish runtime network access or host-grant behavior.
 
 ## Audit Zed regex compatibility
 
@@ -167,9 +169,11 @@ The compatibility audit owns no repair route. Do not mutate `Cargo.toml` or `Car
 
 After resolving version-sensitive behavior through the parent [investigation workflow](../SKILL.md#investigate-and-plan):
 
-1. Identify every participating Zed settings layer and resolve the selected tool’s effective default and accumulated pattern arrays.
-2. For fetch, apply deny, confirm, allow, then default precedence to the initial URL. Evaluate sandbox authorization for the initial hostname and every redirect hostname independently.
-3. For native path and terminal tools, establish that this repository contributes no tool-specific override, then evaluate Zed’s built-in behavior, the inherited global default, task authorization, and sandbox effects separately.
+1. Identify the selected tool’s implementation and whether it invokes configured permission evaluation. Only when it does, identify every participating Zed settings layer and resolve the tool’s effective default and accumulated pattern arrays.
+2. For fetch, treat any empty or regex-invalid effective pattern as denying the tool before pattern precedence.
+3. When every effective fetch pattern is valid, apply deny, confirm, allow, then default precedence to the initial URL. Evaluate shared host-grant authorization for the initial hostname and every redirect hostname independently.
+4. For `terminal`, establish that this repository contributes no tool-specific override, then evaluate Zed’s built-in behavior, the inherited global default, task authorization, and operating-system sandbox effects separately.
+5. For a native path tool, establish that this repository contributes no tool-specific override. When its implementation invokes configured permission evaluation, evaluate the inherited global default, task authorization, and applicable built-in path, privacy, sensitive-settings, and symlink-escape checks. When it does not, omit the configured-permission layer and evaluate task authorization plus those built-in checks. Do not attribute native path behavior to the operating-system sandbox.
 
 The matcher evaluates one selected settings file rather than constructing Zed’s complete effective configuration. When another participating layer contributes fetch rules or a different default, inspect and account for that layer separately.
 
@@ -180,4 +184,4 @@ cargo test --locked --test domfiles-zed-settings-pattern-match-test
 cargo test --locked --test domfiles-zed-settings-regex-dependency-audit-test
 ```
 
-Use the pattern-matcher test as target-contract evidence only after it replaces retired-route assertions and covers help-to-parser agreement, output bounds, schemas, and status behavior. Select remaining root checks through the [skill-owned script validation policy](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).
+Use the pattern-matcher test as contract evidence for help-to-parser agreement, bounded finding retention and output, schemas, and status behavior. Select remaining root checks through the [skill-owned script validation policy](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).

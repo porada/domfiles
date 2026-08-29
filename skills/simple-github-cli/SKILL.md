@@ -36,7 +36,9 @@ Authenticated work must remain in the environment that owns the credentials. Ano
 
 Drafting, preparation, review, and local work do not authorize remote submission or mutation. Authentication and tool permission establish capability only.
 
-Require explicit user authorization and an unambiguous target before any operation whose actual effects can create, edit, comment on, review, close, merge, delete, dispatch, publish, push, fork, or reconfigure GitHub or a remote repository.
+Require explicit user authorization and an unambiguous target before any operation whose actual effects can create, edit, comment on, review, close, merge, delete, dispatch, publish, synchronize, fork, or reconfigure GitHub or a remote repository. Treat `gh repo sync <destination-repository>` as a remote mutation of the named destination. Treat the no-argument form as a local Git mutation under [Opt-In Operations](#opt-in-operations). The `--force` form hard-resets the selected destination branch.
+
+Never publish local Git commits, tags, or refs to a remote, whether through `git push`, a wrapper, a library, or an API. When publication is required, prepare the local state and provide the exact command for the user to run. Do not request an exception or execute publication on the user’s behalf.
 
 Inspect existing state first when a read-only operation can establish what already exists or prevent a duplicate change. Classify the command by its actual effects before executing it, and do not treat a `--dry-run` label as proof that the operation is read-only.
 

@@ -20,9 +20,10 @@ For a standalone audit in either language, follow the [repository audit process]
 ## Investigate the task
 
 1. Classify each in-scope shell file from its hashbang and syntax rather than its extension alone, then apply `fish-shell-scripting` or `posix-shell-scripting`.
-2. When changes to `.config/fish/config.fish` alter machine-local sourcing, keep [Fish local configuration](../../PROJECT.md#fish-local-configuration) aligned.
-3. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
-4. Evaluate `.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Do not report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
+2. When changes to `.config/fish/config.fish` alter the interactive guard or which tracked alias and color files it sources, keep [Fish interactive configuration](../../PROJECT.md#fish-interactive-configuration) aligned.
+3. When changes to `.config/fish/config.fish` alter machine-local sourcing, keep [Fish local configuration](../../PROJECT.md#fish-local-configuration) aligned.
+4. Do not report `.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
+5. Evaluate `.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Do not report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
 
 For every non-Fish shell target and whenever the task touches `domlib`, a Fish `__domfiles_*` helper, shared `$DOMFILES_*` state, or command suppression, follow [`domlib` integration](references/domlib-integration.md).
 
