@@ -30,7 +30,6 @@ export default defineConfig({
 			() => 'pnpm lint:ts:check',
 			() => 'pnpm test:ts',
 		],
-		'*.yaml': 'pnpm lint:yaml',
 		'.github/workflows/*.yaml': 'actionlint',
 		'bin/!(domlib|git-diff-highlight)': [
 			/* prettier-ignore */

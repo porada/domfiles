@@ -17,6 +17,8 @@ catalog:
 
 color: always
 
+engineStrict: true
+
 minimumReleaseAgeExclude:
   - '@standard-config/*'
 

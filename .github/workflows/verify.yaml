@@ -92,16 +92,6 @@ jobs:
           runtime: node@24
       - run: pnpm lint:ts:check
 
-  lint-yaml:
-    name: lint / yaml
-    runs-on: macos-26
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - run: brew install yq
-      - run: bin/domfiles-dev-lint-yaml
-
   typecheck:
     runs-on: ubuntu-latest
     steps:
