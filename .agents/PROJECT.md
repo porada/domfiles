@@ -72,6 +72,10 @@ The global [authorization policy](../.config/zed/AGENTS.md#authorization) separa
 
 Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching decisions by coherent execution phase preserves the context needed for assessment without returning to command-level prompts.
 
+The global [proportionality rule](../.config/zed/AGENTS.md#conduct) separates standing safety gates from implementation complexity. It treats ordinary cooperative concurrency and reversible tracked-file work as preservation and validation problems rather than reasons for speculative transaction infrastructure.
+
+Task-local finding classification and one review baseline prevent later reviewers from treating earlier fixes, settled decisions, or stale evidence as new work. The global [findings](../.config/zed/AGENTS.md#documentation) and [review convergence](../.config/zed/AGENTS.md#collaboration) rules own the resulting workflow.
+
 Git publication remains user-only because remote Git history cannot be recalled from every consumer.
 
 ### Agent task relay
@@ -177,6 +181,12 @@ Every supported installation of the global `agent-documentation` skill is assume
 A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/domfiles-agent-documentation/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
 
 Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
+
+The [smallest sufficient contract](../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#design-the-smallest-sufficient-contract) gate challenges necessity before correctness. Adversarial design review runs before implementation and remains bounded to declared consumers, evidence, and the operating model, so it removes unsupported contract elements instead of hardening a script around speculative requirements.
+
+### Version-sensitive agent documentation
+
+Version-sensitive agent documentation uses one authoritative upstream baseline because current documentation, pinned source, and upstream `main` can describe different implementations. The canonical [agent-documentation workflow](../skills/domfiles-agent-documentation/SKILL.md#compose-the-change) resolves conflicts against that baseline before editing and ties security-boundary claims to exact implementation evidence.
 
 ### Zed selection-to-new-thread key binding
 

@@ -4,6 +4,20 @@ A skill-owned script is a small program that gathers recurring repository eviden
 
 When a script belongs to a portable skill—one installed for use across target projects rather than scoped to one repository—apply the additional [portable skill script contract](portable-skill-scripts.md) before resolving its interface.
 
+## Design the smallest sufficient contract
+
+The optimal contract is the least complex one that completely serves its named consumers within the declared operating model. Apply this gate before implementing a new script or materially expanding an existing script. A material expansion adds a dependency, durable artifact, input schema, mutation-authorizing decision, observable failure or status behavior, operation mode, or side effect. A fix reuses the accepted contract without reopening design when it only restores conformance to that contract and adds none of those material-expansion elements.
+
+1. **Establish necessity.** Name the recurring consumer and the single job the script must perform. First attempt to remove the script, use an existing repository workflow, or use a bounded direct tool sequence. Do not create a script for a one-time transition or merely to encode review preferences.
+2. **Draft only the observable contract.** Define its authority, concurrency and threat model, failure boundaries, inputs, non-goals, outputs, side effects, and statuses. Do not select dependencies or internal architecture yet.
+3. **Run one bounded adversarial design pass.** Challenge necessity before correctness. First try to delete the script or each retained contract element. Then test the remaining contract against boundary values, concurrency inside the declared model, malformed inputs, output failures, and partial operations. Derive a requirement only from a ground allowed by the global “Proportionality” rule or from authoritative behavior, a named recurring consumer, or a script-specific standing policy. The pass must identify the smallest viable alternative and must not invent future consumers, threats, or use cases.
+4. **Choose the smallest sufficient design.** Proceed only when no simpler design satisfies the established requirements. If the adversarial pass turns a small helper into a general framework, protocol, or transactional system, stop and return to the direct workflow or narrow the requirement before implementation.
+5. **Freeze the accepted contract for implementation.** Implementation and review verify conformance to that contract. Reopen design only when new evidence invalidates an accepted assumption. A hypothetical case outside the declared operating model does not expand the contract.
+
+Use one adversarial pass and, after any revision, one focused check of the changed contract. Do not begin an open-ended design-review loop. Ask the user only when two materially different designs remain viable. Otherwise choose the smallest reversible design autonomously, while following every standing approval gate.
+
+Keep rejected alternatives and adversarial notes in task context. Document only the accepted observable contract and non-obvious rationale.
+
 ## Choose the operation route
 
 - Use a read route to gather and report evidence without creating or updating repository artifacts.
@@ -43,8 +57,8 @@ Before changing a skill-owned script within a protected skill tree, follow the [
 - Cover help-to-parser agreement with a contract test rather than review alone. Assert for each mode or standalone operation that the options documented for that route exactly match the options its parser accepts. Performing the alignment without a test leaves the next change free to reintroduce the drift.
 - Keep each help option list alphabetized within its section. Ordering there is order-independent, so a reviewer cannot distinguish a deliberate order from drift.
 - Keep each operation bounded and deterministic for the same repository state and inputs.
-- Prefer one batch, manifest, or suite invocation that reads and prepares shared inputs once over repeated one-record processes. Parse, compile, hash, or index shared data once per invocation when later records reuse it.
-- Let cooperating modes or scripts consume one explicit manifest-relative artifact graph instead of repeatedly extracting the same source data. Keep each artifact’s authority, integrity boundary, and mutation contract clear.
+- When a named consumer requires repeated records, prefer one batch or suite invocation that reads and prepares shared inputs once over repeated one-record processes. Parse, compile, hash, or index shared data once per invocation when later records reuse it. Do not introduce batch input without that consumer.
+- When the accepted contract requires cooperating modes or scripts to share artifacts, define one explicit artifact graph and keep each artifact’s authority, integrity boundary, and mutation contract clear. Do not introduce a manifest solely to connect operations that can remain one invocation.
 - Aggregate the complete result while retaining only the bounded details that can be reported. State exact total and omitted counts without storing or emitting every failure body.
 - Choose human-readable or structured output according to the consumer’s needs. Do not require JSON without a consumer that needs it.
 - Do not invent an output filename in the current directory. Use a declared repository destination or require the caller to supply one.
@@ -81,9 +95,9 @@ Before writing:
 - Use the language’s native test framework when it is sufficient. Use `node:test` for JavaScript or TypeScript and Rust’s built-in `#[test]` harness for Rust.
 - Keep command-line entrypoints testable through an injectable function such as `run(arguments, stdout, stderr)` so focused contract tests avoid spawning a process for every case.
 - Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
-- Cover every documented refusal and every routine that authorizes a mutation on a correctness claim, such as an equivalence, containment, or accounting proof. Generic failure coverage elsewhere does not satisfy this. Assert the refusal a caller would rely on, not only that the operation failed.
+- Cover every distinct externally observable refusal and every routine that authorizes a mutation on a correctness claim, such as an accounting, containment, or equivalence proof. For a refusal shared by multiple external routes, keep the detailed refusal cases on the shared path and add one lightweight wiring assertion for each route proving that it reaches that path. Add route-specific detailed cases only when the route changes behavior or a caller relies on that distinction. Assert the refusal a caller would rely on, not only that the operation failed.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](#bound-artifact-locations).
-- Run focused tests and the repository’s root static validation. Direct execution and focused tests do not replace root typechecking or compilation.
+- Run focused tests during implementation and after each behaviorally relevant correction. Run the repository’s root static validation once after the consolidated change batch, then rerun it only when a later correction changes an input or configuration that it covers. Direct execution and focused tests do not replace root typechecking or compilation.
 
 Document focused script and test commands in the owning skill or its repair reference.
 
