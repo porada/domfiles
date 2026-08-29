@@ -28,7 +28,9 @@ Choose the branch that matches the request. An explicit change takes precedence 
 1. Identify Fish from its hashbang and syntax rather than its filename alone. Include extensionless entrypoints with a Fish hashbang.
 2. Classify the target as a noninteractive script, interactive configuration, autoloaded function, event handler, prompt, or completion. Each surface has different loading, status, output, and performance constraints.
 3. Choose the execution boundary according to who owns the state. Use a function for reusable behavior that must affect the current Fish process. Source a file only when file-based code must affect its caller. Execute a script when process isolation is intended. A sourced file has no process boundary, while an executed Fish script still reads startup configuration by default and inherits its environment.
-4. Prefer the project’s formatter, lint wrapper, tests, and conventions when they preserve Fish semantics. Do not import POSIX-shell policy merely because another shell exists in the same repository.
+4. For agent-selected invocations and command examples, default to `fish --no-config` when using Fish as a noninteractive interpreter. Do not apply this default to repository scripts, workflows, or configuration. This default also does not apply when Fish startup configuration or configured runtime behavior is in scope.
+5. Set `MANPAGER=cat` and `PAGER=cat` for agent-selected Fish-owned help commands so they terminate without opening an interactive pager.
+6. Prefer the project’s formatter, lint wrapper, tests, and conventions when they preserve Fish semantics. Do not import POSIX-shell policy merely because another shell exists in the same repository.
 
 Load bundled guidance when the corresponding decision enters scope:
 
