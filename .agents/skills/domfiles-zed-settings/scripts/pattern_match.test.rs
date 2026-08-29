@@ -1560,7 +1560,7 @@ fn locates_a_nested_duplicate_key_in_a_configured_pattern_object() {
     for disclosure in ["case_sensitive", secret_pattern, "token-abc123"] {
         assert!(
             !stderr.contains(disclosure),
-            "A duplicate-key location must not disclose `{disclosure}`"
+            "A duplicate-key location must not disclose fixture data"
         );
     }
 }
@@ -2379,7 +2379,7 @@ fn omits_selected_paths_inputs_and_patterns_from_diagnostics() {
     ] {
         assert!(
             !stderr.contains(secret),
-            "Standard error must not disclose `{secret}`"
+            "Standard error must not disclose fixture data"
         );
     }
     assert_declares_no_state(&stderr);
