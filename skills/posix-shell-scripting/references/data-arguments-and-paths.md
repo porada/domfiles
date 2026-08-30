@@ -132,7 +132,7 @@ Keep the loop body short enough that the read boundary remains visible. Move lon
 
 In an executable entrypoint, open the file on a dedicated descriptor before the loop when a command in the body may consume standard input. Treat `read` and line processing as independent failure sources. When the loop owns a dedicated descriptor, treat opening and closing it as additional failure sources, and close it after the loop.
 
-Capture each processing or input/output error status immediately. Stop processing when the interface requires it, and propagate statuses according to the interface’s stated precedence. Do not rely on `set -e` to supply that contract. Use `return` rather than `exit` inside a function.
+Capture each processing or input/output error status immediately. Stop processing when the interface requires it, and propagate statuses according to the interface’s stated precedence and the [output and status contract](functions-and-interfaces.md#output-and-status). Do not rely on `set -e` to supply that contract.
 
 Do not iterate over `$(cat "$file")`. Command substitution removes trailing newlines, field splitting discards line boundaries, and pathname expansion can reinterpret the resulting text.
 

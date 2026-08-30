@@ -93,7 +93,7 @@ If `human-facing-writing` is unavailable locally and available evidence shows th
 
 ## Validation
 
-Run behavioral checks only when they cannot modify user state. Cover empty and multi-element lists, paths containing whitespace, failed commands, unmatched globs, and option boundaries when those cases matter.
+Run behavioral checks only when they cannot modify user state. Cover empty and multi-element lists, paths containing whitespace, newline-bearing values and command output, failed commands, unmatched globs, and option boundaries when those cases matter.
 
 When a standalone target must not depend on startup configuration, exercise it under `fish --no-config` and its normal target context. Treat this as a configuration-independence check rather than a hermetic environment.
 

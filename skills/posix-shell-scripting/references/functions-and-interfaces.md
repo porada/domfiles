@@ -6,6 +6,8 @@ Choose each function, sourcing, and process boundary according to the state and 
 
 POSIX does not define `local`. Use a subshell-bodied function when assignments, directory changes, shell options, traps, file descriptors, or the file-creation mask must not affect the caller.
 
+`exit` executed while a subshell-bodied function’s own subshell is the active execution environment terminates that function subshell. On direct invocation of the function, the resulting status returns to its caller, whose own error handling may still terminate the caller’s shell. An `exit` in a nested subshell or command substitution terminates only that nested environment. This containment describes process behavior and does not create an exception to the function-level [output and status rule](#output-and-status).
+
 ```sh
 run_make_in_directory() (
   if [ $# -lt 1 ] || [ -z "$1" ]; then
@@ -53,7 +55,7 @@ Treat standard output, standard error, and exit status as separate interfaces un
 | Standard error  | Diagnostics        |
 | Exit status     | Success or failure |
 
-A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow such as `if command` or `command || fallback`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from a function and `exit` from an executed script. Leave `$?` unquoted when passing it directly to `exit`.
+A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow such as `if command` or `command || fallback`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from every function, including a subshell-bodied function, and `exit` from an executed script. Leave `$?` unquoted when passing it directly to `exit`.
 
 Some commands use a nonzero status for a domain result rather than an operational error. Classify every documented status, and propagate unexpected values. Do not put the command behind `!` when the original status matters because `!` replaces it with the inverted result.
 

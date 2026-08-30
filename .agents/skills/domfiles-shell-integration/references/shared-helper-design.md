@@ -20,7 +20,7 @@
 2. Establish a bounded comparison across the shared contract surface defined in [Align cross-shell helper contracts](#align-cross-shell-helper-contracts).
 3. Resolve each mismatch as aligned behavior or an accepted shell-specific difference before implementation. Do not infer that a transitive behavior should be retained or dropped.
 4. When command form changes, follow [command form and location](command-form-and-location.md), then migrate call sites and contract documentation with the implementation.
-5. Exercise both counterparts with representative boundary inputs and compare their observable contracts before considering the port complete.
+5. Exercise both counterparts with the same bounded case matrix and compare their observable contracts before considering the port complete. When applicable, cover input-shape and content boundaries such as argument cardinality, empty values, letter-case variants, leading and trailing whitespace, and embedded and trailing newlines, plus interaction and outcome boundaries such as EOF, retries, and failure propagation.
 
 ## Document helper contracts
 

@@ -130,6 +130,8 @@ Do not replace an external command mechanically. Use a Fish builtin when it expr
 | Resolve external program availability | `command --query` | Accepting a function or builtin by mistake |
 | Test list membership | `contains` | Regex or loop-based membership checks |
 
+When porting input handling from another shell, compare delimiters, tokenization, backslash handling, leading and trailing whitespace, and EOF behavior explicitly.
+
 When a verified command interface supports it, place `--` after fixed options and before externally supplied positional arguments.
 
 ## Command Conditions
