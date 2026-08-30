@@ -21,7 +21,7 @@ Do not read every permission reference by default. Select only the branches requ
 
 Apply the shared policy and every selected branch throughout the workflow chosen in the parent skill, with these additions:
 
-- For an explicitly requested domain or URL allowance, follow [Translate approved domains and URLs](fetch-permissions.md#translate-approved-domains-and-urls) before any network access to the requested destination.
+- For an explicitly requested domain or URL allowance, follow [Translate approved domains and URLs](fetch-permissions.md#translate-approved-domains-and-urls) before any network access to the requested destination other than the bounded workflow-complete host review that procedure defines.
 - For a standalone documentation audit that includes the Zed permission regex compatibility rationale, follow [Audit Zed regex compatibility](permission-evaluator.md#audit-zed-regex-compatibility) read-only. Treat any requested dependency change as a separate task under the global “Dependencies” policy.
 - For an unexpected native path or terminal permission outcome, first establish that no repository-configured override participates. Then follow [Resolve effective permission behavior](permission-evaluator.md#resolve-effective-permission-behavior) for the tool’s distinct authorization layers.
 
