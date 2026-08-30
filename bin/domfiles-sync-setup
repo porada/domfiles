@@ -56,7 +56,14 @@ else
     __print_error_and_exit 'Failed to resolve `user.email` from `.config/git/config`'
   fi
 
-  read -r type key _ < "$DOMFILES_SSH_KEY.pub"
+  key=''
+  type=''
+  read -r type key _ < "$DOMFILES_SSH_KEY.pub" || true
+
+  if [ -z "$key" ] || [ -z "$type" ]; then
+    __print_error_and_exit "Failed to parse the public key at \`$DOMFILES_SSH_KEY.pub\`"
+  fi
+
   printf '%s namespaces="git" %s %s\n' "$signer" "$type" "$key" \
     > "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
 

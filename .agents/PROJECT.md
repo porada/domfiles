@@ -220,7 +220,12 @@ The npm package adds a large platform-specific native package to every environme
 
 ### Cross-shell helper differences
 
-Accepted shell-specific contract differences between paired `domlib` and Fish helpers are recorded here with their rationale. None are currently established.
+Accepted shell-specific contract differences between paired `domlib` and Fish helpers are recorded here with their rationale:
+
+- **Command routing:** POSIX `__` routes `brew` and `pnpm` through `domlib` wrappers that add fallback or search paths, environment overrides, and custom missing-command diagnostics. Fish `__domfiles_print_and_run` invokes the requested external command directly. Fish startup establishes the supported command paths, and the generic wrapper intentionally adds no per-command routing, environment, or diagnostics.
+- **Failure handling:** Argument-validation failures in POSIX `__`, `__confirm`, and `__is_boolean` terminate the running shell. Their Fish peers report the error and return status 1 because terminating from an autoloaded function would close the interactive shell.
+- **Quoting:** POSIX `__print_command` renders arguments with Python `shlex.quote`, while Fish `__domfiles_print_command` uses `string escape`. Each produces syntax for its own shell, so equivalent commands do not require byte-identical display text.
+- **Suppression lifecycle:** `domlib` normalizes `DOMFILES_SUPPRESSED` once when loaded. Fish `__domfiles_print_command` reads and validates the current value for every command because `.config/fish/config.fish` intentionally does not initialize it. An unsupported value therefore fails when `domlib` loads or when Fish attempts to print a command. Fish has no `__suppress` peer because a single-command variable override can limit suppression to one function invocation.
 
 ### Dependency status labels
 
@@ -286,6 +291,10 @@ Tracked aliases and colors load only during interactive Fish sessions. `.config/
 
 Fish sources this file through `.config/fish/config.fish` during noninteractive startup. A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command while suppressing its output. The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
 
+### Git Fixup Amend Behavior
+
+`git f --amend`, `git f --amend HEAD`, and `git f HEAD --amend` intentionally invoke `git commit --amend --fixup HEAD`. The amended commit receives a `fixup!` subject derived from the former `HEAD`, while amend removes that target from branch history. An autosquash rebase therefore leaves the `fixup!` commit unmatched. This consequence is intentional and accepted.
+
 ### Git log search coloring
 
 `git l` intentionally filters the ANSI-colored formatted log directly so Git’s field colors and `grep`’s match highlighting remain a simple pipeline. Because `grep` treats ANSI escape sequences as input bytes, an expression that crosses a color boundary—for example, from the hash into the subject or from the subject into the date—does not match even though the displayed text is contiguous. This limitation is intentional in favor of implementation simplicity.
@@ -338,11 +347,11 @@ The `__string_*` helpers are optional conveniences rather than a mandatory abstr
 
 ### Suppressed command output
 
-`DOMFILES_SUPPRESSED` suppresses the `$ …` command echo emitted by `__print_command`. It defaults to `false`. `domlib` parses user-supplied values through `__read_boolean_from_env`, then only normalized `true` enables suppression. Gating that one function covers every caller—`__`, and therefore `__chmod`, `__mkdir`, `__touch`, and `__symlink`, plus `__ssh_add` and `__domfiles_exec --print`. Only the echo is suppressed, so a wrapped command’s own output, headings, confirmations, and errors continue to print.
+`DOMFILES_SUPPRESSED` suppresses the `$ …` command echo emitted by the paired `__print_command` and `__domfiles_print_command` helpers. It defaults to `false`. `domlib` and Fish normalize user-supplied values through the paired `__read_boolean_from_env` and `__domfiles_read_boolean_from_env` helpers, then only normalized `true` enables suppression. Gating the command-printing helpers covers Fish `__domfiles_print_and_run` and every POSIX caller: `__`, and therefore `__chmod`, `__mkdir`, `__touch`, and `__symlink`, plus `__ssh_add` and `__domfiles_exec --print`. Only the echo is suppressed, so a wrapped command’s own output, headings, confirmations, and errors continue to print.
 
-`__is_ci` overrides suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
+`__is_ci` and `__domfiles_is_ci` override suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
 
-`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state rather than a path mirrored into Fish. The [`domlib` maintenance policy](skills/domfiles-shell-integration/references/domlib-integration.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set.
+`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state that `.config/fish/config.fish` intentionally does not initialize. The [`domlib` maintenance policy](skills/domfiles-shell-integration/references/domlib-integration.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set.
 
 A `.config/fish/config.fish` counterpart remains unwanted for a different reason than the other exemptions. Fish does not export `set -g`, which every `DOMFILES_*` entry in that file uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
 

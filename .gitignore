@@ -3,6 +3,7 @@
 .config/fish/conf.d
 .config/fish/fish_variables
 .config/fish/functions/__*.fish
+!.config/fish/functions/__domfiles_*.fish
 .config/fish/functions/fisher.fish
 .config/fish/local.fish
 .config/fish/themes

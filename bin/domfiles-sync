@@ -8,7 +8,30 @@ if ! __is_brew_installed; then
   __print_error_and_exit '`brew` needs to be installed before running `domfiles sync`'
 fi
 
+sync_repository=false
+
 if __is_callable git; then
+  if branch="$(git -C "$DOMFILES" symbolic-ref --quiet --short HEAD)"; then
+    case "$branch" in
+      main | master)
+        sync_repository=true
+        ;;
+      *)
+        __print_info "Skipping repository update on branch \`$branch\`"
+        ;;
+    esac
+  else
+    status="$?"
+
+    if [ "$status" -eq 1 ]; then
+      __print_info 'Skipping repository update because `HEAD` does not reference a branch'
+    else
+      __print_error 'Failed to identify the current branch'
+    fi
+  fi
+fi
+
+if [ "$sync_repository" = true ]; then
   stash_failed=false
   stashed_changes=false
 

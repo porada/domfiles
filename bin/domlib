@@ -647,7 +647,7 @@ __print_warning() {
 }
 
 # Prints the given text, replacing `$HOME` with `~`
-__printf() {
+__printf() (
   if [ $# -eq 0 ]; then
     return 0
   fi
@@ -659,7 +659,7 @@ __printf() {
     # shellcheck disable=SC2059
     printf "$format" "$(__string_replace "$*" "$HOME" '~')"
   fi
-}
+)
 
 # Prints parameters as shell-quoted values separated by spaces
 __quote_params() {
@@ -873,8 +873,8 @@ __terminal_count_text_rows() (
   echo "$((rows))"
 )
 
-# Prints available terminal rows and columns. Optionally uses `$1` as the
-# reserved row count
+# Prints available rows and columns for the terminal on standard input.
+# Optionally uses `$1` as the reserved row count
 __terminal_get_available_size() (
   if [ $# -gt 1 ]; then
     __print_error_and_exit '`__terminal_get_available_size` accepts an optional reserved row count'
@@ -886,7 +886,7 @@ __terminal_get_available_size() (
     __print_error_and_exit '`__terminal_get_available_size` requires an unsigned reserved row count'
   fi
 
-  size="$(stty size <&2 2> /dev/null)" || return $?
+  size="$(stty size 2> /dev/null)" || return $?
   rows="${size%% *}"
   columns="${size##* }"
 

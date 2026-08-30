@@ -4,7 +4,6 @@
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Create a fixup commit for the requested commit or `HEAD`
-amend=false
 explicit_fixup=false
 option_operand=false
 param_index=0
@@ -34,10 +33,6 @@ for param in "$@"; do
       explicit_fixup=true
       break
       ;;
-    --amend)
-      amend=true
-      continue
-      ;;
     --author | --cleanup | --date | --file | --inter-hunk-context | \
       --message | --pathspec-from-file | --reedit-message | --reuse-message | \
       --squash | --template | --trailer | --unified)
@@ -61,7 +56,9 @@ for param in "$@"; do
 
   is_target=false
 
-  if [ "${#param}" -ge 4 ]; then
+  if [ "$param" = 'HEAD' ]; then
+    is_target=true
+  elif [ "${#param}" -ge 4 ]; then
     case "$param" in
       *[!0-9a-fA-F]*) ;;
       *)
@@ -85,11 +82,7 @@ if [ "$explicit_fixup" = true ] || [ "$option_operand" = true ]; then
 fi
 
 if [ "$target_count" -gt 1 ]; then
-  __print_error_and_exit '`git f` accepts at most one commit SHA'
-fi
-
-if [ "$amend" = true ] && [ "$target_count" -eq 0 ]; then
-  __print_error_and_exit '`git f --amend` requires a commit SHA'
+  __print_error_and_exit '`git f` accepts at most one commit SHA or `HEAD`'
 fi
 
 fixup_added=false
