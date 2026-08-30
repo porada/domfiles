@@ -10,9 +10,17 @@
 
 - The helpers named exactly `__` and `__domfiles` have no automatic Fish counterpart names. For any other `domlib` helper, replace the leading `__` with `__domfiles_`, leaving names that already begin with `__domfiles_` unchanged.
 - Treat paired POSIX and Fish helpers as peer implementations of a shared contract. Neither implementation governs the other.
-- Keep their accepted inputs, stdout and stderr behavior, return statuses, side effects, defaults, failure conditions, and adjacent contract documentation semantically aligned wherever both shells can support the same behavior.
-- Use shell-native implementations. Allow a shell-specific contract difference when native behavior has no equivalent in the other shell. Document each accepted difference and its rationale in [cross-shell helper differences](../../../PROJECT.md#cross-shell-helper-differences), and keep the remainder of the pair’s contract aligned.
+- Keep their accepted inputs, stdout and stderr behavior, return statuses, side effects, defaults, failure conditions, validation timing, and adjacent contract documentation semantically aligned wherever both shells can support the same behavior.
+- Use shell-native implementations without weakening the shared contract. A preferred idiom does not take precedence when it requires lossy normalization, including command substitution that changes significant whitespace or record boundaries. Allow a shell-specific contract difference when native behavior has no equivalent in the other shell or a settled project decision intentionally selects different behavior. Document each accepted difference and its rationale in [cross-shell helper differences](../../../PROJECT.md#cross-shell-helper-differences), and keep the remainder of the pair’s contract aligned.
 - When either helper changes, inspect its counterpart. During an authorized change, update the implementations, contract documentation, and documented differences needed to keep the pair accurate. During a review, audit, or diagnosis, report required alignment without editing either helper or its documentation.
+
+## Port a helper between shells
+
+1. Inventory the source helper’s direct and transitive behavior before implementing its counterpart, including wrapper dispatch, command resolution, environment variables, failure conditions, suppression, and call sites.
+2. Establish a bounded comparison across the shared contract surface defined in [Align cross-shell helper contracts](#align-cross-shell-helper-contracts).
+3. Resolve each mismatch as aligned behavior or an accepted shell-specific difference before implementation. Do not infer that a transitive behavior should be retained or dropped.
+4. When command form changes, follow [command form and location](command-form-and-location.md), then migrate call sites and contract documentation with the implementation.
+5. Exercise both counterparts with representative boundary inputs and compare their observable contracts before considering the port complete.
 
 ## Document helper contracts
 

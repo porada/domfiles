@@ -85,7 +85,6 @@
 
 ## Tooling
 
-- **Tracked renames:** Always use `git mv` when renaming tracked files.
 - **Empty directories:** When task-authorized removals leave a directory empty, remove that directory as part of the same change. Repeat for newly empty ancestors within the task scope, but never remove a project root implicitly.
 - **High-impact local mutations:** Before an operation may add, rewrite, move, or remove a dynamically determined or otherwise open-ended set of paths, establish a bounded expected target set through a dry run or equivalent inspection. Run it only when that target set fits the task scope, compare the resulting changed-path inventory with the expectation, stop on expansion, and never discard unrelated state merely to restore a clean checkout.
 - **Disposable test commits:** Disable signing with `git -c commit.gpgsign=false commit …` when creating commits in disposable Git repositories for tests so global signing configuration cannot make the test interactive.

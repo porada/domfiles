@@ -37,7 +37,6 @@ For any security report, whether standalone or submitted through an issue or pul
 
 ## Content
 
-- Keep headings short.
 - Place prerequisites, caveats, alternatives, and evidence close to the claim or action they constrain.
 - Use a callout for an operational constraint or risk that readers could otherwise miss. Place it beside the affected action, use the least severe established callout type that fits, and keep it concise. Do not use callouts for ordinary notes or decorative emphasis.
 - Present document fragments and heading outlines directly rather than wrapping the entire fragment in an outer code block. Preserve code blocks that belong to the document content.

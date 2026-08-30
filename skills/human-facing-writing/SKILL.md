@@ -26,7 +26,7 @@ Choose the route for the requested writing task. An explicit change takes preced
 
 Start with the authorized writing unit: the exact writing the task permits you to create, change, or evaluate. Establish where it will appear, the reader it must serve, its immediate purpose, and what should change in the reader’s understanding, feeling, judgment, or action. Make its purpose and value clear early enough to earn attention, without manufacturing urgency or stripping away necessary complexity.
 
-Make every part earn its place. An atomic unit is a self-contained writing element, such as a label, title, or short message. Give it one clear job. In connected prose, let each sentence, paragraph, and section move the idea, experience, or action forward rather than repeat what the reader already knows.
+Make every part earn its place. An atomic unit is a self-contained writing element, such as a label, title, or short message. Give it one clear job. For a heading, make the section’s controlling idea, action, question, contrast, or conventional role recognizable in short, natural wording. In connected prose, let each sentence, paragraph, and section move the idea, experience, or action forward rather than repeat what the reader already knows.
 
 Use precise, familiar, concrete language. When clarity must be immediate, name who acts, what causes what, and which conditions, contrasts, or dependencies matter. Keep confidence proportional to the available material, and verify factual statements.
 
