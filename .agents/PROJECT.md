@@ -20,14 +20,6 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
-### Agent-browser configuration isolation
-
-The [`agent-browser` shim](../bin/agent-browser) sets `AGENT_BROWSER_CONFIG` to the managed [`.config/agent-browser.json`](../.config/agent-browser.json) before resolving the repository-scoped CLI. Selecting one file suppresses upstream automatic discovery of `~/.agent-browser/config.json` and `./agent-browser.json`. A caller-supplied `AGENT_BROWSER_CONFIG` is rejected, while an explicit CLI `--config <path>` retains upstream’s higher precedence and is the supported route for project-local configuration.
-
-The managed configuration defaults to the `domfiles` namespace so daemon sockets and restore-state directories do not collide with direct or non-domfiles use. It also enables nonce-marked content boundaries around untrusted page output.
-
-Before exporting the managed configuration path, the shim rejects inherited `AGENT_BROWSER_*` variables that can select external state or hidden execution inputs. It preserves standard proxy variables and `AGENT_BROWSER_ENCRYPTION_KEY`, along with diagnostic, output, rendering, restore, session, and timeout controls.
-
 ### GitHub CLI authentication boundary
 
 `gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store.
@@ -324,7 +316,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 ### Repository-scoped commands
 
-`agent-browser`, `plugins`, and `skills` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
+`plugins` and `skills` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
 
 `domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
 

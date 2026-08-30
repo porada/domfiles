@@ -142,7 +142,6 @@
 			"network_hosts": [
 				"*.spec.whatwg.org",
 				"add-skill.vercel.sh",
-				"agent-browser.dev",
 				"agentclientprotocol.com",
 				"agentskills.io",
 				"alerts.home-assistant.io",
