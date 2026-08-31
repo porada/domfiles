@@ -5,6 +5,11 @@
 		"bin/git-diff-highlight",
 		"..."
 	],
+	"file_types": {
+		"Git Config": [
+			"**/git/config"
+		]
+	},
 	"format_on_save": "on",
 	"formatter": [
 		{
