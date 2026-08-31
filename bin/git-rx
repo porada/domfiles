@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# shellcheck source=bin/domlib
+# shellcheck source=domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Abort when skipped files would be affected by the reset

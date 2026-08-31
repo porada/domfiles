@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# shellcheck source=bin/domlib
+# shellcheck source=domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Run the available `domfiles` command or list all available commands

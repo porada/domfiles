@@ -1,12 +1,14 @@
 #!/bin/sh
 
-# shellcheck source=bin/domlib
+# shellcheck source=domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Create a fixup commit for the requested commit or `HEAD`
+amend=false
 explicit_fixup=false
 option_operand=false
 param_index=0
+preserve_message=false
 separator_index=0
 target=HEAD
 target_count=0
@@ -29,6 +31,10 @@ for param in "$@"; do
   # optional short-option values only when attached and treating bare required
   # forms as consuming the next argument
   case "$param" in
+    --amend)
+      amend=true
+      continue
+      ;;
     --fixup | --fixup=*)
       explicit_fixup=true
       break
@@ -85,7 +91,27 @@ if [ "$target_count" -gt 1 ]; then
   __print_error_and_exit '`git f` accepts at most one commit SHA or `HEAD`'
 fi
 
-fixup_added=false
+if [ "$amend" = true ] && __git_is_commit_reference HEAD; then
+  head_commit="$(git rev-parse --verify 'HEAD^{commit}')"
+  target_commit="$(git rev-parse --verify "$target^{commit}")"
+
+  if [ "$target_commit" = "$head_commit" ]; then
+    head_subject="$(git log --no-show-signature -1 --format=%s HEAD)"
+
+    case "$head_subject" in
+      'amend! '* | 'fixup! '* | 'squash! '*)
+        preserve_message=true
+        ;;
+      *)
+        if __git_is_commit_reference 'HEAD^'; then
+          target='HEAD^'
+        fi
+        ;;
+    esac
+  fi
+fi
+
+commit_option_added=false
 param_index=0
 total="$#"
 
@@ -99,16 +125,25 @@ while [ "$param_index" -lt "$total" ]; do
   fi
 
   if [ "$param_index" -eq "$separator_index" ]; then
-    set -- "$@" --fixup "$target" "$param"
-    fixup_added=true
+    if [ "$preserve_message" = true ]; then
+      set -- "$@" --no-edit "$param"
+    else
+      set -- "$@" --fixup "$target" "$param"
+    fi
+
+    commit_option_added=true
     continue
   fi
 
   set -- "$@" "$param"
 done
 
-if [ "$fixup_added" = false ]; then
-  set -- "$@" --fixup "$target"
+if [ "$commit_option_added" = false ]; then
+  if [ "$preserve_message" = true ]; then
+    set -- "$@" --no-edit
+  else
+    set -- "$@" --fixup "$target"
+  fi
 fi
 
 __ git commit "$@"

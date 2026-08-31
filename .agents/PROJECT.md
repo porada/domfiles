@@ -263,7 +263,7 @@ The `__symlink` comment states the normal replacement contract and omits source-
 
 ### FFmpeg media preset compatibility
 
-Every supplied input and generated output media format, dimension, duration, and other size constraint in `bin/ffmpeg-wav-png` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
+Every supplied input and generated output media format, dimension, duration, and other size constraint in `.config/fish/functions/ffmpeg-wav-png.fish` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
 
 Each preset owns a complete conversion branch. The repeated discovery loop, image pairing, and output naming across those branches are intentional. Consolidating them into one shared pipeline is a non-goal, so every preset’s container, filter chain, codec options, and constraints stay independent.
 
@@ -291,9 +291,9 @@ Tracked aliases and colors load only during interactive Fish sessions. `.config/
 
 Fish sources this file through `.config/fish/config.fish` during noninteractive startup. A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command while suppressing its output. The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
 
-### Git Fixup Amend Behavior
+### Git fixup amend behavior
 
-`git f --amend`, `git f --amend HEAD`, and `git f HEAD --amend` intentionally invoke `git commit --amend --fixup HEAD`. The amended commit receives a `fixup!` subject derived from the former `HEAD`, while amend removes that target from branch history. An autosquash rebase therefore leaves the `fixup!` commit unmatched. This consequence is intentional and accepted.
+With `--amend`, `git f` compares its inferred or positional fixup target with the commit currently at `HEAD`. When both resolve to the same commit, it preserves an existing `amend!`, `fixup!`, or `squash!` message with `--no-edit`. For any other subject, it moves the target to the first parent when one exists. If no first parent exists, it leaves the target at `HEAD` so Git can amend a root commit.
 
 ### Git log search coloring
 

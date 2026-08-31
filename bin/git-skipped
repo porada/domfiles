@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# shellcheck source=bin/domlib
+# shellcheck source=domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
 # Match `git status` color output
