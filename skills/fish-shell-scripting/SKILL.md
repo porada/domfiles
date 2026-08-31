@@ -14,6 +14,14 @@ Fish code is clearest when it is written on the language’s own terms. This ski
 
 Write only for the latest stable Fish release unless the user or target environment requires another version.
 
+## Secrets and Authentication
+
+Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, relays, command literals, environment assignments, configuration values, or task artifacts. Never directly retrieve, inspect, enumerate, echo, transmit, create, rotate, or load a real credential or authentication identity. Use established machine-local authentication only through ordinary non-disclosing tool operations. When direct credential handling is required, provide a command for the user to run instead.
+
+## Typography
+
+Apply the [typography conventions](references/typography.md) to all prose.
+
 ## Workflow
 
 Choose the branch that matches the request. An explicit change takes precedence when the request also uses review or audit language.

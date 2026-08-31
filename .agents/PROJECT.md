@@ -122,9 +122,11 @@ The list intentionally omits `claude`, `codex`, `fisher`, `git`, `mole`, and `vi
 
 In shell sessions configured by `domfiles` after synchronization, direct invocation assumes repository-managed commands are available through `PATH` in addition to the [supported-environment](#supported-environment) prerequisites.
 
-### Package release-note bullet marker
+### Package release-note skills
 
-The [release-note bullet-marker policy](../skills/domfiles-release-notes/SKILL.md#write-concise-consumer-facing-prose) preserves `*` because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
+The global [`release-notes` overlay](../skills/domfiles-release-notes/SKILL.md) builds on the public [`release-notes-for-humans` skill](../skills/release-notes-for-humans/SKILL.md). The dependency remains one-way so the public skill stays independently installable.
+
+The global overlay retains `*` through its [presentation conventions](../skills/domfiles-release-notes/SKILL.md#presentation-conventions) because previously published notes use that marker. This keeps new and revised release notes consistent even though Markdown accepts other unordered-list markers.
 
 ### Protected skill mutation
 
@@ -150,7 +152,7 @@ The 1,024-byte figure in the [skill description policy](../skills/domfiles-agent
 
 The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public-disclosure boundary.
 
-[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills. The current `skills/domfiles-*` set is global, while `skills/agent-task-relay`, `skills/fish-shell-scripting`, `skills/human-facing-writing`, `skills/posix-shell-scripting`, and `skills/simple-github-cli` are public.
+[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills.
 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 
@@ -162,7 +164,9 @@ The canonical `domfiles-` prefix distinguishes global source directories from un
 
 Supported clients expose globally installed skills beneath different configuration roots, and a global skill’s canonical basename differs from its installed basename. The [distributed-skill link contract](../skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) owns the resulting portability requirements.
 
-Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. Every project-authored writing surface in a public skill remains agent documentation and is also composed through `human-facing-writing` as human-facing installation, evaluation, or maintenance content. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) owns that composition boundary alongside standalone behavior, optional composition, and descriptions. Every public skill entrypoint carries an aligned standalone stale-guidance contract because an independent installation cannot rely on the global retrieval-failure policy or repository-maintainer context when a reference breaks or the skill contradicts current interfaces or behavior. Guidance-specific outcomes take precedence, while the portability contract owns generic runtime behavior and mirror alignment. This source-authoring composition creates no installed sibling dependency.
+Independent public installation removes the shared-policy and guaranteed-sibling assumptions available to global skills. Every public skill therefore carries template-aligned secrets and typography guidance so independent installations preserve the corresponding global behaviors without the global instruction layer. The global policies remain the semantic owners, while `agent-documentation` owns their public-rendering templates and alignment contract. Every project-authored writing surface in a public skill remains agent documentation and is also composed through `human-facing-writing` as human-facing installation, evaluation, or maintenance content. The [public skill portability contract](../skills/domfiles-agent-documentation/references/public-skill-portability.md) owns that composition boundary alongside standalone behavior, optional composition, and descriptions. Every public skill entrypoint carries an aligned standalone stale-guidance contract because an independent installation cannot rely on the global retrieval-failure policy or repository-maintainer context when a reference breaks or the skill contradicts current interfaces or behavior. Guidance-specific outcomes take precedence, while the portability contract owns generic runtime behavior and mirror alignment. This source-authoring composition creates no installed sibling dependency.
+
+Authority, review behavior, tool execution, external services, and mutation vary by workflow, so the public promotion profile resolves them without treating them as universal mirrors. The portability contract owns that profile and its alignment with each policy’s semantic owner.
 
 Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding or removing a globally exposed skill, changing its logical name, or changing its source-to-install mapping requires updating synchronization behavior. Removing or renaming a logical skill that has already been distributed also requires migration behavior for obsolete installed paths.
 

@@ -20,7 +20,7 @@ __print_heading_dimmed 'Linking agent skills'
 
 for source in agent-task-relay domfiles-agent-documentation domfiles-git-worktrees \
   domfiles-release-notes domfiles-repository-harmonization fish-shell-scripting \
-  human-facing-writing posix-shell-scripting simple-github-cli; do
+  human-facing-writing posix-shell-scripting release-notes-for-humans simple-github-cli; do
   name="$(__string_replace "$source" 'domfiles-' '')"
   path="$DOMFILES_SKILLS_DIR/$source"
 

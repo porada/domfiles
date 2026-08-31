@@ -10,6 +10,14 @@ description: |-
 
 GitHub CLI works best when it does one focused job and leaves the rest of the workflow alone. This skill keeps `gh` reads bounded, preserves the user’s setup, and requires clear authority before any remote change.
 
+## Secrets and Authentication
+
+Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, relays, command literals, environment assignments, configuration values, or task artifacts. Never directly retrieve, inspect, enumerate, echo, transmit, create, rotate, or load a real credential or authentication identity. Use established machine-local authentication only through ordinary non-disclosing tool operations. When direct credential handling is required, provide a command for the user to run instead.
+
+## Typography
+
+Apply the [typography conventions](references/typography.md) to all prose.
+
 ## Interface Choice
 
 - Use `gh` only for bounded GitHub state and operations.
@@ -26,7 +34,7 @@ GitHub CLI works best when it does one focused job and leaves the rest of the wo
 
 Use only existing secure machine-local authentication for the target host by default. Treat credential setup and storage as user-owned machine state.
 
-Never request, inspect, print, copy, or transfer credentials, tokens, private keys, one-time codes, or other authentication material. Do not execute `gh auth …`, supply token input or authentication-token environment variables, or expose authentication output. Unless the user explicitly opts into that exact operation, do not select an alternate authentication method, an alternate host, an alternate account, or a different configuration source, or broaden scopes.
+Do not execute `gh auth …`, supply token input or authentication-token environment variables, or expose authentication output. Unless the user explicitly opts into that exact operation, do not select an alternate authentication method, an alternate host, an alternate account, or a different configuration source, or broaden scopes.
 
 If an ordinary `gh` operation requires authentication or an additional scope, stop and ask the user to configure it. When the user explicitly opts into authentication, key management, an alternate authentication method, an alternate host, an alternate account, a different configuration source, or broader scopes, follow [Sensitive Operations](references/sensitive-operations.md) instead of executing the command.
 

@@ -12,6 +12,10 @@ description: |-
 
 Writing works when meaning, voice, and necessary complexity take a form that the reader can follow. This skill applies that principle to everything from a single label to connected prose.
 
+## Secrets and Authentication
+
+Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, relays, command literals, environment assignments, configuration values, or task artifacts. Never directly retrieve, inspect, enumerate, echo, transmit, create, rotate, or load a real credential or authentication identity. Use established machine-local authentication only through ordinary non-disclosing tool operations. When direct credential handling is required, provide a command for the user to run instead.
+
 ## Workflow
 
 Choose the route for the requested writing task. An explicit change takes precedence when the request also uses review or audit language.
@@ -46,8 +50,6 @@ When Connected Prose and Technical Copy both apply, Technical Copy owns factual 
 ## Editorial Boundaries
 
 Follow any more specific instruction that governs the same choice, whether it comes from the user, project, or subject area.
-
-Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, relays, command literals, environment assignments, configuration values, or task artifacts. Never directly retrieve, inspect, enumerate, echo, transmit, create, rotate, or load a real credential or authentication identity. Use established machine-local authentication only through ordinary non-disclosing tool operations. When direct credential handling is required, provide a command for the user to run instead.
 
 Treat a choice as settled when the user establishes it through a direct instruction, correction, selection, or explicit acceptance in a later iteration. This applies to wording, punctuation, formatting, structure, voice, point of view, terminology, formality, and intended ambiguity. Existing text alone, an agent draft or endorsement, and user silence do not establish a decision. Do not reopen writing the user has marked intentional, final, or implemented unless the current request clearly includes it.
 

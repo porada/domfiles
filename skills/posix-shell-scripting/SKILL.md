@@ -14,6 +14,14 @@ Portable POSIX `sh` starts with the language’s actual contracts: expansion, pr
 
 Use the latest published POSIX shell specification unless the user or target environment establishes a narrower baseline. Treat the shell implementation and available external utilities as separate compatibility constraints. A command that works on one machine does not establish portable shell syntax or utility behavior.
 
+## Secrets and Authentication
+
+Never add literal credentials, access tokens, private keys, secret-bearing URLs, or private machine or account values to tracked files, proposed repository artifacts, patches, relays, command literals, environment assignments, configuration values, or task artifacts. Never directly retrieve, inspect, enumerate, echo, transmit, create, rotate, or load a real credential or authentication identity. Use established machine-local authentication only through ordinary non-disclosing tool operations. When direct credential handling is required, provide a command for the user to run instead.
+
+## Typography
+
+Apply the [typography conventions](references/typography.md) to all prose.
+
 ## Workflow
 
 Choose the branch that matches the requested outcome. An explicit change takes precedence when the request also uses review or audit language.

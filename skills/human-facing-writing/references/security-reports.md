@@ -4,7 +4,7 @@ Follow the receiving platform’s template. When the template separates the summ
 
 ## Sensitive Values
 
-Under the entrypoint’s [secret boundary](../SKILL.md#editorial-boundaries), treat “exact setup and configuration” as structural rather than secret-bearing. Replace each secret or private value with a clearly named placeholder, preserving only the format constraints needed to reproduce the issue.
+Under the entrypoint’s [secret boundary](../SKILL.md#secrets-and-authentication), treat “exact setup and configuration” as structural rather than secret-bearing. Replace each secret or private value with a clearly named placeholder, preserving only the format constraints needed to reproduce the issue.
 
 Do not request, inspect, or reproduce a real secret for a security report, even when the user explicitly directs it.
 

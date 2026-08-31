@@ -66,7 +66,7 @@ The root `skills/*` tree stores global and public canonical sources and is not a
 
 Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
 
-- **Category changes:** Update the canonical location, metadata, documentation links, and synchronization behavior together. Bring a skill’s scripts into conformance with the [portable skill script contract](skills/domfiles-agent-documentation/references/portable-skill-scripts.md) before promoting it from internal to global, and remove or relocate them before promoting it into the public category.
+- **Category maintenance:** Follow [skill category maintenance](skills/domfiles-agent-documentation/references/skill-category-maintenance.md) when authoring, reviewing, auditing, or maintaining project-authored skill documentation, changing a skill’s category, or maintaining its supported installation reach.
 - **Installation-safe links:** Apply the [distributed-skill link contract](skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) to every global or public skill.
 - **Public skill writing:** For every edit to a public skill, resolve the agent-documentation contract, then apply `human-facing-writing` to every changed human-facing surface through the [public skill writing composition contract](skills/domfiles-agent-documentation/references/public-skill-portability.md#compose-public-skill-writing). This is source-authoring composition and does not create an installed runtime dependency.
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
