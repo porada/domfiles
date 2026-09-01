@@ -12,7 +12,7 @@ The root `engines.node` range intentionally declares the minimum supported Node.
 
 `domfiles` actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
 
-The README’s “only prerequisite” statement is intentionally scoped to third-party bootstrap software rather than an exhaustive restatement of the supported environment. Its omission of platform, operating-system, `PATH`, and vendor-tool guarantees is intentional. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
+`README.md` documents the repository owner’s configuration workflow rather than a supported onboarding path for other users. It intentionally does not restate the complete supported environment or bootstrap prerequisites. Others may install the repository, but the project makes no compatibility or support commitment for that use. `domfiles sync` reports a missing Homebrew installation before synchronization. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
 
 The canonical Apple Silicon location fallback for `brew` is only a convenience for invoking Homebrew itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
 
@@ -151,6 +151,8 @@ The 1,024-byte figure in the [skill description policy](../skills/domfiles-agent
 ### Skill distribution
 
 The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public-disclosure boundary.
+
+[`skills/README.md`](../skills/README.md) targets visitors who install public skills without synchronizing the rest of this repository. Its examples intentionally preserve the `npx skills add …` form documented by skills.sh, including its omission of `--global`.
 
 [`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills.
 
