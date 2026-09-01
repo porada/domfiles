@@ -1,6 +1,6 @@
 ---
 name: git-worktrees
-description: Apply agent worktree isolation policy for Git repositories. Use this skill before deciding whether a task warrants an isolated worktree, before creating one or its paired branch, before administering an existing worktree or its paired branch, before moving or removing either, and before materializing a historical revision. Covers isolation criteria, paired namespaces, repository targeting for administration, and the destructive-operation gate. Do not use it for ordinary Git commands in an existing worktree, ordinary work in the current checkout, task-specific temporary directories that are not worktrees, or branch operations that involve no worktree.
+description: Use this skill before deciding whether a task warrants an isolated worktree, before creating one or its paired branch, before administering an existing worktree or its paired branch, before moving or removing either, and before materializing a historical revision. Do not use it for ordinary Git commands in an existing worktree, ordinary work in the current checkout, task-specific temporary directories that are not worktrees, or branch operations that involve no worktree.
 metadata:
     internal: true
 ---

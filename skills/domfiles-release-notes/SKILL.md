@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Apply additional release note conventions whenever `release-notes-for-humans` applies, routing generic release evidence, structure, writing, and review through that skill. Also use it immediately for the exact bare `Changelog` shorthand.
+description: Use this skill whenever `release-notes-for-humans` applies and immediately for the exact bare `Changelog` shorthand.
 metadata:
     internal: true
 ---
@@ -17,7 +17,7 @@ Treat the exact prompt `Changelog` as this complete procedure:
 
 1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
 2. Use `release-notes-for-humans` to resolve the affected publishable release units and their release boundaries. Stop and ask whenever that workflow requires user direction.
-3. For each resolved release unit, use the user-confirmed initial-release status item or draft from a complete evidence inventory and material consumer outcomes. If a complete required range or artifact cannot be inspected, stop before drafting and state the evidence boundary instead of continuing to the output-only step.
+3. For each resolved release unit, either use the user-confirmed initial-release status item or draft the release notes from a complete evidence inventory and material consumer outcomes. If a complete required range or artifact cannot be inspected, stop before drafting and state the evidence boundary instead of continuing to the output-only step.
 4. Apply the [presentation conventions](#presentation-conventions).
 5. Output only the ready-to-paste changelog Markdown, with nothing before or after it and without mutating or submitting anything.
 

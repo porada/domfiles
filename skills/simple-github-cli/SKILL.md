@@ -1,20 +1,24 @@
 ---
 name: simple-github-cli
 description: |-
-    Use this skill whenever a task calls for GitHub CLI or `gh`, including `gh search` and `gh api`, or asks to inspect or change GitHub through the CLI. It keeps discovery, retrieval, and explicitly authorized GitHub operations focused and bounded.
+    Use this skill for direct work with GitHub: inspecting remote source or repository state, searching hosted code, invoking GitHub CLI (`gh`) commands such as `gh search` and `gh api`, or performing another operation against GitHub.
 
-    Do not use it for directly addressable public URLs, rendered browser interactions, or ordinary local Git work unless the user explicitly requires `gh`.
+    Do not use it for ordinary local Git work unless the user explicitly requests `gh`. Do not use it for tasks limited to viewing or interacting with GitHub in a browser.
 ---
 
 # Simple GitHub CLI
 
-GitHub CLI works best when it does one focused job and leaves the rest of the workflow alone. This skill keeps `gh` reads bounded, preserves the user’s setup, and requires clear authority before any remote change.
+GitHub work is most reliable when each task uses the narrowest interface that provides the required state. This skill keeps GitHub reads bounded, preserves the user’s setup, and requires clear authority before any remote change.
 
 ## Interface Choice
 
-- Use `gh` only for bounded GitHub state and operations.
-- Use direct HTTP retrieval for a directly addressable public URL, a browser for rendered or interactive state, and local Git or source-search tooling for checked-out source and local repository state.
-- For public remote source discovery, prefer a dedicated indexed code-search tool when one is available. Use bounded `gh search code` when authenticated GitHub access is required or no suitable search tool is available. Use `gh api` for a known authenticated resource.
+Use `gh` when the user explicitly requests that interface or a specific `gh` command. That request selects the interface only, and all authentication, remote-mutation, publication, opt-in, and security boundaries still apply. Otherwise, use the first applicable interface in this order:
+
+- Use local Git or source-search tooling for checked-out source and local repository state.
+- Use direct HTTP retrieval for a directly addressable public resource.
+- For remote source discovery, prefer a dedicated indexed code-search tool when one is available. Use bounded `gh search code` when authenticated GitHub access is required or no suitable search tool is available.
+- Use a focused `gh` command or `gh api` for bounded GitHub repository or API state and operations that the earlier interfaces cannot supply.
+- Use a browser or browser-backed MCP only for rendered or interactive state. Do not use either as a GitHub source or repository browser for source files, trees, diffs, commits, or API-addressable metadata, and do not switch to one merely because another retrieval method failed.
 
 ## Bounded Reads
 

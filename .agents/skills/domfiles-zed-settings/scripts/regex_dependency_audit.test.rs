@@ -1,10 +1,12 @@
 #[path = "regex_dependency_audit.rs"]
 mod helper;
 
+use helper::{Parameter, RouteKind};
 use std::{
     env,
     ffi::OsString,
     fs,
+    io::{self, Write},
     path::{Path, PathBuf},
     process,
     sync::atomic::{AtomicUsize, Ordering},
@@ -113,19 +115,37 @@ impl Drop for Fixture {
     }
 }
 
-fn run_with_files(
+struct FailingWriter;
+
+impl Write for FailingWriter {
+    fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+        Err(io::Error::other("intentional write failure"))
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+fn comparison_arguments(
     local_manifest: &Path,
     upstream_lock: &Path,
     upstream_revision: &str,
-) -> (u8, String, String) {
-    let arguments = [
+) -> [OsString; 6] {
+    [
         OsString::from("--local-manifest"),
         local_manifest.as_os_str().to_owned(),
         OsString::from("--upstream-lock"),
         upstream_lock.as_os_str().to_owned(),
         OsString::from("--upstream-revision"),
         OsString::from(upstream_revision),
-    ];
+    ]
+}
+
+fn run_arguments<I>(arguments: I) -> (u8, String, String)
+where
+    I: IntoIterator<Item = OsString>,
+{
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
     let status = helper::run(arguments, &mut stdout, &mut stderr);
@@ -135,6 +155,56 @@ fn run_with_files(
         String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
         String::from_utf8(stderr).expect("Standard error must be valid UTF-8"),
     )
+}
+
+fn help_options() -> Vec<String> {
+    helper::HELP
+        .lines()
+        .skip_while(|line| *line != "Options:")
+        .skip(1)
+        .take_while(|line| !line.is_empty())
+        .filter(|line| line.trim_start().starts_with("--"))
+        .map(|line| {
+            line.split_whitespace()
+                .next()
+                .expect("Each help option line must name an option")
+                .to_owned()
+        })
+        .collect()
+}
+
+fn usage_options() -> Vec<Vec<String>> {
+    helper::HELP
+        .lines()
+        .skip(1)
+        .take_while(|line| !line.is_empty())
+        .map(|line| {
+            line.split_whitespace()
+                .filter(|token| token.starts_with("--"))
+                .map(str::to_owned)
+                .collect()
+        })
+        .collect()
+}
+
+fn route_options(route: RouteKind) -> Vec<String> {
+    Parameter::ALL
+        .into_iter()
+        .filter(|parameter| parameter.route() == route)
+        .map(|parameter| parameter.option().to_owned())
+        .collect()
+}
+
+fn run_with_files(
+    local_manifest: &Path,
+    upstream_lock: &Path,
+    upstream_revision: &str,
+) -> (u8, String, String) {
+    run_arguments(comparison_arguments(
+        local_manifest,
+        upstream_lock,
+        upstream_revision,
+    ))
 }
 
 fn write_version_files(
@@ -147,6 +217,33 @@ fn write_version_files(
     let upstream_lock = fixture.write("upstream.lock", upstream_lock);
 
     (local_manifest, upstream_lock)
+}
+
+#[test]
+fn documents_every_accepted_option() {
+    let accepted = Parameter::ALL
+        .map(|parameter| parameter.option().to_owned())
+        .to_vec();
+
+    assert_eq!(
+        help_options(),
+        accepted,
+        "The help option list must match the accepted options in alphabetical order"
+    );
+}
+
+#[test]
+fn documents_every_supported_route() {
+    let expected = vec![
+        route_options(RouteKind::Comparison),
+        route_options(RouteKind::Help),
+    ];
+
+    assert_eq!(
+        usage_options(),
+        expected,
+        "Each usage line must name exactly the options its route accepts"
+    );
 }
 
 #[test]
@@ -164,6 +261,115 @@ fn rejects_removed_pattern_options() {
             format!(
                 "regex-dependency-audit: Unknown option `{option}`. Run `regex-dependency-audit --help` for usage\n"
             )
+        );
+    }
+}
+
+#[test]
+fn rejects_help_combined_with_comparison() {
+    let (status, stdout, stderr) = run_arguments([
+        OsString::from("--help"),
+        OsString::from("--local-manifest"),
+        OsString::from("Cargo.toml"),
+    ]);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr,
+        "regex-dependency-audit: Option `--help` must be used alone\n"
+    );
+}
+
+#[test]
+fn rejects_missing_option_values() {
+    for (option, requirement) in [
+        ("--local-manifest", "requires a path"),
+        ("--upstream-lock", "requires a path"),
+        ("--upstream-revision", "requires a commit reference"),
+    ] {
+        let (status, stdout, stderr) = run_arguments([OsString::from(option)]);
+
+        assert_eq!(status, 2);
+        assert!(stdout.is_empty());
+        assert_eq!(
+            stderr,
+            format!("regex-dependency-audit: Option `{option}` {requirement}\n")
+        );
+    }
+}
+
+#[test]
+fn rejects_missing_required_options() {
+    for (arguments, missing_option) in [
+        (Vec::new(), "`--local-manifest <path>`"),
+        (
+            vec![
+                OsString::from("--local-manifest"),
+                OsString::from("Cargo.toml"),
+            ],
+            "`--upstream-lock <path>`",
+        ),
+        (
+            vec![
+                OsString::from("--local-manifest"),
+                OsString::from("Cargo.toml"),
+                OsString::from("--upstream-lock"),
+                OsString::from("Cargo.lock"),
+            ],
+            "`--upstream-revision <commit>`",
+        ),
+    ] {
+        let (status, stdout, stderr) = run_arguments(arguments);
+
+        assert_eq!(status, 2);
+        assert!(stdout.is_empty());
+        assert!(stderr.contains(&format!("Missing required option {missing_option}")));
+    }
+}
+
+#[test]
+fn rejects_positional_arguments() {
+    let (status, stdout, stderr) = run_arguments([OsString::from("Cargo.toml")]);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
+    assert_eq!(
+        stderr,
+        "regex-dependency-audit: Unknown option `Cargo.toml`. Run `regex-dependency-audit --help` for usage\n"
+    );
+}
+
+#[test]
+fn rejects_repeated_options() {
+    for arguments in [
+        [
+            "--local-manifest",
+            "first.toml",
+            "--local-manifest",
+            "second.toml",
+        ],
+        [
+            "--upstream-lock",
+            "first.lock",
+            "--upstream-lock",
+            "second.lock",
+        ],
+        [
+            "--upstream-revision",
+            "abcdef1",
+            "--upstream-revision",
+            "abcdef2",
+        ],
+    ] {
+        let option = arguments[0];
+        let (status, stdout, stderr) = run_arguments(arguments.map(OsString::from));
+
+        assert_eq!(status, 2);
+        assert!(stdout.is_empty());
+        assert_eq!(
+            stderr,
+            format!("regex-dependency-audit: Option `{option}` may be specified only once\n")
         );
     }
 }
@@ -463,32 +669,57 @@ fn returns_success_for_help() {
     assert_eq!(status, 0);
     assert_eq!(
         String::from_utf8(stdout).expect("Standard output must be valid UTF-8"),
-        concat!(
-            "Usage:\n",
-            "  regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
-            "  regex-dependency-audit --help\n",
-            "\n",
-            "Audit the local root package’s pinned and resolved `regex` versions against Zed’s locked version\n",
-            "\n",
-            "Options:\n",
-            "  --help                         Print help. Must be used alone\n",
-            "  --local-manifest <path>        Read the local `regex` pin and adjacent `Cargo.lock`\n",
-            "  --upstream-lock <path>         Read the upstream locked `regex` version\n",
-            "  --upstream-revision <commit>   Label results with a 7- to 40-character lowercase\n",
-            "                                 hexadecimal Zed commit reference\n",
-            "\n",
-            "File behavior:\n",
-            "  Read local files only without modifying them\n",
-            "\n",
-            "Output:\n",
-            "  Help and matching-version results are printed to standard output\n",
-            "  Version-mismatch findings and errors are printed to standard error\n",
-            "\n",
-            "Exit statuses:\n",
-            "  0  Versions matched or help displayed\n",
-            "  1  Local and upstream `regex` versions differed\n",
-            "  2  Invalid arguments or data, or an I/O failure\n",
-        )
+        helper::HELP
     );
     assert!(stderr.is_empty());
+}
+
+#[test]
+fn returns_error_when_help_output_fails() {
+    let mut stdout = FailingWriter;
+    let mut stderr = Vec::new();
+
+    let status = helper::run([OsString::from("--help")], &mut stdout, &mut stderr);
+
+    assert_eq!(status, 2);
+    assert!(
+        String::from_utf8(stderr)
+            .expect("Standard error must be valid UTF-8")
+            .contains("Failed to write help to standard output")
+    );
+}
+
+#[test]
+fn returns_error_when_match_output_fails() {
+    let fixture = Fixture::new();
+    let (local_manifest, upstream_lock) = write_version_files(&fixture, LOCAL_LOCK, UPSTREAM_LOCK);
+    let arguments = comparison_arguments(&local_manifest, &upstream_lock, "abcdef1");
+    let mut stdout = FailingWriter;
+    let mut stderr = Vec::new();
+
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    assert_eq!(status, 2);
+    assert!(
+        String::from_utf8(stderr)
+            .expect("Standard error must be valid UTF-8")
+            .contains("Failed to write audit result to standard output")
+    );
+}
+
+#[test]
+fn returns_error_when_mismatch_output_fails() {
+    let fixture = Fixture::new();
+    let upstream_lock_contents =
+        UPSTREAM_LOCK.replace("version = \"1.12.3\"", "version = \"1.13.0\"");
+    let (local_manifest, upstream_lock) =
+        write_version_files(&fixture, LOCAL_LOCK, &upstream_lock_contents);
+    let arguments = comparison_arguments(&local_manifest, &upstream_lock, "abcdef1");
+    let mut stdout = Vec::new();
+    let mut stderr = FailingWriter;
+
+    let status = helper::run(arguments, &mut stdout, &mut stderr);
+
+    assert_eq!(status, 2);
+    assert!(stdout.is_empty());
 }

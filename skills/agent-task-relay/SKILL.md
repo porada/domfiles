@@ -57,7 +57,7 @@ Never use an in-client subagent to cross or circumvent an environment, access, a
 
 ## Delivery
 
-- **Workflow-owned delivery:** When another applicable workflow invokes this skill for confirmation and assignment composition and explicitly defines the assignment’s terminal delivery, return the composed assignment to that workflow instead of delivering it as a relay. Do not perform both.
+- **Workflow-owned delivery:** When another applicable workflow invokes this skill for confirmation and assignment composition and explicitly defines the required final output and stopping behavior, return the composed assignment to that workflow instead of delivering it as a relay. Do not perform both.
 - **Task relays:** After confirmation, put each complete relay in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready to relay.
 - **User-requested subagent prompts:** Put each complete prompt in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Subagent Prompt` or a descriptive numbered `# Subagent Prompt …` heading.
 - **Verbatim handoffs:** When an entire response is a decision relay, evidence handoff, status return, completed-work report, or other response intended for verbatim relay, make the relay the whole response. Do not wrap it in an outer code block, add a relay heading, or append a readiness message.

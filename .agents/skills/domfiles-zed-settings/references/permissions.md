@@ -13,9 +13,9 @@ Do not read every permission reference by default. Select only the branches requ
 
 ## Select a permission branch
 
-- For domains, fetch patterns, network hosts, redirects, or URLs, read [Fetch and network permissions](fetch-permissions.md).
 - For before-and-after comparison, configured decisions, fetch pattern compilation, or Zed regex compatibility, read the [Permission evaluator](permission-evaluator.md).
-- For effective permission analysis of `fetch`, native path, or `terminal` tools, read [Resolve effective permission behavior](permission-evaluator.md#resolve-effective-permission-behavior).
+- For domains, fetch patterns, network hosts, redirects, or URLs, read [Fetch and network permissions](fetch-permissions.md).
+- For effective authorization, an observed permission outcome, or settings behavior involving `fetch`, a native path tool, or `terminal`, read [Resolve effective permission behavior](permission-evaluator.md#resolve-effective-permission-behavior).
 
 ## Extend the parent workflow
 
@@ -50,7 +50,7 @@ At the branch-specific step of the parent change-validation workflow, follow [Va
 
 ## Validate a permission audit, review, or diagnosis
 
-Apply the relevant fetch and network policy to the in-scope patterns or network hosts, then [resolve effective permission behavior](permission-evaluator.md#resolve-effective-permission-behavior). Use configured pattern matching as one input to that analysis, not as evidence of network access or runtime behavior.
+Apply the relevant fetch and network policy to the in-scope patterns or network hosts. Resolve effective permission behavior only when the audit, review, or diagnosis includes effective authorization, an observed permission outcome, or settings behavior. Use configured pattern matching as one input to that analysis, not as evidence of network access or runtime behavior.
 
 ## Extend the report
 

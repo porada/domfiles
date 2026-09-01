@@ -35,7 +35,6 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 - Let the skill own the source, tests, purpose, invocation, operation routes, artifact contract, and repair workflow.
 - Let the repository root own toolchain configuration, dependencies and host-language type packages, static validation, optional Cargo integration, and repository build-output policy.
 - Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
-- Extract code into `scripts/helpers` only when it is genuine shared implementation rather than infrastructure around superficial duplication.
 
 Root ownership assumes the script runs inside its canonical repository. A skill installed for use outside that repository keeps that ownership by running from its host rather than from the installed path.
 
@@ -57,7 +56,7 @@ Before changing a skill-owned script within a protected skill tree, follow the [
 - Cover help-to-parser agreement with a contract test rather than review alone. Assert for each mode or standalone operation that the options documented for that route exactly match the options its parser accepts. Performing the alignment without a test leaves the next change free to reintroduce the drift.
 - Keep each help option list alphabetized within its section. Ordering there is order-independent, so a reviewer cannot distinguish a deliberate order from drift.
 - Keep each operation bounded and deterministic for the same repository state and inputs.
-- When a named consumer requires repeated records, prefer one batch or suite invocation that reads and prepares shared inputs once over repeated one-record processes. Parse, compile, hash, or index shared data once per invocation when later records reuse it. Do not introduce batch input without that consumer.
+- When a named consumer requires repeated records, prefer one batch or suite invocation over repeated one-record processes. Do not introduce batch input without that consumer.
 - When the accepted contract requires cooperating modes or scripts to share artifacts, define one explicit artifact graph and keep each artifact’s authority, integrity boundary, and mutation contract clear. Do not introduce a manifest solely to connect operations that can remain one invocation.
 - Aggregate the complete result while retaining only the bounded details that can be reported. State exact total and omitted counts without storing or emitting every failure body.
 - Choose human-readable or structured output according to the consumer’s needs. Do not require JSON without a consumer that needs it.
@@ -92,8 +91,6 @@ Before writing:
 
 ## Test the contracts
 
-- Use the language’s native test framework when it is sufficient. Use `node:test` for JavaScript or TypeScript and Rust’s built-in `#[test]` harness for Rust.
-- Keep command-line entrypoints testable through an injectable function such as `run(arguments, stdout, stderr)` so focused contract tests avoid spawning a process for every case.
 - Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
 - Cover every distinct externally observable refusal and every routine that authorizes a mutation on a correctness claim, such as an accounting, containment, or equivalence proof. For a refusal shared by multiple external routes, keep the detailed refusal cases on the shared path and add one lightweight wiring assertion for each route proving that it reaches that path. Add route-specific detailed cases only when the route changes behavior or a caller relies on that distinction. Assert the refusal a caller would rely on, not only that the operation failed.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](#bound-artifact-locations).
@@ -112,7 +109,7 @@ Document focused script and test commands in the owning skill or its repair refe
     - Why existing dependencies or the standard library are insufficient
     - Why a custom implementation would be less correct, maintainable, proportionate, or secure
     - Any material feature, licensing, runtime, supply-chain, or version implications
-- If approval is declined, propose the strongest constrained alternative and explain its limitations. Implement custom infrastructure only when the user explicitly selects it or project constraints make it necessary.
+- If approval is declined, propose the strongest constrained alternative and explain its limitations.
 - Enable only the dependency features required by the approved design.
 
 ## Integrate root validation
@@ -123,7 +120,6 @@ For standard-library-only Rust scripts:
 
 - Compile the script directly with stable `rustc` and compile its adjacent test with `rustc --test`.
 - Pass the repository’s supported Rust edition explicitly. Pass an explicit valid crate name when the repository’s filename pattern contains characters that Rust crate names do not accept.
-- Keep testable behavior in functions that the adjacent test can load from the script instead of duplicating the implementation.
 - Resolve compiled binaries and other transient output through the [ephemeral-artifact rule](#bound-artifact-locations).
 - Include both compile commands in root static validation. Do not register Cargo targets merely because the repository otherwise uses Cargo.
 

@@ -1,6 +1,6 @@
 ---
 name: domfiles-shell-integration
-description: Edit, review, audit, and diagnose Fish and POSIX shell scripts in domfiles, and choose the form or location of command entrypoints. Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or adds or reconsiders a command entrypoint in this repository, including whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
+description: Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or adds or reconsiders a command entrypoint in this repository, including whether a Git helper should be a plain alias or a `bin/git-*` script. Do not use it merely because the task runs terminal commands.
 metadata:
     internal: true
 ---
@@ -12,8 +12,6 @@ Use this skill as the canonical source for domfiles-specific shell integration, 
 For every Fish target, load `fish-shell-scripting` for portable language policy and workflow. For every POSIX shell target, load `posix-shell-scripting`. Apply this skill as the narrower domfiles layer when either language skill governs the same task.
 
 ## Choose the workflow
-
-For Fish and POSIX shell targets, apply the applicable domfiles-specific policy in this skill and its routed references within the inherited language workflow.
 
 For a standalone audit in either language, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), keep the task read-only, and apply the applicable shell-specific checks in this skill and its routed references.
 

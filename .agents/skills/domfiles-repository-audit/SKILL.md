@@ -1,6 +1,6 @@
 ---
 name: domfiles-repository-audit
-description: Perform a read-only audit of the default domfiles repository scope or an explicitly scoped subset. Use this skill immediately for the bare `Audit` shorthand and for standalone audit requests covering redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
+description: Use this skill immediately for the bare `Audit` shorthand and for standalone requests to audit the default domfiles repository scope or an explicitly scoped subset for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
 metadata:
     internal: true
 ---
@@ -28,7 +28,7 @@ Changing the default scope does not change the workflow’s gates.
 ## Partition a large audit
 
 - Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
-- Follow the [repository skill-loading rule](../../../AGENTS.md#skills) for each pass. When delegating a pass, have the delegate load those skills instead of accumulating their bodies in the coordinating context.
+- Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate instead of accumulating their bodies in the coordinating context.
 - Apply the global “Prompt contract” policy to every delegated pass. Identify the applicable `AGENTS.md` files, this audit workflow, and relevant domain skills for the delegate to load rather than copying their bodies into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
 
 ## Audit the contents

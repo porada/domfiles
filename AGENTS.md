@@ -22,7 +22,7 @@
 | Source | Authority and ownership |
 | --- | --- |
 | `.config/zed/AGENTS.md` | Defines global defaults. Applicable project agent instructions override it. |
-| `AGENTS.md` | Defines project instructions, scope, documentation authority, and skill routing. Applicable project instructions override global defaults. |
+| `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
 | `CLAUDE.md` | Bridges Claude to the canonical project instructions in `AGENTS.md`. It defines no independent policy. |
 | `.agents/skills/*/` and `skills/*/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to references within its own skill directory and to sibling skills. Distribution follows the [skill classification](#skills). |
 | `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
@@ -66,15 +66,11 @@ The root `skills/*` tree stores global and public canonical sources and is not a
 
 Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
 
-- **Category maintenance:** Follow [skill category maintenance](skills/domfiles-agent-documentation/references/skill-category-maintenance.md) when authoring, reviewing, auditing, or maintaining project-authored skill documentation, changing a skill’s category, or maintaining its supported installation reach.
-- **Installation-safe links:** Apply the [distributed-skill link contract](skills/domfiles-agent-documentation/SKILL.md#keep-distributed-skill-links-installation-safe) to every global or public skill.
-- **Public skill writing:** When authoring, reviewing, auditing, or maintaining a public skill or a project-authored asset that canonically supplies a public-skill surface, resolve the agent-documentation contract, then use the [public skill writing composition contract](skills/domfiles-agent-documentation/references/public-skill-portability.md#compose-public-skill-writing) to apply `human-facing-writing` to every in-scope surface classified there as public-skill writing. This is source-authoring composition and does not create an installed runtime dependency.
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
-- **Script ownership:** Internal and global skills may own scripts. A global skill’s scripts run from this repository through the `domfiles sync` symlink and take every separate project they inspect or change as an explicitly selected target, following the [portable skill script contract](skills/domfiles-agent-documentation/references/portable-skill-scripts.md). Public skills remain documentation-only because an independently installed copy has no host repository to execute through.
+- **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.
 - **Implementation default:** Write project-authored skill scripts in Rust with `snake_case` source stems, retaining the established `.test.rs` suffix for adjacent contract tests.
 - **Language exception:** Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes it materially more correct, maintainable, or proportionate than Rust.
     - Record the exception and its durable reason in the owning skill before implementation.
     - Avoiding migration, existing language use, familiarity, or shorter syntax alone does not justify an exception.
 - **Cargo names:** Keep established Cargo target and CLI names unchanged when only source filenames change.
-- **Routing:** Load each applicable project-local `domfiles-*` skill immediately before the task pass whose resolved scope intersects its declared scope. Do not preload domain skills for later passes.
 - **Maintenance:** Treat every maintained project-local `domfiles-*` skill as a living document. After using one, suggest a concrete edit only when execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.

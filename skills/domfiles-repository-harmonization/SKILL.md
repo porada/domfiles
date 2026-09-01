@@ -1,6 +1,6 @@
 ---
 name: repository-harmonization
-description: Run change-oriented cross-repository harmonization for a named concept, policy, workflow, terminology, or documentation family. Use this skill immediately for the bare `Harmonize` shorthand and whenever the user asks to harmonize semantically equivalent content across Git repositories. Do not use it for ordinary single-repository cleanup, standalone audits, broad refactors, or consistency work that does not span repositories.
+description: Use this skill immediately for the bare `Harmonize` shorthand and whenever the user asks to harmonize a named concept, policy, workflow, terminology, or documentation family across Git repositories. Do not use it for ordinary single-repository cleanup, standalone audits, broad refactors, or consistency work that does not span repositories.
 metadata:
     internal: true
 ---
@@ -8,6 +8,8 @@ metadata:
 # Repository harmonization
 
 Changing the default scope does not change the workflow’s gates.
+
+When the resolved scope includes agent documentation, follow `agent-documentation` for documentation authority, ownership, and composition within each repository.
 
 ## Resolve the change
 
@@ -24,5 +26,5 @@ Changing the default scope does not change the workflow’s gates.
 
 - **Edit matrix:** Build the complete repository-and-file edit matrix before mutation.
 - **Atomicity:** Apply each supported semantic family across every required safely writable repository as one coordinated unit. If a required destination is blocked or has overlapping work, leave that family unchanged everywhere and report it as unresolved.
-- **Coordination and boundaries:** When a repository is unavailable to its required tools or protected-path workflow, relay its edit pass to an agent running there or stop before mutation. Delegate inventory in small nonoverlapping groups, defaulting to one documentation-heavy repository per agent, and retain the authoritative comparison matrix in the coordinating conversation or one coordinator-owned task artifact. Follow every repository’s instructions, disclosure boundary, concurrent-work policy, protected-path workflow, and validation requirements. Do not transfer private facts or secret-bearing values between repositories.
+- **Coordination and boundaries:** When a repository is unavailable to its required tools or protected-path workflow, relay its edit pass to an agent running there or stop before mutation. When the global evidence-isolation threshold is met, delegate inventory in small nonoverlapping groups, defaulting to one documentation-heavy repository per agent, and retain the authoritative comparison matrix in the coordinating conversation or one coordinator-owned task artifact. Follow every repository’s instructions, disclosure boundary, concurrent-work policy, protected-path workflow, and validation requirements. Do not transfer private facts or secret-bearing values between repositories.
 - **Validation and report:** Validate every changed repository with targeted documentation or copy checks and `git diff --check`. Reread the complete compared family and confirm that every semantically equivalent item uses the canonical formulation. Report the canonical wording, repositories changed, intentional repository-specific variants, and unresolved meaning or authority decisions. Do not report discrepancies already resolved by the pass.

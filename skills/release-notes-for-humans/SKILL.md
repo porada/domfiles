@@ -1,11 +1,11 @@
 ---
 name: release-notes-for-humans
 description: |-
-    Turn supplied drafts or verified changes into accurate release notes that tell consumers what changed and what it means for them.
+    Use this skill to write package release notes, changelog entries, and hosted release descriptions from supplied drafts or verified changes, or to review release copy for wording and consistency.
 
-    Use it for package release notes, changelog entries, hosted release descriptions, and wording or consistency reviews. It covers any change scope, including a commit, commit range, pull request, branch, tag, diff, or all changes since the latest release.
+    The work can cover a commit, commit range, pull request, branch, tag, diff, or every change since the latest release.
 
-    Do not use it for ordinary commit summaries unless they are intended as release or changelog prose.
+    Do not use it for ordinary commit summaries unless they are intended for use in release notes or a changelog.
 ---
 
 # Release Notes for Humans

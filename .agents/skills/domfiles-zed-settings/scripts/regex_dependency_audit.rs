@@ -1,13 +1,13 @@
 use regex::Regex;
 use serde::Deserialize;
 use std::{
-    ffi::{OsStr, OsString},
+    ffi::OsString,
     fs,
     io::Write,
     path::{Path, PathBuf},
 };
 
-const HELP: &str = concat!(
+pub(crate) const HELP: &str = concat!(
     "Usage:\n",
     "  regex-dependency-audit --local-manifest <path> --upstream-lock <path> --upstream-revision <commit>\n",
     "  regex-dependency-audit --help\n",
@@ -37,6 +37,54 @@ const HELP: &str = concat!(
 const STATUS_ERROR: u8 = 2;
 const STATUS_MATCH: u8 = 0;
 const STATUS_MISMATCH: u8 = 1;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum RouteKind {
+    Comparison,
+    Help,
+}
+
+/// Alphabetized so the derived order matches the help option list
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Parameter {
+    Help,
+    LocalManifest,
+    UpstreamLock,
+    UpstreamRevision,
+}
+
+impl Parameter {
+    pub(crate) const ALL: [Self; 4] = [
+        Self::Help,
+        Self::LocalManifest,
+        Self::UpstreamLock,
+        Self::UpstreamRevision,
+    ];
+
+    pub(crate) fn option(self) -> &'static str {
+        match self {
+            Self::Help => "--help",
+            Self::LocalManifest => "--local-manifest",
+            Self::UpstreamLock => "--upstream-lock",
+            Self::UpstreamRevision => "--upstream-revision",
+        }
+    }
+
+    pub(crate) fn route(self) -> RouteKind {
+        match self {
+            Self::Help => RouteKind::Help,
+            Self::LocalManifest | Self::UpstreamLock | Self::UpstreamRevision => {
+                RouteKind::Comparison
+            }
+        }
+    }
+
+    fn parse(token: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|parameter| parameter.option() == token)
+    }
+}
 
 struct VersionArguments {
     local_manifest: PathBuf,
@@ -98,7 +146,12 @@ where
 {
     let arguments: Vec<OsString> = arguments.into_iter().collect();
 
-    if arguments.len() == 1 && arguments[0].as_os_str() == OsStr::new("--help") {
+    if arguments.len() == 1
+        && arguments[0]
+            .to_str()
+            .and_then(Parameter::parse)
+            .is_some_and(|parameter| parameter.route() == RouteKind::Help)
+    {
         return Ok(ParsedArguments::Help);
     }
 
@@ -112,11 +165,11 @@ where
             return Err("Option names must be valid UTF-8".to_owned());
         };
 
-        match option {
-            "--help" => {
+        match Parameter::parse(option) {
+            Some(Parameter::Help) => {
                 return Err("Option `--help` must be used alone".to_owned());
             }
-            "--local-manifest" => {
+            Some(Parameter::LocalManifest) => {
                 if local_manifest.is_some() {
                     return Err("Option `--local-manifest` may be specified only once".to_owned());
                 }
@@ -127,7 +180,7 @@ where
                 local_manifest = Some(PathBuf::from(path));
             }
 
-            "--upstream-lock" => {
+            Some(Parameter::UpstreamLock) => {
                 if upstream_lock.is_some() {
                     return Err("Option `--upstream-lock` may be specified only once".to_owned());
                 }
@@ -137,7 +190,7 @@ where
                 };
                 upstream_lock = Some(PathBuf::from(path));
             }
-            "--upstream-revision" => {
+            Some(Parameter::UpstreamRevision) => {
                 if upstream_revision.is_some() {
                     return Err(
                         "Option `--upstream-revision` may be specified only once".to_owned()
@@ -154,7 +207,7 @@ where
                 };
                 upstream_revision = Some(revision.to_owned());
             }
-            _ => {
+            None => {
                 return Err(format!(
                     "Unknown option `{option}`. Run `regex-dependency-audit --help` for usage"
                 ));

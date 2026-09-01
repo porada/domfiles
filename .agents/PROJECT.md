@@ -78,7 +78,7 @@ The public [`agent-task-relay` skill](../skills/agent-task-relay/SKILL.md) owns 
 
 Inbound recognition is based on report-like content rather than asserted authorship. The routed [Inbound Findings](../skills/agent-task-relay/references/inbound-findings.md) workflow is the canonical owner of inbound recognition, evidence treatment, validation, reporting, and confirmation. Domfiles-managed handling of context-mismatched handoffs remains owned by the global [ambiguity rule](../.config/zed/AGENTS.md#conduct).
 
-The global [commit gate](../.config/zed/AGENTS.md#conduct) and [collaboration policy](../.config/zed/AGENTS.md#collaboration) remain canonical for commit authorization, domfiles-managed automatic external-agent routing, non-interrupting in-client delegation, and the exact anti-drift assignment contract. The public `agent-task-relay` skill carries the commit gate’s assignment-specific application and the anti-drift contract as required standalone context for independent installations and applies both to task relays and explicit user-requested subagent drafts without mediating autonomous delegation. The `simple-github-cli` fallback for `gh agent-task create` mirrors the anti-drift contract, inherited assignment boundaries, commit gate, and dependency approval gate needed to compose and dispatch an assignment when `agent-task-relay` is unavailable. Decision relays are always non-mutating.
+The global [commit gate](../.config/zed/AGENTS.md#conduct) and [collaboration policy](../.config/zed/AGENTS.md#collaboration) remain canonical for commit authorization, non-interrupting in-client delegation, and the exact anti-drift assignment contract. Supported clients discover the public `agent-task-relay` skill from its description when work must continue with an external agent or in an environment with the required access, so the collaboration policy does not repeat that route. The public skill carries the commit gate’s assignment-specific application and the anti-drift contract as required standalone context for independent installations and applies both to task relays and explicit user-requested subagent drafts without mediating autonomous delegation. The `simple-github-cli` fallback for `gh agent-task create` mirrors the anti-drift contract, inherited assignment boundaries, commit gate, and dependency approval gate needed to compose and dispatch an assignment when `agent-task-relay` is unavailable. Decision relays are always non-mutating.
 
 ### Claude Agent integration
 
@@ -102,11 +102,11 @@ Conditional global policy may move into a global skill when most sessions do not
 
 The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
 
-`git-worktrees` is the first such deferral. Its former `Default` bullet was concurrent-work hygiene rather than worktree policy, so preserving existing changes and avoiding another agent’s write scope now lives in the global “Concurrent work” rule. Its route lives with the global temporary-file `.agent-<name>` convention, which the two namespaces share, and the current-checkout rule names the skill so it cannot read as a prohibition on isolation.
+`git-worktrees` is the first such deferral. Its former `Default` bullet was concurrent-work hygiene rather than worktree policy, so preserving existing changes and avoiding another agent’s write scope now lives in the global “Concurrent work” rule. Its description owns the worktree-administration and dismantling triggers. The global “Shared convention” rule retains only the `.agent-<name>` registration check required before reuse, movement, or deletion, and supported clients discover `git-worktrees` when that check identifies a worktree. The current-checkout rule names the skill so it cannot read as a prohibition on isolation.
 
 ### GitHub CLI agent integration
 
-The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) owns conditional agent behavior for `gh`. It carries the authentication and remote-mutation rules its workflow needs plus the [command-specific standalone handoff fallback](#agent-task-relay) for `gh agent-task create`, so the skill remains independently usable. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains the route and aligned domfiles-managed copies of those gates so they remain directly loaded across projects.
+The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) owns conditional agent behavior for `gh`. It carries the authentication and remote-mutation rules its workflow needs plus the [command-specific standalone handoff fallback](#agent-task-relay) for `gh agent-task create`, so the skill remains independently usable. Supported clients discover the skill from its description when a task calls for `gh` or direct GitHub work. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains aligned domfiles-managed copies of the authentication and remote-mutation gates so those boundaries remain directly loaded across projects without repeating the route.
 
 `gh agent-task` and the other non-simple families in [Opt-In Operations](../skills/simple-github-cli/SKILL.md#opt-in-operations) are never chosen without a direct user request. The boundary is scope-based rather than tied to preview status. User-requested external task handoffs use `agent-task-relay` for confirmation and assignment composition when it is available, while `simple-github-cli` owns the selected `gh` interface and terminal command delivery for `gh agent-task create` and task-bearing `gh copilot` invocations. `simple-github-cli` declares `agent-task-relay` through one entrypoint route and one bundled [optional-peer reference](../skills/simple-github-cli/references/optional-peer-agent-task-relay.md). `agent-task-relay` carries a generic workflow-owned delivery deferral, and the `simple-github-cli` agent-task fallback preserves standalone behavior without the peer.
 
@@ -249,10 +249,6 @@ The language-specific `bin/domfiles-dev-lint-*` entrypoints retain their own def
 
 Default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git can C-quote control characters and, when `core.quotePath` is enabled, non-ASCII bytes. A quoted pathname is skipped because it does not resolve to the original file, so pass that path explicitly when linting it.
 
-The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
-
-`git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
-
 ### Domlib helper documentation
 
 Every `domlib` function has one adjacent contract comment. The uniform surface lets readers compare helpers without reconstructing shell bodies. Comment prose wraps at 80 columns while preserving ordinary sentence flow, so a wrapped line remains a continuation rather than a separate statement. Internal periods may separate sentences, while terminal punctuation remains omitted under the shell prose policy.
@@ -296,6 +292,12 @@ Tracked aliases and colors load only during interactive Fish sessions. `.config/
 `.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.
 
 Fish sources this file through `.config/fish/config.fish` during noninteractive startup. A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command while suppressing its output. The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
+
+### Git diff presentation
+
+The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
+
+`git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
 
 ### Git fixup amend behavior
 

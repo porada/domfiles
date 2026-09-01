@@ -1,6 +1,6 @@
 ---
 name: domfiles-zed-settings
-description: Edit, review, audit, and diagnose `.config/zed/settings.json` and `.zed/settings.json` plus project-authored policy and skill scripts for those settings. Use this skill whenever the resolved scope includes either settings file—even when the user did not name it—including agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions. Do not use it for other Zed files alone.
+description: Use this skill whenever the resolved scope includes `.config/zed/settings.json`, `.zed/settings.json`, or project-authored policy or skill scripts for those settings, including tasks about agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions, even when the user did not name either settings file. Do not use it for other Zed files alone.
 metadata:
     internal: true
 ---
@@ -13,8 +13,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 ## Apply the general policy
 
-- Always split Zed settings audits into multiple smaller steps because a single pass can easily exceed the available context window.
-- Follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
+- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
 - Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
