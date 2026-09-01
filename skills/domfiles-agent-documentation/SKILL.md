@@ -1,6 +1,6 @@
 ---
 name: agent-documentation
-description: Edit, review, audit, and maintain agent documentation and the observable contracts of skill scripts, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` and `skills/*` documentation, relay assets, reusable script interfaces and artifacts, and adjacent contract tests. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-script contract architecture. Apply `human-facing-writing` to every in-scope writing surface in a public skill, but not to other agent documentation. Load this skill for project-authored skill-script work, but defer internal implementation quality to the applicable language or domain workflow and relay composition to `agent-task-relay`. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
+description: Edit, review, audit, and maintain agent documentation and the observable contracts of skill scripts, including `AGENTS.md`, `.agents/PROJECT.md`, project-authored `.agents/skills/*` and `skills/*` documentation, relay assets, reusable script interfaces and artifacts, and adjacent contract tests. Use for agent-documentation authority, ownership, composition, routing, redundancy, token efficiency, and skill-script contract architecture. Apply `human-facing-writing` to public-skill writing and canonical assets that supply public-skill surfaces, but not to other agent documentation. Load this skill for project-authored skill-script work, but defer internal implementation quality to the applicable language or domain workflow and relay composition to `agent-task-relay`. Defer to a more specific project agent-documentation workflow when one exists. Do not use for consumer documentation, release notes, public API documentation, ordinary project source unrelated to skill infrastructure, or source comments alone.
 metadata:
     internal: true
 ---
@@ -24,7 +24,7 @@ For a skill with a supported installation outside its canonical repository:
 
 - Keep relative links within the installed skill directory. Link to a sibling only when every supported installation guarantees that sibling and the same relative path resolves from the canonical source and every installation. Otherwise refer to the sibling by its frontmatter `name` without a Markdown link.
 - Do not use relative links that leave the installed skills root or target a client-specific global-instruction path. Refer to an already-loaded global policy by its stable policy or section name instead.
-- When authoring, reviewing, auditing, or maintaining a public skill, follow the [public skill portability contract](references/public-skill-portability.md) and apply `human-facing-writing` to every in-scope writing surface under that contract.
+- When authoring, reviewing, auditing, or maintaining a public skill or a project-authored asset that canonically supplies a public-skill surface, follow the [public skill portability contract](references/public-skill-portability.md). Apply `human-facing-writing` to every in-scope surface that contract classifies as public-skill writing.
 
 ## Resolve the local documentation model
 

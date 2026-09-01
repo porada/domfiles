@@ -6,7 +6,8 @@
 			"title": "Writing",
 			"description": "Bring meaning into focus and make technical writing easy to follow.",
 			"skills": [
-				"human-facing-writing"
+				"human-facing-writing",
+				"release-notes-for-humans"
 			]
 		},
 		{
