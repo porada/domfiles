@@ -1,6 +1,8 @@
 ---
 name: release-notes
-description: Use this skill whenever `release-notes-for-humans` applies and immediately for the exact bare `Changelog` shorthand.
+description: |-
+    Compose release notes for Dom’s packages.
+disable-model-invocation: true
 metadata:
     internal: true
 ---
@@ -9,11 +11,11 @@ metadata:
 
 ## Public workflow
 
-For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay changes only the shorthand, bullet rendering, and package links defined below.
+For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay adds only the `/release-notes` procedure, bullet rendering, and package links defined below.
 
-## `Changelog` shorthand
+## `/release-notes` command
 
-Treat the exact prompt `Changelog` as this complete procedure:
+The `/release-notes` command runs this complete procedure:
 
 1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
 2. Use `release-notes-for-humans` to resolve the affected publishable release units and their release boundaries. Stop and ask whenever that workflow requires user direction.

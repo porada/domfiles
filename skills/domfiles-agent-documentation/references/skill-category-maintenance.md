@@ -4,7 +4,7 @@ Use the applicable project’s skill classification to resolve each skill’s ca
 
 ## Category authoring
 
-In project-authored skill documentation, reserve title-case headings for public-skill surfaces. Keep internal and global skill headings sentence-cased. A template or asset that canonically supplies a public-skill surface follows the destination’s public presentation conventions. Write public skill descriptions in the [required YAML `|-` format](public-skill-portability.md#compose-the-description), and keep internal and global descriptions as plain scalars.
+In project-authored skill documentation, reserve title-case headings for public-skill surfaces. Keep internal and global skill headings sentence-cased. A template or asset that canonically supplies a public-skill surface follows the destination’s public presentation conventions.
 
 ## Category changes
 

@@ -1,6 +1,8 @@
 ---
 name: repository-harmonization
-description: Use this skill immediately for the bare `Harmonize` shorthand and whenever the user asks to harmonize a named concept, policy, workflow, terminology, or documentation family across Git repositories. Do not use it for ordinary single-repository cleanup, standalone audits, broad refactors, or consistency work that does not span repositories.
+description: |-
+    Harmonize documentation, policies, and workflows across Dom’s projects.
+disable-model-invocation: true
 metadata:
     internal: true
 ---
@@ -14,7 +16,7 @@ When the resolved scope includes agent documentation, follow `agent-documentatio
 ## Resolve the change
 
 - **Scope:** Run a change-oriented cross-repository consistency pass across Git repositories within the explicitly supplied project scope or location, defaulting to `~/Projects`. Use the named concept, policy, or documentation family. Without a narrower content scope, compare project-authored agent documentation expressing shared policies, workflows, or terminology. Start from Git-tracked files and exclude generated, managed, vendored, third-party, task-staging `.agent-*`, and untracked files unless explicitly included.
-- **Eligibility:** Include a repository only when it already has established project-authored agent documentation, meaning a tracked `AGENTS.md` or an equivalent file that carries agent instructions directly. Consumer documentation such as a `README` does not qualify, and neither does a bridge file that only imports instructions owned elsewhere. Never establish that surface as part of a harmonization pass, because an ineligible repository is out of scope rather than one large gap to fill. After determining eligibility, print the complete eligible-repository list and stop for user confirmation before further inventory, comparison, or mutation. Treat only confirmed repositories as in scope, without waiving any other gate.
+- **Eligibility:** Include a repository only when it has a tracked `AGENTS.md` and at least one configured Git remote points to `porada/*` or `standard-config/*`. Never establish `AGENTS.md` as part of a harmonization pass, because an ineligible repository is out of scope rather than one large gap to fill. After determining eligibility, present the complete eligible-repository list as an ordered list with a stable number for each repository, and stop for user confirmation before further inventory, comparison, or mutation. Treat only confirmed repositories as in scope, without waiving any other gate.
 - **Checkout boundary:** Treat each in-scope repository’s primary worktree as its current checkout. Do not discover, compare, or mutate linked worktrees, including linked worktrees outside task-staging `.agent-*` paths.
 - **Inventory gate:** Before editing any repository, complete the full read-only inventory, working-state check, and mutation-feasibility check. Read every applicable `AGENTS.md` and repository-specific authority model, and identify repositories with tracked in-scope surfaces.
 - **Baseline:** Every baseline repository must satisfy eligibility and be user-confirmed. The shared instruction layer is the agent instructions every confirmed destination loads in common. Without an explicitly named baseline, use the repository that owns that layer only when it is already confirmed. Present any implicit or explicitly named baseline outside the confirmed set as a source-only candidate and stop for confirmation before inspecting it. Source-only confirmation permits only bounded read-only baseline comparison, not mutation. An item a confirmed baseline expresses that a confirmed destination lacks is a candidate gap rather than an out-of-scope omission.

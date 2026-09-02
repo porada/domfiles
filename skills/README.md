@@ -44,7 +44,7 @@ npx skills add porada/domfiles --skill fish-shell-scripting
 - [**release-notes-for-humans**](release-notes-for-humans/SKILL.md)
 - [**simple-github-cli**](simple-github-cli/SKILL.md)
 
-The `domfiles-*` skills are tied to this repository’s agent configuration. They aren’t ready for standalone installation just yet.
+The `domfiles-*` skills are tied to this repository’s agent configuration. They aren’t ready for standalone installation.
 
 ## License
 
