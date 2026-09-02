@@ -71,7 +71,7 @@
 	tags = false
 
 [pretty]
-	compact = format:%C(dim)%h%C(reset)%C(red)%d %C(reset)%s %C(dim)%cd / %an%C(reset)
+	compact = tformat:%C(dim)%h%C(reset)%C(red)%d %C(reset)%s %C(dim)%cd / %an%C(reset)
 
 [pull]
 	rebase = true

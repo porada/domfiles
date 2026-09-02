@@ -12,9 +12,10 @@ lint_default_files() {
 }
 
 lint_file() {
-  __ jq --slurp \
+  __suppress __ jq --slurp \
     'if length == 1 then empty else error("expected exactly one JSON value, received \(length)") end' \
     -- "$1"
+  __print_confirmation "$1"
 }
 
 __domfiles_dev_lint 'JSON files' "$@"
