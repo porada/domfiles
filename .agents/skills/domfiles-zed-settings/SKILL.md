@@ -1,32 +1,36 @@
 ---
 name: domfiles-zed-settings
-description: Use this skill whenever the resolved scope includes `.config/zed/settings.json`, `.zed/settings.json`, or project-authored policy or skill scripts for those settings, including tasks about agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions, even when the user did not name either settings file. Do not use it for other Zed files alone.
+description: |-
+    Use this skill whenever the resolved scope includes `.config/zed/settings.json`, `.zed/settings.json`, or project-authored policy or skill scripts for those settings, including tasks about agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions, even when the user did not name either settings file.
+
+    Do not use it for other Zed files alone.
+
 metadata:
     internal: true
 ---
 
-# Zed settings
+# Zed Settings
 
 Use this skill as the entrypoint and canonical owner of settings-wide Zed policy and workflow. Do not copy the current domain, permission-pattern, or settings inventories into agent documentation.
 
-When agent tool or sandbox permissions, fetch or network allowances, native path or terminal permission behavior, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/permissions.md) before investigation or planning. Read only the branch references it selects.
+When agent tool or sandbox permissions, fetch or network allowances, native path or terminal permission behavior, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/agent-permissions.md) before investigation or planning. Read only the branch references it selects.
 
-## Apply the general policy
+## Apply the General Policy
 
 - When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/.domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
-- Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
+- Sort Zed settings object arrays by the value of their identifying field.
     - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
 
-## Choose the workflow
+## Choose the Workflow
 
 - For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change-validation workflow below. A non-fetch tool-permission override has no supported mutation route. Stop that change until the agent permission branch defines a dedicated workflow and validation contract.
 - For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, and report all findings together. Skip change planning, change validation, formatting, and implementation.
 - For a standalone review, keep the task read-only and skip change planning, change validation, formatting, and implementation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 
-## Investigate and plan
+## Investigate and Plan
 
 1. Inspect the relevant settings object.
 2. Resolve version-sensitive behavior, defaults, migrations, property names, or schema through current official Zed documentation or source.
@@ -34,12 +38,12 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 Do not mutate settings during this shared investigation. Mutation begins only through the explicit change workflow above.
 
-## Resolve settings behavior
+## Resolve Settings Behavior
 
 - Treat an editor deprecation banner as a lead, not proof that a specific property is deprecated.
 - When Zed produces a migrated backup, compare the parsed values and relevant migration code before removing a setting.
 
-## Validate a change
+## Validate a Change
 
 After editing:
 
@@ -47,11 +51,11 @@ After editing:
 2. Parse each changed settings JSON file with `jq -e 'type == "object"' <path>`.
 3. Check formatting with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-files>`, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands). If dependencies are unavailable, report the limitation unless the current task separately authorizes reconciliation.
 4. Verify every applicable general and selected-branch Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
-5. Run `git --no-pager diff --check` and inspect the final scoped diff and status.
+5. Run `git --no-pager diff --check`.
 
 Do not run the entire repository formatter when a targeted formatting check is sufficient.
 
-## Validate a Zed settings audit, review, or diagnosis
+## Validate a Zed Settings Audit, Review, or Diagnosis
 
 1. Parse each relevant settings JSON file with `jq -e 'type == "object"' <path>`.
 2. Run every applicable conditional-branch read-only validation workflow.

@@ -1,8 +1,8 @@
-# Fetch and network permissions
+# Fetch and Network Permissions
 
-Apply this branch with the shared [agent permission workflow](permissions.md).
+Apply this branch with the shared [agent permission workflow](agent-permissions.md).
 
-## Apply the fetch and network permission policy
+## Apply the Fetch and Network Permission Policy
 
 - Preserve `agent.tool_permissions.tools.fetch.default` as `confirm`.
 - Keep exactly one generic `agent.tool_permissions.tools.fetch.always_allow` rule at `"case_sensitive": true` with this pattern:
@@ -24,7 +24,7 @@ Automatic fetch execution requires both the fetch-tool layer and host-grant auth
 
 Zed applies the fetch rules only to the initial URL, then separately authorizes the initial hostname and every redirect hostname. It does not re-evaluate redirect schemes, ports, paths, queries, or fragments against the fetch regexes. The confirmation complement is therefore an initial-fetch prompt filter, not path-scoped network containment. Same-host redirect paths and sandboxed terminal traffic remain outside it. Treat redirects and subresources as outside the request unless their hosts were already approved. Do not make a live request merely to validate a settings change.
 
-## Translate approved domains and URLs
+## Translate Approved Domains and URLs
 
 When the user explicitly requests an allowance for a named domain or URL, apply the policy above before these scope-specific steps:
 
@@ -42,21 +42,21 @@ When the user explicitly requests an allowance for a named domain or URL, apply 
 
 Do not add or modify a fetch regex for a hostname allowance. A path-qualified allowance does not by itself add `network_hosts`. If the user does not separately authorize the persistent hostname scope, its approved path remains confirmable at the host-grant layer.
 
-Rust regex does not support look-around. Build each same-host confirmation complement from anchored prefix alternatives that match the first differing path byte, including every truncated prefix. Validate every alternative through the [fetch rule corpus](#fetch-rule-corpus), and do not use an unverified hand-written negation as a permission boundary.
+Rust regex does not support look-around. Build each same-host confirmation complement from anchored prefix alternatives that match the first differing path byte, including every truncated prefix. Validate every alternative through the [fetch rule corpus](#build-the-fetch-rule-corpus), and do not use an unverified hand-written negation as a permission boundary.
 
 Before editing a candidate, build the complete guard for the hostname’s full approved-prefix set and apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound). If the decoded pattern exceeds `1,000` Unicode scalars, report that the requested path scope is unsupported by the one-guard model and stop before settings mutation. Do not split the guard or weaken the approved scope to fit the bound.
 
-## Validate a change
+## Validate a Change
 
 For a `network_hosts`-only change, do not invoke the pattern matcher.
 
-For a fetch pattern or default change, validate the candidate settings through the evaluator’s [configured fetch layer](permission-evaluator.md#validate-a-configured-fetch-layer). Include every applicable input from the [fetch rule corpus](#fetch-rule-corpus), satisfy the matching and nonmatching case requirement for every configured pattern, and provide one deciding-source witness for the configured default and every nonempty bucket.
+For a fetch pattern or default change, validate the candidate settings through the evaluator’s [configured fetch layer](permission-evaluator.md#validate-a-configured-fetch-layer). Include every applicable input from the [fetch rule corpus](#build-the-fetch-rule-corpus), satisfy the matching and nonmatching case requirement for every configured pattern, and provide one deciding-source witness for the configured default and every nonempty bucket.
 
-For every fetch pattern or default change, [compare the baseline and candidate settings](permission-evaluator.md#compare-fetch-permission-states). Declare every intended matched-bucket or final-decision transition and retain representative unchanged boundary cases. A representative comparison is not formal regex-language equivalence.
+For every fetch pattern or default change, [compare the baseline and candidate settings](permission-evaluator.md#compare-fetch-permission-states).
 
 After a `network_hosts`-only change or a fetch pattern or default change, verify the approved exact and wildcard host-grant coverage, every wildcard’s documented exception rationale, complete-array ordering, participating settings layers, and effective fetch and terminal boundaries.
 
-## Fetch rule corpus
+## Build the Fetch Rule Corpus
 
 The generic rule must match credential-free HTTPS URLs using an ordinary hostname, including scheme and hostname case variants plus path, query, and fragment starts at the hostname boundary. It must not match HTTP, explicit ports, URL userinfo, trailing-dot hostnames, bracketed IPv6 literals, or empty authorities.
 

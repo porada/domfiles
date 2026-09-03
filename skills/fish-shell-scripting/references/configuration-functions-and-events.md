@@ -66,6 +66,8 @@ Choose the smallest Fish mechanism that matches the behavior:
 | Simple function-shaped wrapper | `alias`, which Fish implements as a function |
 | Startup or event registration | Explicitly sourced configuration or `conf.d` snippet |
 
+By default, the completion pager describes a literal abbreviation with its expansion and a function-backed abbreviation with the expansion function’s name. That default satisfies the [completion-description principle](../SKILL.md#keep-interactive-behavior-deliberate) when it makes the abbreviation’s purpose clear. Otherwise, add a concise custom description by placing the attached option `--description='<text>'` before the abbreviation name. Apply the [human-facing text contract](../SKILL.md#human-facing-text) to its wording.
+
 Define a maintained wrapper with an observable contract as an explicit function. Use `function --wraps <command>` only when the wrapper preserves the delegated command’s relevant completion interface.
 
 When wrapping an external program, invoke it through `command` and forward `$argv` unless the wrapper intentionally changes that interface. Use the command-resolution operation from the Fish-native guidance that matches whether functions, builtins, or only external programs may satisfy the dependency.

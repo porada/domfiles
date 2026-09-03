@@ -2,16 +2,15 @@
 name: domfiles-repository-audit
 description: |-
     Audit this repository.
+
 disable-model-invocation: true
 metadata:
     internal: true
 ---
 
-# Domfiles repository audit
+# Domfiles Repository Audit
 
-Changing the default scope does not change the workflow’s gates.
-
-## Resolve the scope
+## Resolve the Scope
 
 | Priority | Rule |
 | --- | --- |
@@ -27,13 +26,13 @@ Changing the default scope does not change the workflow’s gates.
     - `.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Absolute exclusions still apply, and supporting evidence does not become reportable.
 
-## Partition a large audit
+## Partition a Large Audit
 
 - Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
 - Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate instead of accumulating their bodies in the coordinating context.
 - Apply the global “Prompt contract” policy to every delegated pass. Identify the applicable `AGENTS.md` files and relevant domain skills for the delegate to load. Identify this audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Do not copy those documents into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
 
-## Audit the contents
+## Audit the Contents
 
 For every path in the reportable scope:
 
@@ -44,7 +43,7 @@ For every path in the reportable scope:
 - Report documentation that duplicates durable details or violates the [documented authority and ownership boundaries](../../../AGENTS.md#agent-documentation).
 - Apply every relevant repository instruction and loaded domain-skill policy, treating domain skills as supplements for domain-specific checks and verification rather than separate audit workflows.
 
-## Preserve the read-only process
+## Preserve the Read-Only Process
 
 - Do not modify repository files or run linters or formatters as part of the analysis.
 - Do not report findings outside the reportable scope.
@@ -52,7 +51,7 @@ For every path in the reportable scope:
 - Never speculate about intent or hypothetical implementations.
 - Do not stop after individual findings. Continue until the entire scope has been reviewed, then report all findings together.
 
-## Report the result
+## Report the Result
 
 Follow the global [communication](../../../.config/zed/AGENTS.md#communication) and [issue-reporting](../../../.config/zed/AGENTS.md#documentation) requirements, then:
 

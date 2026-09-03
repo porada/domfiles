@@ -1,6 +1,6 @@
-# Command form and location
+# Command Form and Location
 
-## Choose the narrowest command surface
+## Choose the Narrowest Command Surface
 
 - Before choosing a repository location, load `fish-shell-scripting` and apply its wrapper-selection and execution-boundary policies.
 - After that check, default a command used only through Fish to `.config/fish/functions/<command-name>.fish`.
@@ -9,7 +9,7 @@
 - Add `bin/<command-name>` only when the selected execution boundary requires an executable, including invocation by a non-Fish caller or before Fish is available.
 - Put a `domfiles` subcommand at `bin/domfiles-<command-name>`. For a Git subcommand, follow [Git helper form](#choose-git-helper-form) before using `bin/git-<command-name>`.
 
-## Choose Git helper form
+## Choose Git Helper Form
 
 - Before adding or reviewing a `bin/git-*` entrypoint, inspect `.config/git/config` and determine whether a plain Git alias preserves the required behavior.
 - Prefer a plain Git alias when the helper invokes one Git subcommand with fixed options and relies on Git’s normal argument forwarding.

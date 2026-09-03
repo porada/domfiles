@@ -2,18 +2,17 @@
 name: harmonize
 description: |-
     Harmonize documentation, policies, and workflows across Dom’s projects.
+
 disable-model-invocation: true
 metadata:
     internal: true
 ---
 
-# Repository harmonization
-
-Changing the default scope does not change the workflow’s gates.
+# Repository Harmonization
 
 When the resolved scope includes agent documentation, follow `agent-documentation` for documentation authority, ownership, and composition within each repository.
 
-## Resolve the change
+## Resolve the Change
 
 - **Scope:** Run a change-oriented cross-repository consistency pass across Git repositories within the explicitly supplied project scope or location, defaulting to `~/Projects`. Use the named concept, policy, or documentation family. Without a narrower content scope, compare project-authored agent documentation expressing shared policies, workflows, or terminology. Start from Git-tracked files and exclude generated, managed, vendored, third-party, task-staging `.agent-*`, and untracked files unless explicitly included.
 - **Eligibility:** Include a repository only when it has a tracked `AGENTS.md` and at least one configured Git remote points to `porada/*` or `standard-config/*`. Never establish `AGENTS.md` as part of a harmonization pass, because an ineligible repository is out of scope rather than one large gap to fill. After determining eligibility, present the complete eligible-repository list as an ordered list with a stable number for each repository, and stop for user confirmation before further inventory, comparison, or mutation. Treat only confirmed repositories as in scope, without waiving any other gate.
@@ -24,7 +23,7 @@ When the resolved scope includes agent documentation, follow `agent-documentatio
 - **Canonical form:** For semantically equivalent items, select an existing formulation that completely expresses the shared meaning. Prefer explicit user-established wording, then the most authoritative applicable shared source, then the baseline repository’s formulation, then the most accurate and complete existing formulation. Treat newly synthesized wording as unresolved unless the user explicitly authorizes wording design. Make wording, terminology, ordering, placeholders, punctuation, and structure identical, substituting only unavoidable repository-specific identifiers. Do not infer equivalence from similar names or weaken, broaden, or otherwise change meaning, authority, behavior, or security boundaries to create uniformity.
 - **Placement:** Before replicating an item across repositories, propose hoisting it to the shared instruction layer when the repository owning that layer is confirmed for mutation and the item’s meaning does not depend on repository-specific scope, disclosure, or identifiers. Prefer one hoisted rule over identical per-repository copies, and remove the copies it replaces. Keep the item repository-local when the source section would lose coherence without it, and apply a hoist only after explicit user approval.
 
-## Apply and validate
+## Apply and Validate
 
 - **Edit matrix:** Build the complete repository-and-file edit matrix before mutation.
 - **Atomicity:** Apply each supported semantic family across every required safely writable repository as one coordinated unit. If a required destination is blocked or has overlapping work, leave that family unchanged everywhere and report it as unresolved.

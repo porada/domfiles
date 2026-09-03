@@ -1,8 +1,8 @@
-# Permission evaluator
+# Permission Evaluator
 
 This reference owns the observable contracts for the retained fetch-pattern matcher and regex compatibility audit. It does not own fetch policy, runtime network behavior, host-grant approval, or settings mutation.
 
-## Apply the matcher contract
+## Apply the Matcher Contract
 
 Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as the read-only implementation. It supports exactly these routes:
 
@@ -32,7 +32,7 @@ Use these exit statuses:
 
 An exit status is not a recovery classification. A configured-pattern finding identifies a settings defect. A pattern-case, decision-case, or comparison-case disagreement establishes only that a well-formed declaration and observed behavior differ. The caller must determine whether the declaration is wrong or the selected settings must change. Status `2` identifies invalid input or an operational failure rather than a settings defect.
 
-## Parse settings inputs
+## Parse Settings Inputs
 
 Parse every settings file as strict UTF-8 JSON, not JSONC, and require its root to be an object. Reject duplicate keys in every object. The `agent`, `tool_permissions`, `tools`, and `fetch` objects along the selected `agent.tool_permissions.tools.fetch` path must exist and have object values. Allow and ignore unrelated fields outside the selected fetch object.
 
@@ -47,7 +47,7 @@ Apply the repository [permission pattern length bound](../../../PROJECT.md#permi
 
 Within each settings file, process buckets in `always_allow`, `always_confirm`, then `always_deny` order and each bucket by ascending array index. If any pattern is empty or fails the length or compilation check, report all such configured-pattern findings and skip manifest expectation evaluation for that route.
 
-## Validate a configured fetch layer
+## Validate a Configured Fetch Layer
 
 Run:
 
@@ -97,13 +97,13 @@ Decision-source coverage depends on the complete expected state rather than the 
 
 Require at least one declared decision case for the configured default and for every nonempty bucket. Missing declared source coverage is contract-invalid input with exit status `2`. A valid decision-case declaration that disagrees with observed matches or the observed decision is a decision-case disagreement with exit status `1`.
 
-Use the parent [permission-change planning workflow](permissions.md#plan-a-permission-change) to establish deciding-source witnesses. The matcher evaluates only declared cases and does not attempt a formal reachability proof.
+Use the parent [permission-change planning workflow](agent-permissions.md#plan-a-permission-change) to establish deciding-source witnesses. The matcher evaluates only declared cases and does not attempt a formal reachability proof.
 
 Apply the [settings-input contract](#parse-settings-inputs) to the selected settings file. Reject an out-of-range pattern index or unknown bucket in the manifest as contract-invalid input with exit status `2`.
 
 Order status-`1` findings from source validity to local expectations to final decisions: configured-pattern findings in the settings-input order, pattern-case disagreements in manifest order, then decision-case disagreements in manifest order. On success, report counts of configured patterns, decision cases, and pattern cases. This route establishes configured fetch-pattern matches and decisions for the selected settings file only. It does not resolve displayed prompts, other settings layers, redirect behavior, runtime network access, or host grants.
 
-## Compare fetch permission states
+## Compare Fetch Permission States
 
 Run:
 
@@ -147,7 +147,7 @@ This route does not validate a repair from baseline configured-pattern findings.
 
 Include every intentional bucket or final-decision transition, each changed boundary, and representative unchanged near misses. On success, report counts of baseline patterns, candidate patterns, and comparison cases. A successful comparison establishes only the declared corpus. It is not formal regex-language equivalence and does not establish runtime network access or host-grant behavior.
 
-## Audit Zed regex compatibility
+## Audit Zed Regex Compatibility
 
 During a documentation audit that includes [Zed permission regex compatibility](../../../PROJECT.md#zed-permission-regex-compatibility), obtain Zed’s current `main` `Cargo.lock` and short commit reference through one bounded official-source retrieval. Do not search Zed’s dependency changelog, release notes, or repository history. If the source cannot be retrieved, report the verification limitation instead of inferring compatibility.
 
@@ -173,7 +173,7 @@ The audit compares direct `regex` versions only. Transitive versions, sources, c
 
 The compatibility audit owns no repair route. Do not mutate `Cargo.toml` or `Cargo.lock` through this workflow. Treat a requested repair as a separate dependency change governed by the global “Dependencies” policy, including approval for the complete manifest and lockfile transition before mutation. After that separately authorized change, rerun the focused contract test, the audit against the same upstream lockfile, and root Rust validation.
 
-## Resolve effective permission behavior
+## Resolve Effective Permission Behavior
 
 After resolving version-sensitive behavior through the parent [investigation workflow](../SKILL.md#investigate-and-plan):
 
@@ -185,7 +185,7 @@ After resolving version-sensitive behavior through the parent [investigation wor
 
 The matcher evaluates one selected settings file rather than constructing Zed’s complete effective configuration. When another participating layer contributes fetch rules or a different default, inspect and account for that layer separately.
 
-## Run focused contract tests
+## Run Focused Contract Tests
 
 ```sh
 cargo test --locked --test domfiles-zed-settings-pattern-match-test

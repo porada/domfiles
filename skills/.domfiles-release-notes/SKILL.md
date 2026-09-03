@@ -2,18 +2,19 @@
 name: release-notes
 description: |-
     Compose release notes for Dom’s packages.
+
 disable-model-invocation: true
 metadata:
     internal: true
 ---
 
-# Release notes
+# Release Notes
 
-## Public workflow
+## Public Workflow
 
 For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay adds only the `/release-notes` procedure, bullet rendering, and package links defined below.
 
-## `/release-notes` command
+## `/release-notes` Command
 
 The `/release-notes` command runs this complete procedure:
 
@@ -23,8 +24,8 @@ The `/release-notes` command runs this complete procedure:
 4. Apply the [presentation conventions](#presentation-conventions).
 5. Output only the ready-to-paste changelog Markdown, with nothing before or after it and without mutating or submitting anything.
 
-## Presentation conventions
+## Presentation Conventions
 
 - Use `*` for every unordered release-note bullet. If a generic Markdown formatter’s only disagreement is normalizing this marker to `-`, preserve `*` and do not treat the marker-only result as a release-note failure.
 - Render every semantic status item selected by the public skill with the same `*` marker.
-- In release-note prose outside headings, apply the [package-link map](references/package-links.md) to package names. Keep versions, options, rules, file patterns, errors, and other machine-readable tokens backticked.
+- In release-note prose outside headings, apply the [package-link map](references/package-links.md) to package names.

@@ -7,10 +7,14 @@ A collection of independently installable skills I use as my daily driver. Also 
 ## Install
 
 ```sh
-npx skills add porada/domfiles
+npx skills add porada/domfiles --global
 ```
 
-Global installation is recommended for the best experience. The `skills` CLI installs only the skills you select and sets up no other tooling or configuration from this repository.
+```sh
+gh skill install porada/domfiles --scope user
+```
+
+Global installation is recommended for the best experience. Both `skills` and `gh skill` install only the skills you choose. Neither sets up any other tooling or configuration from this repository.
 
 ## Featured Skills
 
@@ -22,6 +26,10 @@ Paste findings from another thread and see your agent take it from there. Or rel
 npx skills add porada/domfiles --skill agent-task-relay
 ```
 
+```sh
+gh skill install porada/domfiles agent-task-relay
+```
+
 ### [human-facing-writing](human-facing-writing/SKILL.md)
 
 Raise the standard of every piece your agent writes, from general long-form text to small technical copy. No more slop under your name.
@@ -30,12 +38,20 @@ Raise the standard of every piece your agent writes, from general long-form text
 npx skills add porada/domfiles --skill human-facing-writing
 ```
 
+```sh
+gh skill install porada/domfiles human-facing-writing
+```
+
 ### [fish-shell-scripting](fish-shell-scripting/SKILL.md)
 
 Write Fish as intended: without bashisms.
 
 ```sh
 npx skills add porada/domfiles --skill fish-shell-scripting
+```
+
+```sh
+gh skill install porada/domfiles fish-shell-scripting
 ```
 
 ## Other Skills

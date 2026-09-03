@@ -1,10 +1,10 @@
-# `domlib` integration
+# `domlib` Integration
 
-## Inspect shared state
+## Inspect Shared State
 
 When `domlib` or `.config/fish/config.fish` is relevant, inspect both files before evaluating shared variables or functions.
 
-## Integrate POSIX entrypoints
+## Integrate POSIX Entrypoints
 
 - Treat every domfiles shell script not written in Fish as a POSIX `sh` target.
 - Ensure every POSIX shell entrypoint sources `domlib`. Exempt `.hooks` scripts. Treat `bin/domlib` as the shared library rather than an entrypoint, and keep strict mode there so sourced scripts inherit it.
@@ -17,14 +17,14 @@ When `domlib` or `.config/fish/config.fish` is relevant, inspect both files befo
 - Keep the set of `$DOMFILES_*` variables defined in `domlib` and `.config/fish/config.fish` in sync, with exactly matching names.
     - Exempt `$DOMFILES_DEFAULT_IFS`, `$DOMFILES_SSH_KEY`, `$DOMFILES_SUPPRESSED`, and `$DOMFILES_VIM_PLUG`.
 
-## Apply domlib reporting rules
+## Apply Domlib Reporting Rules
 
 - Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
 - Report unused functions or variables defined in `domlib`.
     - Do not treat variables as unused when they exist solely to maintain parity with `.config/fish/config.fish`.
 - Report every POSIX shell function prefixed with `__` when it is defined outside `domlib`.
 
-## Apply domlib-specific POSIX conventions
+## Apply Domlib-Specific POSIX Conventions
 
 - Apply portable continuation policy only to executable POSIX shell code. `domlib` contract comments retain their 80-column limit.
 - Parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value set owned by that helper rather than repeating it in policy or project documentation. Third-party environment variables remain outside this rule.

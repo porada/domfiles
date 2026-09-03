@@ -21,6 +21,8 @@ Choose the narrowest check that establishes the required property, from definiti
 
 An undefined variable, a defined empty list, and a list containing one empty string are different states. Do not pass an unquoted, potentially empty list as the only input to `string length --quiet`. If the list expands to zero arguments, the command reads piped or redirected standard input instead. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
 
+Treat special read-only variables such as `$status` as immutable. Do not assign or erase them with `set` or target them with a single-command override.
+
 When Fish code owns the representation of stored boolean state and neither an applicable policy nor the user selects another form, use the literal values `true` and `false`. Initialize the variable before use, compare it explicitly with `=`, and do not encode owned boolean state through unset or empty values or `0` and `1`.
 
 By default, a called Fish function cannot read its caller’s unexported local variables. Exported locals remain visible, and `--no-scope-shadowing` lets a function access variables in its calling scope.

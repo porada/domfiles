@@ -1,4 +1,4 @@
-# Default agent-documentation authority model
+# Default Agent-Documentation Authority Model
 
 Use this fallback only when a project has not defined its own agent-documentation authority or ownership model. Assign each durable detail to an existing relevant surface. Create a missing surface only when the requested task authorizes it and no existing surface can safely own the detail.
 

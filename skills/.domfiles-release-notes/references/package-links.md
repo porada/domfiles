@@ -1,4 +1,4 @@
-# Package links
+# Package Links
 
 Use this table as the complete allowlist and destination map for package hyperlinks in release-note prose outside headings.
 

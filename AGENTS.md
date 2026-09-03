@@ -1,11 +1,11 @@
-# Agent instructions
+# Agent Instructions
 
 ## Overview
 
 - **Repository:** Contains all actively used dotfiles and is also called `domfiles`.
 - **Disclosure:** The repository is public and open source.
 
-## Public repository boundary
+## Public Repository Boundary
 
 - **Public surfaces:** Treat every tracked file, proposed repository artifact, patch, and relay as publicly disclosed.
 - **Authentication review:** Before recommending or implementing an authenticated or privately configured tool, establish:
@@ -17,7 +17,7 @@
     - **Ignored-file boundary:** A Git-ignored file qualifies as an established machine-local source only when public repository provisioning creates or adopts it without embedding secret values, restricts it to user-only access, and tracked configuration refers only to its path. Ignore status alone is insufficient.
 - **No safe route:** When no established public-safe route exists, report the tool as infeasible or ask the user to select a secret-storage boundary.
 
-## Agent documentation
+## Agent Documentation
 
 | Source | Authority and ownership |
 | --- | --- |
@@ -33,7 +33,7 @@
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
 - **Navigation:** Read only the section of `.agents/PROJECT.md` that applies, reaching it through an existing link or by locating its heading first, rather than reading the document.
 - **Durable knowledge:** Document newly discovered durable project knowledge in `.agents/PROJECT.md` when the task permits that documentation edit. Otherwise report the update as deferred follow-up work.
-- **Ordering:** Keep entries alphabetized when their order is irrelevant, including lookup tables and configuration arrays. Treat labeled instruction bullets as order-dependent, along with rows ordered to carry meaning. Order `.agents/PROJECT.md` second-level sections topically, appending a new section when no topical position is evident, and alphabetize the third-level sections within each. In source, treat a contiguous run of top-level constant declarations as one such list only when their initializers and behavior do not depend on declaration order, and check the complete qualifying run rather than the changed lines alone.
+- **Ordering:** Keep order-independent entries introduced or modified within the resolved scope alphabetized, including configuration arrays, lookup tables, prose enumerations, and regex alternatives. Treat labeled instruction bullets as order-dependent, along with rows ordered to carry meaning. Order `.agents/PROJECT.md` second-level sections topically, appending a new section when no topical position is evident, and alphabetize the third-level sections within each. In source, treat a contiguous run of top-level constant declarations as one such list only when their initializers and behavior do not depend on declaration order, and check the complete qualifying run rather than the changed lines alone.
 
 ## Scope
 
@@ -73,4 +73,3 @@ Skills in the global category may rely on the domfiles-managed global instructio
     - Record the exception and its durable reason in the owning skill before implementation.
     - Avoiding migration, existing language use, familiarity, or shorter syntax alone does not justify an exception.
 - **Cargo names:** Keep established Cargo target and CLI names unchanged when only source filenames change.
-- **Maintenance:** Treat every maintained project-local `domfiles-*` skill as a living document. After using one, suggest a concrete edit only when execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction.

@@ -1,36 +1,14 @@
-# Portable skill scripts
+# Portable Skill Scripts
 
 Use this reference for a script owned by a portable skill—a skill installed for use across target projects rather than scoped to one repository. Apply the [general skill-owned script policy](skill-owned-scripts.md) in addition to this reference.
 
-A portable skill script exposes an agent-neutral process API. Any supported agent can invoke that documented API against an explicitly selected target without installing the script’s source, toolchain, dependencies, or build configuration in that target. Portability spans agents and targets rather than requiring standalone distribution.
+A portable skill script exposes an agent-neutral [observable interface](skill-owned-scripts.md#define-the-observable-interface). Any supported agent can invoke that documented interface against an explicitly selected target without installing the script’s build configuration, dependencies, source, or toolchain in that target. Portability spans agents and targets rather than requiring standalone distribution.
 
 The script therefore runs from the repository that canonically owns it. Confirm that the supported installation keeps that repository reachable, because an installation that copies the skill rather than linking it leaves the script without a host. A skill whose supported installation cannot reach its host stays documentation-only.
 
-## Define the process API
+Updating a target-owned consumer for a breaking interface change requires separate authorization for that target.
 
-Treat these observable elements as the script’s public API:
-
-- The executable and operation names.
-- Accepted arguments, required arguments, defaults, target-selection rules, and documented environment inputs.
-- Standard-output, standard-error, and exit-status behavior.
-- Read and write effects, network access, credential sources, and required authorization.
-- Input manifests, produced artifacts, machine-readable schemas, and compatibility guarantees.
-
-Document the complete API in the owning skill at the decision that invokes the script. Keep command help consistent with that documentation and cover the contract with adjacent tests.
-
-Treat every element above as compatibility-sensitive once documented. A change is breaking when it:
-
-- Removes or renames an executable, operation, or accepted argument.
-- Makes an optional argument required or changes a default, target-selection rule, or documented environment input.
-- Changes standard-output or standard-error assignment, an exit-status meaning, or machine-consumed output.
-- Expands or changes read effects, write effects, network access, credential sources, or authorization requirements.
-- Alters an input-manifest schema, artifact destination, machine-readable schema meaning, or documented compatibility guarantee.
-
-A new optional operation or argument is compatible only when existing invocations retain their behavior. Human-facing wording may otherwise evolve without compatibility treatment unless the owning skill or an exact-string consumer declares it stable.
-
-A breaking change must update every invocation, contract test, consumer, and migration requirement owned by the script’s canonical repository in the same authorized task. Updating a target-owned consumer requires separate authorization for that target. Source filenames and internal functions are not public API unless a documented invocation or consumer addresses them directly.
-
-## Separate the host and target
+## Separate the Host and Target
 
 - Treat the repository that canonically owns the script as the host. The host owns source, tests, dependencies, lockfiles, compilation, and root validation.
 - Treat a project, repository, or path inspected or changed by an operation as its target. Do not infer a target from the host working directory.
@@ -44,7 +22,7 @@ A breaking change must update every invocation, contract test, consumer, and mig
 
 A host-maintenance operation that consumes no separate target may omit a target selector. Name and document that scope explicitly so it cannot be mistaken for a project-targeted operation.
 
-## Apply the common command contract
+## Apply the Common Command Contract
 
 - Keep the interface noninteractive and independent of editor actions, MCP servers, agent-specific APIs, conversational state, and calling-agent implementation.
 - Support an exit-only `--help` operation that writes help to standard output, performs no other work, and returns status `0`. Reject `--help` combined with operational arguments.
@@ -54,21 +32,21 @@ A host-maintenance operation that consumes no separate target may omit a target 
 
 A query that successfully returns zero records is status `0`. Status `1` represents a policy-defined discrepancy, not an empty result.
 
-## Bound target effects
+## Bound Target Effects
 
 - Keep host maintenance and target mutation as separate operations. Authorization to update the hosted script does not authorize changing a target, and authorization to change a target does not authorize updating the host.
 - Never modify target dependencies, toolchain configuration, Git metadata, or agent instructions as an incidental effect.
 - Exclude managed, vendored, generated, and third-party material unless the resolved scope includes it under applicable target policy. Apply every absolute exclusion for machine-local secret material, and never treat explicit scope inclusion as authority to override one.
 - Make network access explicit in the operation contract. Obtain credentials only through an established machine-local source or external credential store, and never accept literal secrets through command arguments.
 
-## Preserve agent and target boundaries
+## Preserve Agent and Target Boundaries
 
 - Treat caller sandbox, permission, access, approval, mutation, and submission boundaries as part of the operation’s preconditions rather than obstacles to bypass.
 - Do not turn an operation requiring native confirmation or additional access into an indirect script or terminal mutation. A script may prepare or validate authorized external staging state, then must stop and report the native or user-authorized action still required.
 - On an access failure, report the selected target, attempted operation, and required boundary crossing. Do not copy the target, follow an alternate path, or reformulate the invocation merely to evade the boundary.
 - Do not infer mutation authority from target existence, writable permissions, an ignored destination, or a previous successful invocation.
 
-## Validate portability
+## Validate Portability
 
 - Run contract tests from the host against target fixtures outside the owning skill directory.
 - Test invocation from a working directory other than the target, target paths containing spaces and non-ASCII characters, missing and inaccessible targets, missing project-wide scope, traversal attempts, symlink escape, and paths omitted by the resolved scope.
@@ -76,6 +54,6 @@ A query that successfully returns zero records is status `0`. Status `1` represe
 - Exercise help, invalid invocation, each defined status, and deterministic ordering.
 - Register source and adjacent tests in the host’s authoritative validation without requiring target integration.
 
-## Avoid speculative interfaces
+## Avoid Speculative Interfaces
 
 Do not require a universal subcommand hierarchy, JSON output, `--dry-run`, a `PATH`-installed wrapper, standalone distribution, or a machine-readable `--contract` operation without a concrete consumer. Add structured output only when an identified consumer needs it, then give every persistent machine-readable schema an integer version and reject unsupported versions rather than interpreting them heuristically. Add a shared interface only when it makes supported agent invocation or composition materially more deterministic than the owning skill’s documented command contract.

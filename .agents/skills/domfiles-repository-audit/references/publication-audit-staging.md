@@ -1,4 +1,4 @@
-# Publication audit staging
+# Publication Audit Staging
 
 An isolated filesystem copy of tracked `HEAD` is not a supported publication-audit route. When an audit requires one, stop and report that limitation. Do not design or implement a materializer as part of the ordinary audit workflow.
 
