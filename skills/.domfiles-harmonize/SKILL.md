@@ -1,5 +1,5 @@
 ---
-name: repository-harmonization
+name: harmonize
 description: |-
     Harmonize documentation, policies, and workflows across Dom’s projects.
 disable-model-invocation: true

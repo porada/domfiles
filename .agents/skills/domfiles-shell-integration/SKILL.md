@@ -13,7 +13,7 @@ For every Fish target, load `fish-shell-scripting` for portable language policy 
 
 ## Choose the workflow
 
-For a standalone audit in either language, follow the [repository audit process](../domfiles-repository-audit/SKILL.md), keep the task read-only, and apply the applicable shell-specific checks in this skill and its routed references.
+For a standalone audit in either language, follow the applicable language skill’s audit workflow, keep the task read-only, and apply the domfiles-specific checks in this skill and its routed references.
 
 ## Investigate the task
 

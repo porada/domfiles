@@ -18,10 +18,10 @@ __symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
 
 __print_heading_dimmed 'Linking agent skills'
 
-for source in agent-task-relay domfiles-agent-documentation domfiles-git-worktrees \
-  domfiles-release-notes domfiles-repository-harmonization fish-shell-scripting \
+for source in .domfiles-agent-documentation .domfiles-git-worktrees .domfiles-harmonize \
+  .domfiles-release-notes .domfiles-verify agent-task-relay fish-shell-scripting \
   human-facing-writing posix-shell-scripting release-notes-for-humans simple-github-cli; do
-  name="$(__string_replace "$source" 'domfiles-' '')"
+  name="$(__string_replace "$source" '.domfiles-' '')"
   path="$DOMFILES_SKILLS_DIR/$source"
 
   __suppress __symlink "$path" "$HOME/.agents/skills/$name"

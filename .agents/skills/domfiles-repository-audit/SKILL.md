@@ -1,6 +1,8 @@
 ---
 name: domfiles-repository-audit
-description: Use this skill immediately for the bare `Audit` shorthand and for standalone requests to audit the default domfiles repository scope or an explicitly scoped subset for redundancies, inconsistencies, typos, outdated or duplicated documentation, dead or unused code, structural or type issues, or reimplemented behavior. Do not use it when the same request explicitly asks for changes, or for commit reviews, ordinary code review, debugging, or implementation tasks.
+description: |-
+    Audit this repository.
+disable-model-invocation: true
 metadata:
     internal: true
 ---
@@ -20,7 +22,7 @@ Changing the default scope does not change the workflow’s gates.
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.
-3. Exclude these paths in publication-audit mode and in every default repository scope, including the bare `Audit` shorthand. An explicit exhaustive scope such as “every tracked file” includes them, subject to the absolute exclusions above:
+3. Exclude these paths in publication-audit mode and in every default repository scope, including `/domfiles-repository-audit` without an explicit scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the absolute exclusions above:
     - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed-settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
     - `.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Absolute exclusions still apply, and supporting evidence does not become reportable.
@@ -29,7 +31,7 @@ Changing the default scope does not change the workflow’s gates.
 
 - Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
 - Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate instead of accumulating their bodies in the coordinating context.
-- Apply the global “Prompt contract” policy to every delegated pass. Identify the applicable `AGENTS.md` files, this audit workflow, and relevant domain skills for the delegate to load rather than copying their bodies into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
+- Apply the global “Prompt contract” policy to every delegated pass. Identify the applicable `AGENTS.md` files and relevant domain skills for the delegate to load. Identify this audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Do not copy those documents into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
 
 ## Audit the contents
 

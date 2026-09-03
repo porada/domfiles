@@ -192,4 +192,4 @@ cargo test --locked --test domfiles-zed-settings-pattern-match-test
 cargo test --locked --test domfiles-zed-settings-regex-dependency-audit-test
 ```
 
-Use the pattern-matcher test as contract evidence for help-to-parser agreement, bounded finding retention and output, schemas, and status behavior. Select remaining root checks through the [skill-owned script validation policy](../../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).
+Use the pattern-matcher test as contract evidence for help-to-parser agreement, bounded finding retention and output, schemas, and status behavior. Select remaining root checks through the [skill-owned script validation policy](../../../../skills/.domfiles-agent-documentation/references/skill-owned-scripts.md#test-the-contracts).

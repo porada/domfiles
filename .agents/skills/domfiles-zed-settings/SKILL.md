@@ -13,7 +13,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 ## Apply the general policy
 
-- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
+- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/.domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
 - Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
 - Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
 - Keep every order-independent list introduced or modified in this scope alphabetized, including prose enumerations, regex alternatives, and Zed settings arrays. Sort object arrays by the value of their identifying field.
@@ -22,8 +22,8 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 ## Choose the workflow
 
 - For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change-validation workflow below. A non-fetch tool-permission override has no supported mutation route. Stop that change until the agent permission branch defines a dedicated workflow and validation contract.
-- For a standalone audit, follow the [repository audit process](../domfiles-repository-audit/SKILL.md).
-- For a standalone review, keep the task read-only and skip change planning, implementation, formatting, and change validation.
+- For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, and report all findings together. Skip change planning, change validation, formatting, and implementation.
+- For a standalone review, keep the task read-only and skip change planning, change validation, formatting, and implementation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 
 ## Investigate and plan

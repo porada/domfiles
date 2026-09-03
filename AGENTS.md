@@ -24,7 +24,7 @@
 | `.config/zed/AGENTS.md` | Defines global defaults. Applicable project agent instructions override it. |
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
 | `CLAUDE.md` | Bridges Claude to the canonical project instructions in `AGENTS.md`. It defines no independent policy. |
-| `.agents/skills/*/` and `skills/*/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to references within its own skill directory and to sibling skills. Distribution follows the [skill classification](#skills). |
+| Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to references within its own skill directory and to sibling skills. Distribution follows the [skill classification](#skills). |
 | `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |
 
@@ -59,10 +59,10 @@ Classify every project-authored skill by its canonical source and supported inst
 | Category | Canonical source | `name` | `metadata.internal` | Supported installation |
 | --- | --- | --- | --- | --- |
 | Internal | `.agents/skills/domfiles-<skill-name>` | `domfiles-<skill-name>` | `true` | Project-local to `domfiles`. |
-| Global | `skills/domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
+| Global | `skills/.domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
 | Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
 
-The root `skills/*` tree stores global and public canonical sources and is not a project-local discovery surface. Client-specific project discovery remains backed by `.agents/skills/*`. `domfiles sync` removes the canonical `domfiles-` prefix when linking a global skill, so its frontmatter `name` and final symlink basename remain `<skill-name>`.
+`skills/.domfiles-*` stores global canonical sources, while `skills/<skill-name>` stores public canonical sources. Neither namespace is a project-local discovery surface. Client-specific project discovery remains backed by `.agents/skills/*`. `domfiles sync` removes the canonical `.domfiles-` prefix when linking a global skill, so its frontmatter `name` and final symlink basename remain `<skill-name>`.
 
 Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
 
