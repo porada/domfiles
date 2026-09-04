@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
-
-# Hide hidden files in Finder
-__ defaults write com.apple.finder AppleShowAllFiles -bool false
-__ killall Finder || true

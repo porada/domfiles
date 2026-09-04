@@ -8,6 +8,7 @@ set --global DOMFILES_ZED_CONFIG_DIR "$DOMFILES_CONFIG_DIR/zed"
 # Resolve common paths
 set --global DOMFILES (path dirname "$DOMFILES_CONFIG_DIR")
 set --global DOMFILES_BIN_DIR "$DOMFILES/bin"
+set --global DOMFILES_HOME_DIR "$DOMFILES/home"
 set --global DOMFILES_PROJECTS_DIR "$HOME/Projects"
 set --global DOMFILES_SKILLS_DIR "$DOMFILES/skills"
 
@@ -26,7 +27,7 @@ set --global --export HOMEBREW_NO_ENV_HINTS 1
 
 # Configure `node`
 set --global --export NODE_OPTIONS '--trace-uncaught --unhandled-rejections=strict'
-set --global --export NODE_REPL_HISTORY "$HOME/.node_history"
+set --global --export NODE_REPL_HISTORY "$HOME/.node-history"
 
 # Set `npm` config paths
 set --global --export npm_config_globalconfig "$DOMFILES_NPM_CONFIG_DIR/global.npmrc"

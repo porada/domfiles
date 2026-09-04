@@ -13,6 +13,8 @@ fi
 DOMFILES_BIN_DIR="$(dirname "$(realpath "$0")")"
 DOMFILES="$(dirname "$DOMFILES_BIN_DIR")"
 # shellcheck disable=SC2034
+DOMFILES_HOME_DIR="$DOMFILES/home"
+# shellcheck disable=SC2034
 DOMFILES_PROJECTS_DIR="$HOME/Projects"
 # shellcheck disable=SC2034
 DOMFILES_SKILLS_DIR="$DOMFILES/skills"
@@ -27,8 +29,6 @@ DOMFILES_GIT_CONFIG_DIR="$DOMFILES_CONFIG_DIR/git"
 DOMFILES_NPM_CONFIG_DIR="$DOMFILES_CONFIG_DIR/npm"
 # shellcheck disable=SC2034
 DOMFILES_ZED_CONFIG_DIR="$DOMFILES_CONFIG_DIR/zed"
-
-# Define helper functions
 
 # Runs `$@`, printing the command beforehand
 __() {
@@ -90,6 +90,12 @@ __domfiles() {
 
   command="$1"
   shift
+
+  # Provide a temporary bridge
+  if [ -x "$DOMFILES_HOME_DIR/bin/domfiles-$command" ]; then
+    "$DOMFILES_HOME_DIR/bin/domfiles-$command" "$@"
+    return
+  fi
 
   "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
 }
@@ -196,12 +202,18 @@ __domfiles_exec() {
     __print_command domfiles "$command" "$@"
   fi
 
+  # Provide a temporary bridge
+  if [ -x "$DOMFILES_HOME_DIR/bin/domfiles-$command" ]; then
+    exec "$DOMFILES_HOME_DIR/bin/domfiles-$command" "$@"
+  fi
+
   exec "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
 }
 
 # Returns success when `$1` is an available `domfiles` command
 __domfiles_is_callable() {
-  [ -x "$DOMFILES_BIN_DIR/domfiles-$1" ]
+  # Provide a temporary bridge
+  [ -x "$DOMFILES_HOME_DIR/bin/domfiles-$1" ] || [ -x "$DOMFILES_BIN_DIR/domfiles-$1" ]
 }
 
 # Returns success when domfiles have no tracked changes
@@ -561,6 +573,26 @@ __mkdir() {
   __chmod "$1"
 }
 
+# Prints a normalized boolean. Returns failure when `$1` is unsupported
+__normalize_boolean() {
+  if [ $# -ne 1 ]; then
+    __print_error '`__normalize_boolean` requires one value'
+    return 1
+  fi
+
+  case "$1" in
+    1 | [Tt][Rr][Uu][Ee] | [Oo][Nn] | [Yy][Ee][Ss])
+      printf '%s\n' true
+      ;;
+    0 | [Ff][Aa][Ll][Ss][Ee] | [Oo][Ff][Ff] | [Nn][Oo])
+      printf '%s\n' false
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 # Pages standard input for terminal output or passes it through unchanged.
 # Optionally uses Git pager configuration for command `$1`
 __page_input() {
@@ -693,17 +725,9 @@ __read_boolean_from_env() (
     return 0
   fi
 
-  case "$value" in
-    1 | [Tt][Rr][Uu][Ee] | [Yy][Ee][Ss] | [Oo][Nn])
-      echo true
-      ;;
-    0 | [Ff][Aa][Ll][Ss][Ee] | [Nn][Oo] | [Oo][Ff][Ff])
-      echo false
-      ;;
-    *)
-      __print_error_and_exit "\`$1\` has an unsupported boolean value. Leave it empty to use the default"
-      ;;
-  esac
+  if ! __normalize_boolean "$value"; then
+    __print_error_and_exit "\`$1\` has an unsupported boolean value"
+  fi
 )
 
 # Prints the pager command. Optionally uses Git configuration for command `$1`
@@ -912,7 +936,7 @@ __touch() {
   __chmod "$1"
 }
 
-# Runs `brew` with domfiles defaults
+# Runs `brew` with domfiles’ defaults
 brew() {
   command='brew'
 
@@ -924,7 +948,7 @@ brew() {
   HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
 }
 
-# Runs `pnpm` with domfiles defaults
+# Runs `pnpm` with domfiles’ defaults
 pnpm() {
   if ! __is_callable pnpm; then
     __print_error_and_exit '`pnpm` is missing'

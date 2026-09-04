@@ -9,6 +9,12 @@ if [ -L "$HOME/.gitconfig" ]; then
   __ rm -f "$HOME/.gitconfig"
 fi
 
+# Migrate `.node_history`
+if [ -f "$HOME/.node_history" ]; then
+  __print_heading_dimmed 'Cleaning up `node` history'
+  __ rm -f "$HOME/.node_history"
+fi
+
 # Migrate global `pnpm` packages
 if __is_callable pnpm; then
   command_list="$(pnpm --dir "$HOME" --loglevel=error list --global --depth=0 --json)"

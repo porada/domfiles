@@ -25,21 +25,8 @@ function __domfiles_read_boolean_from_env
         return 0
     end
 
-    for accepted in 1 on true yes
-        if string match --quiet --ignore-case -- "$accepted" "$value"
-            echo true
-            return 0
-        end
+    if not __domfiles_normalize_boolean "$value"
+        __domfiles_print_error "`$variable_name` has an unsupported boolean value"
+        return 1
     end
-
-    for accepted in 0 false no off
-        if string match --quiet --ignore-case -- "$accepted" "$value"
-            echo false
-            return 0
-        end
-    end
-
-    __domfiles_print_error \
-        "`$variable_name` has an unsupported boolean value. Leave it empty to use the default"
-    return 1
 end

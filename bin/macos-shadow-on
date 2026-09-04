@@ -1,8 +1,0 @@
-#!/bin/sh
-
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
-
-# Enable window shadows when taking screenshots
-__ defaults write com.apple.screencapture disable-shadow -bool false
-__ killall SystemUIServer || true

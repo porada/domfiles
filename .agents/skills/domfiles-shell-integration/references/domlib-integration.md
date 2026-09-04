@@ -27,7 +27,7 @@ When `domlib` or `.config/fish/config.fish` is relevant, inspect both files befo
 ## Apply Domlib-Specific POSIX Conventions
 
 - Apply portable continuation policy only to executable POSIX shell code. `domlib` contract comments retain their 80-column limit.
-- Parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value set owned by that helper rather than repeating it in policy or project documentation. Third-party environment variables remain outside this rule.
+- Parse user-supplied values for domfiles-authored boolean environment variables with `__read_boolean_from_env` at the input boundary. Keep the supported-value sets owned by POSIX `__normalize_boolean` and Fish `.config/fish/functions/__domfiles_normalize_boolean.fish` rather than repeating them in policy or project documentation. Third-party environment variables remain outside this rule.
 - Use `__suppress <command>` rather than an assignment-prefixed function invocation to suppress command echo for one command. See [suppressed command output](../../../PROJECT.md#suppressed-command-output).
     - Never wrap `__domfiles_exec` in `__suppress`. The subshell would absorb its `exec` and let the caller resume. Omit that function’s opt-in `--print` flag instead.
 
