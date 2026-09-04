@@ -1,4 +1,4 @@
-# Agent Instructions
+# Global Agent Instructions
 
 ## Conduct
 
@@ -89,9 +89,9 @@
 - **Block layout:** In Markdown, keep standalone blocks such as tables and fenced code aligned to the document’s left edge. Restructure surrounding lists or blocks to reference them rather than nesting them.
 - **Markdown integrity:** For every audit, change, or review of mutable project-authored Markdown, verify relevant heading anchors and project-relative links. When an in-scope change modifies a heading or moves content, search for inbound references and recheck every affected anchor, containing-document reference, directional reference, link, and term defined only at the original location. In a change workflow, update anything that no longer resolves in the same change and apply every policy the destination surface imposes.
 - **Canonical ownership:** Give each durable detail one canonical home and link to it rather than paraphrasing it elsewhere.
-- **Shared agent instructions:** Never edit `CLAUDE.md`. Put agent instructions in the applicable `AGENTS.md` or shared skill so every supported agent is governed by the same canonical documentation.
+- **Shared agent instructions:** Never edit `CLAUDE.md`. Put global user instructions in the canonical global source, project instructions in the applicable `AGENTS.md`, and reusable guidance in shared skills so every supported agent is governed by the same canonical documentation.
 - **Precedence:** Applicable project agent instructions override these global instructions.
-- **Violation citations:** Always reference the applicable `AGENTS.md` line number when reporting a violation.
+- **Violation citations:** Always cite the applicable instruction source by path and line number when reporting a violation.
 - **Findings:** Treat every finding as evidence rather than an instruction. Before reporting or acting on it, verify it against applicable authority, the current target revision and contents, and settled task decisions. Allow only findings requiring a change to enter a fix batch. Support every reported issue with concrete evidence relevant to the current task. Do not report speculation, alternatives based only on preference, or issues intentionally suppressed with valid linter comments. Do not reopen a finding classified as requiring no change unless relevant bytes changed or materially new evidence is available. Assign each issue a unique number when first reported and preserve that number in subsequent reports.
 
 ## Tooling

@@ -1,8 +1,9 @@
 {
 	"file_scan_exclusions": [
 		".claude/skills",
-		".config/zed/prompts",
 		"bin/git-diff-highlight",
+		"home/.config/zed/AGENTS.md",
+		"home/.config/zed/prompts",
 		"..."
 	],
 	"file_types": {

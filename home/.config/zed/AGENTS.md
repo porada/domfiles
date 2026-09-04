@@ -1,0 +1,1 @@
+../../../.agents/GLOBAL.md

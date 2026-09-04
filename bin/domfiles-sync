@@ -148,6 +148,3 @@ __domfiles sync-clean
 __print_heading 'Sync complete'
 __domfiles dependencies || true
 __is_fish || echo
-
-# Record the last complete sync
-date +%s > "$DOMFILES/.lastsync"

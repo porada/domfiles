@@ -1,16 +1,10 @@
 # Resolve config paths
 set --global DOMFILES_FISH_CONFIG_DIR (path dirname (path resolve (status filename)))
-set --global DOMFILES_CONFIG_DIR (path dirname "$DOMFILES_FISH_CONFIG_DIR")
-set --global DOMFILES_GIT_CONFIG_DIR "$DOMFILES_CONFIG_DIR/git"
-set --global DOMFILES_NPM_CONFIG_DIR "$DOMFILES_CONFIG_DIR/npm"
-set --global DOMFILES_ZED_CONFIG_DIR "$DOMFILES_CONFIG_DIR/zed"
+set --global DOMFILES (path resolve "$DOMFILES_FISH_CONFIG_DIR/../../..")
 
 # Resolve common paths
-set --global DOMFILES (path dirname "$DOMFILES_CONFIG_DIR")
 set --global DOMFILES_BIN_DIR "$DOMFILES/bin"
-set --global DOMFILES_HOME_DIR "$DOMFILES/home"
 set --global DOMFILES_PROJECTS_DIR "$HOME/Projects"
-set --global DOMFILES_SKILLS_DIR "$DOMFILES/skills"
 
 # Set the default editor
 set --global --export EDITOR vim -c startinsert
@@ -30,15 +24,15 @@ set --global --export NODE_OPTIONS '--trace-uncaught --unhandled-rejections=stri
 set --global --export NODE_REPL_HISTORY "$HOME/.node-history"
 
 # Set `npm` config paths
-set --global --export npm_config_globalconfig "$DOMFILES_NPM_CONFIG_DIR/global.npmrc"
-set --global --export npm_config_userconfig "$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
+set --global --export npm_config_globalconfig "$HOME/.config/npm/global.npmrc"
+set --global --export npm_config_userconfig "$HOME/.config/npm/user.npmrc"
 
 # Set `pnpm` config paths
 set --global --export PNPM_HOME "$HOME/Library/pnpm"
 set --global --export pnpm_config_npmrc_auth_file "$npm_config_userconfig"
 
 # Set `zizmor` config path
-set --global --export ZIZMOR_CONFIG "$DOMFILES_CONFIG_DIR/zizmor.yaml"
+set --global --export ZIZMOR_CONFIG "$HOME/.config/zizmor/config.yaml"
 
 # Opt out of telemetry
 set --global --export DISABLE_TELEMETRY 1
@@ -60,4 +54,4 @@ if status is-interactive
 end
 
 # Load local configuration
-source "$DOMFILES_FISH_CONFIG_DIR/local.fish" >/dev/null 2>&1
+source "$DOMFILES_FISH_CONFIG_DIR/local.fish"

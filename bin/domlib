@@ -13,6 +13,8 @@ fi
 DOMFILES_BIN_DIR="$(dirname "$(realpath "$0")")"
 DOMFILES="$(dirname "$DOMFILES_BIN_DIR")"
 # shellcheck disable=SC2034
+DOMFILES_AGENTS_DIR="$DOMFILES/.agents"
+# shellcheck disable=SC2034
 DOMFILES_HOME_DIR="$DOMFILES/home"
 # shellcheck disable=SC2034
 DOMFILES_PROJECTS_DIR="$HOME/Projects"
@@ -20,15 +22,13 @@ DOMFILES_PROJECTS_DIR="$HOME/Projects"
 DOMFILES_SKILLS_DIR="$DOMFILES/skills"
 
 # Resolve config paths
-DOMFILES_CONFIG_DIR="$DOMFILES/.config"
+DOMFILES_CONFIG_DIR="$DOMFILES_HOME_DIR/.config"
 # shellcheck disable=SC2034
 DOMFILES_FISH_CONFIG_DIR="$DOMFILES_CONFIG_DIR/fish"
 # shellcheck disable=SC2034
 DOMFILES_GIT_CONFIG_DIR="$DOMFILES_CONFIG_DIR/git"
 # shellcheck disable=SC2034
 DOMFILES_NPM_CONFIG_DIR="$DOMFILES_CONFIG_DIR/npm"
-# shellcheck disable=SC2034
-DOMFILES_ZED_CONFIG_DIR="$DOMFILES_CONFIG_DIR/zed"
 
 # Runs `$@`, printing the command beforehand
 __() {
@@ -92,8 +92,8 @@ __domfiles() {
   shift
 
   # Provide a temporary bridge
-  if [ -x "$DOMFILES_HOME_DIR/bin/domfiles-$command" ]; then
-    "$DOMFILES_HOME_DIR/bin/domfiles-$command" "$@"
+  if [ -x "$DOMFILES_HOME_DIR/.local/bin/domfiles-$command" ]; then
+    "$DOMFILES_HOME_DIR/.local/bin/domfiles-$command" "$@"
     return
   fi
 
@@ -203,8 +203,8 @@ __domfiles_exec() {
   fi
 
   # Provide a temporary bridge
-  if [ -x "$DOMFILES_HOME_DIR/bin/domfiles-$command" ]; then
-    exec "$DOMFILES_HOME_DIR/bin/domfiles-$command" "$@"
+  if [ -x "$DOMFILES_HOME_DIR/.local/bin/domfiles-$command" ]; then
+    exec "$DOMFILES_HOME_DIR/.local/bin/domfiles-$command" "$@"
   fi
 
   exec "$DOMFILES_BIN_DIR/domfiles-$command" "$@"
@@ -213,7 +213,8 @@ __domfiles_exec() {
 # Returns success when `$1` is an available `domfiles` command
 __domfiles_is_callable() {
   # Provide a temporary bridge
-  [ -x "$DOMFILES_HOME_DIR/bin/domfiles-$1" ] || [ -x "$DOMFILES_BIN_DIR/domfiles-$1" ]
+  [ -x "$DOMFILES_HOME_DIR/.local/bin/domfiles-$1" ] \
+    || [ -x "$DOMFILES_BIN_DIR/domfiles-$1" ]
 }
 
 # Returns success when domfiles have no tracked changes

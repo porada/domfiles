@@ -5,16 +5,14 @@
 
 __print_heading 'Linking domfiles'
 
-__symlink "$DOMFILES_CONFIG_DIR" "$HOME/.config"
-
-for source in .curlrc .vimrc; do
-  __symlink "$DOMFILES_CONFIG_DIR/$source" "$HOME/$source"
+for source in .config .curlrc .vimrc; do
+  __symlink "$DOMFILES_HOME_DIR/$source" "$HOME/$source"
 done
 
 __print_heading_dimmed 'Linking agent instructions'
 
-__symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md"
-__symlink "$DOMFILES_ZED_CONFIG_DIR/AGENTS.md" "$HOME/.codex/AGENTS.md"
+__symlink "$DOMFILES_AGENTS_DIR/GLOBAL.md" "$HOME/.claude/CLAUDE.md"
+__symlink "$DOMFILES_AGENTS_DIR/GLOBAL.md" "$HOME/.codex/AGENTS.md"
 
 __print_heading_dimmed 'Linking agent skills'
 
@@ -53,7 +51,7 @@ else
   signer="$(git config --global --get user.email 2> /dev/null || true)"
 
   if [ -z "$signer" ]; then
-    __print_error_and_exit 'Failed to resolve `user.email` from `.config/git/config`'
+    __print_error_and_exit 'Failed to resolve `user.email` from `git config`'
   fi
 
   key=''

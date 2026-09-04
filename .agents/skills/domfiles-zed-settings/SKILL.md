@@ -1,7 +1,7 @@
 ---
 name: domfiles-zed-settings
 description: |-
-    Use this skill whenever the resolved scope includes `.config/zed/settings.json`, `.zed/settings.json`, or project-authored policy or skill scripts for those settings, including tasks about agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions, even when the user did not name either settings file.
+    Use this skill whenever the resolved scope includes `home/.config/zed/settings.json`, `.zed/settings.json`, or project-authored policy or skill scripts for those settings, including tasks about agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions, even when the user did not name either settings file.
 
     Do not use it for other Zed files alone.
 
@@ -18,8 +18,8 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 ## Apply the General Policy
 
 - When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill-script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/.domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
-- Keep `.config/zed/settings.json` free of entries that only restate Zed defaults.
-- Keep `.zed/settings.json` free of entries that only restate `.config/zed/settings.json` or Zed defaults.
+- Keep `home/.config/zed/settings.json` free of entries that only restate Zed defaults.
+- Keep `.zed/settings.json` free of entries that only restate `home/.config/zed/settings.json` or Zed defaults.
 - Sort Zed settings object arrays by the value of their identifying field.
     - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
 

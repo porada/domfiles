@@ -3,30 +3,6 @@
 # shellcheck source=domlib
 . "$(dirname "$(realpath "$0")")/domlib"
 
-# Migrate `.gitconfig`
-if [ -L "$HOME/.gitconfig" ]; then
-  __print_heading_dimmed 'Removing outdated `git` config'
-  __ rm -f "$HOME/.gitconfig"
-fi
-
-# Migrate `.node_history`
-if [ -f "$HOME/.node_history" ]; then
-  __print_heading_dimmed 'Cleaning up `node` history'
-  __ rm -f "$HOME/.node_history"
-fi
-
-# Migrate global `pnpm` packages
-if __is_callable pnpm; then
-  command_list="$(pnpm --dir "$HOME" --loglevel=error list --global --depth=0 --json)"
-
-  for command in plugins skills; do
-    if printf '%s\n' "$command_list" | grep -Fq -- "\"$command\":"; then
-      __print_heading_dimmed "Removing \`$command\` installed through \`pnpm\`"
-      __ pnpm --dir "$HOME" --loglevel=error remove --global "$command"
-    fi
-  done
-fi
-
 # Migrate agent instructions
 outdated_agent_instructions=false
 
@@ -42,4 +18,21 @@ for skill in github-cli package-release-notes prompt-relays prose \
       __ rm -f "$path"
     fi
   done
+done
+
+# Migrate config paths
+outdated_config_paths=false
+
+for source in fish/local.fish gh git/allowed_signers npm/user.npmrc zed/prompts; do
+  target="$DOMFILES_CONFIG_DIR/$source"
+  source="$HOME/.config/$source"
+
+  if [ -e "$source" ] && [ ! -e "$target" ]; then
+    if [ "$outdated_config_paths" = false ]; then
+      __print_heading_dimmed 'Migrating config paths'
+      outdated_config_paths=true
+    fi
+
+    __ mv "$source" "$target"
+  fi
 done

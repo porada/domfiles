@@ -54,7 +54,7 @@ The same-host complement is an initial-fetch prompt filter rather than a path-sc
 
 ### Zed Worktree Permission Coupling
 
-The global [temporary-file policy](../.config/zed/AGENTS.md#temporary-files) defines the project-relative `.agent-<name>` directory namespace. The global [`git-worktrees` skill](../skills/.domfiles-git-worktrees/SKILL.md) applies that namespace to isolated worktrees and owns the paired `agent/<name>` branch namespace, isolation criteria, administration, and lifecycle. When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of those names.
+The global [temporary-file policy](GLOBAL.md#temporary-files) defines the project-relative `.agent-<name>` directory namespace. The global [`git-worktrees` skill](../skills/.domfiles-git-worktrees/SKILL.md) applies that namespace to isolated worktrees and owns the paired `agent/<name>` branch namespace, isolation criteria, administration, and lifecycle. When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of those names.
 
 While terminal sandboxing is active, files in open worktrees are normal project write roots, while protected Git administrative metadata requires a separate sandbox grant, including for top-level worktree moves. Those sandbox limits do not apply to a command that runs without the wrapper. `terminal` actions still inherit the global `allow` and remain subject to task authorization. Native path actions that invoke configured permission evaluation inherit the same default and remain subject to their built-in checks. Native path actions that bypass the evaluator receive no configured decision and remain subject to the path, privacy, sensitive-settings, and symlink-escape checks their implementations apply. A path that looks like `.agent-<name>` neither expands terminal sandbox access nor proves the current working directory or repository boundary.
 
@@ -62,13 +62,13 @@ While terminal sandboxing is active, files in open worktrees are normal project 
 
 ### Agent Authorization Model
 
-The global [authorization policy](../.config/zed/AGENTS.md#authorization) separates instruction authority from untrusted evidence so prompt injection cannot authorize its own effects.
+The global [authorization policy](GLOBAL.md#authorization) separates instruction authority from untrusted evidence so prompt injection cannot authorize its own effects.
 
 Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching decisions by coherent execution phase preserves the context needed for assessment without returning to command-level prompts.
 
-The global [proportionality rule](../.config/zed/AGENTS.md#conduct) separates standing safety gates from implementation complexity. It treats ordinary cooperative concurrency and reversible tracked-file work as preservation and validation problems rather than reasons for speculative transaction infrastructure.
+The global [proportionality rule](GLOBAL.md#conduct) separates standing safety gates from implementation complexity. It treats ordinary cooperative concurrency and reversible tracked-file work as preservation and validation problems rather than reasons for speculative transaction infrastructure.
 
-Task-local finding classification and one review baseline prevent later reviewers from treating earlier fixes, settled decisions, or stale evidence as new work. The global [findings](../.config/zed/AGENTS.md#documentation) and [review convergence](../.config/zed/AGENTS.md#collaboration) rules own the resulting workflow.
+Task-local finding classification and one review baseline prevent later reviewers from treating earlier fixes, settled decisions, or stale evidence as new work. The global [findings](GLOBAL.md#documentation) and [review convergence](GLOBAL.md#collaboration) rules own the resulting workflow.
 
 Git publication remains user-only because remote Git history cannot be recalled from every consumer.
 
@@ -76,23 +76,23 @@ Git publication remains user-only because remote Git history cannot be recalled 
 
 The public [`agent-task-relay` skill](../skills/agent-task-relay/SKILL.md) owns inbound validation of user-pasted findings and status responses, user-mediated task-relay flow confirmation, composition, default relay delivery, complete revision, decision basis, and general evidence-only decision relays. Task-relay flow confirmation owns a self-contained isolation decision rather than routing to `git-worktrees`. The relay records only the confirmed requirement, while the receiving environment’s repository policy owns worktree creation, operation, and cleanup. It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. Generic relay behavior stays within the skill, split between its entrypoint and routed references, rather than in a standalone capture asset. This avoids a second normative copy. [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) keeps an explicit route for specialized relay-asset maintenance.
 
-Inbound recognition is based on report-like content rather than asserted authorship. The routed [Inbound Findings](../skills/agent-task-relay/references/inbound-findings.md) workflow is the canonical owner of inbound recognition, evidence treatment, validation, reporting, and confirmation. Domfiles-managed handling of context-mismatched handoffs remains owned by the global [ambiguity rule](../.config/zed/AGENTS.md#conduct).
+Inbound recognition is based on report-like content rather than asserted authorship. The routed [Inbound Findings](../skills/agent-task-relay/references/inbound-findings.md) workflow is the canonical owner of inbound recognition, evidence treatment, validation, reporting, and confirmation. Domfiles-managed handling of context-mismatched handoffs remains owned by the global [ambiguity rule](GLOBAL.md#conduct).
 
-The global [commit gate](../.config/zed/AGENTS.md#conduct) and [collaboration policy](../.config/zed/AGENTS.md#collaboration) remain canonical for commit authorization, non-interrupting in-client delegation, and the exact anti-drift assignment contract. Supported clients discover the public `agent-task-relay` skill from its description when work must continue with an external agent or in an environment with the required access, so the collaboration policy does not repeat that route. The public skill carries the commit gate’s assignment-specific application and the anti-drift contract as required standalone context for independent installations and applies both to task relays and explicit user-requested subagent drafts without mediating autonomous delegation. The `simple-github-cli` fallback for `gh agent-task create` mirrors the anti-drift contract, inherited assignment boundaries, commit gate, and dependency approval gate needed to compose and dispatch an assignment when `agent-task-relay` is unavailable. Decision relays are always non-mutating.
+The global [commit gate](GLOBAL.md#conduct) and [collaboration policy](GLOBAL.md#collaboration) remain canonical for commit authorization, non-interrupting in-client delegation, and the exact anti-drift assignment contract. Supported clients discover the public `agent-task-relay` skill from its description when work must continue with an external agent or in an environment with the required access, so the collaboration policy does not repeat that route. The public skill carries the commit gate’s assignment-specific application and the anti-drift contract as required standalone context for independent installations and applies both to task relays and explicit user-requested subagent drafts without mediating autonomous delegation. The `simple-github-cli` fallback for `gh agent-task create` mirrors the anti-drift contract, inherited assignment boundaries, commit gate, and dependency approval gate needed to compose and dispatch an assignment when `agent-task-relay` is unavailable. Decision relays are always non-mutating.
 
 ### Claude Agent Integration
 
 The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
 
-The [`claude-acp` registry entry](../.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
+The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
 
 Claude follows the [External Agent permission layering](#zed-agent-permission-model): Zed’s operating-system sandbox does not isolate it. At Zed commit `1662f5f3`, Claude Agent’s ACP permission requests and its own permission system govern its tools without passing through Zed’s native tool-permission evaluator.
 
 ### Claude, Codex, and Zed Global Instructions
 
-The tracked `.config/zed/AGENTS.md` is the canonical global instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex, while the managed `~/.config` link exposes it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped.
+The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped.
 
-Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.config/zed/AGENTS.md`.
+Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.agents/GLOBAL.md`.
 
 The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defines the repository-specific instruction surfaces.
 
@@ -106,13 +106,13 @@ The `Collaboration` policy is the standing example of what does not move. Its de
 
 ### GitHub CLI Agent Integration
 
-The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) owns conditional agent behavior for `gh`. It carries the authentication and remote-mutation rules its workflow needs plus the [command-specific standalone handoff fallback](#agent-task-relay) for `gh agent-task create`, so the skill remains independently usable. Supported clients discover the skill from its description when a task calls for `gh` or direct GitHub work. The global [GitHub CLI policy](../.config/zed/AGENTS.md#github-cli) retains aligned domfiles-managed copies of the authentication and remote-mutation gates so those boundaries remain directly loaded across projects without repeating the route.
+The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) owns conditional agent behavior for `gh`. It carries the authentication and remote-mutation rules its workflow needs plus the [command-specific standalone handoff fallback](#agent-task-relay) for `gh agent-task create`, so the skill remains independently usable. Supported clients discover the skill from its description when a task calls for `gh` or direct GitHub work. The global [GitHub CLI policy](GLOBAL.md#github-cli) retains aligned domfiles-managed copies of the authentication and remote-mutation gates so those boundaries remain directly loaded across projects without repeating the route.
 
 `gh agent-task` and the other non-simple families in [Opt-In Operations](../skills/simple-github-cli/SKILL.md#opt-in-operations) are never chosen without a direct user request. The boundary is scope-based rather than tied to preview status. User-requested external task handoffs use `agent-task-relay` for confirmation and assignment composition when it is available, while `simple-github-cli` owns the selected `gh` interface and terminal command delivery for `gh agent-task create` and task-bearing `gh copilot` invocations. `simple-github-cli` declares `agent-task-relay` through one entrypoint route and one bundled [optional-peer reference](../skills/simple-github-cli/references/optional-peer-agent-task-relay.md). `agent-task-relay` carries a generic workflow-owned delivery deferral, and the `simple-github-cli` agent-task fallback preserves standalone behavior without the peer.
 
 ### Global System-Available Tooling
 
-The [global system-available tooling list](../.config/zed/AGENTS.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
+The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
 
 The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
 
@@ -156,7 +156,7 @@ Documentation for global skills is maintained under the assumption that an insta
 
 The public [`posix-shell-scripting`](../skills/posix-shell-scripting/SKILL.md) and [`fish-shell-scripting`](../skills/fish-shell-scripting/SKILL.md) skills respectively own portable POSIX shell and Fish authoring, review, audit, diagnosis, and validation guidance. The repository-internal [`domfiles-shell-integration`](skills/domfiles-shell-integration/SKILL.md) skill retains domfiles-specific shell invariants and integration policy. General wording remains owned by [`human-facing-writing`](../skills/human-facing-writing/SKILL.md), keeping shell semantics separate from editorial guidance.
 
-The public `human-facing-writing` skill applies its [Writing Principles](../skills/human-facing-writing/SKILL.md#writing-principles) standard to every task, then routes connected prose and technical copy to separate references, giving overlapping work one precedence contract while preserving a complete nontechnical path. The global **Numbering** rule exists for Zed-specific behavior, remains owned by [`.config/zed/AGENTS.md`](../.config/zed/AGENTS.md#writing), and is intentionally excluded from the public typography contract. Synchronization removes the obsolete managed symlinks rather than retaining aliases, so clients discover the merged skill once.
+The public `human-facing-writing` skill applies its [Writing Principles](../skills/human-facing-writing/SKILL.md#writing-principles) standard to every task, then routes connected prose and technical copy to separate references, giving overlapping work one precedence contract while preserving a complete nontechnical path. The global **Numbering** rule exists for Zed-specific behavior, remains owned by [`.agents/GLOBAL.md`](GLOBAL.md#writing), and is intentionally excluded from the public typography contract. Synchronization removes the obsolete managed symlinks rather than retaining aliases, so clients discover the merged skill once.
 
 During source authoring, the `agent-documentation` workflow composes every project-authored agent-documentation writing surface and all human-facing writing in its assets through `human-facing-writing`, regardless of skill category or invocation mode. Agent documentation retains ownership of contract meaning, authority, routing, and machine-readable content. This composition creates no installed runtime dependency on `human-facing-writing`.
 
@@ -196,7 +196,7 @@ Version-sensitive agent documentation uses one authoritative upstream baseline b
 
 ### Zed Selection-to-New-Thread Key Binding
 
-The `ctrl-enter` binding in `.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
+The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
 
 ## Synchronization
 
@@ -215,8 +215,6 @@ Repository updates are skipped when the checkout contains entries marked by `git
 The workflow can complete with visible, explicitly handled failures. An unhandled error or a nonzero exit from a sync stage stops the broader workflow.
 
 The final dependency status is advisory. Its result remains visible while synchronization continues to completion.
-
-`.lastsync` records only that the broader workflow reached its end. Command output remains the record of individual operation outcomes. The file remains intentionally write-only until a consumer is introduced.
 
 ## Tooling
 
@@ -237,7 +235,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 - **Command routing:** POSIX `__` routes `brew` and `pnpm` through `domlib` wrappers that add fallback or search paths, environment overrides, and custom missing-command diagnostics. Fish `__domfiles_print_and_run` invokes the requested external command directly. Fish startup establishes the supported command paths, and the generic wrapper intentionally adds no per-command routing, environment, or diagnostics.
 - **Failure handling:** Argument-validation failures in POSIX `__`, `__confirm`, and `__is_boolean` terminate the running shell. Their Fish peers report the error and return status 1 because terminating from an autoloaded function would close the interactive shell.
 - **Quoting:** POSIX `__print_command` renders arguments with Python `shlex.quote`, while Fish `__domfiles_print_command` uses `string escape`. Each produces syntax for its own shell, so equivalent commands do not require byte-identical display text.
-- **Suppression lifecycle:** `domlib` normalizes `DOMFILES_SUPPRESSED` once when loaded. Fish `__domfiles_print_command` reads and validates the current value for every command because `.config/fish/config.fish` intentionally does not initialize it. An unsupported value therefore fails when `domlib` loads or when Fish attempts to print a command. Fish has no `__suppress` peer because a single-command variable override can limit suppression to one function invocation.
+- **Suppression lifecycle:** `domlib` normalizes `DOMFILES_SUPPRESSED` once when loaded. Fish `__domfiles_print_command` reads and validates the current value for every command because `home/.config/fish/config.fish` intentionally does not initialize it. An unsupported value therefore fails when `domlib` loads or when Fish attempts to print a command. Fish has no `__suppress` peer because a single-command variable override can limit suppression to one function invocation.
 
 ### Dependency Status Labels
 
@@ -271,7 +269,7 @@ The `__symlink` comment states the normal replacement contract and omits source-
 
 ### FFmpeg Media Preset Compatibility
 
-Every supplied input and generated output media format, dimension, duration, and other size constraint in `.config/fish/functions/ffmpeg-wav-png.fish` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
+Every supplied input and generated output media format, dimension, duration, and other size constraint in `home/.config/fish/functions/ffmpeg-wav-png.fish` is an accepted platform-compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
 
 Each preset owns a complete conversion branch. The repeated discovery loop, image pairing, and output naming across those branches are intentional. Consolidating them into one shared pipeline is a non-goal, so every preset’s container, filter chain, codec options, and constraints stay independent.
 
@@ -285,19 +283,19 @@ The managed Fish configuration intentionally erases every existing abbreviation 
 
 ### Fish `clone` Argument Contract
 
-The [`clone`](../.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Use `git clone` directly for option-bearing invocations. An unsupported invocation can reach Git without a reliable follow-up directory change, which is an accepted consequence of keeping the wrapper simple.
+The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Use `git clone` directly for option-bearing invocations. An unsupported invocation can reach Git without a reliable follow-up directory change, which is an accepted consequence of keeping the wrapper simple.
 
 For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
 
 ### Fish Interactive Configuration
 
-Tracked aliases and colors load only during interactive Fish sessions. `.config/fish/config.fish` keeps both sources inside its `status is-interactive` guard so noninteractive Fish invocations do not inherit interactive-only aliases or color configuration.
+Tracked aliases and colors load only during interactive Fish sessions. `home/.config/fish/config.fish` keeps both sources inside its `status is-interactive` guard so noninteractive Fish invocations do not inherit interactive-only aliases or color configuration.
 
 ### Fish Local Configuration
 
-`.config/fish/local.fish` is active machine-local Fish configuration when present. Its sourcing intentionally suppresses both stdout and stderr so local setup does not add shell-startup output.
+`home/.config/fish/local.fish` is active machine-local Fish configuration when present. Fish sources it through `home/.config/fish/config.fish` during startup without redirecting standard output or standard error.
 
-Fish sources this file through `.config/fish/config.fish` during noninteractive startup. A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command while suppressing its output. The [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
+A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command and emit its output. The [global tooling guidance](GLOBAL.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
 
 ### Git Diff Presentation
 
@@ -351,7 +349,7 @@ The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to
 
 ### Ripgrep Configuration Isolation
 
-`rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) requires `--no-config` on every agent invocation.
+`rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
 
 ### String Helper Reuse
 
@@ -363,9 +361,9 @@ The `__string_*` helpers are optional conveniences rather than a mandatory abstr
 
 `__is_ci` and `__domfiles_is_ci` override suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
 
-`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state that `.config/fish/config.fish` intentionally does not initialize. The [`domlib` maintenance policy](skills/domfiles-shell-integration/references/domlib-integration.md#maintain-domlib) therefore exempts it from the `$DOMFILES_*` parity set.
+`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state that Fish configuration intentionally does not initialize. The [`domlib` maintenance policy](skills/domfiles-shell-integration/references/domlib-integration.md#maintain-domlib) requires `domlib` counterparts for Fish-defined `$DOMFILES_*` variables but permits variables defined only in `domlib`, including `DOMFILES_SUPPRESSED`.
 
-A `.config/fish/config.fish` counterpart remains unwanted for a different reason than the other exemptions. Fish does not export `set -g`, which every `DOMFILES_*` entry in that file uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
+A Fish counterpart remains unwanted. Fish does not export `set -g`, which every `DOMFILES_*` entry in Fish configuration uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
 
 An exported value reaches every child script, so `DOMFILES_SUPPRESSED=true domfiles sync` covers an entire synchronization run. `__suppress` applies the same suppression to one command by exporting the variable inside a subshell, which is how `domfiles-sync-setup` keeps the agent-skill linking loop from echoing without affecting later synchronization steps.
 

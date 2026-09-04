@@ -21,7 +21,7 @@
 
 | Source | Authority and ownership |
 | --- | --- |
-| `.config/zed/AGENTS.md` | Defines global defaults. Applicable project agent instructions override it. |
+| `.agents/GLOBAL.md` | Defines global user defaults. Applicable project agent instructions override it. |
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
 | `CLAUDE.md` | Bridges Claude to the canonical project instructions in `AGENTS.md`. It defines no independent policy. |
 | Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. `SKILL.md` is the entrypoint and may route to references within its own skill directory and to sibling skills. Distribution follows the [skill classification](#skills). |
@@ -37,7 +37,7 @@
 
 ## Scope
 
-- **Fish:** When Fish configuration or runtime behavior is in scope and [`.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication-audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-the-scope) excludes it.
+- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication-audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-the-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
 - **Symlink:** Do not analyze the contents of `bin/git-diff-highlight` (it’s a symlink).
@@ -49,7 +49,7 @@
 - **Fixed locations:** Report cases that would tie this repository to a fixed filesystem location, except:
     - `$HOME/*` paths, system paths, or vendor paths.
     - Symlinks created through `domfiles sync`.
-    - `.config/fish/fish_variables`.
+    - `home/.config/fish/fish_variables`.
     - Documentation.
 
 ## Skills
