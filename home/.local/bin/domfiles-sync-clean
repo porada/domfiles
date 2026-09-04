@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 __print_heading_dimmed 'Cleaning up'
 
@@ -12,6 +12,3 @@ __ rm -f "$HOME/.ssh/known_hosts.old"
 __ rm -f "$HOME/.vim/autoload/plug.vim.old"
 __ rm -f "$HOME/.viminfo"
 __ rm -f "$HOME/.zsh_history"
-
-__ rm -rf "$DOMFILES/.config"
-__ rm -f "$DOMFILES/.lastsync"

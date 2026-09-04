@@ -13,7 +13,7 @@ git clone https://github.com/porada/domfiles.git ~/.domfiles
 Cloning over HTTPS is recommended to avoid authentication issues on a fresh system. [Once SSH is set up](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent), `domfiles sync` automatically configures the remote to connect over SSH.
 
 ```sh
-~/.domfiles/bin/domfiles sync
+~/.domfiles/home/.local/bin/domfiles sync
 ```
 
 ## Skills

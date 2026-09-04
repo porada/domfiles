@@ -1,9 +1,8 @@
-# Resolve config paths
-set --global DOMFILES_FISH_CONFIG_DIR (path dirname (path resolve (status filename)))
-set --global DOMFILES (path resolve "$DOMFILES_FISH_CONFIG_DIR/../../..")
+# Resolve domfiles’ paths
+set --global DOMFILES \
+    (path dirname (path dirname (path dirname (path dirname (path resolve (status filename))))))
 
 # Resolve common paths
-set --global DOMFILES_BIN_DIR "$DOMFILES/bin"
 set --global DOMFILES_PROJECTS_DIR "$HOME/Projects"
 
 # Set the default editor
@@ -43,15 +42,17 @@ set --global --export VERCEL_TELEMETRY_DISABLED 1
 # Set `$PATH`
 fish_add_path --path --move /opt/homebrew/sbin
 fish_add_path --path --move /opt/homebrew/bin
-fish_add_path --path --move "$HOME/.cargo/bin"
 fish_add_path --path --move "$PNPM_HOME/bin"
-fish_add_path --path --move "$DOMFILES_BIN_DIR"
+fish_add_path --path --move "$HOME/.cargo/bin"
+fish_add_path --path --move "$HOME/.local/bin"
 
 # Load interactive configuration
+set --local config (status dirname)
+
 if status is-interactive
-    source "$DOMFILES_FISH_CONFIG_DIR/aliases.fish"
-    source "$DOMFILES_FISH_CONFIG_DIR/colors.fish"
+    source "$config/aliases.fish"
+    source "$config/colors.fish"
 end
 
 # Load local configuration
-source "$DOMFILES_FISH_CONFIG_DIR/local.fish"
+source "$config/local.fish"

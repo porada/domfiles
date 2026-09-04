@@ -7,7 +7,7 @@ When `domlib` or `home/.config/fish/config.fish` is relevant, inspect both files
 ## Integrate POSIX Entrypoints
 
 - Treat every domfiles shell script not written in Fish as a POSIX `sh` target.
-- Ensure every POSIX shell entrypoint sources `domlib`. Exempt `.hooks` scripts. Treat `bin/domlib` as the shared library rather than an entrypoint, and keep strict mode there so sourced scripts inherit it.
+- Ensure every POSIX shell entrypoint sources `domlib`. Exempt `.hooks` scripts. Treat `home/.local/share/domlib` as the shared library rather than an entrypoint, and keep strict mode there so sourced scripts inherit it.
 
 ## Maintain `domlib`
 

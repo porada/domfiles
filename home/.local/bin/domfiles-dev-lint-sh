@@ -1,14 +1,18 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Lint POSIX shell scripts that come with domfiles
 # (lints all files when no paths are provided)
 __domfiles_cd_root
 
 lint_default_files() {
-  git ls-files --cached --others --exclude-standard -- '*.sh' '.hooks/*' 'bin/*'
+  git ls-files --cached --others --exclude-standard -- \
+    '*.sh' \
+    '.hooks/*' \
+    'home/.local/bin/*' \
+    'home/.local/share/*'
 }
 
 lint_file() {

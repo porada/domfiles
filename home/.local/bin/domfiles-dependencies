@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Check domfiles’ dependencies
 check() {
-  dependency_path '$PATH' "$DOMFILES_BIN_DIR"
+  dependency_path '$PATH' "$HOME/.local/bin"
 
   dependency_exec 'brew' '__is_brew_installed'
   dependency_bin 'fish'

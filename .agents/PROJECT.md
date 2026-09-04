@@ -82,7 +82,7 @@ The global [commit gate](GLOBAL.md#conduct) and [collaboration policy](GLOBAL.md
 
 ### Claude Agent Integration
 
-The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
+The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
 
 The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude user state under `~/.claude` and `~/.claude.json` remains machine-local outside the repository.
 
@@ -112,7 +112,7 @@ The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) own
 
 ### Global System-Available Tooling
 
-The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
+The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
 
 The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package-manager workflow, respectively.
 
@@ -150,7 +150,7 @@ The [skill distribution contract](../AGENTS.md#skills) defines project-authored 
 
 [`skills/README.md`](../skills/README.md) targets visitors who install public skills without synchronizing the rest of this repository. Its top-level examples select user-wide installation to enact the README’s recommendation. Its featured `npx skills add … --skill …` examples intentionally preserve the form documented by skills.sh, including the omission of `--global`.
 
-[`bin/domfiles-sync-setup`](../bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills.
+[`home/.local/bin/domfiles-sync-setup`](../home/.local/bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills.
 
 Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
 
@@ -210,6 +210,8 @@ Repository updates are skipped when the checkout contains entries marked by `git
 
 `domfiles sync` is the repository’s canonical update path. It intentionally establishes the repository-managed state, including replacing the initial contents of managed paths. That replacement is expected synchronization behavior rather than accidental data loss.
 
+Synchronization links the repository’s `home/.local/bin` directory to `~/.local/bin`. It does not link `home/.local/share/domlib` into the user’s home because each command resolves its real path before sourcing `../share/domlib` from the repository.
+
 `domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. An individual failure is recoverable only when the main workflow or a sync stage handles it explicitly, surfaces the result, and can continue later work independently of the failed operation. Source control flow defines the exact recoverable cases.
 
 The workflow can complete with visible, explicitly handled failures. An unhandled error or a nonzero exit from a sync stage stops the broader workflow.
@@ -249,7 +251,7 @@ The `rust` row reports whether both `cargo` and `rustc` are available, matching 
 
 ### Development Lint Wrapper Architecture
 
-The language-specific `bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands while sharing discovery and execution through `domlib`. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
+The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands while sharing discovery and execution through `domlib`. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
 
 Default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git can C-quote control characters and, when `core.quotePath` is enabled, non-ASCII bytes. A quoted pathname is skipped because it does not resolve to the original file, so pass that path explicitly when linting it.
 
@@ -341,7 +343,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 `domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
 
-The corresponding scripts in `bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
+The corresponding scripts in `home/.local/bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
 pnpm 12 persists an exact `packageManager` pin at major 12 or newer in a leading environment document in `pnpm-lock.yaml`. With the default `pmOnFail: download`, every command reconciles its `packageManagerDependencies`, including version output. A frozen install fails when this document is missing or stale instead of updating it. The `packageManager` field and both lockfile documents therefore change together during a pnpm major upgrade.
 

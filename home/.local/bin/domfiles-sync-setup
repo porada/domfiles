@@ -1,18 +1,18 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 __print_heading 'Linking domfiles'
 
-for source in .config .curlrc .vimrc; do
+for source in .config .curlrc .local/bin .vimrc; do
   __symlink "$DOMFILES_HOME_DIR/$source" "$HOME/$source"
 done
 
 __print_heading_dimmed 'Linking agent instructions'
 
-__symlink "$DOMFILES_AGENTS_DIR/GLOBAL.md" "$HOME/.claude/CLAUDE.md"
-__symlink "$DOMFILES_AGENTS_DIR/GLOBAL.md" "$HOME/.codex/AGENTS.md"
+__symlink "$DOMFILES/.agents/GLOBAL.md" "$HOME/.claude/CLAUDE.md"
+__symlink "$DOMFILES/.agents/GLOBAL.md" "$HOME/.codex/AGENTS.md"
 
 __print_heading_dimmed 'Linking agent skills'
 
@@ -20,7 +20,7 @@ for source in .domfiles-agent-documentation .domfiles-git-worktrees .domfiles-ha
   .domfiles-release-notes .domfiles-verify agent-task-relay fish-shell-scripting \
   human-facing-writing posix-shell-scripting release-notes-for-humans simple-github-cli; do
   name="$(__string_replace "$source" '.domfiles-' '')"
-  path="$DOMFILES_SKILLS_DIR/$source"
+  path="$DOMFILES/skills/$source"
 
   __suppress __symlink "$path" "$HOME/.agents/skills/$name"
   __suppress __symlink "$path" "$HOME/.claude/skills/$name"
@@ -30,9 +30,9 @@ done
 __print_heading_dimmed 'Provisioning additional files'
 
 __mkdir "$DOMFILES_PROJECTS_DIR"
-__touch "$DOMFILES_FISH_CONFIG_DIR/local.fish"
-__touch "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
-__touch "$DOMFILES_NPM_CONFIG_DIR/user.npmrc"
+__touch "$DOMFILES_CONFIG_DIR/fish/local.fish"
+__touch "$DOMFILES_CONFIG_DIR/git/allowed_signers"
+__touch "$DOMFILES_CONFIG_DIR/npm/user.npmrc"
 __touch "$HOME/.hushlogin"
 
 __print_heading_dimmed 'Ensuring proper permissions'
@@ -63,7 +63,7 @@ else
   fi
 
   printf '%s namespaces="git" %s %s\n' "$signer" "$type" "$key" \
-    > "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
+    > "$DOMFILES_CONFIG_DIR/git/allowed_signers"
 
-  __print_confirmation "$DOMFILES_GIT_CONFIG_DIR/allowed_signers"
+  __print_confirmation "$DOMFILES_CONFIG_DIR/git/allowed_signers"
 fi

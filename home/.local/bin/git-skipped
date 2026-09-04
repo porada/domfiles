@@ -1,17 +1,17 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Match `git status` color output
 if __is_stdout_tty; then
-  output_is_tty=true
+  is_tty=true
 else
-  output_is_tty=false
+  is_tty=false
 fi
 
-color="$(git config --get-colorbool color.status "$output_is_tty")" || exit $?
-unset output_is_tty
+color="$(git config --get-colorbool color.status "$is_tty")" || exit $?
+unset is_tty
 
 # Show skipped files marked `--assume-unchanged`
 print_skipped() {

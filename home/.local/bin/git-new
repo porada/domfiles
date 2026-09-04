@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Create a new branch, overwriting it if necessary
 if [ $# -ne 1 ]; then

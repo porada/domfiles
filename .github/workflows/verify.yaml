@@ -33,7 +33,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install fish
-      - run: bin/domfiles-dev-lint-fish
+      - run: home/.local/bin/domfiles-dev-lint-fish
 
   lint-json:
     name: lint / json
@@ -43,7 +43,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install jq
-      - run: bin/domfiles-dev-lint-json
+      - run: home/.local/bin/domfiles-dev-lint-json
 
   lint-rs:
     name: lint / rs
@@ -67,7 +67,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install shellcheck
-      - run: bin/domfiles-dev-lint-sh
+      - run: home/.local/bin/domfiles-dev-lint-sh
 
   lint-toml:
     name: lint / toml
@@ -77,7 +77,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install taplo
-      - run: bin/domfiles-dev-lint-toml
+      - run: home/.local/bin/domfiles-dev-lint-toml
 
   lint-ts:
     name: lint / ts

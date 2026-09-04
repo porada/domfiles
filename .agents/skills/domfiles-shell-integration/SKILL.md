@@ -1,7 +1,7 @@
 ---
 name: domfiles-shell-integration
 description: |-
-    Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `bin` scripts, and `.hooks`—or adds or reconsiders a command entrypoint in this repository, including whether a Git helper should be a plain alias or a `bin/git-*` script.
+    Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `home/.local/bin` scripts, and `.hooks`—or adds or reconsiders a command entrypoint in this repository, including whether a Git helper should be a plain alias or a `home/.local/bin/git-*` script.
 
     Do not use it merely because the task runs terminal commands.
 
@@ -50,11 +50,11 @@ Do not report an existing command solely because another supported form could ex
 
 Before adding a command entrypoint or explicitly reconsidering an existing command’s form or location, follow [command form and location](references/command-form-and-location.md).
 
-Before reviewing a `bin/git-*` entrypoint, follow [Git helper form](references/command-form-and-location.md#choose-git-helper-form).
+Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](references/command-form-and-location.md#choose-git-helper-form).
 
 ## Evaluate Duplication and Reuse
 
-- Do not report the language-specific `bin/domfiles-dev-lint-*` entrypoints as duplication merely because each retains its own default scope and lint command. Shared discovery and execution belong in `domlib`. See [development lint wrapper architecture](../../PROJECT.md#development-lint-wrapper-architecture) for rationale.
+- Do not report the language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints as duplication merely because each retains its own default scope and lint command. Shared discovery and execution belong in `domlib`. See [development lint wrapper architecture](../../PROJECT.md#development-lint-wrapper-architecture) for rationale.
 - Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned.
 - Do not report `__string_*` helpers or equivalent inline string operations as reimplementations. See [string helper reuse](../../PROJECT.md#string-helper-reuse) for rationale.
 
@@ -66,7 +66,7 @@ Report `find` commands that place `-maxdepth` anywhere other than immediately af
 
 After editing, use the narrowest applicable validation scope:
 
-1. Pass changed paths explicitly to the matching lint wrapper. Omit paths only when repository-wide validation is intended. Explicit paths bypass default discovery. With no paths, wrappers discover tracked files and non-ignored untracked files. The Fish, JSON, and TOML wrappers respectively restrict that inventory to `*.fish`, `*.json`, and `*.toml` files. The POSIX wrapper uses `*.sh`, `.hooks/*`, and `bin/*` to include extensionless entrypoints. Every wrapper skips non-files and symlinks.
+1. Pass changed paths explicitly to the matching lint wrapper. Omit paths only when repository-wide validation is intended. Explicit paths bypass default discovery. With no paths, wrappers discover tracked files and non-ignored untracked files. The Fish, JSON, and TOML wrappers respectively restrict that inventory to `*.fish`, `*.json`, and `*.toml` files. The POSIX wrapper uses `*.sh`, `.hooks/*`, `home/.local/bin/*`, and `home/.local/share/*` to include extensionless entrypoints and `domlib`. Every wrapper skips non-files and symlinks.
 2. For Fish, run `pnpm run lint:fish <changed-fish-files>`. Include `home/.config/fish/local.fish` explicitly when it exists. The wrapper already runs `fish --no-execute`, so do not repeat that check.
 3. For POSIX shell, run `sh -n -- <file>` for each changed file and `pnpm run lint:sh <changed-posix-files>`. The wrapper supplies the complementary ShellCheck analysis.
 4. For JSON or TOML, run `pnpm run lint:<format> <changed-format-files>`. The JSON wrapper requires exactly one parsed JSON value, and the TOML wrapper runs `taplo lint --no-schema`.

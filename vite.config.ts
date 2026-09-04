@@ -31,11 +31,11 @@ export default defineConfig({
 			() => 'pnpm test:ts',
 		],
 		'.github/workflows/*.yaml': 'actionlint',
-		'bin/!(domlib|git-diff-highlight)': [
+		'home/.local/bin/!(git-diff-highlight)': [
 			/* prettier-ignore */
 			'chmod +x',
 			'pnpm lint:sh',
 		],
-		'bin/domlib': 'pnpm lint:sh',
+		'home/.local/share/*': 'pnpm lint:sh',
 	},
 });

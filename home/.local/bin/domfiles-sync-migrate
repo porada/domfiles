@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Migrate agent instructions
 outdated_agent_instructions=false
@@ -18,21 +18,4 @@ for skill in github-cli package-release-notes prompt-relays prose \
       __ rm -f "$path"
     fi
   done
-done
-
-# Migrate config paths
-outdated_config_paths=false
-
-for source in fish/local.fish gh git/allowed_signers npm/user.npmrc zed/prompts; do
-  target="$DOMFILES_CONFIG_DIR/$source"
-  source="$HOME/.config/$source"
-
-  if [ -e "$source" ] && [ ! -e "$target" ]; then
-    if [ "$outdated_config_paths" = false ]; then
-      __print_heading_dimmed 'Migrating config paths'
-      outdated_config_paths=true
-    fi
-
-    __ mv "$source" "$target"
-  fi
 done

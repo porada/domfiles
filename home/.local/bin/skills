@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
+
+__domfiles_pnpm_exec skills "$@"

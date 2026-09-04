@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# shellcheck source=domlib
-. "$(dirname "$(realpath "$0")")/domlib"
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
 
 __print_heading 'Installing dependencies'
 __is_ci && __ brew --version
@@ -68,8 +68,8 @@ if __is_callable node && __is_callable pnpm; then
 
   # Install `pnpm` completions
   if __is_callable fish; then
-    __mkdir "$DOMFILES_FISH_CONFIG_DIR/completions"
-    __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_FISH_CONFIG_DIR/completions/pnpm.fish"
+    __mkdir "$DOMFILES_CONFIG_DIR/fish/completions"
+    __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_CONFIG_DIR/fish/completions/pnpm.fish"
   fi
 fi
 

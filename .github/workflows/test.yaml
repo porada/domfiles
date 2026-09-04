@@ -20,7 +20,7 @@ jobs:
         with:
           persist-credentials: false
       - run: sw_vers
-      - run: bin/domfiles-sync
+      - run: home/.local/bin/domfiles-sync
       - run: fish --command 'domfiles sync'
 
   test-rs:

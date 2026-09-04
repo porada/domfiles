@@ -40,7 +40,7 @@
 - **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication-audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-the-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
-- **Symlink:** Do not analyze the contents of `bin/git-diff-highlight` (it’s a symlink).
+- **Symlink:** Do not analyze the contents of `home/.local/bin/git-diff-highlight` (it’s a symlink).
 - **Secret-bearing local files:** Do not read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
 ## Reporting
