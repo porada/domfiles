@@ -118,17 +118,9 @@ Document focused script and test commands in the owning skill or its repair refe
 
 ## Choose Dependencies Before Implementation
 
-- Prefer an existing repository dependency or standard-library capability when it directly provides the required behavior and keeps the implementation small, complete, and maintainable.
 - Do not reimplement a mature general-purpose capability merely to avoid adding a dependency or requesting approval. This includes cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior.
-- When the best implementation requires a dependency change whose addition or update needs approval, follow the approval gate in the global “Dependencies” policy before implementation or mutating delegation. Before asking for approval, tell the user:
-    - Which dependency or smallest dependency set is proposed
-    - What each dependency provides
-    - Where it will be declared and which code will use it
-    - Why existing dependencies or the standard library are insufficient
-    - Why a custom implementation would be less correct, maintainable, proportionate, or secure
-    - Any material feature, licensing, runtime, supply-chain, or version implications
+- When the best implementation requires a dependency change, follow the global “Dependencies” policy before implementation or mutating delegation.
 - If approval is declined, propose the strongest constrained alternative and explain its limitations.
-- Enable only the dependency features required by the approved design.
 
 ## Integrate Root Validation
 

@@ -70,7 +70,17 @@ Before any `gh copilot` invocation, follow [Copilot CLI](references/copilot-cli.
 
 `gh codespace ssh` is always user-run. Before preparing it, tell the user that GitHub CLI may create a key pair in `~/.ssh` when no valid key is available, require explicit opt-in to that possible key-management effect, and follow [Sensitive Operations](references/sensitive-operations.md).
 
-Installing or updating an extension, skill, or other executable through `gh` requires explicit user approval for that exact dependency change.
+## Dependency Changes
+
+Treat installing or updating an extension, skill, or other executable through `gh` as a dependency change.
+
+Apply this section whenever this skill carries dependency approval, prepares an operation that may add or update a dependency, or proposes a dependency change.
+
+Choose the smallest dependency set that completely satisfies the task. Prefer an existing dependency or standard-library capability when sufficient. Enable only the required features.
+
+Before requesting approval, identify each proposed addition or update exactly. For each dependency, state its consumers, declaration location, installation location when relevant, and purpose. Explain why existing dependencies or standard-library capabilities are insufficient and why a custom implementation would be less correct, maintainable, proportionate, or secure. Disclose any material feature, licensing, runtime, supply-chain, or version implications.
+
+Require explicit user approval for the exact dependency addition or update before carrying approval or preparing the operation.
 
 ## Capability Boundaries
 

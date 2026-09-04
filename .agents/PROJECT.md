@@ -349,8 +349,6 @@ pnpm 12 persists an exact `packageManager` pin at major 12 or newer in a leading
 
 The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout-state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
-Projects that require a project-specific command version are expected to declare and invoke that command locally rather than relying on the domfiles command.
-
 ### Ripgrep Configuration Isolation
 
 `rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](../.config/zed/AGENTS.md#system-available-tooling) requires `--no-config` on every agent invocation.

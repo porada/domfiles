@@ -29,8 +29,8 @@ metadata:
 ## Partition a Large Audit
 
 - Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
-- Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate instead of accumulating their bodies in the coordinating context.
-- Apply the global “Prompt contract” policy to every delegated pass. Identify the applicable `AGENTS.md` files and relevant domain skills for the delegate to load. Identify this audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Do not copy those documents into the prompt. Keep the reportable scope, coverage tracking, cross-pass synthesis, and issue IDs in the coordinating context.
+- Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate without loading their bodies into the coordinating context.
+- Apply the global “Prompt contract” policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
 
 ## Audit the Contents
 

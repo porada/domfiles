@@ -12,6 +12,8 @@ Confirmation authorizes only the stated handoff. It satisfies the entrypoint’s
 
 Confirmation never grants commit authorization. It does not authorize unstated remote submissions, publication, secret access, dependency changes, or scope expansion. When the receiving task requires a commit, obtain the user’s explicit command authorizing it before command execution.
 
+Before presenting a flow that includes a dependency addition or update, apply the entrypoint’s [Dependency Changes](../SKILL.md#dependency-changes) policy.
+
 Confirmation grants dependency approval only when the flow names the exact addition or update and the user explicitly approves it. An agent cannot provide that approval on the user’s behalf. Carry approval into the task description only when it identifies the user’s direct response that granted it. If the receiving agent discovers an unapproved dependency addition or update, require it to stop and ask the user.
 
 ## Task Description

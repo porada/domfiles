@@ -51,7 +51,7 @@ For a skill with a supported installation outside its canonical repository:
 - For an explicit change, including a request that also uses review or audit language, use the change workflow. Treat inspection as the evidence-gathering phase, then resolve the canonical owner, compose the change, and validate the final contents.
 - For a standalone ordinary review, keep the task read-only. Resolve the canonical owner and validate the existing contents, but skip composition, formatting, and every mutation.
 - For a standalone audit, keep the task read-only. Follow an applicable model-invocable project audit workflow when one exists. Otherwise start from Git-tracked paths, add only explicitly named untracked documentation when local policy permits it, inspect the resolved documentation scope, report findings, and stop without formatting or mutation.
-- When reviewing a change against a file-scoped policy such as naming or prose punctuation, evaluate the complete file rather than the diff alone. A diff-only pass reports whichever violations the change happened to touch and silently accepts the rest.
+- Treat naming and prose-punctuation policies as file-scoped unless a narrower surface contract defines another scope.
 - Resolve each pass’s scope before applying project and domain skills. Let supported clients discover them from their descriptions, and do not preload skills for later passes.
 
 ## Resolve the Canonical Owner
@@ -93,10 +93,9 @@ For every change, review, or audit:
 
 1. Reread every applicable `AGENTS.md` file and each in-scope documentation file that the current task has not already loaded unchanged. Use Git status and diff to identify what changed since it was loaded.
 2. Search the complete applicable documentation family for each proposition being changed or evaluated, its distinctive wording, and close semantic variants. Apply the [documentation boundary checks](references/documentation-boundary-checks.md) to routed or layered surfaces. When a global instruction changes or is evaluated, identify every affected public-skill mirror, including rephrased variants, and apply the [public skill portability contract](references/public-skill-portability.md) to each. Confirm that one normative definition remains and that every secondary occurrence has a distinct required role or links to the canonical owner.
-3. Verify every relevant project-relative link, heading anchor, and skill frontmatter name. For a skill with a supported installation outside its canonical repository, resolve every relative link from each supported installation root and reject links that escape the installed skills tree or target an unavailable peer. Before renaming or deleting a heading, search project-authored agent documentation for links to its current anchor and update those links in the same change or preserve the heading.
+3. Verify every relevant skill frontmatter name. For a skill with a supported installation outside its canonical repository, resolve every relative link from each supported installation root and reject links that escape the installed skills tree or target an unavailable peer.
 4. For every in-scope change to a direct-path surface, compare its before-and-after context footprint. In a review or audit, report unjustified growth without editing.
-5. When an in-scope change moved content between files or surfaces, recheck every reference that resolved through its old location, including directional prose such as “above” and “below,” phrases naming the containing document, and terms defined only in the origin. Apply any policy the destination surface newly imposes.
-6. When an in-scope change moved guidance from a `SKILL.md` into references, map every removed proposition to its destination and confirm that every task that previously received it still deterministically loads that destination. Treat a missing route, condition, exception, or behavioral distinction as a contract regression.
+5. When an in-scope change moved guidance from a `SKILL.md` into references, map every removed proposition to its destination and confirm that every task that previously received it still deterministically loads that destination. Treat a missing behavioral distinction, condition, exception, or route as a contract regression.
 
 For a review or audit, use only read-only diagnostics and identify anything that could not be verified.
 
@@ -105,10 +104,9 @@ For a review or audit, use only read-only diagnostics and identify anything that
 After capturing all task-authorized documentation updates intended for the current change:
 
 1. Resolve every unjustified direct-path increase found by the complete-scope footprint check. Move conditional guidance into a reference in the existing skill, and remove obsolete direct-path wording in the same change.
-2. Resolve every stale reference found by the complete-scope moved-content check, including directional prose, phrases naming the containing document, and terms defined only in the origin.
-3. Resolve every missing route, condition, exception, or behavioral distinction found by the complete-scope moved-guidance check.
-4. Run targeted diagnostics and `git diff --check` for the changed documentation without formatting unrelated files. Inspect task-owned untracked documentation directly because Git diff checks do not include it. Do not stage files solely for validation.
-5. Perform one bounded final alignment pass over the changed documentation against the [documentation principles](#apply-the-documentation-principles), the resolved local authority model, applicable project values, and explicit user decisions. Correct concrete discrepancies within the authorized scope before delivery. Treat this as a completion check rather than a drafting gate: do not withhold useful documentation, reopen settled decisions, repeatedly rewrite compliant content, or expand scope for speculative improvements. If a correction requires new authorization, preserve the completed changes and report that boundary.
+2. Resolve every missing behavioral distinction, condition, exception, or route found by the complete-scope moved-guidance check.
+3. Run targeted diagnostics and `git diff --check` for the changed documentation without formatting unrelated files. Inspect task-owned untracked documentation directly because Git diff checks do not include it. Do not stage files solely for validation.
+4. Perform one bounded final alignment pass over the changed documentation against the [documentation principles](#apply-the-documentation-principles), the resolved local authority model, applicable project values, and explicit user decisions. Correct concrete discrepancies within the authorized scope before delivery. Treat this as a completion check rather than a drafting gate: do not withhold useful documentation, reopen settled decisions, repeatedly rewrite compliant content, or expand scope for speculative improvements. If a correction requires new authorization, preserve the completed changes and report that boundary.
 
 ## Report the Result
 

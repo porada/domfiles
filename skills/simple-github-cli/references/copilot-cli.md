@@ -6,7 +6,7 @@
 
 Establish from read-only machine-local evidence whether a Copilot CLI is already available. Do not invoke `copilot` or `gh copilot` to check.
 
-If the CLI is unavailable or its presence cannot be established, tell the user that `gh copilot` may download the GitHub Copilot CLI into GitHub CLI’s machine-local data directory. Require explicit user approval for that exact dependency addition before preparing the command. Opting into `gh copilot` does not provide dependency approval.
+If the CLI is unavailable or its presence cannot be established, tell the user that `gh copilot` may download the GitHub Copilot CLI into GitHub CLI’s machine-local data directory. Treat that possible download as a dependency addition and apply the entrypoint’s [Dependency Changes](../SKILL.md#dependency-changes) policy before preparing the command. Opting into `gh copilot` does not provide dependency approval.
 
 ## Task Handoffs
 
