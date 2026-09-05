@@ -5,4 +5,4 @@
 
 # Remove the current index lock file
 index="$(git rev-parse --git-path index)" || exit $?
-__ rm -f "$index.lock"
+__ rm -f -- "$index.lock"

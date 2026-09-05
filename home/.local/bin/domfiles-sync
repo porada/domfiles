@@ -96,12 +96,17 @@ if [ "$sync_repository" = true ]; then
         fi
 
         if [ "$stash_failed" = false ]; then
-          if ! __ git -C "$DOMFILES" rebase; then
+          if __ git -C "$DOMFILES" rebase; then
+            __print_confirmation 'Repository updated'
+          else
             echo
             __print_error 'Failed to update the repository'
-            __ git -C "$DOMFILES" rebase --abort || true
-          else
-            __print_confirmation 'Repository updated'
+
+            git_dir="$(git -C "$DOMFILES" rev-parse --absolute-git-dir)" || exit $?
+
+            if [ -d "$git_dir/rebase-apply" ] || [ -d "$git_dir/rebase-merge" ]; then
+              __ git -C "$DOMFILES" rebase --abort || exit $?
+            fi
           fi
         fi
       fi
@@ -118,15 +123,21 @@ if [ "$sync_repository" = true ]; then
       skipped_files="$(__git_skipped_files "$DOMFILES")"
 
       if [ -n "$skipped_files" ]; then
-        __print_error 'Cannot restore the original state while the repository contains skipped files'
+        __print_error_and_exit 'Cannot restore the original state while the repository contains skipped files'
+      fi
+
+      __ git -C "$DOMFILES" reset --hard "$current_revision" || {
+        status="$?"
+        __print_error 'Failed to restore the original state'
+        exit "$status"
+      }
+
+      if __ git -C "$DOMFILES" stash pop --index --quiet; then
+        __print_confirmation 'Original state restored'
       else
-        if ! __ git -C "$DOMFILES" reset --hard "$current_revision"; then
-          __print_error 'Failed to restore the original state'
-        elif __ git -C "$DOMFILES" stash pop --index --quiet; then
-          __print_confirmation 'Original state restored'
-        else
-          __print_error 'Failed to restore the original state'
-        fi
+        status="$?"
+        __print_error 'Failed to restore the original state'
+        exit "$status"
       fi
     fi
   fi

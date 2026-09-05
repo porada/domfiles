@@ -103,7 +103,7 @@ fi
 
 if ! grep -qFx -- "$fish" /etc/shells; then
   __print_heading 'Adding `fish` to `/etc/shells`'
-  __ sudo sh -c "echo \"$fish\" >> /etc/shells" || true
+  __ sudo sh -c 'printf "%s\n" "$1" >> /etc/shells' sh "$fish" || true
 fi
 
 __print_heading_dimmed 'Setting `fish` as the default shell'

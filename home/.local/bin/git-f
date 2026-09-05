@@ -45,6 +45,10 @@ for param in "$@"; do
       option_operand=true
       continue
       ;;
+    --no-amend)
+      amend=false
+      continue
+      ;;
     --*)
       continue
       ;;

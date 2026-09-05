@@ -60,7 +60,8 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 
 ## Apply Domfiles POSIX Conventions
 
-Report `find` commands that place `-maxdepth` anywhere other than immediately after the search path.
+- Allow argumentless `echo` to print a blank line as an exception to `posix-shell-scripting`’s `printf` requirement.
+- Report `find` commands that place `-maxdepth` anywhere other than immediately after the search path.
 
 ## Validate a Change
 

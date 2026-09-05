@@ -18,6 +18,9 @@ set --global --export LESSHISTFILE -
 set --global --export HOMEBREW_NO_AUTO_UPDATE 1
 set --global --export HOMEBREW_NO_ENV_HINTS 1
 
+# Configure `gh`
+set --global --export GH_NO_UPDATE_NOTIFIER 1
+
 # Configure `node`
 set --global --export NODE_OPTIONS '--trace-uncaught --unhandled-rejections=strict'
 set --global --export NODE_REPL_HISTORY "$HOME/.node-history"

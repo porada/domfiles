@@ -8,11 +8,10 @@ function __domfiles_confirm
     set --local whitespace (printf ' \t')
 
     while true
-        printf '%s %s\n' \
-            "$(__domfiles_print_warning "$argv[1]")" \
-            "$(__domfiles_print_info 'y/n')"
+        __domfiles_print_warning --inline -- "$argv[1]"
+        __domfiles_print_info --inline -- y/n
 
-        read --local response
+        read --local --prompt-str '' response
         or return 1
 
         set response (string trim --chars "$whitespace" -- "$response")

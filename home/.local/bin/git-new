@@ -8,8 +8,10 @@ if [ $# -ne 1 ]; then
   __print_error_and_exit '`git new` requires one argument'
 fi
 
-if git show-ref --verify --quiet "refs/heads/$1"; then
-  if ! __confirm "Overwrite branch \`$1\`?"; then
+branch="$(git check-ref-format --branch "$1")" || exit $?
+
+if git show-ref --verify --quiet "refs/heads/$branch"; then
+  if ! __confirm "Overwrite branch \`$branch\`?"; then
     exit 0
   fi
 else
@@ -17,4 +19,4 @@ else
   [ "$status" -eq 1 ] || exit "$status"
 fi
 
-__ git checkout -B "$1"
+__ git checkout -B "$branch"
