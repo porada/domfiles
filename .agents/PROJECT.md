@@ -12,7 +12,7 @@ The root `engines.node` range intentionally declares the minimum supported Node.
 
 `domfiles` actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
 
-`README.md` documents the repository owner’s configuration workflow rather than a supported onboarding path for other users. It intentionally does not restate the complete supported environment or bootstrap prerequisites. Others may install the repository, but the project makes no compatibility or support commitment for that use. `domfiles sync` reports a missing Homebrew installation before synchronization. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
+[`home/README.md`](../home/README.md) documents the repository owner’s configuration workflow rather than a supported onboarding path for other users. It intentionally does not restate the complete supported environment or bootstrap prerequisites. Others may install the repository, but the project makes no compatibility or support commitment for that use. `domfiles sync` reports a missing Homebrew installation before synchronization. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
 
 The canonical Apple Silicon location fallback for `brew` is only a convenience for invoking Homebrew itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
 

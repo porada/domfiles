@@ -14,45 +14,45 @@ npx skills add porada/domfiles --global
 gh skill install porada/domfiles --scope user
 ```
 
-Global installation is recommended for the best experience. Both `skills` and `gh skill` install only the skills you choose. Neither sets up any other tooling or configuration from this repository.
+Global installation is recommended for the best experience. Both [`skills`](https://www.skills.sh/docs/cli) and [`gh skill`](https://cli.github.com/manual/gh_skill) install only the skills you choose. Neither sets up any other tooling or configuration from this repository.
 
 ## Featured Skills
 
-### [agent-task-relay](agent-task-relay)
+- ### [agent-task-relay](agent-task-relay)
 
-Paste findings from another thread and see your agent take it from there. Or relay work to another agent just as easily.
+    Paste findings from another thread and see your agent take it from there. Or relay work to another agent just as easily.
 
-```sh
-npx skills add porada/domfiles --skill agent-task-relay
-```
+    ```sh
+    npx skills add porada/domfiles --skill agent-task-relay
+    ```
 
-```sh
-gh skill install porada/domfiles agent-task-relay
-```
+    ```sh
+    gh skill install porada/domfiles agent-task-relay
+    ```
 
-### [human-facing-writing](human-facing-writing)
+- ### [human-facing-writing](human-facing-writing)
 
-Raise the standard of every piece your agent writes, from general long-form text to small technical copy. No more slop under your name.
+    Raise the standard of every piece your agent writes, from general long-form text to small technical copy. No more slop under your name.
 
-```sh
-npx skills add porada/domfiles --skill human-facing-writing
-```
+    ```sh
+    npx skills add porada/domfiles --skill human-facing-writing
+    ```
 
-```sh
-gh skill install porada/domfiles human-facing-writing
-```
+    ```sh
+    gh skill install porada/domfiles human-facing-writing
+    ```
 
-### [fish-shell-scripting](fish-shell-scripting)
+- ### [fish-shell-scripting](fish-shell-scripting)
 
-Write Fish as intended: without bashisms.
+    Write Fish as intended: without bashisms.
 
-```sh
-npx skills add porada/domfiles --skill fish-shell-scripting
-```
+    ```sh
+    npx skills add porada/domfiles --skill fish-shell-scripting
+    ```
 
-```sh
-gh skill install porada/domfiles fish-shell-scripting
-```
+    ```sh
+    gh skill install porada/domfiles fish-shell-scripting
+    ```
 
 ## Other Skills
 
@@ -60,7 +60,7 @@ gh skill install porada/domfiles fish-shell-scripting
 - [**release-notes-for-humans**](release-notes-for-humans)
 - [**simple-github-cli**](simple-github-cli)
 
-The `.domfiles-*` skills are tied to this repository’s agent configuration. They aren’t ready for standalone installation.
+The `.domfiles-*` skills are tied to this repository’s [configuration](../home). They aren’t ready for standalone installation.
 
 ## License
 
