@@ -36,7 +36,8 @@
 	"git": {
 		"inline_blame": {
 			"enabled": false
-		}
+		},
+		"worktree_directory": "../.zed"
 	},
 	"git_panel": {
 		"dock": "left"
@@ -83,7 +84,7 @@
 		"dock": "left",
 		"hide_root": true
 	},
-	"restore_on_startup": "empty_tab",
+	"restore_on_startup": "last_workspace",
 	"scrollbar": {
 		"cursors": false,
 		"selected_symbol": false,
@@ -111,7 +112,6 @@
 	},
 	"theme": "One Dark",
 	"title_bar": {
-		"show_branch_status_icon": true,
 		"show_user_picture": false
 	},
 	"toolbar": {
@@ -133,7 +133,7 @@
 		"default_model": {
 			"effort": "max",
 			"enable_thinking": true,
-			"model": "gpt-5.6-sol",
+			"model": "gpt-6-astra",
 			"provider": "openai-subscribed"
 		},
 		"default_width": 600,
