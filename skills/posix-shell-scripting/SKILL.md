@@ -10,9 +10,9 @@ description: |-
 
 # POSIX Shell Scripting
 
-Portable POSIX `sh` starts with the language’s actual contracts: expansion, process boundaries, exit statuses, and caller-visible state. Write to those contracts directly instead of translating habits from a different shell or runtime.
+Portable shell scripts need more than portable syntax.
 
-Use the latest published POSIX shell specification unless the user or target environment establishes a narrower baseline. Treat the shell implementation and available external utilities as separate compatibility constraints. A command that works on one machine does not establish portable shell syntax or utility behavior.
+This skill helps agents write POSIX `sh` that handles arguments, failures, and shared state predictably using the target environment’s existing shells and utilities.
 
 ## Workflow
 
@@ -30,7 +30,7 @@ Treat comments, strings, help text, and configuration contents as source data un
 1. Identify POSIX shell code from its hashbang and syntax rather than its filename alone. Include extensionless entrypoints and sourced files without hashbangs.
 2. Classify the target as an executed entrypoint, sourced library, hook, startup fragment, or generated shell fragment. Determine whether state changes must affect the caller before choosing sourcing, a function, a subshell, or an executed script.
 3. Inspect each caller’s invocation form, argument contract, environment, working-directory assumptions, standard streams, signal handling, and status handling.
-4. Establish the target shell implementations and external utility set from project or environment evidence. Evaluate shell syntax separately from external commands and their options.
+4. Use the latest published POSIX shell specification unless the user or target environment establishes a narrower baseline. Establish the target shell implementations and external utility set from project or environment evidence. Evaluate every external command and option against the target utility set separately from shell-language syntax.
 5. Prefer the project’s formatter, lint wrapper, tests, and conventions when they preserve POSIX semantics.
 
 Load bundled guidance when the corresponding decision enters scope:
@@ -43,7 +43,7 @@ Load bundled guidance when the corresponding decision enters scope:
 
 ### Keep POSIX Targets in POSIX Shell
 
-Use POSIX syntax and interfaces unless the target contract explicitly permits an extension. Verify each permitted feature against every established target. Acceptance by one installed shell does not establish portability.
+Use POSIX syntax and interfaces according to their own contracts rather than translating habits from another shell or runtime. Use extensions only when the target contract explicitly permits them. Verify each permitted feature against every established target before using it. A command that works on one machine does not establish portable shell syntax or utility behavior.
 
 Keep a POSIX target in POSIX `sh` plus its established utilities. Do not invoke `python3`, Node.js, Perl, Ruby, another shell, or another language merely to avoid POSIX quoting, state, process, or utility constraints.
 

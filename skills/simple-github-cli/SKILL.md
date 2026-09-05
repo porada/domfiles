@@ -8,7 +8,9 @@ description: |-
 
 # Simple GitHub CLI
 
-GitHub work is most reliable when each task uses the narrowest interface that provides the required state. This skill keeps GitHub reads bounded, preserves the user’s setup, and requires clear authority before any remote change.
+GitHub tasks should fit the user’s workflow, not require a new one.
+
+This skill helps agents choose the narrowest interface that can handle the task. It keeps reads bounded, preserves the user’s setup, and requires explicit user authorization before any remote change.
 
 ## Interface Choice
 

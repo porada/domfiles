@@ -18,7 +18,7 @@ Global installation is recommended for the best experience. Both `skills` and `g
 
 ## Featured Skills
 
-### [agent-task-relay](agent-task-relay/SKILL.md)
+### [agent-task-relay](agent-task-relay)
 
 Paste findings from another thread and see your agent take it from there. Or relay work to another agent just as easily.
 
@@ -30,7 +30,7 @@ npx skills add porada/domfiles --skill agent-task-relay
 gh skill install porada/domfiles agent-task-relay
 ```
 
-### [human-facing-writing](human-facing-writing/SKILL.md)
+### [human-facing-writing](human-facing-writing)
 
 Raise the standard of every piece your agent writes, from general long-form text to small technical copy. No more slop under your name.
 
@@ -42,7 +42,7 @@ npx skills add porada/domfiles --skill human-facing-writing
 gh skill install porada/domfiles human-facing-writing
 ```
 
-### [fish-shell-scripting](fish-shell-scripting/SKILL.md)
+### [fish-shell-scripting](fish-shell-scripting)
 
 Write Fish as intended: without bashisms.
 
@@ -56,9 +56,9 @@ gh skill install porada/domfiles fish-shell-scripting
 
 ## Other Skills
 
-- [**posix-shell-scripting**](posix-shell-scripting/SKILL.md)
-- [**release-notes-for-humans**](release-notes-for-humans/SKILL.md)
-- [**simple-github-cli**](simple-github-cli/SKILL.md)
+- [**posix-shell-scripting**](posix-shell-scripting)
+- [**release-notes-for-humans**](release-notes-for-humans)
+- [**simple-github-cli**](simple-github-cli)
 
 The `.domfiles-*` skills are tied to this repository’s agent configuration. They aren’t ready for standalone installation.
 

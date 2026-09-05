@@ -10,7 +10,9 @@ description: |-
 
 # Agent Task Relay
 
-A useful relay lets work move between conversations without transferring unverified conclusions or authority the user did not provide. This skill validates inbound findings, separates assignments from evidence-only handoffs, confirms external task handoffs before drafting their relays, and preserves each handoff’s scope, approval, access, and mutation boundaries.
+Moving work between agent threads shouldn’t mean losing context or inadvertently changing the agent’s authority.
+
+This skill checks incoming findings, separates assignments from evidence-only handoffs, and confirms external assignments with the user before drafting their prompts. It preserves each handoff’s limits on access, approvals, changes, and scope.
 
 ## Workflow
 

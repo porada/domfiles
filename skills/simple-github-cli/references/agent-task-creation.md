@@ -22,7 +22,7 @@ After confirmation, compose a task description with a descriptive heading and an
 
 Preserve the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary, and must return any boundary request to the user rather than crossing it.
 
-For a repository the user works in, authorize an operation that writes a commit only when the task description identifies the user’s explicit command to commit. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working-tree changes only.
+Authorize an operation that writes a commit in any repository, directly or indirectly, only when the task description identifies the user’s explicit command to commit. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working-tree changes only.
 
 Do not include credentials, tokens, private keys, secret values, secret-bearing URLs, or other private material. Rely only on access already available in the receiving environment.
 

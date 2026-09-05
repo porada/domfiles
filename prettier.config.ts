@@ -10,6 +10,15 @@ export default defineConfig({
 		{
 			files: [
 				/* prettier-ignore */
+				'skills/**/assets/*.txt',
+			],
+			options: {
+				parser: 'markdown',
+			},
+		},
+		{
+			files: [
+				/* prettier-ignore */
 				'skills/posix-shell-scripting/references/*.md',
 			],
 			options: {

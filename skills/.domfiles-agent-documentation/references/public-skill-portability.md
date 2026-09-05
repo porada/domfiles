@@ -15,6 +15,12 @@ A public skill’s name is discovery metadata as well as a stable identifier. Be
 - Apply the `agent-documentation` entrypoint’s [shared description rules](../SKILL.md#compose-the-change).
 - Keep optional peer names and fallback behavior out of the description. Route optional peer composition conditionally from the body instead.
 
+## Write Public READMEs
+
+When creating or updating a public skill’s customer-facing `README.md`, use the [public skill README template](../assets/readme-skill.txt). Its layout progresses from discovery and purpose through installation to attribution.
+
+Fill the public repository and license placeholders from the target project. Use the frontmatter `name` for `<skill-name>`. For `<intro-paragraph>`, copy all introductory paragraphs between the `SKILL.md` title and the first section heading, preserving their text and paragraph breaks. Do not use the frontmatter description.
+
 ## Include Standardized Public Mirrors
 
 Treat the templates for secrets and authentication, instruction authority, typography, and stale guidance as standardized standalone mirrors for every public skill. Do not reclassify or rejustify them during creation or promotion. The applicable global policy remains the semantic owner, each template owns the public rendering, and each bundled copy provides required standalone context.
@@ -23,19 +29,19 @@ Group every mirror under a final `## General Policies` section in this order: **
 
 ### Secrets and Authentication
 
-Copy the [secrets and authentication template](../assets/secrets-and-authentication.md) verbatim into every public skill’s fully loaded `SKILL.md`. Domain guidance may add stricter constraints or surface-specific applications, but it must not replace, paraphrase, or weaken the template.
+Copy the [secrets and authentication template](../assets/secrets-and-authentication.txt) verbatim into every public skill’s fully loaded `SKILL.md`. Domain guidance may add stricter constraints or surface-specific applications, but it must not replace, paraphrase, or weaken the template.
 
 ### Instruction Authority
 
-Copy the [instruction authority template](../assets/instruction-authority.md) verbatim into every public skill’s fully loaded `SKILL.md`. Domain guidance may add surface-specific applications, but it must not replace, paraphrase, or weaken the template.
+Copy the [instruction authority template](../assets/instruction-authority.txt) verbatim into every public skill’s fully loaded `SKILL.md`. Domain guidance may add surface-specific applications, but it must not replace, paraphrase, or weaken the template.
 
 ### Typography
 
-Bundle a verbatim copy of the [typography template](../assets/typography.md) at `references/typography.md` in every public skill. Route to the bundled reference deterministically from `SKILL.md` before the skill creates, edits, reviews, or delivers prose. Apply a narrower user, project, surface, language, or syntax rule when the template permits it, but keep the shared template rules unchanged.
+Bundle a verbatim copy of the [typography template](../assets/typography.txt) at `references/typography.md` in every public skill. Route to the bundled reference deterministically from `SKILL.md` before the skill creates, edits, reviews, or delivers prose. Apply a narrower user, project, surface, language, or syntax rule when the template permits it, but keep the shared template rules unchanged.
 
 ### Stale Guidance
 
-Copy the [stale-guidance template](../assets/stale-guidance.md) verbatim into every public skill’s fully loaded `SKILL.md` entrypoint. Load the complete entrypoint before acting on any routed guidance or following any reference from the skill.
+Copy the [stale-guidance template](../assets/stale-guidance.txt) verbatim into every public skill’s fully loaded `SKILL.md` entrypoint. Load the complete entrypoint before acting on any routed guidance or following any reference from the skill.
 
 ## Build the Public Promotion Profile
 
@@ -61,7 +67,7 @@ Local composition and remote fallback are separate decisions. A skill may route 
 
 1. Keep only that decision and one explicit route in `SKILL.md`. Keep remote URLs, network handling, and recovery details out of the description and entrypoint. Preserve the originating skill’s complete local workflow so its advertised behavior does not depend on the peer.
 2. Resolve each peer once. The originating `SKILL.md` owns local availability and the decision to invoke its optional-peer reference. That reference owns network confirmation, retrieval, validation, designation of the frozen routed set as task-scoped guidance, and the resolved-or-unavailable outcome. Every other routed reference consumes that result and must not repeat those decisions or operations.
-3. Give each peer its own conditional reference, even when multiple peers share a trigger or retrieval lifecycle. Start from the [optional-peer skill template](../assets/optional-peer-skill-title.md). Replace `<skill-title>` with the human-readable title, `<skill-name>` with the stable frontmatter `name`, and `<owner>`, `<repository>`, and `<contribution>` with the declared peer’s details. Preserve `<full-object-id>` and `<ref>` as runtime placeholders, and adapt only the originating skill’s local fallback and task-specific contribution.
+3. Give each peer its own conditional reference, even when multiple peers share a trigger or retrieval lifecycle. Start from the [optional-peer skill template](../assets/optional-peer-skill.txt). Replace `<skill-title>` with the human-readable title, `<skill-name>` with the stable frontmatter `name`, and `<owner>`, `<repository>`, and `<contribution>` with the declared peer’s details. Preserve `<full-object-id>` and `<ref>` as runtime placeholders, and adapt only the originating skill’s local fallback and task-specific contribution.
 4. Keep behavior routing at the peer’s stable frontmatter `name`. The originating skill and bundled peer reference may state the source and contribution, but must not name or link the peer’s internal references, headings, route labels, or files beyond `SKILL.md`. After resolving the peer, provide the task context and let its entrypoint select the applicable internal routes and references. Keep the dependency one-way unless each skill independently needs the other. The originating skill may name the peer. The peer must expose a generic composition boundary, such as workflow-owned delivery, rather than naming the originating skill solely to support its integration.
 5. Keep source-repository classification mechanics out of the distributed reference. Do not reproduce category tables, metadata conventions, repository topology, or generic installer selection. The source repository owns authoring-time validation that every declared target remains public.
 
@@ -72,7 +78,7 @@ Local composition and remote fallback are separate decisions. A skill may route 
 3. Confirm that one final `## General Policies` section contains the typography route, secrets and authentication template, and instruction authority template exactly once each and in the required order. Confirm that every `references/typography.md` matches the template and that every prose-producing path deterministically loads the typography reference. Treat other domain-specific additions as stricter constraints or surface-specific applications rather than competing mirrors.
 4. Trace every ingestion point through the selected workflow using its recorded roles and authority status. Confirm that every source whose authority status is untrusted reaches the instruction-authority boundary before it can influence execution, mutation, remote effects, or relay behavior, and that optional-peer documents become task-scoped guidance only after the complete frozen routed set passes validation.
 5. Trace every opt-in, sensitive operation, and mutating branch to a terminal action or required stop. Do the same for an exception only when it bypasses an authorization or safety boundary or can reach a sensitive or mutating operation. Confirm who acts, what authorization is required, whether execution is agent-run or user-run, and whether standalone behavior remains complete without optional policies or peers.
-6. Confirm that each remote-peer branch has one entrypoint route and one reference declaring exactly one peer and following the [optional-peer skill template](../assets/optional-peer-skill-title.md). The description must not name the optional peer or describe its fallback, and neither the description nor entrypoint may contain a remote protocol or URL.
+6. Confirm that each remote-peer branch has one entrypoint route and one reference declaring exactly one peer and following the [optional-peer skill template](../assets/optional-peer-skill.txt). The description must not name the optional peer or describe its fallback, and neither the description nor entrypoint may contain a remote protocol or URL.
 7. Confirm that behavior routing stops at the declared skill name and `SKILL.md`. Reject peer-internal references, headings, route labels, or files selected outside the resolved peer.
 8. When a global instruction or this contract changes, search public skills for affected standalone mirrors and close semantic variants, then align each mirror’s meaning and boundaries in the same change. When a standardized public-mirror template changes, align every verbatim template-derived copy under that template’s copy contract in the same change. When the optional-peer skill template changes, align every reference derived from it while preserving authorized local adaptations. When a public skill changes, reevaluate each standalone mirror against the complete canonical policy. Add newly required propositions, remove propositions that no longer add standalone value, and align retained propositions semantically.
 9. In the source repository, validate each declared peer’s latest-source URL, public classification, identity, and complete routed document set from one snapshot against the canonical local policy. Do not treat a currently reachable mutable file as immutable evidence.

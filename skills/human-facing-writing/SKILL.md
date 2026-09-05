@@ -10,7 +10,7 @@ description: |-
 
 # Human-Facing Writing
 
-Writing works when meaning, voice, and necessary complexity take a form that the reader can follow. This skill applies that principle to everything from a single label to connected prose.
+Writing works when meaning, voice, and necessary complexity take a form that the reader can follow. This skill applies that principle to everything from a single label to long-form, structured writing.
 
 ## Workflow
 

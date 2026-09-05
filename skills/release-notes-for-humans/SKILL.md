@@ -10,7 +10,9 @@ description: |-
 
 # Release Notes for Humans
 
-Good release notes respect both sides of the work. Maintainers need complete evidence, while readers need only the changes that affect them. This skill keeps those layers separate so the final note is accurate, concise, and useful to people deciding whether and how to update.
+Good release notes respect both sides of the work.
+
+This skill keeps the evidence maintainers need separate from the notes readers see, producing accurate, concise release notes that help people decide whether and how to update.
 
 ## Workflow
 

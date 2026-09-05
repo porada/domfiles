@@ -21,7 +21,7 @@ Use this table to distinguish portable forms from target-gated extensions. The r
 | Option parsing | `getopts` or an explicit `case` loop | External `getopt` or shell-specific parsers |
 | Wait for a child | Capture `$!`, then `wait "$pid"` | `wait -n` without established support |
 
-A feature’s presence in a newer POSIX edition does not establish its availability in every target implementation. Verify syntax and utility behavior against each established target before using a target-gated form.
+A feature’s presence in a newer POSIX edition does not establish its availability in every target implementation.
 
 ## Utility Selection
 
@@ -35,7 +35,7 @@ Before a programmatic `cd`, reject an empty operand. Preserve absolute paths and
 
 Scope `LC_ALL=C` to commands that deliberately need bytewise sorting, matching, or character classes. Do not change user-facing behavior globally.
 
-Evaluate every external command and option against the target utility set separately from shell-language syntax. Portable syntax does not make a GNU-only option portable.
+Portable syntax does not make a GNU-only option portable.
 
 ## Pipeline Contracts
 

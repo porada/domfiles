@@ -54,7 +54,9 @@ The same-host complement is an initial-fetch prompt filter rather than a path-sc
 
 ### Zed Worktree Permission Coupling
 
-The global [temporary-file policy](GLOBAL.md#temporary-files) defines the project-relative `.agent-<name>` directory namespace. The global [`git-worktrees` skill](../skills/.domfiles-git-worktrees/SKILL.md) applies that namespace to isolated worktrees and owns the paired `agent/<name>` branch namespace, isolation criteria, administration, and lifecycle. When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of those names.
+The global [`git-worktrees` skill](../skills/.domfiles-git-worktrees/SKILL.md) is independent of the [temporary-file namespace](GLOBAL.md#temporary-files), allowing environment-managed checkouts without treating them as disposable scratch directories. Its [Zed workflow](../skills/.domfiles-git-worktrees/references/zed-worktrees.md) records the client-specific lifecycle. When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of directory and branch names.
+
+The archival and reopening source baseline is Zed revision `bebe92f4`. In `crates/sidebar/src/sidebar.rs`, the [archive-task guard](https://github.com/zed-industries/zed/blob/bebe92f469834a287f5a57ed78e8d51a918b8ada/crates/sidebar/src/sidebar.rs#L5515-L5523), [reopening path](https://github.com/zed-industries/zed/blob/bebe92f469834a287f5a57ed78e8d51a918b8ada/crates/sidebar/src/sidebar.rs#L4100-L4162), and [root selection](https://github.com/zed-industries/zed/blob/bebe92f469834a287f5a57ed78e8d51a918b8ada/crates/sidebar/src/sidebar.rs#L4717-L4752) establish terminal-aware archival eligibility and conditional snapshot restoration.
 
 While terminal sandboxing is active, files in open worktrees are normal project write roots, while protected Git administrative metadata requires a separate sandbox grant, including for top-level worktree moves. Those sandbox limits do not apply to a command that runs without the wrapper. `terminal` actions still inherit the global `allow` and remain subject to task authorization. Native path actions that invoke configured permission evaluation inherit the same default and remain subject to their built-in checks. Native path actions that bypass the evaluator receive no configured decision and remain subject to the path, privacy, sensitive-settings, and symlink-escape checks their implementations apply. A path that looks like `.agent-<name>` neither expands terminal sandbox access nor proves the current working directory or repository boundary.
 
@@ -96,13 +98,17 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 
 The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defines the repository-specific instruction surfaces.
 
+### Commit Workflow
+
+The global [`commit` skill](../skills/.domfiles-commit/SKILL.md) owns commit preparation, execution confirmation, and result verification. Its editorial model for newly composed messages comes from the repository owner’s 2026 diff-to-message history, with bodyless output selected explicitly. Inherited cherry-pick messages and Git-generated merge messages retain operation context that this editorial model would otherwise discard. It remains documentation-only because ordinary Git operations can execute the approved batches without a separate staging implementation. The global [commit gate](GLOBAL.md#conduct) and [index-preservation policy](GLOBAL.md#collaboration) remain the authorization and preservation owners.
+
 ### Deferred Global Policy
 
 Conditional global policy may move into a global skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
 
 The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
 
-`git-worktrees` is the first model-invocable deferral. Its former `Default` bullet was concurrent-work hygiene rather than worktree policy, so preserving existing changes and avoiding another agent’s write scope now lives in the global “Concurrent work” rule. Its description owns the worktree-administration and dismantling triggers. The global “Shared convention” rule retains only the `.agent-<name>` registration check required before reuse, movement, or deletion, and supported clients discover `git-worktrees` when that check identifies a worktree. The current-checkout rule names the skill so it cannot read as a prohibition on isolation.
+`git-worktrees` is the first model-invocable deferral. Its former `Default` bullet was concurrent-work hygiene rather than worktree policy, so preserving existing changes and avoiding another agent’s write scope now lives in the global “Concurrent work” rule. Entry into an existing linked worktree is a discovery trigger so manually created checkouts receive the same guidance as agent-created ones. The global “Shared convention” rule retains only the `.agent-<name>` registration check required before reuse, movement, or deletion, and supported clients discover `git-worktrees` when that check identifies a worktree. The current-checkout rule names the skill so it cannot read as a prohibition on isolation. The worktree workflow remains global while it is tried in daily use, with client-specific lifecycle guidance kept out of the public relay skill.
 
 ### GitHub CLI Agent Integration
 
@@ -134,7 +140,7 @@ At Zed commit `dd04a229`, native mutation tools force confirmation when a direct
 
 The public `skills/human-facing-writing` source does not receive Zed’s agent-specific classification. Its staging boundary applies to every agent because changes to its writing contract can affect every project-authored agent-documentation writing surface composed through it.
 
-The [protected skill mutation policy](../skills/.domfiles-agent-documentation/references/protected-skill-mutation.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions. Registered `.agent-<name>` worktrees and task staging roots are peer uses of the shared namespace, which rules out nested staging roots.
+The [protected skill mutation policy](../skills/.domfiles-agent-documentation/references/protected-skill-mutation.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions. The staging-host exception prevents a checkout whose name matches the task-directory convention from containing another task staging root.
 
 ### Repository Harmonization
 
@@ -147,6 +153,8 @@ The 1,024-byte figure in the [skill description policy](../skills/.domfiles-agen
 ### Skill Distribution
 
 The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public-disclosure boundary.
+
+Authoring and maintenance records stay outside skill directories so installed guidance stays focused on use rather than the history of its creation. The [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles) own this boundary.
 
 [`skills/README.md`](../skills/README.md) targets visitors who install public skills without synchronizing the rest of this repository. Its top-level examples select user-wide installation to enact the README’s recommendation. Its featured `npx skills add … --skill …` examples intentionally preserve the form documented by skills.sh, including the omission of `--global`.
 

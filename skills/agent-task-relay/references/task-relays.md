@@ -40,7 +40,7 @@ Before the guard, define the bounded assignment, owned scope, exclusions, source
 
 Every assignment inherits the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary. Require it to return any boundary request to its coordinator or the user rather than crossing it.
 
-For a repository the user works in, an assignment may authorize an operation that writes a commit only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working-tree changes only. This restriction does not apply to fixture commits in disposable repositories when the source task’s policy already exempts them.
+An assignment may authorize an operation that writes a commit in any repository, directly or indirectly, only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working-tree changes only.
 
 Use the guard only when the prompt assigns future work. Omit it from decision relays and other transfers of established data. A receiving action alone does not turn an evidence handoff into an assignment.
 

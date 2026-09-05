@@ -9,6 +9,9 @@
 	"file_types": {
 		"Git Config": [
 			"**/git/config"
+		],
+		"Markdown": [
+			"**/assets/*.txt"
 		]
 	},
 	"format_on_save": "on",
