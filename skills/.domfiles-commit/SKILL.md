@@ -1,9 +1,9 @@
 ---
 name: commit
 description: |-
-    Use whenever an agent considers or prepares to commit changes, from composing messages and grouping hunks through commit-related staging to creating a commit. Also use before invoking scripts or tests that create commits.
+    Use whenever an agent considers or prepares to commit changes, from composing messages and grouping hunks through commit-related staging to creating a commit. Also use for prospective planning before implementation and for requested history updates or rebases. Use before invoking scripts or tests that create commits.
 
-    Do not use for read-only inspection of existing commits when no commit is being prepared.
+    Do not use for read-only inspection of existing commits when no commit or history update is being prepared.
 
 metadata:
     internal: true
@@ -13,9 +13,19 @@ metadata:
 
 Neither automatic activation nor `/commit` invocation authorizes staging or committing. Apply the global **Commit gate** and **Index preservation** policies throughout.
 
-For commits assembled from working-tree changes, prepare the proposal through [Inspect Changes](#inspect-changes), [Group Hunks](#group-hunks), and [Compose Subjects](#compose-subjects). For cherry-picks and merges that create commits, including continuation after a pause, prepare it through [Preserve Operation Messages](#preserve-operation-messages) instead. Both routes then follow [Confirm Commits](#confirm-commits), [Create Approved Commits](#create-approved-commits), and [Report the Result](#report-the-result), in that order.
+For prospective commit planning before changes exist, follow [Plan Before Implementation](#plan-before-implementation) and return to the calling workflow without entering confirmation or execution.
 
-Before invoking a script or test that creates commits, inspect its implementation and inputs to establish the target repositories and expected commit sequence. Select the applicable route for those commits rather than assuming the invoking repository’s diff represents them. Include the exact invocation in [confirmation](#confirm-commits), and obtain approval to create the proposed batch through that command. Invoke it only if it can satisfy every per-commit requirement, including inspection before creation and verification before advancing. Otherwise, report what cannot be established or satisfied and stop before invocation.
+A bare `/commit` prepares new commits. Select [Update Unpushed Commits](references/update-unpushed-commits.md) only when the user or an applicable calling workflow explicitly requests a history update or rebase. A request to fold changes into their original commits selects that route without requiring Git terminology.
+
+For new commits assembled from working-tree changes, prepare the proposal through [Inspect Changes](#inspect-changes), [Group Hunks](#group-hunks), and [Compose Subjects](references/compose-subjects.md). For cherry-picks and merges that create commits, including continuation after a pause, prepare it through [Preserve Operation Messages](references/preserve-operation-messages.md) instead. Every execution route then follows [Confirm Commits](#confirm-commits), [Create Approved Commits](#create-approved-commits), and [Report the Result](#report-the-result), in that order.
+
+Before invoking a script or test that creates commits, inspect its implementation and inputs to establish the target repositories and expected commit sequence. Select the applicable route for those commits rather than assuming the invoking repository’s diff represents them. Include the exact invocation in [confirmation](#confirm-commits), and obtain approval to create the proposed batch through that command. Invoke it only if it can satisfy the selected route’s inspection, preservation, validation, and verification requirements at that route’s defined checkpoints. Otherwise, report what cannot be established or satisfied and stop before invocation.
+
+## Plan Before Implementation
+
+Use the intended task scope and available repository evidence to apply [Group Hunks](#group-hunks) prospectively. Identify coherent change units, their dependency order, and assumptions that could alter the breakdown. Respect supplied packaging constraints without inventing changes to satisfy them. Identify a conflict when the proposed scope does not support a coherent requested split. If the plan includes provisional subjects, use [Compose Subjects](references/compose-subjects.md) for their wording.
+
+Keep this pass read-only. Commit counts, boundaries, and any subjects are provisional, not a staging plan or authorization to create commits. Return the breakdown to the implementation workflow. Once the changes exist, start [Inspect Changes](#inspect-changes) against the actual diff rather than treating the earlier plan as a concrete commit proposal.
 
 ## Inspect Changes
 
@@ -35,69 +45,35 @@ Treat each commit as one independently understandable change, not as a container
 - **Order:** Put prerequisites before their consumers. Every intermediate commit must remain coherent and must not depend on a later commit to work. A passing final working tree does not establish that an earlier proposed commit is valid.
 - **Feasibility:** Check that the proposed groups can be staged from the existing changes without duplicating or dropping hunks. Keep inseparable hunks together. Do not rewrite source, introduce temporary behavior, or fabricate changes merely to manufacture a split.
 
-## Compose Subjects
+## Preserve Message Constraints
 
-Use this decision order for each group:
+Apply these safeguards to every route, including supplied and inherited messages:
 
-1. Identify the dominant intended change, using verified task context rather than patch mechanics alone. Distinguish the actual change from capabilities that can merely be inferred from it.
-2. Choose the narrowest durable repository concept that captures that intent. Name a concrete artifact or surface when sufficient. Move up to a capability, maintenance class, or subsystem only when the narrower objects are supporting details. Reuse established compact vocabulary such as `config` and `README` when it fits.
-3. Choose a semantic verb. Added lines do not necessarily mean `Add`, and deleted lines do not necessarily mean `Remove`. Use the role guide below as a vocabulary aid, not an exhaustive list or a rigid taxonomy.
-4. Add a qualifier only when it distinguishes a material condition, mechanism, purpose, or scope. Describe the delta rather than inventorying the resulting state. A conjunction may join objects under one action, but should not combine unrelated changes.
-5. Apply the [message form](#message-form). Check that the subject covers its assigned hunks without claiming an unverified motivation or outcome.
-
-The role guide is alphabetized by editorial role:
-
-| Role | Verb Choices |
-| --- | --- |
-| Adoption | Use `Install` for managed provisioning, `Set up` for integrated first-time configuration, and `Use` for adopting a selected mechanism. |
-| Creation | Use `Add` for a concrete artifact or supported case, `Establish` for durable architecture, and `Introduce` for a named public option or substantial capability. |
-| Maintenance | Use `Adjust` or `Tweak` for a bounded refinement and `Update` for an existing surface or recurring maintenance class. Do not force a distinction between near-synonyms that context cannot establish. |
-| Organization | Use `Clean up` for heterogeneous pruning within one area and `Refactor` when structure or ownership is the organizing decision. `Refactor` does not guarantee behavior preservation. Prefer a direct operation such as `Extract`, `Move`, `Remove`, or `Rename` when that operation defines the change. |
-| Outcomes | Use `Disable` or `Enable` for the resulting inactive or active state and `Warn on` for warning severity. Use `Fix` for an established defect. Choose a precise outcome verb such as `Ensure`, `Preserve`, `Prevent`, or `Reject` when it states the effect more clearly. |
-
-### Recurring Forms
-
-- **Dependencies:** Use `Update dependencies` for a dependency-maintenance batch, including directly caused compatibility, configuration, or generated changes. Name one package when its update is deliberately singled out. Use `Use` when adopting a selected tool or version is the dominant decision.
-- **Documentation:** Use `Update documentation` for a documentation follow-up in a contribution to another repository. A specific maintained surface may instead justify a narrower subject, such as “Update `README`.”
-- **Special commits:** Use `Initial commit` for a repository root. Use a bare semantic version only for an actual release commit when that form is established in the repository. Do not choose or change a release version as part of composing its subject.
-
-### Message Form
-
-- **Grammar:** Write one compact, sentence-case imperative clause, normally `<verb> <object>`, subject to the special forms above. Omit articles that add no meaning, colons, Conventional Commit prefixes, scope labels, and terminal punctuation. Preserve necessary precision rather than imposing a fixed word or character limit.
-- **Literal names:** Put exact searchable tokens in backticks, including commands, configuration keys, domains, file labels, package selectors, paths, and rule IDs. Leave conceptual categories and canonically styled product names in prose. For example, `typescript@7` is a literal selector, while TypeScript is a product name.
-- **Bodyless output:** The subject is the complete proposed message. Do not generate a body, explanatory prose, issue-reference paragraphs, testing checklists, or trailers. Preserve an existing hosted `(#<number>)` subject suffix when it belongs to the selected message, but never invent one.
 - **Authorship:** Never make yourself or another AI agent a commit author or co-author. Do not append agent-attribution trailers or message signatures. Preserve established human authorship and do not silently discard supplied human co-author attribution to satisfy the bodyless format.
-- **Conflicts:** Treat user-supplied wording and mandatory repository message requirements as constraints. If they conflict with this message form, resolve the conflict with the user before proceeding rather than silently rewriting the input, dropping attribution, or bypassing a requirement.
+- **Conflicts:** Treat user-supplied wording and mandatory repository message requirements as constraints. If they conflict with the selected route’s message rules, resolve the conflict with the user before proceeding rather than silently rewriting the input, dropping attribution, or bypassing a requirement.
 
 ## Confirm Commits
 
 Present the proposal in its own response before any staging or committing:
 
 1. State the target repository, branch, and resolved scope briefly.
-2. For inherited or generated messages, use the proposal defined in [Preserve Operation Messages](#preserve-operation-messages). Otherwise, show each proposed commit in execution order. Put its exact complete subject in a blockquote, followed by a concise description of its included changes. Identify the hunk boundaries when a file is shared between commits or only partly included. Do not substitute filenames alone for a change description.
+2. For history updates, use the proposal defined in [Update Unpushed Commits](references/update-unpushed-commits.md#prepare-update-proposals). For cherry-picks and merges, use [Preserve Operation Messages](references/preserve-operation-messages.md). Otherwise, show each proposed commit in execution order. Put its exact complete subject in a blockquote, followed by a concise description of its included changes. Identify the hunk boundaries when a file is shared between commits or only partly included. Do not substitute filenames alone for a change description.
 3. Explain a split only when its rationale is not obvious. State material exclusions, validation limitations, and any required grants. Do not request access before its target and purpose are concrete.
-4. Ask explicitly whether to execute the proposed batch, including its staging and commit creation, then stop. Approval of that request is the user’s command to execute the named batch, not merely approval of an editorial plan.
+4. Ask explicitly whether to execute the proposed batch, including its staging, commit creation, and any history rewrite, then stop. Approval of that request is the user’s command to execute the named batch, not merely approval of an editorial plan.
 
 A correction to the proposal is not approval to execute it unless the user explicitly says so. Reconfirm any material change to the approved content, messages, order, or target. Authorization is limited to the proposed batch and does not waive a separate approval or security boundary.
 
 ## Create Approved Commits
 
-Execute the approved batch in order:
+Use these safeguards for every execution route. Ordinary routes validate each candidate before creating its commit, using a supported pause when necessary, and verify the recorded result before advancing. The [unpushed-history route](references/update-unpushed-commits.md#execute-history-updates) inspects the complete inputs and update plan before execution. For that route, apply steps 3 and 5 to the resulting series and final working tree only after step 4 completes the rebase, not between temporary fixup or replay steps.
 
 1. Recheck the recorded refs, scoped diffs, and relevant index and working-tree state against the proposal. If concurrent work changes the approved content or invalidates its boundaries, stop and return the affected part to confirmation.
-2. Apply the global **Index preservation** policy, including for partially staged files, and prepare only the next approved candidate through the selected route. Before invoking a commit-producing operation, establish how candidate validation will occur before commit creation, using a supported pause when necessary. If the mechanism cannot satisfy the required checks, stop before invoking it. For working-tree commits, stage only the approved group, using hunk-level staging when a path is shared with another group or unrelated work. Never substitute whole-file staging for an approved partial-file selection.
-3. Inspect the complete effective candidate patch and confirm it contains exactly the approved changes. Run the required validation against that candidate rather than relying on later or unstaged changes.
-4. Create the commit through the selected route’s execution mechanism and approved message policy, preserving established human authorship. Follow repository-required hook and signing behavior without bypassing checks. For working-tree commits, supply the exact approved subject through literal-safe, noninteractive input so backticks remain message characters rather than shell syntax.
-5. Verify each recorded patch, complete message, and authorship against the proposal after hooks and commit tooling have run, including the selected route’s additional checks. Verify the remaining index and working-tree state before advancing to the next commit.
+2. Apply the global **Index preservation** policy, including for partially staged files, and prepare only approved inputs through the selected route. Establish how its required checkpoints will be satisfied before invoking a commit-producing operation. If the mechanism cannot satisfy them, stop before invoking it. For working-tree changes, stage only the approved group, using hunk-level staging when a path is shared with another group or unrelated work. Never substitute whole-file staging for an approved partial-file selection.
+3. At the selected validation checkpoint, inspect the complete effective patches and confirm they contain exactly the approved changes. Run the required validation against that candidate or completed series, not unrelated or unapproved working-tree changes.
+4. Create commits through the selected route’s execution mechanism and approved message policy, preserving established human authorship. Follow repository-required hook and signing behavior at every invocation without bypassing checks. For newly composed messages, supply the exact approved subject through literal-safe, noninteractive input so backticks remain message characters rather than shell syntax.
+5. At the selected verification checkpoint, verify each recorded patch, complete message, and authorship against the proposal after hooks and commit tooling have run, including the selected route’s additional checks. Verify the remaining index and working-tree state.
 
-If execution encounters conflicts, errors, failed checks, or a result that differs from the approved proposal, preserve the resulting state and completed commits, report what happened, and stop. Continue only after required checks pass and the resolution remains within the approved scope. Obtain fresh confirmation for a material change. Do not add unapproved fixes, blindly retry, or automatically amend, reset, or replay the batch.
-
-## Preserve Operation Messages
-
-1. Resolve the repository, destination checkout and branch, source commits, and operation order. Record the destination’s starting `HEAD`, inspect the source patches and complete messages against the relevant destination history, and identify unrelated index and working-tree state to preserve. Do not substitute the destination’s uncommitted diff for the operation’s changes or proceed through an unrelated Git operation already in progress.
-2. Preserve complete inherited cherry-pick messages and Git-generated merge messages by default, including bodies and trailers. Skip hunk grouping and subject composition, and do not impose the authored-message conventions. Retain the **Authorship** and **Conflicts** safeguards in [Message Form](#message-form). Resolve an explicit message-rewrite request before proposing the operation rather than silently normalizing the existing message.
-3. Prepare a read-only proposal naming the exact operation and invocation, source commit IDs and order, destination and starting `HEAD`, intended changes, and expected parent relationships. Put each inherited message in a blockquote without rewriting it. For generated messages, show a read-only preview when available. Otherwise, state that Git will generate the message from the approved inputs instead of inventing exact text.
-4. During [Create Approved Commits](#create-approved-commits), use the operation’s native preparation, command, and continuation flow rather than staging authored hunk groups or replacing it with freshly composed commits. For cherry-pick sequences, apply one source commit at a time. Add verification of expected parent relationships to the shared post-commit checks.
+If execution encounters conflicts, errors, failed checks, or a result that differs from the approved proposal, preserve the resulting state and completed commits, report what happened, and stop. Continue only when the resolution remains within the approved scope and the checks required at that checkpoint pass. Obtain fresh confirmation for a material change. Do not add unapproved fixes, blindly retry, or automatically amend, reset, or replay the batch.
 
 ## Report the Result
 

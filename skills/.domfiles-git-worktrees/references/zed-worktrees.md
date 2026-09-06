@@ -2,7 +2,9 @@
 
 ## Create and Enter the Checkout
 
-Use the title-bar worktree picker (`git: worktree`) or an available native operation that preserves Zed’s managed lifecycle. If the required operation is unavailable to the agent, ask the user to perform it in Zed. Do not substitute raw Git creation, even beneath Zed’s managed directory, because the resulting checkout would lack Zed’s creation record.
+Check the tools actually exposed in the current session, including `create_thread`, and use their schemas to determine which creation actions they support. Do not infer availability merely because Zed supports the feature. Follow [Recognize Conversation Handoffs](#recognize-conversation-handoffs) before selecting an operation that also starts a conversation.
+
+Use an available native operation that preserves Zed’s managed lifecycle. If no exposed tool supports the authorized creation, identify the missing tool or capability as a limitation of this session and request the smallest necessary Zed UI action, using the title-bar worktree picker (`git: worktree`) for checkout creation. Do not substitute raw Git creation, even beneath Zed’s managed directory, because the resulting checkout would lack Zed’s creation record.
 
 Use Zed’s configured worktree location, generated name, and default starting ref unless the user specifies otherwise or the task requires a particular revision. The location comes from the global `git.worktree_directory` setting. Do not supply a custom name merely to impose a task slug or branch naming scheme. Confirm the starting ref when it matters to the task rather than assuming every creation interface has the same default.
 
@@ -12,7 +14,11 @@ After creation, follow the entrypoint’s [existing-worktree entry checks](../SK
 
 ## Recognize Conversation Handoffs
 
-Zed’s `create_thread` operation can create both a linked worktree and an independent sibling conversation. The sibling receives no parent conversation history, and its output does not return to the parent. Apply the entrypoint’s handoff boundary before selecting such an operation. Its availability does not make it a substitute for a subagent that returns results to a coordinator.
+When exposed in the current session, `create_thread` can create both a linked worktree and an independent sibling conversation. The sibling receives no parent conversation history, and its output does not return to the parent. Apply the entrypoint’s [handoff boundary](../SKILL.md#select-the-lifecycle) before invoking such an operation. Its availability does not make it a substitute for a subagent that returns results to a coordinator.
+
+When the confirmed flow selects native dispatch, use `agent-task-relay`’s workflow-owned delivery rule to obtain the composed assignment rather than emit a user-mediated relay. Supply that assignment through the exposed tool’s schema, preserving the confirmed flow and worktree choices. Report only the creation outcome established by the tool response, then stop rather than claiming the receiving task is complete.
+
+Without a suitable native dispatch tool, use `agent-task-relay`’s normal user-mediated delivery and include any required Zed UI action in the proposed flow.
 
 ## Preserve Managed State
 

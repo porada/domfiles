@@ -102,6 +102,16 @@ The [agent-documentation ownership model](../AGENTS.md#agent-documentation) defi
 
 The global [`commit` skill](../skills/.domfiles-commit/SKILL.md) owns commit preparation, execution confirmation, and result verification. Its editorial model for newly composed messages comes from the repository owner’s 2026 diff-to-message history, with bodyless output selected explicitly. Inherited cherry-pick messages and Git-generated merge messages retain operation context that this editorial model would otherwise discard. It remains documentation-only because ordinary Git operations can execute the approved batches without a separate staging implementation. The global [commit gate](GLOBAL.md#conduct) and [index-preservation policy](GLOBAL.md#collaboration) remain the authorization and preservation owners.
 
+Conditional message guidance keeps planning and message-preserving operations independent of authored-subject conventions without splitting the shared confirmation and execution lifecycle.
+
+The [unpushed-history update route](../skills/.domfiles-commit/references/update-unpushed-commits.md) is an explicitly selected mode, leaving ordinary `/commit` behavior focused on new commits. Its publication cutoff avoids rewriting shared history, regardless of whether a pull request exists. Fixups preserve the intended boundaries of earlier commits without forcing independently useful additions into them. Post-rebase validation assesses the resulting series rather than temporary fixups and replay states.
+
+### Contribution Flow
+
+The global [`contribution-flow` skill](../skills/.domfiles-contribution-flow/SKILL.md) coordinates preparation of contributions to repositories the user does not own. Its responsibility ends at readiness for the user’s manual browser submission, rather than publication or ongoing maintainer follow-up.
+
+Contribution-level decisions, prewriting context collection, and consistency with previous submissions live in this workflow so `human-facing-writing` remains useful independently of remote retrieval. Existing-work assessment and reference relationships connect the contribution’s justification to its eventual prose. Personal reference preferences remain in this global workflow rather than changing the public writing skill’s defaults. Upstream checkpoints belong to the contribution workflow, while `commit` owns the mechanics and eligibility of history updates. That dependency is one-way and leaves the global authorization rules unchanged.
+
 ### Deferred Global Policy
 
 Conditional global policy may move into a global skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.

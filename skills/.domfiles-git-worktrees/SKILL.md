@@ -15,7 +15,7 @@ Keep worktree paths independent of branch names. A worktree may use a branch or 
 
 ## Enter an Existing Worktree
 
-Use this path for an existing worktree rather than repeating its creation or original isolation decision. Do not investigate or ask about lifecycle ownership solely for ordinary edits, inspection, or validation.
+Use this path for an existing worktree rather than repeating its creation or original isolation decision. Entry, ordinary work, and [integration](#integrate-changes) do not require tools for creating worktrees or conversations. Do not investigate or ask about lifecycle ownership solely for ordinary edits, inspection, or validation.
 
 1. Confirm that active tools target the intended repository and linked worktree, not the primary checkout or another worktree. Verify registration with `git --no-pager worktree list --porcelain`.
 2. Read this checkout’s applicable instructions and inspect its state under the global **Concurrent work** rule. Record `HEAD` and its branch or detached state, and confirm the starting revision when the task depends on it. Do not assume the checkout is untouched.
@@ -38,7 +38,7 @@ Before a worktree lifecycle operation, resolve who manages or will manage the ch
 
 When Zed owns or will create the worktree, follow [Zed Worktrees](references/zed-worktrees.md) for every lifecycle operation. Prefer this workflow for tasks using Zed. The creation, administration, and dismantling sections below apply only to explicitly selected direct Git management, not as a fallback for an unavailable native operation. [Integration](#integrate-changes) applies to both direct-Git and Zed-managed worktrees.
 
-Checkout isolation does not authorize starting another conversation. If proceeding requires an independent conversation handoff, use `agent-task-relay` for confirmation and assignment composition, carrying the resolved isolation decision into that workflow. This skill does not dispatch threads.
+Checkout isolation does not authorize starting another conversation. If proceeding requires an independent conversation handoff, use `agent-task-relay` for confirmation and assignment composition, carrying the resolved isolation decision into that workflow. For Zed, follow [Recognize Conversation Handoffs](references/zed-worktrees.md#recognize-conversation-handoffs) for native creation and delivery after confirmation.
 
 ## Create a Worktree
 

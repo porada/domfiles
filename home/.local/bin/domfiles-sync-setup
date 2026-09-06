@@ -16,10 +16,10 @@ __symlink "$DOMFILES/.agents/GLOBAL.md" "$HOME/.codex/AGENTS.md"
 
 __print_heading_dimmed 'Linking agent skills'
 
-for source in .domfiles-agent-documentation .domfiles-commit .domfiles-git-worktrees \
-  .domfiles-harmonize .domfiles-release-notes .domfiles-verify agent-task-relay \
-  fish-shell-scripting human-facing-writing posix-shell-scripting release-notes-for-humans \
-  simple-github-cli; do
+for source in .domfiles-agent-documentation .domfiles-commit .domfiles-contribution-flow \
+  .domfiles-git-worktrees .domfiles-harmonize .domfiles-release-notes .domfiles-verify \
+  agent-task-relay fish-shell-scripting human-facing-writing posix-shell-scripting \
+  release-notes-for-humans simple-github-cli; do
   name="$(__string_replace "$source" '.domfiles-' '')"
   path="$DOMFILES/skills/$source"
 
