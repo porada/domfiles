@@ -1,0 +1,91 @@
+#!/bin/sh
+
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
+
+# Format selected files with domfiles’ Prettier configuration
+format() {
+  pnpm --config.verifyDepsBeforeRun=error exec prettier \
+    --config "$DOMFILES/prettier.config.ts" \
+    --ignore-path /dev/null \
+    --no-editorconfig \
+    "$@"
+}
+
+if [ "${1-}" = '--' ]; then
+  shift
+fi
+
+if [ $# -eq 0 ]; then
+  __print_info_and_exit 'Usage: domfiles format [--] <file> [<file> …]'
+fi
+
+for param; do
+  shift
+
+  if [ ! -f "$param" ]; then
+    __print_error_and_exit "Expected \`$param\` to be a file path"
+  fi
+
+  # Preserve trailing newlines in symlink destinations until validation
+  file="$(realpath -- "$param" && printf .)" || exit $?
+  file="${file%?}"
+  file="${file%?}"
+
+  # Keep each confirmation entry on one unambiguous line
+  case "$file" in
+    *[[:cntrl:]]*)
+      __print_error_and_exit 'File paths containing control characters are not supported'
+      ;;
+  esac
+
+  if [ ! -r "$file" ] || [ ! -w "$file" ]; then
+    __print_error_and_exit "Failed to format. \`$file\` isn’t readable or writable"
+  fi
+
+  set -- "$@" "$file"
+done
+
+# Collapse repeated paths and symlinks to the same destination
+for file; do
+  shift
+
+  for other; do
+    [ "$file" != "$other" ] || continue 2
+  done
+
+  set -- "$@" "$file"
+done
+
+index=0
+
+echo
+
+for file; do
+  index="$((index + 1))"
+  __print_styled '' '%s\n' -- "$index. $file"
+done
+
+echo
+
+if [ $# -eq 1 ]; then
+  question='Format 1 file?'
+else
+  question="Format $# files?"
+fi
+
+if ! __confirm "$question"; then
+  exit 0
+fi
+
+echo
+
+# Resolve plugins and native formatter configuration from domfiles
+__domfiles_cd_root
+
+# Catch formatting errors across the complete selection before writing
+status=0
+format --check --log-level=error -- "$@" > /dev/null || status=$?
+[ "$status" -le 1 ] || exit "$status"
+
+format --write -- "$@"

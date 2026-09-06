@@ -339,6 +339,12 @@ With `--amend`, `git f` compares its inferred or positional fixup target with th
 
 Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints and are not intended to mirror the currently resolved version.
 
+### Prettier Formatter Command
+
+[`domfiles-format`](../home/.local/bin/domfiles-format) accepts existing file paths, resolves symlinks, and lists each destination once with `$HOME` abbreviated to `~` before asking for confirmation through `__confirm`. It has no recursive mode or `--write` option. Resolved paths containing control characters are unsupported so the numbered confirmation list stays unambiguous. After confirmation, a non-writing Prettier check runs across the complete selection to catch formatting errors before any writes. Writes follow Prettier’s normal per-file behavior rather than a batch transaction.
+
+Formatting runs from the domfiles checkout with its installed Prettier, explicit configuration, and full plugin set. Target-side Prettier configuration, `.editorconfig`, and ignore files do not supply formatting policy. Prettier’s built-in exclusions still apply. The caller’s relative paths are resolved before changing directories, which also keeps native formatter configuration discovery rooted in domfiles. The command uses the existing workspace installation and does not install dependencies automatically.
+
 ### Prettier Formatter Wrappers
 
 `prettier-plugin-fish`, `prettier-plugin-rust`, and `prettier-plugin-toml` are intentionally thin whole-file wrappers around Homebrew-provided `fish_indent`, `rustfmt`, and `taplo`, respectively. Each native formatter’s output is preserved verbatim, and that formatter owns its language’s formatting semantics. Prettier options such as `tabWidth` and `useTabs` intentionally do not affect their output. The Fish and Rust wrappers declare the `fish` and `rust-script` interpreters so Prettier infers their parsers for extensionless files with matching hashbangs.
