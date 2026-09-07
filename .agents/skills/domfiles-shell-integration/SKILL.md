@@ -29,7 +29,7 @@ For a standalone audit in either language, follow the applicable language skill�
 
 For every non-Fish shell target and whenever the task touches `domlib`, a Fish `__domfiles_*` helper, shared `$DOMFILES_*` state, or command suppression, follow [`domlib` integration](references/domlib-integration.md).
 
-## Check Supported-Environment Compatibility
+## Check Supported Environment Compatibility
 
 - Evaluate every in-scope `domfiles` shell script’s interpreter, external commands, options, `PATH`, architecture, and default-shell assumptions against the [supported environment](../../PROJECT.md#supported-environment).
 - Judge each requirement at its intended lifecycle stage—fresh bootstrap, synchronization, post-sync runtime, or development—and account for prerequisites provisioned earlier by `domfiles sync`.
@@ -42,7 +42,7 @@ Use the applicable language skill for semantic requirements and composition with
 - Avoid first-person and subjective wording.
 - Omit final punctuation from script comments and user-facing strings passed to `__print*`.
 - Treat standalone headings and status labels as labels rather than sentences. Allow sentence case or title case, and do not require imperative voice.
-- Use sentence-case imperative voice for action and section comments.
+- Use sentence case imperative voice for action and section comments.
 
 ## Choose Command Form and Location
 

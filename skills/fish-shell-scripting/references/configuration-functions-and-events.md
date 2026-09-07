@@ -2,11 +2,11 @@
 
 ## Configuration Lifecycle
 
-Fish selects configuration snippets across the configured `conf.d` directories before reading system and user `config.fish` files. If the same basename appears in more than one directory, only the first file in directory-precedence order runs. Fish then runs the selected snippets in natural filename order.
+Fish selects configuration snippets across the configured `conf.d` directories before reading system and user `config.fish` files. If the same basename appears in more than one directory, only the first file in directory precedence order runs. Fish then runs the selected snippets in natural filename order.
 
 Put independent startup snippets in `conf.d/*.fish` when their order and override behavior are deliberate. Put user-level overrides and coordination in `$__fish_config_dir/config.fish`. Fish resolves that directory from `$XDG_CONFIG_HOME` or its `$HOME/.config/fish` fallback.
 
-Keep setup required by noninteractive shells outside interactive-only guards. Guard prompts, abbreviations, bindings, and other interactive behavior with `status is-interactive` so remote commands and file-transfer sessions do not receive unrelated output or state. Guard login-only behavior with `status is-login`.
+Keep setup required by noninteractive shells outside interactive-only guards. Guard prompts, abbreviations, bindings, and other interactive behavior with `status is-interactive` so remote commands and file transfer sessions do not receive unrelated output or state. Guard login-only behavior with `status is-login`.
 
 ## Declarative Startup
 
@@ -20,7 +20,7 @@ Use universal variables for intentionally mutable, cross-session preferences man
 
 ## Function Contracts
 
-Apply the [function-documentation contract](../SKILL.md#function-documentation) to every explicit function on this surface.
+Apply the [function documentation contract](../SKILL.md#function-documentation) to every explicit function on this surface.
 
 ## Function Autoloading
 
@@ -60,17 +60,17 @@ Choose the smallest Fish mechanism that matches the behavior:
 
 | Need | Mechanism |
 | --- | --- |
-| Interactive command-line expansion visible before execution | `abbr` |
+| Interactive command line expansion visible before execution | `abbr` |
 | Lazily loaded named behavior | Autoloaded function file |
 | Reusable runtime behavior | Function |
 | Simple function-shaped wrapper | `alias`, which Fish implements as a function |
 | Startup or event registration | Explicitly sourced configuration or `conf.d` snippet |
 
-By default, the completion pager describes a literal abbreviation with its expansion and a function-backed abbreviation with the expansion function’s name. That default satisfies the [completion-description principle](../SKILL.md#keep-interactive-behavior-deliberate) when it makes the abbreviation’s purpose clear. Otherwise, add a concise custom description by placing the attached option `--description='<text>'` before the abbreviation name. Apply the [human-facing text contract](../SKILL.md#human-facing-text) to its wording.
+By default, the completion pager describes a literal abbreviation with its expansion and a function-backed abbreviation with the expansion function’s name. That default satisfies the [completion description principle](../SKILL.md#keep-interactive-behavior-deliberate) when it makes the abbreviation’s purpose clear. Otherwise, add a concise custom description by placing the attached option `--description='<text>'` before the abbreviation name. Apply the [human-facing text contract](../SKILL.md#human-facing-text) to its wording.
 
 Define a maintained wrapper with an observable contract as an explicit function. Use `function --wraps <command>` only when the wrapper preserves the delegated command’s relevant completion interface.
 
-When wrapping an external program, invoke it through `command` and forward `$argv` unless the wrapper intentionally changes that interface. Use the command-resolution operation from the Fish-native guidance that matches whether functions, builtins, or only external programs may satisfy the dependency.
+When wrapping an external program, invoke it through `command` and forward `$argv` unless the wrapper intentionally changes that interface. Use the command resolution operation from the Fish-native guidance that matches whether functions, builtins, or only external programs may satisfy the dependency.
 
 ## Event Handlers
 

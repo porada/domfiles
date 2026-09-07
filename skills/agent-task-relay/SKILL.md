@@ -3,7 +3,7 @@ name: agent-task-relay
 description: |-
     Create, revise, review, and audit prompts for clear, bounded handoffs to another agent or conversation. Validate findings and status responses brought into the current conversation.
 
-    Use this skill when work must continue with an external agent or in an environment with the required access, when results or decisions need to move between conversations, or when a user message primarily contains pasted findings or a status response, even without an explicit request to act. Also use it for explicitly requested subagent prompts, reusable relay maintenance, and decision-capture prompt maintenance.
+    Use this skill when work must continue with an external agent or in an environment with the required access, when results or decisions need to move between conversations, or when a user message primarily contains pasted findings or a status response, even without an explicit request to act. Also use it for explicitly requested subagent prompts, reusable relay maintenance, and decision capture prompt maintenance.
 
     Do not use for autonomous in-client delegation. Do not treat incidental, illustrative, archival, or explicitly deferred agent text as an inbound handoff.
 ---
@@ -21,7 +21,7 @@ Choose the route for the artifact or inbound handoff, then apply revision or rev
 - **Inbound findings:** To validate a pasted review, audit, findings report, or status response, follow [Inbound Findings](references/inbound-findings.md).
 - **Task relay:** To assign work to an external agent, follow [External Handoffs](#external-handoffs), then [Task Relays](references/task-relays.md), and apply [Delivery](#delivery).
 - **Decision relay:** To pass results and decisions into another conversation, follow [Decision Relays](references/decision-relays.md), then apply [Delivery](#delivery). Include material decisions when any exist.
-- **Specialized prompts:** When the user explicitly asks for a subagent prompt, follow [User-Requested Subagent Prompts](references/task-relays.md#user-requested-subagent-prompts), then apply [Delivery](#delivery). When maintaining a standalone decision-capture prompt, treat that prompt as the change target and follow [Domain Profiles](references/decision-relays.md#domain-profiles).
+- **Specialized prompts:** When the user explicitly asks for a subagent prompt, follow [User-Requested Subagent Prompts](references/task-relays.md#user-requested-subagent-prompts), then apply [Delivery](#delivery). When maintaining a standalone decision capture prompt, treat that prompt as the change target and follow [Domain Profiles](references/decision-relays.md#domain-profiles).
 - **Revision:** Follow the selected artifact route, then return every affected prompt in full under [Delivery](#delivery). Reconfirm a task handoff under [Task Relay Confirmation](references/task-relays.md#task-relay-confirmation) when the requested change materially alters the confirmed flow.
 - **Review or audit:** Use the selected artifact route as the review criteria, and keep the task read-only. Report findings against this entrypoint and the routed reference. Do not compose or deliver a replacement, and do not mutate anything.
 
@@ -30,7 +30,7 @@ Choose the route for the artifact or inbound handoff, then apply revision or rev
 | Term | Meaning |
 | --- | --- |
 | **Agent task relay** | The user-mediated workflow for assigning work, passing established results and decisions, or bringing findings into a conversation for independent validation. |
-| **Decision-capture prompt** | A prompt that asks the current agent to turn context already available in the conversation into a decision relay without continuing the underlying task. |
+| **Decision capture prompt** | A prompt that asks the current agent to turn context already available in the conversation into a decision relay without continuing the underlying task. |
 | **Decision relay** | An evidence-only handoff of completed results, supporting evidence, material decisions when any exist, and known limitations. |
 | **External agent** | An agent operating in another conversation or execution environment rather than as an in-client subagent. |
 | **Inbound findings handoff** | A user-mediated transfer of review findings or a status response into the current conversation for independent validation. |
@@ -51,7 +51,7 @@ Every relay must make its purpose, authority, and stopping point clear.
 
 ## External Handoffs
 
-A direct request to assign work to an external agent begins the task-relay workflow. A tentative question suggests a relay and waits for the user’s choice. An incidental or quoted mention of another agent does not route the task.
+A direct request to assign work to an external agent begins the task relay workflow. A tentative question suggests a relay and waits for the user’s choice. An incidental or quoted mention of another agent does not route the task.
 
 When the task requires access available only in another conversation, client, host, authenticated session, or project, suggest a relay as soon as that boundary is established. If an attempted access operation revealed the boundary, report the exact limitation before proposing the handoff.
 
@@ -62,7 +62,7 @@ Never use an in-client subagent to cross or circumvent an environment, access, a
 - **Workflow-owned delivery:** When another applicable workflow invokes this skill for confirmation and assignment composition and explicitly defines the required final output and stopping behavior, return the composed assignment to that workflow instead of delivering it as a relay. Do not perform both.
 - **Task relays:** After confirmation, put each complete relay in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready to relay.
 - **User-requested subagent prompts:** Put each complete prompt in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Precede it with `# Subagent Prompt` or a descriptive numbered `# Subagent Prompt …` heading.
-- **Verbatim handoffs:** When an entire response is a decision relay, evidence handoff, status return, completed-work report, or other response intended for verbatim relay, make the relay the whole response. Do not wrap it in an outer code block, add a relay heading, or append a readiness message.
+- **Verbatim handoffs:** When an entire response is a decision relay, evidence handoff, status return, completed work report, or other response intended for verbatim relay, make the relay the whole response. Do not wrap it in an outer code block, add a relay heading, or append a readiness message.
 - **Revisions:** Return every affected prompt in full with the requested change applied. Do not provide a patch, fragment, or splice instructions. When one change affects a coordinated prompt set, replace the complete affected set, omit unrelated unchanged prompts, and preserve established decisions and untouched boundaries.
 
 ## General Policies

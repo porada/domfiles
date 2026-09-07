@@ -27,7 +27,7 @@ When Fish code owns the representation of stored boolean state and neither an ap
 
 By default, a called Fish function cannot read its caller’s unexported local variables. Exported locals remain visible, and `--no-scope-shadowing` lets a function access variables in its calling scope.
 
-When caller-scope inheritance is not part of the function’s contract, use a single-command override such as `NAME=value function_name` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
+When caller scope inheritance is not part of the function’s contract, use a single-command override such as `NAME=value function_name` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
 
 ## Argument Lists
 
@@ -118,7 +118,7 @@ Do not replace an external command mechanically. Use a Fish builtin when it expr
 | Need | Prefer | Avoid When Fish Owns the Operation |
 | --- | --- | --- |
 | Inspect shell, command, or script context | `status` | `$0` or shell-specific context variables |
-| Manage path-list additions | `fish_add_path` or list-valued path variables | Manual colon concatenation |
+| Manage path list additions | `fish_add_path` or list-valued path variables | Manual colon concatenation |
 | Parse function or script options | `argparse` | `getopts`, `getopt`, or hand-written option shifting |
 | Read Fish’s process ID | `$fish_pid` | `$$` or another shell’s PID variable |
 
@@ -167,7 +167,7 @@ Inspect `$pipestatus` only when individual pipeline stages matter. Do not reinte
 
 After a pipeline, `$status` is the pipeline result. It normally comes from the final foreground process and then reflects any `not` or `!` negation. `$pipestatus` contains one unnegated status per pipeline process. Inspect or copy these values immediately.
 
-Fish deliberately has no `pipefail` mode because an early-closing consumer can make an upstream process report `SIGPIPE` even when the pipeline is semantically correct.
+Fish deliberately has no `pipefail` mode because a downstream command can close its input pipe before an upstream process finishes writing. The upstream process may then report `SIGPIPE` even though the pipeline is working as intended.
 
 ## Paths
 
@@ -193,4 +193,4 @@ Prefer a pipe when a consumer accepts standard input. Use `$(producer | psub)` o
 
 Fish’s overall design is documented in the official [design principles](https://fishshell.com/docs/current/design.html). Expansion and state behavior are documented in the [Fish language](https://fishshell.com/docs/current/language.html), [`set` reference](https://fishshell.com/docs/current/cmds/set.html), [`string collect` reference](https://fishshell.com/docs/current/cmds/string-collect.html), and [`string split0` reference](https://fishshell.com/docs/current/cmds/string-split0.html).
 
-Path, input, and command-resolution behavior are documented in the [`path` reference](https://fishshell.com/docs/current/cmds/path.html), [`read` reference](https://fishshell.com/docs/current/cmds/read.html), [`command` reference](https://fishshell.com/docs/current/cmds/command.html), and [`type` reference](https://fishshell.com/docs/current/cmds/type.html). Generated Fish syntax is covered by the [`eval` reference](https://fishshell.com/docs/current/cmds/eval.html).
+Path, input, and command resolution behavior are documented in the [`path` reference](https://fishshell.com/docs/current/cmds/path.html), [`read` reference](https://fishshell.com/docs/current/cmds/read.html), [`command` reference](https://fishshell.com/docs/current/cmds/command.html), and [`type` reference](https://fishshell.com/docs/current/cmds/type.html). Generated Fish syntax is covered by the [`eval` reference](https://fishshell.com/docs/current/cmds/eval.html).

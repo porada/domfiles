@@ -18,7 +18,7 @@ If a material choice remains unresolved, ask the user explicitly, and emit neith
 
 Present the final flow in its own response. Keep it succinct, but include the receiving action, material target environment, worktree decision when repository work is involved, scope and exclusions, mutation and approval boundaries, required execution steps, validation, and handoff mode.
 
-For every required dependency addition or update, choose the smallest sufficient set. Prefer an existing dependency or standard-library capability when sufficient, and enable only required features. Before requesting approval, identify each proposed addition or update exactly and state its consumers, declaration location, installation location when relevant, and purpose. Explain why existing dependencies or standard-library capabilities are insufficient and why a custom implementation would be less correct, maintainable, proportionate, or secure. Disclose any material feature, licensing, runtime, supply-chain, or version implications.
+For every required dependency addition or update, choose the smallest sufficient set. Prefer an existing dependency or standard library capability when sufficient, and enable only required features. Before requesting approval, identify each proposed addition or update exactly and state its consumers, declaration location, installation location when relevant, and purpose. Explain why existing dependencies or standard library capabilities are insufficient and why a custom implementation would be less correct, maintainable, proportionate, or secure. Disclose any material feature, licensing, runtime, supply chain, or version implications.
 
 Ask the user to confirm or correct the flow, and do not include the task relay in that response. After confirmation, emit the complete relay without recapping the flow.
 
@@ -40,7 +40,7 @@ Before the guard, define the bounded assignment, owned scope, exclusions, source
 
 Every assignment inherits the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary. Require it to return any boundary request to its coordinator or the user rather than crossing it.
 
-An assignment may authorize an operation that writes a commit in any repository, directly or indirectly, only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working-tree changes only.
+An assignment may authorize an operation that writes a commit in any repository, directly or indirectly, only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working tree changes only.
 
 Use the guard only when the prompt assigns future work. Omit it from decision relays and other transfers of established data. A receiving action alone does not turn an evidence handoff into an assignment.
 
@@ -52,7 +52,7 @@ Include only the applicable parts of this sequence:
 
 1. Title and receiving action.
 2. Task context, authoritative evidence, and material target information.
-3. Scope, exclusions, mutation boundary, approval boundary, and behavior-preservation requirements.
+3. Scope, exclusions, mutation boundary, approval boundary, and behavior preservation requirements.
 4. Required result, mandatory process constraints, validation, and known limitations.
 5. Handoff mode, stopping point, and exact final anti-drift guard.
 

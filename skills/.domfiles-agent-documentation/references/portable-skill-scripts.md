@@ -14,20 +14,20 @@ Updating a target-owned consumer for a breaking interface change requires separa
 - Treat a project, repository, or path inspected or changed by an operation as its target. Do not infer a target from the host working directory.
 - Require a single-target project-wide operation to accept `--root <target-root>` as its path base and `--scope <scope-manifest>` as its agent-resolved input boundary. Require a narrower operation to select its complete scope through explicit input paths. For a multi-target operation, use role-qualified selectors and document each target’s role and path base.
 - Treat a target root as location rather than authorization. Reject a missing selector before reading target content.
-- Resolve the scope manifest to a finite set of target-relative paths, and reject traversal, path-base ambiguity, and symlink escape before reading an authorized path.
-- Leave semantic resolution of each target’s `AGENTS.md`, authority model, approvals, protected paths, and absolute exclusions to the invoking agent. A script may inventory or structurally validate only paths the invoking agent selected through the applicable scope manifest or the operation’s explicit input-path arguments.
-- Do not require the target to install dependencies, add manifests, change package-manager state, register build targets, or expose repository-specific commands.
+- Resolve the scope manifest to a finite set of target-relative paths, and reject traversal, path base ambiguity, and symlink escape before reading an authorized path.
+- Leave semantic resolution of each target’s `AGENTS.md`, authority model, approvals, protected paths, and absolute exclusions to the invoking agent. A script may inventory or structurally validate only paths the invoking agent selected through the applicable scope manifest or the operation’s explicit input path arguments.
+- Do not require the target to install dependencies, add manifests, change package manager state, register build targets, or expose repository-specific commands.
 - Do not apply host policy to the target merely because the script executes in the host.
-- Resolve relative command-line paths against the invocation working directory unless a documented manifest-relative contract governs them. Distinguish host paths, target paths, and artifact destinations in help and diagnostics.
+- Resolve relative command line paths against the invocation working directory unless a documented manifest-relative contract governs them. Distinguish host paths, target paths, and artifact destinations in help and diagnostics.
 
-A host-maintenance operation that consumes no separate target may omit a target selector. Name and document that scope explicitly so it cannot be mistaken for a project-targeted operation.
+A host maintenance operation that consumes no separate target may omit a target selector. Name and document that scope explicitly so it cannot be mistaken for a project-targeted operation.
 
 ## Apply the Common Command Contract
 
 - Keep the interface noninteractive and independent of editor actions, MCP servers, agent-specific APIs, conversational state, and calling-agent implementation.
 - Support an exit-only `--help` operation that writes help to standard output, performs no other work, and returns status `0`. Reject `--help` combined with operational arguments.
 - Reject unknown arguments, missing required arguments, inaccessible required inputs, and invalid input without performing writes.
-- Write requested data, reports, and completed findings to standard output. Reserve standard error for usage and operational diagnostics. Keep default output free of terminal-control sequences and order it deterministically.
+- Write requested data, reports, and completed findings to standard output. Reserve standard error for usage and operational diagnostics. Keep default output free of terminal control sequences and order it deterministically.
 - Use status `0` when the requested operation completes successfully without check findings. Use status `1` only when a check or audit completes and reports findings. Use status `2` for invalid invocation, invalid or inaccessible input, and operational failure.
 
 A query that successfully returns zero records is status `0`. Status `1` represents a policy-defined discrepancy, not an empty result.

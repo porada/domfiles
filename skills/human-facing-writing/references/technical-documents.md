@@ -18,15 +18,15 @@ Treat this sequence as a decision framework, not a fixed template. A visual befo
 
 ### FAQ Collections
 
-Treat an established FAQ as one question collection, and keep its question-form headings in natural casing. During structure-only work, keep every existing question-form heading under that FAQ rather than moving individual questions into other sections.
+Treat an established FAQ as one question collection, and keep its question form headings in natural casing. During structure-only work, keep every existing question form heading under that FAQ rather than moving individual questions into other sections.
 
 Do not propose a standalone FAQ with only one question. If another grouping would split an established FAQ or leave it with one question, preserve the current collection and identify the unresolved copy decision instead of rewriting or relocating questions.
 
 ## Document Types
 
-Before drafting or revising an issue or pull request body for a specific repository, check the supplied context or accessible repository for an applicable template. Use the template when available and the post-type defaults below when none applies. An unknown template status does not prevent drafting from the available context, but do not claim template compliance. Ask only when a known required template is unavailable or a material ambiguity prevents a useful draft.
+Before drafting or revising an issue or pull request body for a specific repository, check the supplied context or accessible repository for an applicable template. Use the template when available and the post type defaults below when none applies. An unknown template status does not prevent drafting from the available context, but do not claim template compliance. Ask only when a known required template is unavailable or a material ambiguity prevents a useful draft.
 
-For any security report, whether standalone or submitted through an issue or pull request form, also follow the [security-report workflow](security-reports.md).
+For any security report, whether standalone or submitted through an issue or pull request form, also follow the [security report workflow](security-reports.md).
 
 | Document Type | Default |
 | --- | --- |
@@ -40,9 +40,9 @@ For any security report, whether standalone or submitted through an issue or pul
 - Place prerequisites, caveats, alternatives, and evidence close to the claim or action they constrain.
 - Use a callout for an operational constraint or risk that readers could otherwise miss. Place it beside the affected action, use the least severe established callout type that fits, and keep it concise. Do not use callouts for ordinary notes or decorative emphasis.
 - Present document fragments and heading outlines directly rather than wrapping the entire fragment in an outer code block. Preserve code blocks that belong to the document content.
-- Keep equivalent package-manager or environment paths parallel when the project presents them as equal options.
+- Keep equivalent package manager or environment paths parallel when the project presents them as equal options.
 - On GitHub surfaces that automatically link same-repository references, prefer bare `#…` references for issues and pull requests when user or repository convention permits them. Reference Discussions by URL, using descriptive Markdown link text when the destination would otherwise be unclear. Use an explicit link for cross-repository, ambiguous, or off-platform references.
 
 ## Validation
 
-As part of the technical-copy workflow’s [final validation](technical-copy.md#validation), read the complete rendered document from its opening through the first useful result or decision, then continue through any optional detail. Confirm that the headings reveal the hierarchy and that every link reaches its intended destination.
+As part of the technical copy workflow’s [final validation](technical-copy.md#validation), read the complete rendered document from its opening through the first useful result or decision, then continue through any optional detail. Confirm that the headings reveal the hierarchy and that every link reaches its intended destination.

@@ -1,12 +1,12 @@
 # Documentation Comments
 
-Use technical-copy evidence and reader-facing terminology to shape declaration-level documentation, including JSDoc, language-native comments, and docstrings.
+Use technical copy evidence and reader-facing terminology to shape declaration-level documentation, including JSDoc, language-native comments, and docstrings.
 
 ## Scope
 
 Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. This reference governs their wording and editorial review. Do not generalize family-wide coverage or JSDoc syntax from one language or project.
 
-Alongside the technical-copy workflow’s [evidence requirements](technical-copy.md#evidence), inspect each declaration’s call sites, declared types, and surrounding comments before composing or propagating wording. For a requested module or family pass, complete the in-scope coverage before reviewing the family as a whole.
+Alongside the technical copy workflow’s [evidence requirements](technical-copy.md#evidence), inspect each declaration’s call sites, declared types, and surrounding comments before composing or propagating wording. For a requested module or family pass, complete the in-scope coverage before reviewing the family as a whole.
 
 ## Comment Content
 
@@ -14,7 +14,7 @@ Write every JSDoc comment as a multiline block with `/**` and `*/` on separate l
 
 For promises and analogous asynchronous results, describe settlement or completion behavior when it states the purpose more directly. State distinct outcomes in separate sentences.
 
-When no project, language, or established local convention governs callable documentation, begin with a third-person present-tense verb and omit terminal punctuation from a compact summary.
+When no project, language, or established local convention governs callable documentation, begin with a third-person present tense verb and omit terminal punctuation from a compact summary.
 
 Treat the surrounding symbol, type, and nearby API as context the reader already has, especially in an editor tooltip. Avoid repeating an obvious name, host tool, artifact, parameter explanation, or return type. A comment may share a verb with the function when it still adds purpose or significance beyond the identifier.
 
@@ -26,7 +26,7 @@ Add scope, defaults, fallback, precedence, exceptions, or deprecation guidance o
 
 Preserve semantic precision even when a shorter or more familiar phrase sounds smoother. Distinctions such as current versus legacy, direct versus inherited, or shared versus owned may carry the reason a helper exists.
 
-Under the technical-copy workflow’s [composition guidance](technical-copy.md#composition), include implementation mechanics only when callers rely on them as contract. Omit cache keys, object identity, restoration steps, filtering mechanics, and similar details that merely restate the body.
+Under the technical copy workflow’s [composition guidance](technical-copy.md#composition), include implementation mechanics only when callers rely on them as contract. Omit cache keys, object identity, restoration steps, filtering mechanics, and similar details that merely restate the body.
 
 Prefer the behavioral reason for an operation when names and types already expose its mechanics. Explain compatibility, recursion prevention, delegation, or another meaningful consequence when that is the helper’s significance. Keep detail proportional to neighboring comments. A technically complete comment is still editorially wrong when it makes a small helper sound uniquely complicated.
 

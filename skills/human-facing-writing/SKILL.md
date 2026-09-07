@@ -3,7 +3,7 @@ name: human-facing-writing
 description: |-
     Draft, edit, review, and refine all human-facing writing, from short-form copy to connected prose. Use it whenever readers must follow ideas, context, reasoning, narrative, or tone.
 
-    Use it across technical surfaces such as package and repository descriptions, README and technical-document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and repository collaboration through issues, pull requests, and discussions.
+    Use it across technical surfaces such as package and repository descriptions, README and technical document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and repository collaboration through issues, pull requests, and discussions.
 
     Do not use for LICENSE text, formatting-only work, or tasks that neither evaluate nor change wording or information architecture. Agent responses are not a trigger on their own.
 ---
@@ -36,12 +36,12 @@ The result should sound like the writer, not the workflow. Preserve the writerâ€
 
 The [Writing Principles](#writing-principles) standard applies to every human-facing writing task. Load only the references the task requires.
 
-- **Connected Prose:** Load the [connected-prose workflow](references/connected-prose.md) when a reader must follow an idea across more than one atomic unit. This includes context, explanation, reasoning, causality, tradeoffs, consequences, narrative, and tone. Use it independently for nontechnical, creative, narrative, reflective, persuasive, personal, and other general writing.
-- **Technical Copy:** Load the [technical-copy overlay](references/technical-copy.md) when correctness depends on implementation or contract evidence. This includes package and repository descriptions, README and technical-document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and other technical or developer-facing strings.
+- **Connected Prose:** Load the [connected prose workflow](references/connected-prose.md) when a reader must follow an idea across more than one atomic unit. This includes context, explanation, reasoning, causality, tradeoffs, consequences, narrative, and tone. Use it independently for nontechnical, creative, narrative, reflective, persuasive, personal, and other general writing.
+- **Technical Copy:** Load the [technical copy overlay](references/technical-copy.md) when correctness depends on implementation or contract evidence. This includes package and repository descriptions, README and technical document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and other technical or developer-facing strings.
 - **Revision Rubric:** For a substantive review, difficult revision, or work involving multiple reading units, load the relevant parts of the [prose revision rubric](references/prose-revision-rubric.md).
-- **GitHub Collaboration:** Apply [Writing Principles](#writing-principles) and the technical-copy overlay to every GitHub issue, pull request, and Discussion title, body, comment, or review. Add Connected Prose whenever the reader must follow more than a single fact or action, including most bodies, comments, and reviews.
+- **GitHub Collaboration:** Apply [Writing Principles](#writing-principles) and the technical copy overlay to every GitHub issue, pull request, and Discussion title, body, comment, or review. Add Connected Prose whenever the reader must follow more than a single fact or action, including most bodies, comments, and reviews.
 
-When Connected Prose and Technical Copy both apply, Technical Copy owns factual accuracy, exact literal tokens, consistent reader-facing terminology, necessary technical distinctions, required actions, observable behavior, and document-level information architecture, including templates, headings, and section order. Connected Prose owns the reading path within that architecture, including reading-unit progression, paragraph movement, cohesion, cadence, and voice. Preserve the technical facts and structural constraints, then make the strongest prose possible within them.
+When Connected Prose and Technical Copy both apply, Technical Copy owns factual accuracy, exact literal tokens, consistent reader-facing terminology, necessary technical distinctions, required actions, observable behavior, and document-level information architecture, including templates, headings, and section order. Connected Prose owns the reading path within that architecture, including reading unit progression, paragraph movement, cohesion, cadence, and voice. Preserve the technical facts and structural constraints, then make the strongest prose possible within them.
 
 ## Editorial Boundaries
 

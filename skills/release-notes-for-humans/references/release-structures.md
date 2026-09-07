@@ -1,15 +1,15 @@
 # Release Structures
 
-Start with a flat release-note list. Use one of these structures only when it makes a material consumer decision easier to find or understand.
+Start with a flat release note list. Use one of these structures only when it makes a material consumer decision easier to find or understand.
 
 ## Status Items
 
-A status item communicates release state rather than an ordinary consumer outcome. Render its exact italicized text as one unordered-list item using the marker required by the release surface.
+A status item communicates release state rather than an ordinary consumer outcome. Render its exact italicized text as one unordered list item using the marker required by the release surface.
 
 - **Initial release:** Use `_Initial release._` only after the user confirms that the release is initial. In an initial package section within a non-initial synchronized release, use it only when the package’s exhaustive inventory contains no more specific consumer-facing item. Do not substitute unbulleted prose or an emoji-only body.
-- **No functional changes:** Use `_No functional changes._` only for a non-initial package section in a synchronized release whose exhaustive inventory contains no consumer-relevant item, including a dependency update or similar package change. A required synchronized version bump alone does not count as an item. Keep this status as the section’s only release-note item.
+- **No functional changes:** Use `_No functional changes._` only for a non-initial package section in a synchronized release whose exhaustive inventory contains no consumer-relevant item, including a dependency update or similar package change. A required synchronized version bump alone does not count as an item. Keep this status as the section’s only release note item.
 
-## Aggregate Release-Note Files
+## Aggregate Release Note Files
 
 For a file that covers one package, use `# <package> Release Notes` as the top-level heading. Put `## Unreleased` first when present. Follow it with linked `## [<version>](<release-url>)` sections in newest-first order, separating releases with `---`. Omit a version link only when no canonical release URL is available.
 
@@ -64,4 +64,4 @@ Put `Breaking Changes` first, followed by `All Packages` when needed. Then use t
 
 Use `All Packages` only for a change that applies uniformly to every package in the synchronized set. Do not repeat that change in package-specific sections.
 
-When synchronized packages must publish together, retain one section for every package in the set. Apply the [status-item rules](#status-items) when a package has no consumer-relevant item. Outside a synchronized release, having no item to list normally does not warrant a release.
+When synchronized packages must publish together, retain one section for every package in the set. Apply the [status item rules](#status-items) when a package has no consumer-relevant item. Outside a synchronized release, having no item to list normally does not warrant a release.

@@ -15,7 +15,7 @@
     - Whether any generated or modified file can enter the repository.
 - **Feasibility:** Treat a tool as feasible only when its public configuration can remain separate from secret material through an established machine-local source or external credential store.
     - **Ignored-file boundary:** A Git-ignored file qualifies as an established machine-local source only when public repository provisioning creates or adopts it without embedding secret values, restricts it to user-only access, and tracked configuration refers only to its path. Ignore status alone is insufficient.
-- **No safe route:** When no established public-safe route exists, report the tool as infeasible or ask the user to select a secret-storage boundary.
+- **No safe route:** When no established public-safe route exists, report the tool as infeasible or ask the user to select a secret storage boundary.
 
 ## Agent Documentation
 
@@ -37,7 +37,7 @@
 
 ## Scope
 
-- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication-audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-the-scope) excludes it.
+- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-the-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
 - **Symlink:** Do not analyze the contents of `home/.local/bin/git-diff-highlight` (it’s a symlink).

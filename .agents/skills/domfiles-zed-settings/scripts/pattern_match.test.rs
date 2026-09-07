@@ -1217,7 +1217,7 @@ fn reports_baseline_configuration_findings_before_candidate_findings() {
             "  The candidate settings `always_confirm[1]` pattern is not valid regex syntax\n",
             "pattern-match: 0 findings omitted\n",
         ),
-        "Every baseline finding must precede every candidate finding in settings-input order"
+        "Every baseline finding must precede every candidate finding in settings input order"
     );
 }
 
@@ -1560,7 +1560,7 @@ fn locates_a_nested_duplicate_key_in_a_configured_pattern_object() {
     for disclosure in ["case_sensitive", secret_pattern, "token-abc123"] {
         assert!(
             !stderr.contains(disclosure),
-            "A duplicate-key location must not disclose fixture data"
+            "A duplicate key location must not disclose fixture data"
         );
     }
 }
@@ -1614,7 +1614,7 @@ fn locates_a_nested_duplicate_key_in_a_layer_manifest() {
         for disclosure in [MATCHING_INPUT, "expected_match", "\"allow\""] {
             assert!(
                 !stderr.contains(disclosure),
-                "A duplicate-key location must not disclose `{disclosure}`"
+                "A duplicate key location must not disclose `{disclosure}`"
             );
         }
     }
@@ -1962,7 +1962,7 @@ fn rejects_duplicate_object_keys_in_a_comparison_manifest() {
 
     for (name, document, expected) in [
         // An empty `cases` array would fail structural validation, so the duplicate diagnostic also
-        // establishes that duplicate-key detection precedes it
+        // establishes that duplicate key detection precedes it
         (
             "root.json",
             "{\"cases\":[],\"cases\":[]}".to_owned(),
@@ -1993,7 +1993,7 @@ fn rejects_duplicate_object_keys_in_a_comparison_manifest() {
         for disclosure in ["https://example.com/", "always_allow", "\"allow\""] {
             assert!(
                 !stderr.contains(disclosure),
-                "A duplicate-key location must not disclose `{disclosure}`"
+                "A duplicate key location must not disclose `{disclosure}`"
             );
         }
     }

@@ -18,7 +18,7 @@ When `domlib` or `home/.config/fish/config.fish` is relevant, inspect both files
 
 ## Apply Domlib Reporting Rules
 
-- Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage-count grounds.
+- Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage count grounds.
 - Report unused functions or variables defined in `domlib`.
     - Do not treat a `domlib` variable as unused when it exists solely as the required counterpart to a Fish-defined variable.
 - Report every POSIX shell function prefixed with `__` when it is defined outside `domlib`.

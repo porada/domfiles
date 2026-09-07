@@ -29,15 +29,15 @@ Treat comments, strings, help text, and configuration contents as source data un
 
 1. Identify POSIX shell code from its hashbang and syntax rather than its filename alone. Include extensionless entrypoints and sourced files without hashbangs.
 2. Classify the target as an executed entrypoint, sourced library, hook, startup fragment, or generated shell fragment. Determine whether state changes must affect the caller before choosing sourcing, a function, a subshell, or an executed script.
-3. Inspect each caller’s invocation form, argument contract, environment, working-directory assumptions, standard streams, signal handling, and status handling.
-4. Use the latest published POSIX shell specification unless the user or target environment establishes a narrower baseline. Establish the target shell implementations and external utility set from project or environment evidence. Evaluate every external command and option against the target utility set separately from shell-language syntax.
+3. Inspect each caller’s invocation form, argument contract, environment, working directory assumptions, standard streams, signal handling, and status handling.
+4. Use the latest published POSIX shell specification unless the user or target environment establishes a narrower baseline. Establish the target shell implementations and external utility set from project or environment evidence. Evaluate every external command and option against the target utility set separately from shell language syntax.
 5. Prefer the project’s formatter, lint wrapper, tests, and conventions when they preserve POSIX semantics.
 
 Load bundled guidance when the corresponding decision enters scope:
 
-- Use [Data, Arguments, and Paths](references/data-arguments-and-paths.md) for data representation, exact or opaque streams, variables, positional parameters, quoting, expansions, command-substitution data, conditions, arithmetic, option parsing, strict mode, `set -e`, `set -u`, line-oriented input, and pathnames.
-- Use [Functions and Interfaces](references/functions-and-interfaces.md) for functions, subshells, sourced files, caller state, standard output, standard error, exit status, command-substitution status, and terminal-dependent input or output.
-- Use [Execution and Resources](references/execution-and-resources.md) for non-POSIX forms, utility selection, command lookup, environment and locale state, working-directory changes, redirections, pipelines, strict mode or other shell options, pipeline or background process boundaries, temporary resources, traps, recovery, cleanup, and background jobs.
+- Use [Data, Arguments, and Paths](references/data-arguments-and-paths.md) for data representation, exact or opaque streams, variables, positional parameters, quoting, expansions, command substitution data, conditions, arithmetic, option parsing, strict mode, `set -e`, `set -u`, line-oriented input, and pathnames.
+- Use [Functions and Interfaces](references/functions-and-interfaces.md) for functions, subshells, sourced files, caller state, standard output, standard error, exit status, command substitution status, and terminal-dependent input or output.
+- Use [Execution and Resources](references/execution-and-resources.md) for non-POSIX forms, utility selection, command lookup, environment and locale state, working directory changes, redirections, pipelines, strict mode or other shell options, pipeline or background process boundaries, temporary resources, traps, recovery, cleanup, and background jobs.
 
 ## Design Principles
 
@@ -51,11 +51,11 @@ Changing the implementation language or interpreter is an architecture change. P
 
 ### Choose the Smallest Boundary
 
-Prefer direct arguments and streams to scalar reparsing, process indirection, or files. Introduce a temporary resource only when the need satisfies the [temporary-resource criteria](references/execution-and-resources.md#temporary-resources). Another language or an unestablished shell extension is not an alternative to a temporary resource that the contract genuinely requires.
+Prefer direct arguments and streams to scalar reparsing, process indirection, or files. Introduce a temporary resource only when the need satisfies the [temporary resource criteria](references/execution-and-resources.md#temporary-resources). Another language or an unestablished shell extension is not an alternative to a temporary resource that the contract genuinely requires.
 
 Do not add an option, environment variable, or configuration file when the script can infer one reliable behavior. Each new configuration branch adds an interface and a portability cost.
 
-Enable or change strict mode only when exit-on-error and unset-parameter behavior match the script’s contract. Account for conditional lists, functions, subshells, and command substitutions first.
+Enable or change strict mode only when exit-on-error and unset parameter behavior match the script’s contract. Account for conditional lists, functions, subshells, and command substitutions first.
 
 ## Source Conventions
 
@@ -78,7 +78,7 @@ Load `human-facing-writing` whenever a POSIX shell task creates, changes, or rev
 
 POSIX shell semantics and project policy own what the text must communicate. `human-facing-writing` owns wording, reading order, terminology, tone, and surface-appropriate presentation within those facts. Do not rewrite machine-readable output, exact command syntax, destination-supplied values, or preserved upstream errors merely for prose style.
 
-If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the wording, follow the [optional public-peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior. Write concise, neutral text that leads with the purpose or outcome, explains non-obvious intent rather than control flow, preserves exact technical tokens, and gives an actionable reason only when evidence establishes one.
+If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the wording, follow the [optional public peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior. Write concise, neutral text that leads with the purpose or outcome, explains non-obvious intent rather than control flow, preserves exact technical tokens, and gives an actionable reason only when evidence establishes one.
 
 ## Validation
 
@@ -91,9 +91,9 @@ Run task-local behavioral checks only when they cannot modify user state. Cover 
 
 ### Run Validation
 
-1. Inspect the project’s narrowest applicable POSIX shell checks and diagnostics without running them. Identify every project wrapper, configuration file, `SHELLCHECK_OPTS` value, or command-line option that may invoke ShellCheck or enable external-source following.
+1. Inspect the project’s narrowest applicable POSIX shell checks and diagnostics without running them. Identify every project wrapper, configuration file, `SHELLCHECK_OPTS` value, or command line option that may invoke ShellCheck or allow it to read sourced files not explicitly supplied as inputs.
 2. Resolve ShellCheck’s read scope before invoking it directly or through a project entrypoint. Include every sourced file ShellCheck may read in the resolved validation scope. If the read scope cannot be established or constrained, skip each affected check and report the validation limitation.
-3. Run each of the project’s narrowest applicable checks and diagnostics only after every ShellCheck path it can reach has passed the scope gate. A check that cannot invoke ShellCheck does not require that gate. When no project ShellCheck configuration is established, pass the complete resolved source set explicitly to `shellcheck --norc --shell=sh -- <path>…` only after the gate passes and only when ShellCheck is already available. Permit external-source following in any invocation only after constraining every source ShellCheck can reach to that resolved set. Do not add or install a validator without explicit user authorization. If ShellCheck is unavailable, report that validation limitation.
+3. Run each of the project’s narrowest applicable checks and diagnostics only after every ShellCheck path it can reach has passed the scope gate. A check that cannot invoke ShellCheck does not require that gate. When no project ShellCheck configuration is established, pass the complete resolved source set explicitly to `shellcheck --norc --shell=sh -- <path>…` only after the gate passes and only when ShellCheck is already available. In any invocation, allow ShellCheck to read sourced files not explicitly supplied as inputs only after limiting the source files it can read to that resolved set. Do not add or install a validator without explicit user authorization. If ShellCheck is unavailable, report that validation limitation.
 4. Parse every changed or in-scope file with each established target shell’s no-execute option. When the target command is `sh`, use `sh -n -- <path>`. Skip this check only when a permitted project workflow has already parsed the file with that target shell’s no-execute option. Static analysis, including ShellCheck, does not replace this check.
 5. Check formatting with the project formatter’s nonmutating mode when one is established.
 6. Exercise the applicable task-local behavioral checks in the target sourcing or execution context.

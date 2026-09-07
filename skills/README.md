@@ -58,6 +58,7 @@ Global installation is recommended for the best experience. Both [`skills`](http
 
 - [**posix-shell-scripting**](posix-shell-scripting)
 - [**release-notes-for-humans**](release-notes-for-humans)
+- [**sensible-commit-flow**](sensible-commit-flow)
 - [**simple-github-cli**](simple-github-cli)
 
 The `.domfiles-*` skills are tied to this repository’s [configuration](../home). They aren’t ready for standalone installation.

@@ -14,7 +14,7 @@ Use this table to distinguish portable forms from target-gated extensions. The r
 | Combined redirection | `>file 2>&1` | `&>` |
 | Conditions | `[ … ]`, `test`, or `case` | `[[ … ]]` |
 | Function declaration | `name() { …; }` | `function name` |
-| Function-state isolation | A subshell-bodied function | `local` |
+| Function state isolation | A subshell-bodied function | `local` |
 | Generated input | A pipe or redirection | Here-strings or process substitution |
 | Load shell code | `.` | `source` |
 | Mutable argument vector | `set --` and `"$@"` | Arrays |
@@ -25,13 +25,13 @@ A feature’s presence in a newer POSIX edition does not establish its availabil
 
 ## Utility Selection
 
-Prefer parameter expansion, `case`, and arithmetic expansion when their exact edge-case semantics match the operation. Use an established external utility when its documented behavior is the required interface. Do not replace clear shell logic mechanically. Likewise, do not force structured parsing, binary processing, or a complex algorithm into shell merely to avoid a suitable established tool.
+Prefer parameter expansion, `case`, and arithmetic expansion when their exact edge case semantics match the operation. Use an established external utility when its documented behavior is the required interface. Do not replace clear shell logic mechanically. Likewise, do not force structured parsing, binary processing, or a complex algorithm into shell merely to avoid a suitable established tool.
 
 Use `command -v <name>` when any command selected by normal shell resolution may satisfy the dependency, then invoke `<name>` normally. When an alias or function must be bypassed, invoke `command <name>` and handle that invocation’s status instead of treating `command -v` as a matching preflight. `command` may still select a built-in, so it is not an external-only resolver.
 
 Do not reset `PATH` indiscriminately. Doing so can hide intentionally installed dependencies.
 
-Before a programmatic `cd`, reject an empty operand. Preserve absolute paths and explicit relative paths beginning with `./` or `../`. Prefix every other relative path with `./` so option-like names and `-` remain directory operands. Invoke `CDPATH='' cd "$directory"` to disable directory search and emitted path output. Add `-P` only when the interface requires physical-path behavior.
+Before a programmatic `cd`, reject an empty operand. Preserve absolute paths and explicit relative paths beginning with `./` or `../`. Prefix every other relative path with `./` so option-like names and `-` remain directory operands. Invoke `CDPATH='' cd "$directory"` to disable directory search and emitted path output. Add `-P` only when the interface requires physical path behavior.
 
 Scope `LC_ALL=C` to commands that deliberately need bytewise sorting, matching, or character classes. Do not change user-facing behavior globally.
 
@@ -93,4 +93,4 @@ Capture `$!` immediately after each background command. Wait for every recorded 
 
 ## Official Sources
 
-The [POSIX Shell Command Language](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html) defines expansion, execution, functions, pipelines, and shell state. The [Utility Syntax Guidelines](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html) define the option conventions that individual utilities may adopt. Use each utility’s POSIX reference together with target implementation evidence before relying on its options or edge-case behavior.
+The [POSIX Shell Command Language](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html) defines expansion, execution, functions, pipelines, and shell state. The [Utility Syntax Guidelines](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html) define the option conventions that individual utilities may adopt. Use each utility’s POSIX reference together with target implementation evidence before relying on its options or edge case behavior.

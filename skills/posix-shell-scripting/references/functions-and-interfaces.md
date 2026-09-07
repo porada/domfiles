@@ -4,7 +4,7 @@ Choose each function, sourcing, and process boundary according to the state and 
 
 ## Function State
 
-POSIX does not define `local`. Use a subshell-bodied function when assignments, directory changes, shell options, traps, file descriptors, or the file-creation mask must not affect the caller.
+POSIX does not define `local`. Use a subshell-bodied function when assignments, directory changes, shell options, traps, file descriptors, or the file creation mask must not affect the caller.
 
 `exit` executed while a subshell-bodied function’s own subshell is the active execution environment terminates that function subshell. On direct invocation of the function, the resulting status returns to its caller, whose own error handling may still terminate the caller’s shell. An `exit` in a nested subshell or command substitution terminates only that nested environment. This containment describes process behavior and does not create an exception to the function-level [output and status rule](#output-and-status).
 
@@ -41,7 +41,7 @@ Use `.`, not `source`. A sourceable file should normally define functions and do
 
 Separate reusable library definitions from an executable entrypoint when combining them would require a nonportable test for whether the file was sourced or executed.
 
-Do not assume `$0` identifies the entrypoint file. When `sh` finds a slashless command file through `PATH`, POSIX still sets `$0` to the original command-file operand. Establish the library location through an installation contract, a caller-provided interface, or an invocation contract that guarantees `$0` denotes the actual file. Define the contract’s symlink behavior as well.
+Do not assume `$0` identifies the entrypoint file. When `sh` finds a slashless command file through `PATH`, POSIX still sets `$0` to the original command file operand. Establish the library location through an installation contract, a caller-provided interface, or an invocation contract that guarantees `$0` denotes the actual file. Define the contract’s symlink behavior as well.
 
 ShellCheck’s static source route serves a different consumer. Add one only after the source belongs to the resolved validation scope, and keep it aligned with the runtime location contract.
 
@@ -96,8 +96,8 @@ Never use an externally influenced value as the format string.
 
 ## Terminal Destinations
 
-Test the file descriptor whose behavior will change. Use `[ -t 0 ]` for standard-input decisions, `[ -t 1 ]` for standard-output decisions, and `[ -t 2 ]` for diagnostics. One terminal descriptor does not imply that either of the others also refers to a terminal.
+Test the file descriptor whose behavior will change. Use `[ -t 0 ]` for standard input decisions, `[ -t 1 ]` for standard output decisions, and `[ -t 2 ]` for diagnostics. One terminal descriptor does not imply that either of the others also refers to a terminal.
 
-Use a terminal test only when the script itself changes behavior. Gate script-controlled standard-output paging, color, and terminal-fit calculations on `[ -t 1 ]`. Do not duplicate a command’s own automatic terminal behavior.
+Use a terminal test only when the script itself changes behavior. Gate script-controlled standard output paging, color, and terminal-fit calculations on `[ -t 1 ]`. Do not duplicate a command’s own automatic terminal behavior.
 
-When standard output is not a terminal, avoid terminal-size queries that cannot improve the redirected result.
+When standard output is not a terminal, avoid terminal size queries that cannot improve the redirected result.

@@ -4,13 +4,13 @@
 
 Check the tools actually exposed in the current session, including `create_thread`, and use their schemas to determine which creation actions they support. Do not infer availability merely because Zed supports the feature. Follow [Recognize Conversation Handoffs](#recognize-conversation-handoffs) before selecting an operation that also starts a conversation.
 
-Use an available native operation that preserves Zed’s managed lifecycle. If no exposed tool supports the authorized creation, identify the missing tool or capability as a limitation of this session and request the smallest necessary Zed UI action, using the title-bar worktree picker (`git: worktree`) for checkout creation. Do not substitute raw Git creation, even beneath Zed’s managed directory, because the resulting checkout would lack Zed’s creation record.
+Use an available native operation that preserves Zed’s managed lifecycle. If no exposed tool supports the authorized creation, identify the missing tool or capability as a limitation of this session and request the smallest necessary Zed UI action, using the title bar worktree picker (`git: worktree`) for checkout creation. Do not substitute raw Git creation, even beneath Zed’s managed directory, because the resulting checkout would lack Zed’s creation record.
 
 Use Zed’s configured worktree location, generated name, and default starting ref unless the user specifies otherwise or the task requires a particular revision. The location comes from the global `git.worktree_directory` setting. Do not supply a custom name merely to impose a task slug or branch naming scheme. Confirm the starting ref when it matters to the task rather than assuming every creation interface has the same default.
 
 New Zed worktrees start detached, so beginning edits or validation does not require creating a branch. A fresh checkout contains the selected committed state, not the original checkout’s staged, unstaged, or untracked files. Leave those files untouched unless the task authorizes a bounded transfer.
 
-After creation, follow the entrypoint’s [existing-worktree entry checks](../SKILL.md#enter-an-existing-worktree) before editing. Creating a worktree does not by itself establish that the current conversation now operates there.
+After creation, follow the entrypoint’s [existing worktree entry checks](../SKILL.md#enter-an-existing-worktree) before editing. Creating a worktree does not by itself establish that the current conversation now operates there.
 
 ## Recognize Conversation Handoffs
 

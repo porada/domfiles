@@ -20,7 +20,7 @@ Choose the boundary that preserves the contract rather than the one that makes t
 
 ## Argument Vectors
 
-Treat `"$@"` as the shell’s argument-vector container. It expands to one field per positional parameter and preserves empty arguments. Quoted `"$*"` joins the parameters into one field using the first character of `IFS`. Unquoted `$@` and `$*` perform field splitting and pathname expansion, so they cannot preserve the original vector.
+Treat `"$@"` as the shell’s argument vector container. It expands to one field per positional parameter and preserves empty arguments. Quoted `"$*"` joins the parameters into one field using the first character of `IFS`. Unquoted `$@` and `$*` perform field splitting and pathname expansion, so they cannot preserve the original vector.
 
 Build a command and its arguments with `set --`, then execute `"$@"`. Do not store a command or argument list in a scalar, reconstruct one through unquoted expansion, or use `eval` to recover boundaries that the representation has already discarded.
 
@@ -73,7 +73,7 @@ done
 
 Use a separate rebuilding pass when arguments must be removed, inserted, or reordered. Record the original argument count before shifting or appending, process only that many original arguments, then execute the rebuilt vector. Without that boundary, an appended argument can be mistaken for original input.
 
-Validate positional cardinality before assigning required parameters. Leave `$#` unquoted in numeric tests. Own one mutable positional-parameter vector at a time. A function invocation temporarily replaces the positional parameters and restores the caller’s parameters when it returns, so an ordinary helper function can use `set --` without adding a process boundary.
+Validate positional cardinality before assigning required parameters. Leave `$#` unquoted in numeric tests. Own one mutable positional parameter vector at a time. A function invocation temporarily replaces the positional parameters and restores the caller’s parameters when it returns, so an ordinary helper function can use `set --` without adding a process boundary.
 
 ## Parameter Validation
 
@@ -88,7 +88,7 @@ The operator controls both the trigger and the result. Adding `:` expands the tr
 
 Use `${optional-}` when absence is valid under `set -u`. Quote parameter expansions and command substitutions unless field splitting or pathname expansion is both intentional and bounded. Use double quotes where expansion may occur and single quotes for literals that would otherwise require escaping. Treat every unquoted expansion as an explicit parsing operation.
 
-Do not encode a list in a space- or newline-delimited scalar. It cannot preserve empty elements, and its result depends on `IFS` and pathname expansion. Restrict an `IFS` change to the smallest applicable scope when a loop list comes from an unquoted parameter expansion, command substitution, or arithmetic expansion. Literal words and pathname-expansion results do not require that change.
+Do not encode a list in a space- or newline-delimited scalar. It cannot preserve empty elements, and its result depends on `IFS` and pathname expansion. Restrict an `IFS` change to the smallest applicable scope when a loop list comes from an unquoted parameter expansion, command substitution, or arithmetic expansion. Literal words and pathname expansion results do not require that change.
 
 ## Conditions and Arithmetic
 
@@ -96,7 +96,7 @@ Put a command directly in `if`, `while`, or `until` when its status is the condi
 
 Do not create an `if`, `elif`, or loop branch solely to hold a no-op command. Prefer a negated condition or an early `continue`, `return`, or `exit` so each remaining branch performs required work while preserving the [output and status contract](functions-and-interfaces.md#output-and-status). Empty `case` arms may represent accepted patterns without a command.
 
-When shell grammar genuinely requires a no-op command, use `true` for success or `false` for failure instead of `:`. Account for `false` under `set -e`. Reserve `:` for parameter-expansion or redirection side effects.
+When shell grammar genuinely requires a no-op command, use `true` for success or `false` for failure instead of `:`. Account for `false` under `set -e`. Reserve `:` for parameter expansion or redirection side effects.
 
 Use `case` for patterns, enumerated values, and numeric validation. Validate both the syntax and the target-supported range before arithmetic expansion. This example accepts decimal values from `0` through `999` without leading zeros, leaving room for the increment to produce `1000`:
 

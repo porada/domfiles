@@ -6,7 +6,7 @@ When a script belongs to a portable skill—one installed for use across target 
 
 ## Design the Smallest Sufficient Contract
 
-The optimal contract is the least complex one that completely serves its named consumers within the declared operating model. Apply this gate before implementing a new script or materially expanding an existing script. A material expansion adds a dependency, durable artifact, input schema, mutation-authorizing decision, observable failure or status behavior, operation mode, or side effect. A fix reuses the accepted contract without reopening design when it only restores conformance to that contract and adds none of those material-expansion elements.
+The optimal contract is the least complex one that completely serves its named consumers within the declared operating model. Apply this gate before implementing a new script or materially expanding an existing script. A material expansion adds a dependency, durable artifact, input schema, mutation-authorizing decision, observable failure or status behavior, operation mode, or side effect. A fix reuses the accepted contract without reopening design when it only restores conformance to that contract and adds none of those material expansion elements.
 
 1. **Establish necessity.** Name the recurring consumer and the single job the script must perform. First attempt to remove the script, use an existing repository workflow, or use a bounded direct tool sequence. Do not create a script for a one-time transition or merely to encode review preferences.
 2. **Draft only the observable contract.** Define its authority, concurrency and threat model, failure boundaries, inputs, non-goals, outputs, side effects, and statuses. Do not select dependencies or internal architecture yet.
@@ -14,7 +14,7 @@ The optimal contract is the least complex one that completely serves its named c
 4. **Choose the smallest sufficient design.** Proceed only when no simpler design satisfies the established requirements. If the adversarial pass turns a small helper into a general framework, protocol, or transactional system, stop and return to the direct workflow or narrow the requirement before implementation.
 5. **Freeze the accepted contract for implementation.** Implementation and review verify conformance to that contract. Reopen design only when new evidence invalidates an accepted assumption. A hypothetical case outside the declared operating model does not expand the contract.
 
-Use one adversarial pass and, after any revision, one focused check of the changed contract. Do not begin an open-ended design-review loop. Ask the user only when two materially different designs remain viable. Otherwise choose the smallest reversible design autonomously, while following every standing approval gate.
+Use one adversarial pass and, after any revision, one focused check of the changed contract. Do not begin an open-ended design review loop. Ask the user only when two materially different designs remain viable. Otherwise choose the smallest reversible design autonomously, while following every standing approval gate.
 
 Keep rejected alternatives and adversarial notes in task context. Document only the accepted observable contract and non-obvious rationale.
 
@@ -22,21 +22,21 @@ Keep rejected alternatives and adversarial notes in task context. Document only 
 
 Treat these elements as the script’s observable interface:
 
-- Accepted arguments, defaults, documented environment inputs, required arguments, and target-selection rules.
+- Accepted arguments, defaults, documented environment inputs, required arguments, and target selection rules.
 - Authorization requirements, credential sources, network access, and read and write effects.
 - Compatibility guarantees, input manifests, machine-readable schemas, and produced artifacts.
 - Executable and operation names.
-- Exit-status meanings and standard-error and standard-output behavior.
+- Exit status meanings and standard error and standard output behavior.
 
 Document the complete interface in the owning skill at the decision that invokes the script. Keep command help consistent with that documentation, and cover the contract with adjacent tests.
 
 Once documented, every interface element is compatibility-sensitive. A change is breaking when it:
 
-- **Arguments:** Changes a default, documented environment input, or target-selection rule, makes an optional argument required, or removes or renames an accepted argument.
-- **Artifacts:** Alters an artifact destination, compatibility guarantee, input-manifest schema, or machine-readable schema meaning.
+- **Arguments:** Changes a default, documented environment input, or target selection rule, makes an optional argument required, or removes or renames an accepted argument.
+- **Artifacts:** Alters an artifact destination, compatibility guarantee, input manifest schema, or machine-readable schema meaning.
 - **Effects:** Expands or changes authorization requirements, credential sources, network access, or read or write effects.
 - **Executables and operations:** Removes or renames an executable or operation.
-- **Streams and statuses:** Changes an exit-status meaning, machine-consumed output, standard-error assignment, or standard-output assignment.
+- **Streams and statuses:** Changes an exit status meaning, machine-consumed output, standard error assignment, or standard output assignment.
 
 A new optional argument or operation is compatible only when existing invocations retain their behavior. Human-facing wording may evolve without compatibility treatment unless the owning skill or an exact-string consumer declares it stable.
 
@@ -57,14 +57,14 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 
 - Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`. Follow the [filename contract](#resolve-file-names) for every pair.
 - Let the skill own the source, tests, purpose, invocation, operation routes, artifact contract, and repair workflow.
-- Let the repository root own toolchain configuration, dependencies and host-language type packages, static validation, optional Cargo integration, and repository build-output policy.
+- Let the repository root own toolchain configuration, dependencies and host language type packages, static validation, optional Cargo integration, and repository build output policy.
 - Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
 
 Root ownership assumes the script runs inside its canonical repository. A skill installed for use outside that repository keeps that ownership by running from its host rather than from the installed path.
 
 ## Change Protected Scripts
 
-Before changing a skill-owned script within a protected skill tree, follow the [protected skill mutation policy](protected-skill-mutation.md), which defines those trees and selects the applicable route. For a staged change, keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts`, and promote only the reviewed staging unit. Scripts elsewhere under root `skills` use the ordinary direct-edit workflow. Do not apply protected-skill staging to them merely because `domfiles sync` exposes them through global symlinks.
+Before changing a skill-owned script within a protected skill tree, follow the [protected skill mutation policy](protected-skill-mutation.md), which defines those trees and selects the applicable route. For a staged change, keep scripts, helpers, adjacent tests, and fixtures under `<staging>/editable/<skill>/scripts`, and promote only the reviewed staging unit. Scripts elsewhere under root `skills` use the ordinary direct edit workflow. Do not apply protected skill staging to them merely because `domfiles sync` exposes them through global symlinks.
 
 ## Make the Interface Discoverable
 
@@ -90,7 +90,7 @@ Every filesystem write must remain within one of these authorized categories:
 
 Do not repurpose a location merely because it is ignored. Never modify `.gitignore` while running the script, and do not add an ignore rule solely to accommodate script-specific output. If repository-wide toolchain output exposes a missing ignore policy, handle that as a separate repository configuration change under the current task’s authorization.
 
-For ephemeral artifacts, follow the global “Temporary Files” policy. Accept the resolved task-specific destination from the caller instead of establishing a separate temporary-output convention.
+For ephemeral artifacts, follow the global “Temporary Files” policy. Accept the resolved task-specific destination from the caller instead of establishing a separate temporary output convention.
 
 Before writing:
 
@@ -136,7 +136,7 @@ For standard-library-only Rust scripts:
 When a Rust script requires a non-standard-library dependency:
 
 - Use Cargo through an existing repository-owned tooling package or, when the current task authorizes it, one shared tooling package for skill-owned scripts.
-- Let a root package own the targets in a package-root workspace. In a virtual workspace, let a package member own them because the virtual manifest cannot define targets.
+- Let a root package own the targets in a package root workspace. In a virtual workspace, let a package member own them because the virtual manifest cannot define targets.
 - Use repository-unique, skill-qualified target names and the repository’s normal shared Cargo target directory. Do not override `CARGO_TARGET_DIR` merely to isolate a script.
 - Keep target registration and applicable root manifests committed, follow the repository’s lockfile policy, and keep generated `target/` contents ignored and uncommitted.
 
@@ -147,7 +147,7 @@ Give every script and adjacent test the same filename stem, adding only the reso
 1. Preserve an explicit user-selected path or applicable project instruction for the current pair. Treat it as a broader convention only when the user or project policy says so.
 2. Follow an existing script-and-test pair in the same skill unless it is documented as exceptional.
 3. Treat a pattern shared by at least two project-authored skills as cross-skill precedent.
-4. Derive the stem style from repository-owned standalone scripts and executable helpers. Derive test-suffix placement from sidecar tests, including tests written in another language. Treat a single pair from another skill as supporting evidence rather than an automatic winner. When applicable patterns conflict, prefer files with the same role and closest scope, then ask only when equally applicable evidence remains unresolved.
+4. Derive the stem style from repository-owned standalone scripts and executable helpers. Derive test suffix placement from sidecar tests, including tests written in another language. Treat a single pair from another skill as supporting evidence rather than an automatic winner. When applicable patterns conflict, prefer files with the same role and closest scope, then ask only when equally applicable evidence remains unresolved.
 5. When no repository pattern governs the pair, use the portable fallback `script-name.<extension>` and `script-name.test.<extension>`.
 
 Treat skill-owned scripts as repository tooling rather than ordinary language modules. Do not infer language-native filenames merely from a manifest, package, or file extension. Use a language-native alternative only when existing repository files, explicit project policy, or a tooling constraint requires it. The presence of Cargo alone does not establish Rust-native filename conventions.

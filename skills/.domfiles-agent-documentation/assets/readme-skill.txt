@@ -1,4 +1,4 @@
-[![](https://skills.sh/b/<owner>/<repository>)](https://www.skills.sh/<owner>/<repository>/<skill-name>)
+[![](https://skills.sh/b/porada/domfiles)](https://www.skills.sh/porada/domfiles/<skill-name>)
 
 # <skill-name>
 
@@ -7,13 +7,13 @@
 ## Install
 
 ```sh
-npx skills add <owner>/<repository> --skill <skill-name>
+npx skills add porada/domfiles --skill <skill-name>
 ```
 
 ```sh
-gh skill install <owner>/<repository> <skill-name>
+gh skill install porada/domfiles <skill-name>
 ```
 
 ## License
 
-<license-attribution>
+MIT © [Dom Porada](https://dom.engineering)

@@ -53,11 +53,13 @@ Distinguish accidental opacity from intentional ambiguity, complexity, or delaye
 
 Watch for vague references, stacked abstraction, inflated transitions, cleverness that obscures meaning, or brevity that makes a complex thought falsely simple.
 
+Look for abstract role names, actions expressed as nouns, and modifiers with an unstated reference point. Check whether these constructions leave readers to infer information the sentence needs to state.
+
 ### 7. Rhythm, Pacing, and Emphasis
 
 Observe how adjacent sentences gather, release, repeat, answer, or turn. Notice how the prose moves among claims, examples, scenes, calculations, dialogue, and inference. Judge sentence and paragraph length, fragments, lists, questions, and emphasis by their effect in context.
 
-Watch for unrelenting staccato, unbroken density, sentence-length variation that leaves every sentence performing the same explanatory job, or paragraphs that repeatedly orient, explain, and recap as self-contained units.
+Watch for unrelenting staccato, unbroken density, sentence length variation that leaves every sentence performing the same explanatory job, or paragraphs that repeatedly orient, explain, and recap as self-contained units.
 
 Also watch for repeated syntax that neither develops the thought nor earns a purposeful break, lists used as default structure, repetition that performs no meaningful semantic, rhythmic, emotional, or structural work, or emphasis that replaces hierarchy and reasoning.
 

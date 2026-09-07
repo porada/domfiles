@@ -92,13 +92,13 @@ Load `human-facing-writing` whenever a Fish task creates, changes, or reviews hu
 
 Fish semantics and project policy own what the text must communicate. `human-facing-writing` owns wording, reading order, terminology, tone, and surface-appropriate presentation within those facts. Do not rewrite machine-readable output, exact command syntax, destination-supplied values, or preserved upstream errors merely for prose style.
 
-If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the wording, follow the [optional public-peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior. Write concise, neutral text that leads with the purpose or outcome, explains non-obvious intent rather than control flow, preserves exact technical tokens, and gives an actionable reason only when evidence establishes one.
+If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the wording, follow the [optional public peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior. Write concise, neutral text that leads with the purpose or outcome, explains non-obvious intent rather than control flow, preserves exact technical tokens, and gives an actionable reason only when evidence establishes one.
 
 ## Validation
 
 Run behavioral checks only when they cannot modify user state. Cover empty and multi-element lists, paths containing whitespace, newline-bearing values and command output, failed commands, unmatched globs, and option boundaries when those cases matter.
 
-When a standalone target must not depend on startup configuration, exercise it under `fish --no-config` and its normal target context. Treat this as a configuration-independence check rather than a hermetic environment.
+When a standalone target must not depend on startup configuration, exercise it under `fish --no-config` and its normal target context. Treat this as a configuration independence check rather than a hermetic environment.
 
 For configuration, prompts, completions, and events, validate the relevant interactive, noninteractive, login, autoload, or event-loading context without persisting universal variables or overwriting user configuration.
 
@@ -113,7 +113,7 @@ For configuration, prompts, completions, and events, validate the relevant inter
 2. Parse each script in the validation scope with `fish --no-config --no-execute <path>` when the project workflow does not already do so.
 3. Check formatting with the project formatter’s check mode or `fish_indent --check <path>` when no project formatter is established.
 4. Exercise the relevant behavioral checks above.
-5. Recheck every function in the validation scope against the [function-documentation contract](#function-documentation) and every human-facing string in that scope under the [human-facing text contract](#human-facing-text).
+5. Recheck every function in the validation scope against the [function documentation contract](#function-documentation) and every human-facing string in that scope under the [human-facing text contract](#human-facing-text).
 
 ## General Policies
 

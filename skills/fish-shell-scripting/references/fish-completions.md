@@ -12,7 +12,7 @@ Choose the registration target that matches how Fish resolves the completed comm
 
 Model every option and operand from the target command’s verified interface. Represent short, GNU-style long, and old-style options accurately, distinguishing required arguments, optional arguments, and positional operands. Use a condition only when applicability depends on state evaluated at completion time, such as the current command line, variables, command availability, or the filesystem, and keep each condition quiet and fast.
 
-Disable or force file completion deliberately because custom candidates do not disable file candidates by themselves. Use wrapped-command completion only for a command-name target whose relevant interface matches the delegated command. Fish ignores wrapping for `complete --path`.
+Disable or force file completion deliberately because custom candidates do not disable file candidates by themselves. Use wrapped command completion only for a command name target whose relevant interface matches the delegated command. Fish ignores wrapping for `complete --path`.
 
 Descriptions supplied to `complete` are human-facing technical copy. Apply the [human-facing text contract](../SKILL.md#human-facing-text) and use the target command’s help terminology.
 
@@ -41,7 +41,7 @@ Use `string`, `path`, and list operations to transform candidate data instead of
 ## Validation
 
 - Exercise representative command lines with `complete --do-complete`, including empty input, partial options, `--`, option arguments, and paths containing whitespace.
-- Confirm that descriptions, conditions, file-completion behavior, and wrapped-command behavior match the target command.
+- Confirm that descriptions, conditions, file completion behavior, and wrapped command behavior match the target command.
 - Check interactive latency when candidate generation runs external commands.
 
 ## Official Sources

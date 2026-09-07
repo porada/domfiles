@@ -20,7 +20,7 @@ Use this path for an existing worktree rather than repeating its creation or ori
 1. Confirm that active tools target the intended repository and linked worktree, not the primary checkout or another worktree. Verify registration with `git --no-pager worktree list --porcelain`.
 2. Read this checkout’s applicable instructions and inspect its state under the global **Concurrent work** rule. Record `HEAD` and its branch or detached state, and confirm the starting revision when the task depends on it. Do not assume the checkout is untouched.
 3. Keep the existing branch or detached state, location, and name unless the task authorizes a change. Detached `HEAD` alone is not a reason to create a branch. Do not transfer state from another checkout without bounded task authorization.
-4. Before commit-related staging or creating commits, follow `commit`, which applies the global **Commit gate**.
+4. Before commit-related staging or creating commits, follow `commit-flow`, which applies the global **Commit gate**.
 
 ## Decide Whether to Isolate
 
@@ -36,7 +36,7 @@ Use this path for an existing worktree rather than repeating its creation or ori
 
 Before a worktree lifecycle operation, resolve who manages or will manage the checkout from established task context or available evidence. If ownership remains unclear, ask before that operation. Neither a directory name nor its presence in an editor proves which tool manages it. Recheck Git registration when an administration decision depends on it.
 
-When Zed owns or will create the worktree, follow [Zed Worktrees](references/zed-worktrees.md) for every lifecycle operation. Prefer this workflow for tasks using Zed. The creation, administration, and dismantling sections below apply only to explicitly selected direct Git management, not as a fallback for an unavailable native operation. [Integration](#integrate-changes) applies to both direct-Git and Zed-managed worktrees.
+When Zed owns or will create the worktree, follow [Zed Worktrees](references/zed-worktrees.md) for every lifecycle operation. Prefer this workflow for tasks using Zed. The creation, administration, and dismantling sections below apply only to explicitly selected direct Git management, not as a fallback for an unavailable native operation. [Integration](#integrate-changes) applies to both direct Git and Zed-managed worktrees.
 
 Checkout isolation does not authorize starting another conversation. If proceeding requires an independent conversation handoff, use `agent-task-relay` for confirmation and assignment composition, carrying the resolved isolation decision into that workflow. For Zed, follow [Recognize Conversation Handoffs](references/zed-worktrees.md#recognize-conversation-handoffs) for native creation and delivery after confirmation.
 
@@ -48,15 +48,15 @@ Checkout isolation does not authorize starting another conversation. If proceedi
 
 ## Administer a Worktree
 
-- **Repository targeting:** Run direct Git worktree-administration commands from the primary checkout unless the command requires another location.
-- **Relocation:** For a task-authorized move, apply the global **Concurrent work** and **Recoverability** policies to the source and destination. Preserve the checkout’s `HEAD`, index, and working-tree state, including ignored and untracked files. Use `git worktree move` without replacing existing destination state, then verify the preserved state and updated Git registration. A state-preserving relocation does not require integration or abandonment.
+- **Repository targeting:** Run direct Git worktree administration commands from the primary checkout unless the command requires another location.
+- **Relocation:** For a task-authorized move, apply the global **Concurrent work** and **Recoverability** policies to the source and destination. Preserve the checkout’s `HEAD`, index, and working tree state, including ignored and untracked files. Use `git worktree move` without replacing existing destination state, then verify the preserved state and updated Git registration. A state-preserving relocation does not require integration or abandonment.
 
 ## Integrate Changes
 
 Use this workflow for task-authorized integration into another branch. Integrating commits does not administer the worktree or require resolving its lifecycle owner.
 
 1. Identify the source checkout, intended changes, and destination branch and checkout. Inspect both checkouts for existing changes and unfinished Git operations. Preserve unrelated state under the global **Concurrent work** policy. Do not mix integration with a Git operation already in progress.
-2. Identify the exact source commits and confirm that their changes fit the authorized scope. Detached `HEAD` does not require creating a branch, and linked worktrees share commit objects. Follow `commit` before any commit-producing operation, including committing source changes, cherry-picking, or a non-fast-forward merge. A fast-forward creates no new commits.
+2. Identify the exact source commits and confirm that their changes fit the authorized scope. Detached `HEAD` does not require creating a branch, and linked worktrees share commit objects. Follow `commit-flow` before any commit-producing operation, including committing source changes, cherry-picking, or a non-fast-forward merge. A fast-forward creates no new commits.
 3. Run integration from the destination checkout on the selected branch. Prefer a fast-forward when the destination tip is an ancestor of the source tip and every intervening commit is in scope. Otherwise, resolve whether to merge the source history or cherry-pick selected commits in dependency order. Ask when the requested history outcome does not settle that choice.
 4. Resolve integration conflicts within the authorized scope, then validate the combined result and verify that every intended change reached the destination. Keep the source worktree available until verification is complete. Integration alone does not authorize branch or worktree cleanup, and the global **Git publication** prohibition still applies. When cleanup is separately requested, follow [Select the Lifecycle](#select-the-lifecycle).
 

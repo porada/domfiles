@@ -86,7 +86,7 @@ pub(crate) const HELP: &str = concat!(
     "Limitations:\n",
     "  Every selected file is read once. Nothing is written, no configuration is read from the environment, no request is made, no settings are discovered, and no case input is executed\n",
     "  Results establish the configured fetch layer of the selected files only. They do not establish Zed settings discovery or layering, redirect handling, sandbox host authorization, prompt display, or runtime network access\n",
-    "  A verified comparison establishes the declared corpus rather than formal regex-language equivalence\n",
+    "  A verified comparison establishes the declared corpus rather than formal regex language equivalence\n",
     "\n",
     "Exit statuses:\n",
     "  0  Every configured pattern and declared expectation passed, or help displayed\n",
@@ -146,7 +146,7 @@ pub(crate) enum Bucket {
 }
 
 impl Bucket {
-    /// Ordered to match the documented settings-input processing order and the compiled bucket
+    /// Ordered to match the documented settings input processing order and the compiled bucket
     /// indexes, so both stay in step with the reported finding order
     pub(crate) const ALL: [Self; 3] = [Self::Allow, Self::Confirm, Self::Deny];
 
@@ -196,7 +196,7 @@ impl Decision {
     }
 }
 
-/// One complete matched-bucket state and the final configured decision it produces
+/// One complete matched bucket state and the final configured decision it produces
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct State {
     allow: bool,
@@ -254,7 +254,7 @@ impl Role {
         }
     }
 
-    /// The schema this role’s document declares, which bounds every duplicate-key location to
+    /// The schema this role’s document declares, which bounds every duplicate key location to
     /// declared names
     fn shape(self) -> Shape {
         match self {
@@ -486,7 +486,7 @@ impl<'de> de::Visitor<'de> for JsonVisitor {
     }
 }
 
-/// The structure one document role declares. A duplicate-key location descends this shape so every
+/// The structure one document role declares. A duplicate key location descends this shape so every
 /// rendered segment is a declared name rather than a key the inspected document supplies
 #[derive(Clone, Copy, Debug)]
 enum Shape {
@@ -1093,7 +1093,7 @@ fn require_state(value: &Json, subject: &str) -> Result<State, String> {
     })
 }
 
-/// Validates the fetch object in unknown-field, `default`, then bucket order, and each bucket by
+/// Validates the fetch object in unknown field, `default`, then bucket order, and each bucket by
 /// ascending index, so the first reported projection error is deterministic
 pub(crate) fn project_fetch_layer(document: &Json, role: Role) -> Result<FetchLayer, String> {
     let label = role.label();
@@ -1227,7 +1227,7 @@ fn parse_comparison_manifest(document: &Json) -> Result<ComparisonManifest, Stri
     Ok(ComparisonManifest { cases })
 }
 
-/// Validates manifest references, then declared-state precedence, then witness coverage, so the
+/// Validates manifest references, then declared state precedence, then witness coverage, so the
 /// first reported cross-file error is deterministic
 fn validate_layer_references(
     manifest: &LayerManifest,
@@ -1337,7 +1337,7 @@ fn compilation_failure(error: &regex::Error) -> String {
     }
 }
 
-/// Compiles each configured pattern exactly once, in settings-input order, recording every
+/// Compiles each configured pattern exactly once, in settings input order, recording every
 /// configuration finding in the caller’s budget. An empty pattern and a pattern over the
 /// reviewability bound never reach the regex builder, so a rejected layer reports every
 /// configuration finding instead of a compiled set whose indexes no longer align with the settings
@@ -1490,7 +1490,7 @@ fn evaluate_comparison(
 }
 
 /// Runs the validation phases in their documented order: arguments, file type and readability,
-/// UTF-8 decoding, JSON parsing with duplicate-key detection, manifest structure, settings
+/// UTF-8 decoding, JSON parsing with duplicate key detection, manifest structure, settings
 /// projection, then cross-file references and coverage
 fn execute<I>(arguments: I) -> Result<Report, String>
 where
@@ -1553,7 +1553,7 @@ fn diagnostic_line(text: &str) -> String {
 }
 
 /// Drops trailing details until the total count, rendered details, and omitted count fit the
-/// standard-error bound, so both counts survive truncation
+/// standard error bound, so both counts survive truncation
 pub(crate) fn render_findings(findings: &Findings) -> String {
     let total = findings.total();
     let mut shown = findings.details().len();

@@ -14,7 +14,7 @@ Begin by identifying the work’s dominant movement: argument, explanation, narr
 
 A reading unit is the smallest section meant to be read continuously as one purposeful movement. It develops one controlling idea, question, event, experience, or argumentative step and provides a meaningful local payoff.
 
-One reading unit may be the whole of a short work. Add a boundary only when it would materially improve the reader’s progress. In longer work, prefer compact, purposeful units to sections that expand indefinitely. Do not impose a word-count target. A unit ends when it completes its rhetorical job.
+One reading unit may be the whole of a short work. Add a boundary only when it would materially improve the reader’s progress. In longer work, prefer compact, purposeful units to sections that expand indefinitely. Do not impose a word count target. A unit ends when it completes its rhetorical job.
 
 For each reading unit:
 
@@ -68,6 +68,6 @@ When the current workflow authorizes writing changes, follow [Working Method](#w
 
 Do not manufacture quality by copying another writer’s swagger, sentence lengths, paragraph counts, slogans, quirks, or formatting habits. Extract the mechanism behind an effective choice, then adapt it to this reader, subject, voice, and purpose.
 
-Treat familiar rules of economy, directness, active voice, and paragraph structure as conditional tools. When a rule conflicts with the intended reading experience, keep the choice that better supports purposeful detail or repetition, intended ambiguity, voice, pacing, reading-unit movement, and cohesion. Do not make prose less engaging merely to make it more compliant.
+Treat familiar rules of economy, directness, active voice, and paragraph structure as conditional tools. When a rule conflicts with the intended reading experience, keep the choice that better supports purposeful detail or repetition, intended ambiguity, voice, pacing, reading unit movement, and cohesion. Do not make prose less engaging merely to make it more compliant.
 
 Do not use readability formulas, corpus averages, or fixed quotas as proxies for attention or quality. Measurements can reveal unusual density or repetition, but the reading effect determines whether revision is needed.

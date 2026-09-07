@@ -8,7 +8,7 @@ Treat project-authored context, destination-supplied values, and original error 
 
 Determine which surrounding context identifies the message’s source and which dynamic values would help the intended reader act. Before exposing any value, apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries).
 
-Add a module-name prefix only when a message may appear in a shared or ambient context, such as CLI output, and its source would otherwise be difficult to identify. Use the established module name and prefix syntax. When the reporting context already makes ownership clear, omit attribution. Follow any applicable nearby prefix or project policy instead of imposing a universal bracketed form.
+Add a module name prefix only when a message may appear in a shared or ambient context, such as CLI output, and its source would otherwise be difficult to identify. Use the established module name and prefix syntax. When the reporting context already makes ownership clear, omit attribution. Follow any applicable nearby prefix or project policy instead of imposing a universal bracketed form.
 
 ## Project-Authored Context
 
@@ -22,7 +22,7 @@ Do not hedge a known condition, list speculative causes, repeat the headline, or
 
 Include the consumer-facing source file path when it identifies the failing input, especially in multi-file operations. Keep the path in the headline, preserve it exactly, and do not substitute a synthetic internal path.
 
-Apply the [code-token convention](typography.md) only when the prose refers to a value as a path, identifier, option, format, or another code token. A word that matches a symbol name does not require identifier formatting for that reason alone.
+Apply the [code token convention](typography.md) only when the prose refers to a value as a path, identifier, option, format, or another code token. A word that matches a symbol name does not require identifier formatting for that reason alone.
 
 Include the exact case, expected or received values, or a reason only when the detail helps the intended reader act and is appropriate to expose on that surface. When the audience or exposure boundary is unclear, omit exact values rather than assuming they are safe to reveal.
 
@@ -44,4 +44,4 @@ Adapt only destination-owned dynamic values and module attribution. Confirm that
 
 Keep related failures that share an operation structurally parallel. When one uses a `Failed to …` headline, preserve that headline across the family unless a materially different failure requires another framing.
 
-Across equivalent paths, apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries) to the selected prefix, punctuation, line breaks, code formatting, and lack of terminal punctuation. Align related test titles to the same verified behavior and terminology without copying runtime-message syntax into a different surface.
+Across equivalent paths, apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries) to the selected prefix, punctuation, line breaks, code formatting, and lack of terminal punctuation. Align related test titles to the same verified behavior and terminology without copying runtime message syntax into a different surface.

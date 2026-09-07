@@ -16,6 +16,6 @@ When the entrypoint does not resolve `agent-task-relay`, do not compose or expan
 
 ## User-Run Command
 
-After resolving every applicable opt-in, dependency approval, handoff confirmation, and remote-mutation authorization, provide the exact `gh copilot …` command in a `sh` code block. Use named placeholders for unresolved task text and tool permissions.
+After resolving every applicable opt-in, dependency approval, handoff confirmation, and remote mutation authorization, provide the exact `gh copilot …` command in a `sh` code block. Use named placeholders for unresolved task text and tool permissions.
 
 Tell the user to copy, paste, and run the command locally, review every prompt and tool permission before accepting it, and never share credentials, secret values, private material, or secret-bearing output in chat. Ask only whether the operation succeeded or for a sanitized error containing no private values.
