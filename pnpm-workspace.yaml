@@ -1,6 +1,9 @@
 packages:
   - packages/*
 
+allowBuilds:
+  esbuild: false
+
 autoInstallPeers: false
 
 catalog:
@@ -31,6 +34,14 @@ peerDependencyRules:
 strictPeerDependencies: true
 
 trustPolicy: no-downgrade
+
+trustPolicyIgnoreAfter: 43200
+
+trustPolicyExclude:
+  - '@vercel/*'
+  - vercel
+
+trustPolicyExcludePrune: true
 
 update:
   ignoreDeps:

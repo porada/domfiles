@@ -20,6 +20,14 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
+### Dependency Installation Policy
+
+[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids installation-time script execution without disabling esbuild’s runtime build API. It gives up the script’s binary-version check, fallback download, and launcher optimization, so optional dependencies remain required by this installation model.
+
+`trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` bounds how long that comparison can prevent installation: pnpm skips it when the target release’s age in whole minutes exceeds 43,200, or 30 days. This cutoff applies across the workspace, not only to Vercel packages. It is neither a calendar month nor a minimum release age.
+
+`trustPolicyExcludePrune` removes unused bare-name and exact-version exclusions based on the persisted shared dependency graph. Wildcard entries such as `@vercel/*` remain even when no package matches. Pruning follows dependency presence, not improvements in publishing trust.
+
 ### GitHub CLI Authentication Boundary
 
 `gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store.
@@ -43,6 +51,8 @@ When terminal sandboxing is active, a tool permission `allow` does not grant an 
 `agent.tool_permissions.tools.fetch.always_allow` contains one generic HTTPS syntax rule. A path-filtered fetch allowance uses a same-host `always_confirm` complement for every other direct initial path and relies on the generic rule for its approved prefixes. Confirmation precedence makes those prefixes prompt-free at the fetch tool layer without redundant allow rules. The generic rule excludes URL userinfo and explicit ports.
 
 `agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed consumes those entries as host grants for native fetch and, while terminal sandboxing is active, as the sandbox network floor for terminal processes. It matches the grants case-insensitively without a port constraint, and each grant covers every port. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal actions independently inherit the global tool default and remain subject to task authorization and any active sandbox wrapper.
+
+`*.dom.engineering` and `*.porada.co` are explicit exceptions to the usual wildcard restriction. Both domains belong to the repository owner, who approved wildcard access to their subdomains.
 
 `*.spec.whatwg.org` supports recurring web platform research across WHATWG’s complete, changing standards catalog. The current catalog assigns each listed specification a dedicated `<spec-name>.spec.whatwg.org` hostname. Exact enumeration can lag catalog changes, interrupting that workflow with host confirmations whenever research follows a newly listed hostname until settings are updated. The exception accepts every current and future strict subdomain at any depth under `spec.whatwg.org`, including any non-specification host WHATWG might place there. Every WHATWG hostname outside that suffix remains a separate host grant decision. The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-the-fetch-and-network-permission-policy) owns the wildcard exception gate.
 
@@ -132,7 +142,7 @@ The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) own
 
 ### Global System-Available Tooling
 
-The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands that agents can invoke directly across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
+The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands available across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
 
 The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package manager workflow, respectively.
 
@@ -373,7 +383,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 ### Repository-Scoped Commands
 
-`plugins` and `skills` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
+`plugins`, `skills`, and `vercel` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
 
 `domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
 

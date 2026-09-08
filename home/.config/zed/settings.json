@@ -162,6 +162,8 @@
 		"limit_content_width": false,
 		"sandbox_permissions": {
 			"network_hosts": [
+				"*.dom.engineering",
+				"*.porada.co",
 				"*.spec.whatwg.org",
 				"add-skill.vercel.sh",
 				"agentclientprotocol.com",
@@ -170,6 +172,7 @@
 				"alerts.home-assistant.io",
 				"api.github.com",
 				"api.grep.app",
+				"api.vercel.com",
 				"api.wordpress.org",
 				"apple.com",
 				"apps.apple.com",
@@ -261,6 +264,7 @@
 				"npmx.dev",
 				"objects.githubusercontent.com",
 				"openai.com",
+				"openapi.vercel.sh",
 				"opensource.org",
 				"oxc.rs",
 				"pandoc.org",
