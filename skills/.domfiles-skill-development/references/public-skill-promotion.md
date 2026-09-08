@@ -1,0 +1,27 @@
+# Public Skill Promotion
+
+Use this reference for public creation, promotion, or renaming, including reviews and audits. Name selection applies to all three operations. The profile and its validation apply only to creation and promotion. In read-only work, assess the applicable requirements through `agent-documentation` rather than creating a profile or carrying out the operation.
+
+## Choose a Public Name
+
+A public skill’s name is discovery metadata as well as a stable identifier. Before creating, promoting, or renaming one, identify the primary domain, task, or tool terms users are likely to search. When the target registry or index is available, inspect a bounded set of exact and close matches. Prefer a distinctive name that retains the primary domain or tool term, and avoid clever wording that obscures the trigger.
+
+## Build the Public Promotion Profile
+
+Complete the public promotion profile before creating a public skill, or before moving or rewriting content during a promotion. Evaluate the intended public capability and every reachable workflow with global instructions removed. For a promotion, include the complete source skill and proposed target behavior. Inventory each decision, output contract, safety boundary, or workflow that changes without the global instruction layer, then capture the result in one task-local profile. Use any promoted, retained, or removed classification required by [category maintenance](skill-installation.md#category-changes) as input. Keep the profile out of the distributed skill. It is the authoring record for deciding which inherited policies need standalone behavior, not another public contract.
+
+Record standardized mirrors as template-covered without reopening their inclusion, ownership, or wording. Apply the following five mandatory lenses to the complete behavior delta inventory. The lenses are not exhaustive and do not limit which dependencies the profile must discover. Mark a lens not applicable only after checking it:
+
+1. **Authority and provenance:** Inventory every source the workflow ingests. For each source, record every applicable role: evidence, instructions, and task material. Independently classify its authority status as authoritative, untrusted, or validated optional peer guidance. Confirm every source whose authority status is untrusted reaches the instruction authority boundary before its contents can influence execution, mutation, relay behavior, or remote effects. Determine which distinctions would disappear without the global instruction layer.
+2. **Review behavior:** For every advertised review or audit route, resolve its evidence standard, output restrictions, read-only boundary, required final output, and stopping behavior. Reconcile every required disclosure or evidence limitation with any output restriction.
+3. **Tool execution:** Inventory every operation the workflow selects or recommends. Classify each one under the global **Code Execution** policy and every applicable tool-specific execution policy, then identify each execution safeguard or deferral that independent behavior requires.
+4. **External services:** Identify authenticated state, optional peers, required network access, service-specific interfaces, and transmitted data. Decide whether the public skill owns the service interaction, defers it to another workflow, or preserves a complete local fallback. Apply the [optional public peer contract](optional-public-peers.md) only to optional public peers.
+5. **Mutation and approval:** Trace every dependency change, local mutation, publication step, remote effect, and user-only operation to the actor, required authorization, required stop, or terminal action. For each dependency change, also inventory its selection and informed approval requirements. Keep drafting, preparation, review, and tool availability from implying authority for a later effect.
+
+Search global instructions only for normative units that supply a dependency exposed by the complete inventory or materially improve the independent skill. Do not use topical similarity alone. Classify each candidate as a required mirror when omission changes advertised behavior, an output contract, safety, or a workflow, an enriching mirror when it adds material standalone value, context-bound when it depends on unavailable installation assumptions, paths, or tooling, or merely related otherwise. Include required mirrors, suggest enriching mirrors, and exclude merely related wording. For a context-bound dependency, remove it or author a distinct public rule rather than paraphrasing the global instruction.
+
+For each required or suggested mirror, report its classification, context cost, dependency or value, global policy and current source location, meaning and boundaries the standalone version must preserve, and proposed destination. Place every accepted mirror on the narrowest applicable surface under the public baseline’s [standalone mirror rule](public-skill-portability.md). Revalidate the skill without global instructions, and include every accepted mirror in future semantic-alignment searches.
+
+## Validate Public Promotion
+
+For a creation or promotion, confirm that the promotion profile contains the complete behavior delta inventory, applies all five mandatory lenses, and accepts standardized mirrors as template-covered. Confirm that every other inherited policy dependency has a classification, destination or retained owner, independently valid result, and named source owner.

@@ -10,7 +10,7 @@ metadata:
 
 # Domfiles Repository Audit
 
-## Resolve the Scope
+## Resolve Audit Scope
 
 | Priority | Rule |
 | --- | --- |
@@ -32,7 +32,7 @@ metadata:
 - Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate without loading their bodies into the coordinating context.
 - Apply the global “Prompt contract” policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
 
-## Audit the Contents
+## Audit Contents
 
 For every path in the reportable scope:
 
@@ -43,7 +43,7 @@ For every path in the reportable scope:
 - Report documentation that duplicates durable details or violates the [documented authority and ownership boundaries](../../../AGENTS.md#agent-documentation).
 - Apply every relevant repository instruction and loaded domain skill policy, treating domain skills as supplements for domain-specific checks and verification rather than separate audit workflows.
 
-## Preserve the Read-Only Process
+## Keep Audits Read-Only
 
 - Do not modify repository files or run linters or formatters as part of the analysis.
 - Do not report findings outside the reportable scope.
@@ -51,7 +51,7 @@ For every path in the reportable scope:
 - Never speculate about intent or hypothetical implementations.
 - Do not stop after individual findings. Continue until the entire scope has been reviewed, then report all findings together.
 
-## Report the Result
+## Report Audit Results
 
 Follow the global [communication](../../GLOBAL.md#communication) and [issue reporting](../../GLOBAL.md#documentation) requirements, then:
 

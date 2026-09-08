@@ -1,0 +1,23 @@
+# Optional Public Peers
+
+An optional remote peer branch is the conditional workflow reached only when a relevant local peer is unavailable and available task evidence supports expecting remote use to materially improve the final output.
+
+Local composition and remote fallback are separate decisions. A skill may route to a locally available public peer by its stable frontmatter `name` without declaring remote retrieval. The remote peer workflow begins only when the local peer is unavailable and the originating skill offers GitHub-hosted retrieval under this contract.
+
+## Route Optional Public Peers
+
+1. Keep only that decision and one explicit route in `SKILL.md`. Keep network handling, recovery details, and remote URLs out of the description and entrypoint. Preserve the originating skill’s complete local workflow so its advertised behavior does not depend on the peer.
+2. Resolve each peer once. The originating `SKILL.md` owns local availability and the decision to invoke its optional peer reference. That reference owns network confirmation, retrieval, validation, designation of the frozen routed set as task-scoped guidance, and the resolved-or-unavailable outcome. Every other routed reference consumes that result and must not repeat those decisions or operations.
+3. Give each peer its own conditional reference, even when multiple peers share a trigger or retrieval lifecycle. Start from the [optional peer skill template](../assets/optional-peer-skill.txt). Replace `<skill-name>` with the stable frontmatter `name`, `<skill-title>` with the human-readable title, and `<contribution>`, `<owner>`, and `<repository>` with the declared peer’s details. Preserve `<full-object-id>` and `<ref>` as runtime placeholders, and adapt only the originating skill’s local fallback and task-specific contribution.
+4. Keep behavior routing at the peer’s stable frontmatter `name`. The originating skill and bundled peer reference may state the source and contribution, but must not name or link the peer’s internal files beyond `SKILL.md`, headings, references, or route labels. After resolving the peer, provide the task context and let its entrypoint select the applicable internal routes and references. Keep the dependency one-way unless each skill independently needs the other. The originating skill may name the peer. The peer must expose a generic composition boundary, such as workflow-owned delivery, rather than naming the originating skill solely to support its integration.
+5. Keep source repository classification mechanics out of the distributed reference. Do not reproduce category tables, generic installer selection, metadata conventions, or repository topology. The source repository owns authoring-time validation that every declared target remains public.
+
+## Validate Optional Public Peers
+
+These checks supplement the [shared public validation](public-skill-portability.md#validate-public-portability), including for existing peer declarations.
+
+1. Confirm that each remote peer branch has one entrypoint route and one reference declaring exactly one peer and following the [optional peer skill template](../assets/optional-peer-skill.txt). Check the description against the [public-description portability contract](public-skill-portability.md#keep-public-descriptions-portable). Neither the description nor entrypoint may contain a remote protocol or URL.
+2. Confirm that behavior routing stops at the declared skill name and `SKILL.md`. Reject peer-internal files, headings, references, or route labels selected outside the resolved peer. Confirm that optional peer documents become task-scoped guidance only after the complete frozen routed set passes validation.
+3. When the optional peer skill template changes, align every reference derived from it while preserving authorized local adaptations.
+4. In the source repository, validate each declared peer’s complete routed document set, identity, latest source URL, and public classification from one snapshot against the canonical local policy. Do not treat a currently reachable mutable file as immutable evidence.
+5. When coordinated unpublished changes affect both a peer declaration and the peer, validate the local sources as one candidate snapshot and the current remote snapshot separately. If the remote snapshot lacks the declared contribution or contradicts the candidate’s composition contract, required final output or stopping behavior, or fallback contract, record a publication gate and confirm that the distributed peer reference classifies it as an authoring defect and continues through the local fallback.

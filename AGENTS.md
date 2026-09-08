@@ -33,11 +33,10 @@
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
 - **Navigation:** Read only the section of `.agents/PROJECT.md` that applies, reaching it through an existing link or by locating its heading first, rather than reading the document.
 - **Durable knowledge:** Document newly discovered durable project knowledge in `.agents/PROJECT.md` when the task permits that documentation edit. Otherwise report the update as deferred follow-up work.
-- **Ordering:** Keep order-independent entries introduced or modified within the resolved scope alphabetized, including configuration arrays, lookup tables, prose enumerations, and regex alternatives. Treat labeled instruction bullets as order-dependent, along with rows ordered to carry meaning. Order `.agents/PROJECT.md` second-level sections topically, appending a new section when no topical position is evident, and alphabetize the third-level sections within each. In source, treat a contiguous run of top-level constant declarations as one such list only when their initializers and behavior do not depend on declaration order, and check the complete qualifying run rather than the changed lines alone.
 
 ## Scope
 
-- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-the-scope) excludes it.
+- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-audit-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
 - **Symlink:** Do not analyze the contents of `home/.local/bin/git-diff-highlight` (it’s a symlink).

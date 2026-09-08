@@ -4,6 +4,12 @@ A skill-owned script is a small program that gathers recurring repository eviden
 
 When a script belongs to a portable skill—one installed for use across target projects rather than scoped to one repository—apply the additional [portable skill script contract](portable-skill-scripts.md) before resolving its interface.
 
+## Choose the Contract Pass
+
+For a script contract review or audit, inspect implementation and adjacent tests only as bounded evidence for a specific observable contract, then stop once the claim is established. Do not assess algorithms, internal structure, language idioms, performance, dead code, duplication, or general test quality unless the user explicitly includes implementation. Evaluation criteria such as security, maintainability, or project values apply within the resolved scope and do not expand it. Keep standalone reviews and audits read-only, following an applicable model-invocable project audit workflow when one exists. Otherwise, begin an audit with Git-tracked paths, add only explicitly named untracked material when local policy permits it, inspect the resolved scope, report findings, and stop without formatting or mutation.
+
+When the resolved scope explicitly includes implementation, follow applicable project, domain, and language implementation and validation workflows for internal concerns. Keep the script contract pass focused on contract consequences, and update agent documentation only when the contract, routing, or documented invocation changes. Documentation work rejoins the shared `agent-documentation` lifecycle.
+
 ## Design the Smallest Sufficient Contract
 
 The optimal contract is the least complex one that completely serves its named consumers within the declared operating model. Apply this gate before implementing a new script or materially expanding an existing script. A material expansion adds a dependency, durable artifact, input schema, mutation-authorizing decision, observable failure or status behavior, operation mode, or side effect. A fix reuses the accepted contract without reopening design when it only restores conformance to that contract and adds none of those material expansion elements.

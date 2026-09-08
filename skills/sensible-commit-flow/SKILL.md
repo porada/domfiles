@@ -8,7 +8,7 @@ description: |-
 
 # Sensible Commit Flow
 
-Commit history should reflect the work, with each commit making sense on its own.
+Every commit should have a clear purpose, and the history should show how the changes fit together.
 
 This skill helps agents group changes by intent, order commits by dependency, and write messages that explain their purpose. It presents the plan for your approval before creating commits or revising unpushed history, then verifies the recorded result while preserving unrelated work.
 

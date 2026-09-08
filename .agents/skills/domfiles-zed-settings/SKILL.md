@@ -17,7 +17,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 ## Apply the General Policy
 
-- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and the [skill-owned script policy](../../../skills/.domfiles-agent-documentation/references/skill-owned-scripts.md) for artifacts, layout, root toolchain ownership, staging, and tests.
+- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and `skill-development` for skill script contracts.
 - Keep `home/.config/zed/settings.json` free of entries that only restate Zed defaults.
 - Keep `.zed/settings.json` free of entries that only restate `home/.config/zed/settings.json` or Zed defaults.
 - Sort Zed settings object arrays by the value of their identifying field.
