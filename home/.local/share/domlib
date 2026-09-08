@@ -26,7 +26,7 @@ __() {
     __print_error_and_exit '`__` requires at least one argument'
   fi
 
-  __print_command "$@"
+  __print_command "$@" || return
 
   if [ "$1" = 'brew' ]; then
     shift
@@ -328,7 +328,7 @@ __git_diff_list_changed_excluded_paths() (
         printf '%s\n' "$file"
       else
         status="$?"
-        [ "$status" -eq 1 ] || exit "$status"
+        [ "$status" -eq 1 ] || return "$status"
       fi
     elif git diff-files --quiet -- "$file"; then
       continue
@@ -338,7 +338,7 @@ __git_diff_list_changed_excluded_paths() (
       if [ "$status" -eq 1 ]; then
         printf '%s\n' "$file"
       else
-        exit "$status"
+        return "$status"
       fi
     fi
   done
@@ -474,15 +474,19 @@ __is_brew_installed() {
   fi
 }
 
-# Returns success when `$1` is a keg-only Homebrew package
-__is_brew_keg_only() {
-  brew info "$1" --json=v2 2> /dev/null | grep -q '"keg_only": true'
-}
+# Returns success when `$1` is a keg-only Homebrew package. Returns 1 when it
+# is not, or 2 if querying Homebrew fails
+__is_brew_keg_only() (
+  metadata="$(brew info "$1" --json=v2)" || return 2
+  printf '%s\n' "$metadata" | grep -q '"keg_only": true'
+)
 
-# Returns success when `$1` is a linked Homebrew package
-__is_brew_linked() {
-  brew info "$1" --json=v2 2> /dev/null | grep -q '"linked_keg": "[^"]'
-}
+# Returns success when `$1` is a linked Homebrew package. Returns 1 when it
+# is not, or 2 if querying Homebrew fails
+__is_brew_linked() (
+  metadata="$(brew info "$1" --json=v2)" || return 2
+  printf '%s\n' "$metadata" | grep -q '"linked_keg": "[^"]'
+)
 
 # Returns success when `$1` is available as a command
 __is_callable() {
@@ -567,10 +571,10 @@ __normalize_boolean() {
   fi
 
   case "$1" in
-    1 | [Tt][Rr][Uu][Ee] | [Oo][Nn] | [Yy][Ee][Ss])
+    1 | [Oo][Nn] | [Tt][Rr][Uu][Ee] | [Yy][Ee][Ss])
       printf '%s\n' true
       ;;
-    0 | [Ff][Aa][Ll][Ss][Ee] | [Oo][Ff][Ff] | [Nn][Oo])
+    0 | [Ff][Aa][Ll][Ss][Ee] | [Nn][Oo] | [Oo][Ff][Ff])
       printf '%s\n' false
       ;;
     *)
@@ -591,7 +595,7 @@ __page_input() (
     return 0
   }
 
-  pager="$(__resolve_pager "$@")"
+  pager="$(__resolve_pager "$@")" || return
 
   case "$pager" in
     cat | less)
@@ -679,7 +683,9 @@ __print_styled() (
     return 0
   fi
 
-  text="$(__string_replace "$*" "$HOME" '~')" || return $?
+  # Preserve trailing newlines through command substitution
+  text="$(__string_replace "$*" "$HOME" '~' && printf .)" || return $?
+  text="${text%?}"
 
   if ! __is_stdout_tty; then
     style=''
@@ -755,25 +761,32 @@ __resolve_pager() (
     __print_error_and_exit '`__resolve_pager` accepts at most one Git command'
   fi
 
-  pager=''
-
   if [ $# -eq 1 ]; then
+    pager=''
+
     if pager="$(git config --get "pager.$1")"; then
       case "$(git config --file /dev/null --type=bool --default "$pager" \
         --get domfiles.pager 2> /dev/null || true)" in
         false)
-          pager='cat'
+          printf '%s\n' cat
+          return
           ;;
         true)
           pager=''
           ;;
       esac
     fi
+
+    if [ -z "${GIT_PAGER+x}" ] && [ -n "$pager" ]; then
+      printf '%s\n' "$pager"
+    else
+      git var GIT_PAGER
+    fi
+
+    return
   fi
 
-  if [ -n "$pager" ]; then
-    printf '%s\n' "$pager"
-  elif [ -n "${PAGER-}" ]; then
+  if [ -n "${PAGER-}" ]; then
     printf '%s\n' "$PAGER"
   elif __is_callable less; then
     printf '%s\n' less
@@ -806,7 +819,8 @@ __string_contains() {
   esac
 }
 
-# Prints `$1` with every literal occurrence of `$2` replaced by `$3`
+# Prints `$1` with every literal occurrence of `$2` replaced by `$3`, without
+# adding a newline
 __string_replace() {
   if [ $# -ne 3 ]; then
     __print_error_and_exit '`__string_replace` requires three arguments'
@@ -817,7 +831,7 @@ __string_replace() {
   fi
 
   if ! __string_contains "$1" "$2"; then
-    printf '%s\n' "$1"
+    printf '%s' "$1"
     return 0
   fi
 

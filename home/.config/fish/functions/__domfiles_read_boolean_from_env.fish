@@ -13,11 +13,11 @@ function __domfiles_read_boolean_from_env
         return 1
     end
 
-    set --local variable_name $argv[1]
-    set --local value
-
-    if set --query --export "$variable_name"
-        set value $$variable_name
+    # Read the exported value before introducing function-scoped state
+    if set --query --export -- "$argv[1]"
+        set --function value "$$argv[1]"
+    else
+        set --function value ''
     end
 
     if test -z "$value"
@@ -26,7 +26,7 @@ function __domfiles_read_boolean_from_env
     end
 
     if not __domfiles_normalize_boolean "$value"
-        __domfiles_print_error "`$variable_name` has an unsupported boolean value"
+        __domfiles_print_error "`$argv[1]` has an unsupported boolean value"
         return 1
     end
 end

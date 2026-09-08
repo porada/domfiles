@@ -57,6 +57,8 @@ Treat standard output, standard error, and exit status as separate interfaces un
 
 A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow such as `if command` or `command || fallback`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from every function, including a subshell-bodied function, and `exit` from an executed script. Leave `$?` unquoted when passing it directly to `exit`.
 
+When a function’s contract requires a failed prerequisite to stop later work, handle that failure explicitly rather than relying on `set -e`. Validate a direct call first, then repeat in conditional contexts: an `if` condition, negation with `!`, and non-final positions in `&&` or `||` lists. Inject the failure before a later side effect, and verify both the absence of that effect and the required status after accounting for any caller-side inversion.
+
 Some commands use a nonzero status for a domain result rather than an operational error. Classify every documented status, and propagate unexpected values. Do not put the command behind `!` when the original status matters because `!` replaces it with the inverted result.
 
 For example, `git merge-base --is-ancestor` returns `0` when the upstream commit is an ancestor of `HEAD`, `1` when it is not, and another status when the comparison fails:
@@ -101,3 +103,5 @@ Test the file descriptor whose behavior will change. Use `[ -t 0 ]` for standard
 Use a terminal test only when the script itself changes behavior. Gate script-controlled standard output paging, color, and terminal-fit calculations on `[ -t 1 ]`. Do not duplicate a command’s own automatic terminal behavior.
 
 When standard output is not a terminal, avoid terminal size queries that cannot improve the redirected result.
+
+When a wrapper takes over a command’s terminal presentation, preserve the configuration and environment variable precedence required by its declared interface. Check empty and unset values separately because they may select different behavior. Prefer the underlying command’s supported resolver when it supplies that behavior rather than duplicating its resolution logic.

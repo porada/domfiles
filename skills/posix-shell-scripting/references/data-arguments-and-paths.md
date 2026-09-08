@@ -124,6 +124,8 @@ Parse required long options with an explicit `case` loop. Define the behavior fo
 
 Validate option relationships and positional cardinality after parsing. Protect externally supplied operands with `--` only when the receiving utility supports it. Prefer a dedicated option such as `grep -e "$pattern"` when an operand could otherwise be parsed as an option. Prefix a relative pathname with `./` when the utility has no suitable option boundary.
 
+Before rewriting a delegated command’s arguments, establish which input forms the wrapper supports. Validate `--` handling, abbreviated and full option names, and attached and separate option values against that declared interface. Preserve supported argument boundaries, and reject unsupported forms before rewriting rather than partially parsing them and forwarding an altered command.
+
 ## Line-Oriented Input
 
 Read line-oriented text with `IFS= read -r`, and capture its status immediately. Status `1` indicates EOF. A greater status indicates an error. Clear `line` before each call so an unsuccessful `read` cannot reuse the previous record. Accept a nonempty value returned with status `1` only when a final unterminated line is valid input.

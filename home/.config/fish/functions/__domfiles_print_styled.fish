@@ -29,7 +29,13 @@ function __domfiles_print_styled
     end
 
     set --local text "$argv"
-    set text "$(string replace --all -- "$HOME" '~' "$text")"
+    set text $(
+        string replace --all -- "$HOME" '~' "$text" |
+            string collect --allow-empty --no-trim-newlines
+    )
+
+    # Remove the output newline without trimming the input’s newlines
+    set text $(string split --right --max 1 --fields 1 \n -- "$text")
 
     # Run `test` externally to follow function-local redirections
     if not command test -t 1

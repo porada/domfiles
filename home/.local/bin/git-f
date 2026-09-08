@@ -4,6 +4,7 @@
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Create a fixup commit for the requested commit or `HEAD`
+abbreviated_option=''
 amend=false
 explicit_fixup=false
 option_operand=false
@@ -50,6 +51,29 @@ for param in "$@"; do
       continue
       ;;
     --*)
+      # Keep abbreviated operands intact while checking for explicit `--fixup`
+      option_name="${param%%=*}"
+
+      for full_option in --amend --author --cleanup --date --file --fixup \
+        --inter-hunk-context --message --no-amend --pathspec-from-file \
+        --reedit-message --reuse-message --squash --template --trailer --unified; do
+        case "$full_option" in
+          "$option_name"?*)
+            abbreviated_option="$option_name"
+
+            case "$full_option" in
+              --amend | --no-amend) ;;
+              *)
+                case "$param" in
+                  *=*) ;;
+                  *) option_operand=true ;;
+                esac
+                ;;
+            esac
+            ;;
+        esac
+      done
+
       continue
       ;;
     -*[Su]?* | -*[cCFmtU]?*)
@@ -85,6 +109,10 @@ for param in "$@"; do
     target_index="$param_index"
   fi
 done
+
+if [ "$explicit_fixup" = false ] && [ -n "$abbreviated_option" ]; then
+  __print_error_and_exit "Use a full option name instead of \`$abbreviated_option\` with \`git f\`"
+fi
 
 if [ "$explicit_fixup" = true ] || [ "$option_operand" = true ]; then
   __ git commit "$@"

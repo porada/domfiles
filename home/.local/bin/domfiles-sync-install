@@ -16,7 +16,7 @@ else
   __ brew upgrade --overwrite || true
 fi
 
-install() {
+install() (
   case "$1" in
     claude-code | codex) cask=true ;;
     *) cask=false ;;
@@ -32,11 +32,21 @@ install() {
     fi
   fi
 
-  if __is_brew_keg_only "$1" && ! __is_brew_linked "$1"; then
+  if __is_brew_keg_only "$1"; then
+    if __is_brew_linked "$1"; then
+      return 0
+    else
+      status="$?"
+      [ "$status" -eq 1 ] || return "$status"
+    fi
+
     __print_heading_dimmed "Linking \`$1\`"
     __ brew link --quiet --overwrite --force "$1"
+  else
+    status="$?"
+    [ "$status" -eq 1 ] || return "$status"
   fi
-}
+)
 
 # Install primary dependencies
 for formula in fish fisher git node@24 pnpm rust vim; do

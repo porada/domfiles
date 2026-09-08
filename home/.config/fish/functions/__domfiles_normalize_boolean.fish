@@ -5,14 +5,14 @@ function __domfiles_normalize_boolean
         return 1
     end
 
-    for accepted in 1 true on yes
+    for accepted in 1 on true yes
         if string match --quiet --ignore-case -- "$accepted" "$argv[1]"
             echo true
             return 0
         end
     end
 
-    for accepted in 0 false off no
+    for accepted in 0 false no off
         if string match --quiet --ignore-case -- "$accepted" "$argv[1]"
             echo false
             return 0
