@@ -84,6 +84,24 @@
 		"dock": "left",
 		"hide_root": true
 	},
+	"read_only_files": [
+		"**/*.snap",
+		"**/*.tsbuildinfo",
+		"**/.next/**",
+		"**/.pnpm-store/**",
+		"**/build/**",
+		"**/Cargo.lock",
+		"**/coverage/**",
+		"**/dist/**",
+		"**/fish_variables",
+		"**/next-env.d.ts",
+		"**/node_modules/**",
+		"**/package-lock.json",
+		"**/pnpm-lock.yaml",
+		"**/skills-lock.json",
+		"**/target/**",
+		"**/yarn.lock"
+	],
 	"restore_on_startup": "last_workspace",
 	"scrollbar": {
 		"cursors": false,
