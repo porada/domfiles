@@ -1,7 +1,6 @@
 .agent-*
 .DS_Store
 .hooks/_
-.pnpm-store
 coverage
 home/.config/fish/completions
 home/.config/fish/conf.d

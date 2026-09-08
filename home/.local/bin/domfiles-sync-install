@@ -63,7 +63,7 @@ fi
 
 # Configure `pnpm`
 __print_heading_dimmed 'Configuring `pnpm`'
-__ pnpm config set --global store-dir .pnpm-store
+__ pnpm config set --global store-dir "$HOME/Library/pnpm/store"
 
 # Install project dependencies
 if __is_callable node && __is_callable pnpm; then

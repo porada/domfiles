@@ -38,6 +38,12 @@ GitHub CLI can fall back to storing a token in plaintext when secure credential 
 
 The Zed settings workflow caps decoded permission patterns at 1,000 Unicode scalars as a self-imposed reviewability bound rather than a Zed or regex engine constraint.
 
+### pnpm Shared Store
+
+Local development processes, including agents and their subprocesses, are mutually trusted. The shared pnpm store therefore prioritizes cross-project reuse over per-project cache isolation.
+
+The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default-location hard-link probe in the parent executable directory, so resolving the shared store does not require a write grant to that parent. The [Zed settings](../home/.config/zed/settings.json) intentionally include the repository owner’s approved macOS username in the pnpm grants because Zed requires literal absolute paths without home expansion or glob matching.
+
 ### Zed Agent Permission Model
 
 Zed Agent tool permissions intentionally use `agent.tool_permissions.default: "allow"`. `fetch` is the only tool with tool-specific configuration. A tool that invokes configured permission evaluation and has no tool-specific entry falls back to the global baseline. A tool that bypasses that evaluator receives no decision from this setting.

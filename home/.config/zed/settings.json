@@ -352,6 +352,10 @@
 				"yarnpkg.com",
 				"zed.dev",
 				"zizmor.sh"
+			],
+			"write_paths": [
+				"/Users/dom/Library/Caches/pnpm",
+				"/Users/dom/Library/pnpm/store"
 			]
 		},
 		"show_merge_conflict_indicator": false,
