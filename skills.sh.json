@@ -12,7 +12,7 @@
 		},
 		{
 			"title": "Shell Scripting",
-			"description": "Work with the shell—not against it.",
+			"description": "Work with the shell, not against it.",
 			"skills": [
 				"fish-shell-scripting",
 				"posix-shell-scripting"

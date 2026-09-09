@@ -96,7 +96,7 @@ Every filesystem write must remain within one of these authorized categories:
 
 Do not repurpose a location merely because it is ignored. Never modify `.gitignore` while running the script, and do not add an ignore rule solely to accommodate script-specific output. If repository-wide toolchain output exposes a missing ignore policy, handle that as a separate repository configuration change under the current task’s authorization.
 
-For ephemeral artifacts, follow the global “Temporary Files” policy. Accept the resolved task-specific destination from the caller instead of establishing a separate temporary output convention.
+For ephemeral artifacts, have the caller establish storage through `agent-task-directories` before invoking the script. Accept the resolved task-specific destination instead of establishing a separate temporary output convention.
 
 Before writing:
 

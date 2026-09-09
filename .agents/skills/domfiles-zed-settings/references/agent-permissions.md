@@ -34,7 +34,7 @@ For a fetch pattern or fetch default change, enumerate the required URL cases an
 ## Apply a Fetch Pattern or Default Change
 
 1. Run the pattern matcher’s focused [contract test](permission-evaluator.md#run-focused-contract-tests). Stop before candidate creation when it fails.
-2. In the task-specific directory selected through the global “Temporary Files” policy, copy the complete current `home/.config/zed/settings.json` into separate baseline and candidate files. Do not intentionally modify the baseline.
+2. In a task directory established through `agent-task-directories`, copy the complete current `home/.config/zed/settings.json` into separate baseline and candidate files. Do not intentionally modify the baseline.
 3. Build a baseline layer manifest and run the [configured layer route](permission-evaluator.md#validate-a-configured-fetch-layer) against the baseline. Require status `0` before candidate mutation. Correct an authored manifest disagreement, but treat an empty, overlong, or invalid baseline pattern as a settings repair that requires separate authorization.
 4. Apply only the authorized change to the candidate. Build the candidate layer and comparison manifests, then require status `0` from the [configured layer](permission-evaluator.md#validate-a-configured-fetch-layer) and [comparison](permission-evaluator.md#compare-fetch-permission-states) routes.
 5. Review the complete baseline-to-candidate diff and both layer manifests plus the comparison manifest. Confirm that every candidate difference belongs to the authorized fetch fields.

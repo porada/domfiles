@@ -56,6 +56,7 @@ Global installation is recommended for the best experience. Both [`skills`](http
 
 ## Other Skills
 
+- [**agent-task-directories**](agent-task-directories)
 - [**posix-shell-scripting**](posix-shell-scripting)
 - [**release-notes-for-humans**](release-notes-for-humans)
 - [**sensible-commit-flow**](sensible-commit-flow)

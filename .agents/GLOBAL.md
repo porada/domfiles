@@ -39,16 +39,9 @@
     - Delegate exploratory online research before the first potentially unbounded search, fetch, or open-ended navigation. GitHub issues, pull requests, discussions, release histories, and similar collections are exploratory.
     - For local investigation, first narrow scope and use pagination or output limits. Delegate broad command output, large Git ranges, or independent repository audit scopes only when those controls are insufficient and the main thread needs a concise result.
     - Treat each subagent’s context and output budgets as finite. Give each one a narrow question, explicit source constraints and stop conditions, and a concise output contract. Default to the five strongest findings with URLs or project-relative evidence, and split independent questions across subagents.
-    - Keep final synthesis and decisions in the main thread. Save substantial supporting evidence in the [task-specific temporary directory](#temporary-files) and read only targeted portions back.
+    - Keep final synthesis and decisions in the main thread. Save substantial supporting evidence in a task directory established through `agent-task-directories`, and read only targeted portions back.
     - If a subagent fails or exhausts its context, continue in the original thread and start a new, narrower subagent rather than repeating the unbounded investigation there.
 - **Authenticated research:** Keep online research that depends on authenticated or otherwise nontransferable browser state in the main thread, with a narrow source count and stopping point defined before browsing.
-
-## Temporary Files
-
-- **Namespace:** Place temporary files managed directly by the agent under one task-specific `.agent-<name>` directory at the relevant project root unless applicable project instructions require another approved namespace. Use a unique, filesystem-safe `<name>` that identifies the task, adding a short suffix when needed to avoid collisions.
-- **Shared convention:** Before reusing, moving, or deleting a `.agent-<name>` directory, inspect it and determine whether Git registers it as a worktree.
-- **Retention:** Helper scripts may remain in their task-specific directory when likely reuse makes retention more efficient than recreation. Treat expected reuse as continued need under the cleanup rule.
-- **Cleanup:** Remove only temporary directories created for the current task, and only when they are no longer needed.
 
 ## Communication
 
@@ -96,6 +89,7 @@
 
 ## Tooling
 
+- **Task storage:** Before creating agent-managed scratch files, apply `agent-task-directories`. If the skill cannot be loaded, stop before writing those files.
 - **Empty directories:** When task-authorized removals leave a directory empty, remove that directory as part of the same change. Repeat for newly empty ancestors within the task scope, but never remove a project root implicitly.
 - **High-impact local mutations:** Before an operation may add, rewrite, move, or remove a dynamically determined or otherwise open-ended set of paths, establish a bounded expected target set through a dry run or equivalent inspection. Run it only when that target set fits the task scope, compare the resulting changed-path inventory with the expectation, stop on expansion, and never discard unrelated state merely to restore a clean checkout.
 - **Executable resolution:** Invoke commands through `PATH`. Use an absolute path only when selecting a specific installation is required, diagnosing `PATH` resolution, or another concrete constraint makes the location material. Make the reason evident.
@@ -124,8 +118,17 @@
 
 #### Retrieval Boundaries
 
-- **MCP and browser boundary:** Do not use MCP servers, Chrome MCP, or browser automation as generic filesystem, HTTP, source code, or repository browsers. In particular, do not use them to inspect source files, repository trees, diffs, commits, or API-addressable metadata. Use MCP or a browser only when the task requires server-owned semantics, rendered or interactive state, user interaction, browser-managed downloads, nontransferable authentication, or an explicit user or project workflow. Select that route for the required capability, not as a retrieval fallback. Do not reopen the same resource through a subagent or another indirect proxy merely because the selected retrieval method failed.
-- **Retrieval failure:** If a retrieval attempt fails because of a tool, permission, sandbox, network, or unexplained transport error, stop retrieving that resource and report the resource, attempted method, exact error, and smallest corrective action. Correct an ordinary path or URL mistake, then retry only the selected method. Do not submit an external tooling issue unless explicitly requested.
+- **Non-browser MCP:** Apply the **Eligibility** rule under [Browser Automation](#browser-automation) to non-browser MCP servers.
+- **Retrieval failure:** If a retrieval attempt fails because of a tool, permission, sandbox, network, or unexplained transport error, stop retrieving that resource and report the resource, attempted method, exact error, and smallest corrective action. Correct an ordinary path or URL mistake, then retry only the selected method. Do not switch tools or reopen the same resource through a subagent or another indirect proxy merely because the selected retrieval method failed. Do not submit an external tooling issue unless explicitly requested.
+
+#### Browser Automation
+
+- **Eligibility:** Do not use browser automation, including Chrome MCP, as generic filesystem, HTTP, source code, or repository browsers. In particular, do not use it to inspect source files, repository trees, diffs, commits, or API-addressable metadata. Use it only when the task requires server-owned semantics, rendered or interactive state, user interaction, browser-managed downloads, nontransferable authentication, or an explicit user or project workflow. Select it for the required capability.
+- **Tool choice:** For eligible browser interaction, use Chrome MCP even when a skill prescribes `agent-browser` or another browser driver. Translate those interaction steps while preserving required checks and evidence. Honor an explicit user or applicable project selection of another tool, and keep repository browser test suites unchanged.
+- **Capability gaps:** If Chrome MCP is unavailable or cannot perform a required step, report the specific gap and ask before switching tools. Do not silently omit the step. Tool substitution does not authorize installation. Apply the [retrieval failure rule](#retrieval-boundaries) when a retrieval attempt fails.
+- **Process isolation:** For authorized independent Chrome MCP server launches that start their own browsers, use `--isolated` for temporary profiles. When persistent sessions are explicitly required, use distinct machine-local `--user-data-dir` profiles outside repositories instead. Process isolation does not separate agents sharing one server.
+- **Shared servers:** Assign each agent its own pages and, when independent cookies and storage are needed, a unique `isolatedContext`. Pass `pageId` explicitly on page-scoped calls. If explicit page targeting or required isolation is unavailable, or agents must share a page, serialize the complete browser workflow. Clean up only task-created pages and contexts.
+- **Profile conflicts:** Stop affected browser work and report profile contention. Do not terminate another session or delete profile locks to proceed.
 
 #### Terminal Execution
 

@@ -25,6 +25,7 @@ for source in \
   .domfiles-release-notes \
   .domfiles-skill-development \
   .domfiles-verify \
+  agent-task-directories \
   agent-task-relay \
   fish-shell-scripting \
   human-facing-writing \
