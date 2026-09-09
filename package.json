@@ -15,7 +15,7 @@
 	"packageManager": "pnpm@12.4.0",
 	"dependencies": {
 		"plugins": "^1.3.4",
-		"skills": "^1.5.24",
+		"skills": "^1.5.25",
 		"vercel": "^59.11.7"
 	},
 	"devDependencies": {

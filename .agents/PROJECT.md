@@ -26,8 +26,6 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 `trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` bounds how long that comparison can prevent installation: pnpm skips it when the target release’s age in whole minutes exceeds 43,200, or 30 days. This cutoff applies across the workspace, not only to Vercel packages. It is neither a calendar month nor a minimum release age.
 
-`trustPolicyExcludePrune` removes unused bare-name and exact-version exclusions based on the persisted shared dependency graph. Wildcard entries such as `@vercel/*` remain even when no package matches. Pruning follows dependency presence, not improvements in publishing trust.
-
 ### GitHub CLI Authentication Boundary
 
 `gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store.
