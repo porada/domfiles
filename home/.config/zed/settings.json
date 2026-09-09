@@ -355,7 +355,8 @@
 			],
 			"write_paths": [
 				"/Users/dom/Library/Caches/pnpm",
-				"/Users/dom/Library/pnpm/store"
+				"/Users/dom/Library/pnpm",
+				"/Users/dom/Projects"
 			]
 		},
 		"show_merge_conflict_indicator": false,

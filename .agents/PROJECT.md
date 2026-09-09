@@ -42,7 +42,9 @@ The Zed settings workflow caps decoded permission patterns at 1,000 Unicode scal
 
 Local development processes, including agents and their subprocesses, are mutually trusted. The shared pnpm store therefore prioritizes cross-project reuse over per-project cache isolation.
 
-The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default-location hard-link probe in the parent executable directory, so resolving the shared store does not require a write grant to that parent. The [Zed settings](../home/.config/zed/settings.json) intentionally include the repository owner’s approved macOS username in the pnpm grants because Zed requires literal absolute paths without home expansion or glob matching.
+The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default-location hard-link probes.
+
+The [Zed settings](../home/.config/zed/settings.json) grant every sandboxed terminal command write access to pnpm’s entire home directory, covering both dependency storage and package-manager bootstrap state without tracking internal subdirectories. The separate cache grant remains necessary because that cache lives outside pnpm’s home. Under the mutual-trust model above, this boundary intentionally permits changes to pnpm-managed executables later run outside the sandbox. Zed requires literal absolute paths without home expansion or glob matching, so the grants include the repository owner’s approved macOS username.
 
 ### Zed Agent Permission Model
 
