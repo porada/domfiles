@@ -5,7 +5,12 @@
 
 __print_heading 'Linking domfiles'
 
-for source in .config .curlrc .local/bin .vimrc; do
+for source in \
+  .claude/settings.json \
+  .config \
+  .curlrc \
+  .local/bin \
+  .vimrc; do
   __symlink "$DOMFILES_HOME_DIR/$source" "$HOME/$source"
 done
 

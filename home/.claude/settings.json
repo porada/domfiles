@@ -1,0 +1,10 @@
+{
+	"attribution": {
+		"commit": "",
+		"pr": ""
+	},
+	"autoDreamEnabled": false,
+	"autoMemoryEnabled": false,
+	"includeGitInstructions": false,
+	"theme": "auto"
+}
