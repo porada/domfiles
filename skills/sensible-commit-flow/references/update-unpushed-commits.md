@@ -8,7 +8,7 @@ Resolve the selected branch, starting `HEAD`, old boundary, and intended new bas
 
 Establish that the complete rewritten range is unpushed, not merely the fixup targets. Check current evidence for every relevant publication destination, including a fork, and refresh scoped remote information when necessary. An unset tracking branch, stale remote information, or absence from one remote does not establish eligibility. Treat a commit known to have been pushed as published even if its remote ref was later removed. Stop when any affected commit has been pushed or its publication status cannot be established.
 
-Identify publication destinations from task context and non-secret metadata, then scope remote reads to the required publication evidence under the shared [execution boundaries](../SKILL.md#execution-boundaries). If refreshing evidence requires updating local refs, obtain separate authorization for that bounded step rather than treating read-only preparation as permission. Unavailable network evidence stops the affected rewrite, not unrelated local planning.
+Identify publication destinations from task context and non-secret metadata, then scope remote reads to the required publication evidence under the shared [execution boundaries](../SKILL.md#execution-boundaries). If refreshing evidence requires updating local refs, establish explicit authorization for that bounded step before executing it. Existing recorded authorization suffices only when it covers that effect under [Confirm Commits](../SKILL.md#confirm-commits), not merely because preparation is in scope. Unavailable network evidence stops the affected rewrite, not unrelated local planning.
 
 ## Prepare Update Proposals
 
@@ -23,7 +23,7 @@ Prepare these additions to the shared [confirmation](../SKILL.md#confirm-commits
 3. Specify the native command sequence, intended todo list changes, any expected empty or already applied commits, and the resulting parent relationships. Distinguish temporary fixup messages from final messages.
 4. Establish how unrelated index and working tree state will remain outside the batch and be restored exactly. The index and tracked working tree state must be clean before replay begins, with ignored and untracked state protected from overwrite. Do not let implicit autostashing or automatic updates to other branches widen the operation.
 
-Return to the shared lifecycle for execution approval. Selecting this mode is not permission to create fixups or rewrite commits.
+Return to [Confirm Commits](../SKILL.md#confirm-commits) to establish the applicable approval mode before execution. Selecting this history-update route alone is not permission to create fixups or rewrite commits.
 
 ## Execute History Updates
 

@@ -18,7 +18,7 @@ Choose references for the relationship they establish, not to accumulate links. 
 
 Use closing language only when full resolution or another intended reason for closure is established. Reference partial solutions or related context without implying closure. Default to `Fixes` for bug reports, `Resolves` for feature requests, and `Closes` for other issues, typically when they have been invalidated. These are preferences rather than a rigid taxonomy, so choose a more appropriate verb when the context warrants it. Keep `Fixes #<number>.` in its own paragraph by default, with its position determined by the body’s structure or required template.
 
-Supply `human-facing-writing` with the user’s preference for `<owner>/<repository>#<number>` shorthand for unambiguous cross-repository GitHub issue and pull request references. Leave other reference formatting to that peer. Let references carry background rather than repeating titles or entire reports, while keeping the body’s purpose understandable. Do not default to a link-only body or add mandatory issue links or a references section beyond the repository’s requirements.
+Supply `human-facing-writing` with the user’s preference for `<owner>/<repository>#<number>` shorthand for unambiguous cross-repository GitHub issue and pull request references. Leave other reference formatting to that peer. Let references carry background rather than repeating titles or entire reports, while keeping the body’s purpose understandable. For a follow-up whose rationale is already established by the reference, state what this contribution completes or what now makes it appropriate without arguing the original case again. Do not default to a link-only body or add mandatory issue links or a references section beyond the repository’s requirements.
 
 ## Compose the Content
 
@@ -26,7 +26,7 @@ Use supplied examples of the user’s previous GitHub submissions to identify re
 
 Normalize the template’s ordinary prose to the applicable typography conventions through `human-facing-writing`. Preserve code, exact required wording, machine-readable markers, and other literal syntax wherever their spelling is part of the contract.
 
-Keep the body as short as it can be while satisfying the template and giving maintainers enough evidence to understand and act. Remove repetition and unnecessary explanation rather than required context, reproduction details, or material limitations.
+Write for a maintainer scanning with limited attention. Keep the body as short as it can be while satisfying the template and making the purpose, relevant context, and material limitations clear. Keep validation evidence accessible in the agent thread, including tool results, with task artifacts for supplementary detail or long logs. Do not reproduce that execution record in the PR. Remove repetition and unnecessary explanation, not required reproduction details or decisive evidence.
 
 For every pull request body, explain the intended outcome and strongest verified reason to pursue it. When the limitation of an existing alternative is decisive, make that limitation clear. Never narrate the code changes or paraphrase the diff. Apply this rule within the mandated template rather than replacing its fields. If an explicit repository requirement cannot be satisfied without a change inventory, ask the user to resolve that conflict.
 
@@ -39,4 +39,16 @@ Do not present a fallback as a repository requirement. Ask for missing context o
 
 For vulnerability reports and CVE preparation, provide a title and body by default. Supply additional fields only when the user requests them, and flag any required form fields that still need their input.
 
-Review the completed title and body against the selected surface, current template, supplied examples, and verified outcome before returning them to the entrypoint’s [handoff](../SKILL.md#hand-back-the-contribution).
+## Describe Testing
+
+Use a short, truthful reassurance about what was tested or not tested. State the relevant result and any limitation that materially affects confidence in the contribution. Do not turn Testing into a catalogue of irrelevant checks not run, command transcript, diagnostic report, or inventory of checks. Include such detail only when a repository requirement or the contribution’s reproducibility makes it necessary.
+
+In an early draft, describe planned validation as planned. Before final delivery, replace plans with actual results. Do not imply that a check ran, passed, or covered behavior beyond the available evidence.
+
+## Finalize the Content
+
+Review the title and body against the selected surface, current template, supplied examples, and verified outcome. Keep only useful optional sections, and do not add boilerplate beyond the repository’s requirements.
+
+Resolve required checklist items before final delivery. Mark applicable items whose completion is established. Obtain the user’s confirmation for personal attestations that the agent cannot make on their behalf, and resolve unmet requirements or permitted not-applicable treatment rather than checking boxes speculatively. Do not present a body with unresolved required items as ready to submit.
+
+Use blockquotes when discussing the draft. For the final copy-ready handoff, provide the title in its own plain-text code block and the complete body in a separate `markdown` code block, using a longer outer fence when the body contains code fences. Keep labels, publication instructions, and any thread-only validation detail outside those blocks. Return the complete content to the entrypoint’s [handoff](../SKILL.md#hand-back-the-contribution), not fragments the user must assemble.

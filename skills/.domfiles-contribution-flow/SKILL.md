@@ -13,7 +13,7 @@ metadata:
 
 Prepare an upstream contribution for the user’s manual submission. A useful outcome may be a focused change, a report, a conversation, or a decision not to proceed.
 
-The workflow ends at submission readiness. External or adversarial review is optional and user-directed, not a prerequisite for that state. Post-submission monitoring and maintainer follow-up are outside this workflow.
+The workflow ends at submission readiness after the selected preparation path and final editorial work. Pull requests include internal adversarial review. External reviews and handoffs remain optional and user-directed. Post-submission monitoring and maintainer follow-up are outside this workflow.
 
 ## Compose With Peers
 
@@ -26,15 +26,17 @@ Load each peer when its responsibility enters scope. Keep its policy under that 
 | `human-facing-writing` | General editorial guidance, including technical accuracy, templates, and typography. |
 | `simple-github-cli` | Remote GitHub context and separately authorized remote operations through the appropriate interface. |
 
-This workflow creates no exception to the global **Commit gate**, **Index preservation**, or **Git publication** policies. If a peer cannot support a required operation under those policies, stop that operation and report the limitation rather than inventing another execution path.
+Use the global **Contribution Preparation Authorization** policy only when its authority and managed-installation conditions are established. Carry its recorded setup instruction or checkpoint grant to each peer. Otherwise retain the existing confirmation defaults. This workflow cannot grant itself authority or waive the global **Index preservation** or **Git publication** policies. If a peer cannot support an authorized operation, report the limitation rather than inventing another execution path.
 
-For a standalone review of a prepared contribution, keep the task read-only, assess it against the applicable steps below, and report only findings and material evidence limitations. Do not treat a review request as authorization to apply fixes or change Git state.
+For an assessment-only request or standalone review, keep the task read-only and report the assessment or findings with material evidence limitations. A supplied worktree or linked pull request does not authorize preparation, fixes, or Git mutations.
 
 ## Assess the Contribution
 
 Identify the target repository, intended outcome, and available evidence. Use the available contribution guidance, security policy, and templates to establish repository expectations.
 
 Consider confidentiality before public searches or choosing a submission surface. An undisclosed vulnerability belongs in the repository’s designated private reporting channel, not a public issue or pull request. Reporting a vulnerability and requesting a CVE identifier are distinct actions. Do not assume CVE eligibility or an assigned identifier. If no suitable private channel is available, or the required channel conflicts with manual browser submission, stop for the user’s decision rather than exposing the report publicly.
+
+For an active pull request preparation task, complete [checkout entry and setup](references/prepare-pull-requests.md#enter-the-supplied-checkout) before researching the implementation. Setup does not settle whether a contribution is justified.
 
 Through `simple-github-cli`, make bounded searches for related issues and pull requests and inspect relevant current upstream evidence. Establish what remains unresolved, distinguishing complete upstream fixes, existing reports, partial solutions, and proposed fixes. Read decisive comments to understand the disposition of earlier work rather than treating closure as rejection or approval as integration. Follow the peer’s retrieval failure handling rather than treating unavailable evidence as an empty search.
 
@@ -54,7 +56,7 @@ For every post-producing outcome, follow [Prepare Post Content](references/prepa
 
 ## Incorporate Findings Before Submission
 
-When the user supplies findings, `agent-task-relay` owns their validation and applicable fix confirmation through its existing routing. Do not add a separate findings protocol or require another review.
+When the user supplies findings, `agent-task-relay` owns their validation and applicable fix confirmation through its existing routing. Supply any continuing authorization record so it can establish whether those fixes are covered. Do not add a separate findings protocol or restart a whole-contribution review solely because findings arrive.
 
 If validated findings undermine the contribution’s premise, return to [Assess the Contribution](#assess-the-contribution) before continuing implementation. Distinguish changes needed for the current contribution’s correctness or supporting evidence from adjacent cleanup or improvements that could become focused follow-ups. Agreement to defer adjacent work does not settle the current contribution’s correctness or evidence questions.
 
@@ -62,6 +64,8 @@ After fixes are approved, resume the selected preparation path. For pull request
 
 ## Hand Back the Contribution
 
-Provide the finished title and body, the intended repository and submission surface, and material evidence or validation limitations. For a pull request, include its head branch, upstream target branch, and the exact user-run Git publication command when publication is needed. Resolve those values from the verified checkout rather than guessing destinations.
+Provide the [finalized title and body](references/prepare-post-content.md#finalize-the-content), the intended repository and submission surface, and material evidence or validation limitations. For a pull request, include its head branch, upstream target branch, and the exact user-run Git publication command when publication is needed. Resolve those values from the verified checkout rather than guessing destinations. Deliver the complete package before publication, not in response to the user reporting a push.
+
+An implementation summary or commit result is an intermediate checkpoint. Continue with authorized preparation, or present the next concrete approval request, rather than making the user ask to resume.
 
 The user submits pull requests, issues, discussions, and security reports manually through the browser. Do not submit through `gh`, an API, or browser automation. Report preparation readiness, not publication or acceptance, then stop. A subsequent user request can reopen preparation without making ongoing monitoring part of this workflow.

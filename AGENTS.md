@@ -65,6 +65,7 @@ Classify every project-authored skill by its canonical source and supported inst
 
 Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
 
+- **Skill catalog:** Treat `skills.sh.json` as consumer-facing documentation under the global consumer documentation policy. Its copy and information architecture serve readers browsing the public skill collection. Preserve existing group and skill order unless reordering is within the requested scope. Continue validating JSON syntax, schema constraints, and skill identifiers.
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
 - **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.
 - **Implementation default:** Write project-authored skill scripts in Rust with `snake_case` source stems, retaining the established `.test.rs` suffix for adjacent contract tests.

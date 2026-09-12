@@ -11,6 +11,14 @@
 			]
 		},
 		{
+			"title": "Agent Coordination",
+			"description": "Keep agent work organized and carry context between conversations.",
+			"skills": [
+				"agent-task-relay",
+				"agent-task-directories"
+			]
+		},
+		{
 			"title": "Shell Scripting",
 			"description": "Work with the shell, not against it.",
 			"skills": [
