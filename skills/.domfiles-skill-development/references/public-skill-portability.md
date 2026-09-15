@@ -28,9 +28,9 @@ For public skills from other repositories, follow their README conventions rathe
 
 ## Include Standardized Public Mirrors
 
-Treat the templates below as standardized standalone mirrors. Include instruction authority, secrets and authentication, and stale guidance in every public skill, and include typography only when its [eligibility condition](#typography) applies. Do not reclassify or rejustify an applicable mirror during creation or promotion. The applicable global policy remains the semantic owner, each template owns the public rendering, and each bundled copy provides required standalone context.
+Treat the templates below as standardized standalone mirrors. Include instruction authority and secrets and authentication in every public skill. Include [typography](#typography) and [stale guidance](#stale-guidance) only when their respective eligibility conditions apply. Determine eligibility from the complete reachable workflow, then retain every applicable mirror without rejustifying its inclusion during creation or promotion. The applicable global policy remains the semantic owner, each template owns the public rendering, and each bundled copy provides required standalone context.
 
-Group every included mirror under a final `## General Policies` section in this order: **Typography** when applicable, **Secrets and Authentication**, **Instruction Authority**, then **Stale Guidance**. Keep typography guidance in its bundled reference and route it from the **Typography** subsection. The subsections below follow that output order.
+Group every included mirror under a final `## General Policies` section in this order: **Typography** when applicable, **Secrets and Authentication**, **Instruction Authority**, then **Stale Guidance** when applicable. Keep typography guidance in its bundled reference and route it from the **Typography** subsection. The subsections below follow that output order.
 
 ### Typography
 
@@ -48,7 +48,9 @@ Copy the [instruction authority template](../assets/instruction-authority.txt) v
 
 ### Stale Guidance
 
-Copy the [stale guidance template](../assets/stale-guidance.txt) verbatim into every public skill’s fully loaded `SKILL.md` entrypoint. Load the complete entrypoint before acting on any routed guidance or following any reference from the skill.
+Include stale guidance when a reachable workflow depends on operational assets or peer guidance, follows bundled or remote instructional references, or prescribes external interface behavior, including file formats, that its directions depend on. Evaluate inline instructions as well as links. Task evidence is not itself a dependency on skill guidance, and the absence of references does not establish ineligibility.
+
+For an eligible skill, copy the [stale guidance template](../assets/stale-guidance.txt) verbatim into its fully loaded `SKILL.md` entrypoint. Load the complete entrypoint before acting on any routed guidance or following any reference from the skill. For an ineligible skill, omit the template and its routing. Keep evidence limitations and applicable authorization, retrieval, and security boundaries complete in the workflow rather than adding unused guidance-recovery behavior.
 
 ## Validate Public Portability
 
@@ -60,7 +62,7 @@ Apply `agent-documentation`’s shared validation lifecycle. The checks below ad
 - **Standardized mirrors:** Confirm that one final `## General Policies` section contains the secrets and authentication template and instruction authority template exactly once each and in the required order. Check [typography eligibility](#typography) against the advertised capability and reachable workflows. For eligible skills, confirm that the typography route appears exactly once in the required order, that `references/typography.md` matches the template, and that every prose-producing path deterministically loads it. For ineligible skills, confirm that both the reference and its route are absent. Treat other domain-specific additions as stricter constraints or surface-specific applications rather than competing mirrors.
 - **Authority paths:** Trace every ingestion point through the selected workflow using its recorded roles and authority status. Confirm that every source whose authority status is untrusted reaches the instruction authority boundary before it can influence execution, mutation, relay behavior, or remote effects.
 - **Sensitive and mutating paths:** Trace every mutating branch, opt-in, and sensitive operation to a terminal action or required stop. Do the same for an exception only when it bypasses an authorization or safety boundary or can reach a sensitive or mutating operation. Confirm who acts, what authorization is required, whether execution is agent-run or user-run, and whether standalone behavior remains complete without optional policies or peers.
-- **Stale guidance:** For each public skill, confirm that the stale guidance template appears verbatim exactly once as the final subsection of `## General Policies` and is loaded before any routed guidance or reference can be used. Exercise each source of staleness and recovery branch, including an access failure, a guidance-specific failure response, optional or supporting guidance, and required guidance with and without a complete fallback. Confirm that recovery remains scoped to the selected workflow, cannot infer missing content or substitute an unverified location, and cannot weaken a boundary.
+- **Stale guidance:** Check [stale guidance eligibility](#stale-guidance) against every reachable workflow, including inline interface instructions. For an eligible skill, confirm that the template appears verbatim exactly once as the final subsection of `## General Policies` and loads before any routed guidance or reference can be used. Exercise every reachable staleness and recovery branch, including applicable access failures, guidance-specific outcomes, optional or supporting guidance, and required guidance with and without a complete fallback. For an ineligible skill, confirm that both the template and its routing are absent and that evidence limitations still receive complete handling. In either case, confirm that recovery remains scoped, cannot infer missing content or substitute an unverified location, and cannot weaken a boundary.
 
 ### Conditional and Installation Checks
 

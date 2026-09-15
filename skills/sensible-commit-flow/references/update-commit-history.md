@@ -37,6 +37,8 @@ Prepare these additions to the shared [confirmation](../SKILL.md#confirm-commits
 3. Specify the native command sequence, intended todo list changes, any expected empty or already applied commits, and the resulting parent relationships. Distinguish temporary fixup messages from final messages.
 4. Establish how unrelated index and working tree state will remain outside the batch and be restored exactly. The index and tracked working tree state must be clean before replay begins, with ignored and untracked state protected from overwrite. Do not let implicit autostashing or automatic updates to other branches widen the operation.
 
+A pending [human review marker](preserve-human-review-markers.md) may prevent clean replay. In that case, pause for the user’s required action instead of committing or temporarily hiding it.
+
 Return to [Confirm Commits](../SKILL.md#confirm-commits) with the proposal and its authorization record. Selecting this route alone is not approval, but a user request that already authorizes the bounded update does not need another green light.
 
 ## Execute History Updates

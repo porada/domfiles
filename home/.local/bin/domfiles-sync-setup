@@ -29,7 +29,6 @@ for source in \
   .domfiles-harmonize \
   .domfiles-release-notes \
   .domfiles-skill-development \
-  .domfiles-verify \
   agent-task-directories \
   agent-task-relay \
   fish-shell-scripting \
@@ -37,7 +36,8 @@ for source in \
   posix-shell-scripting \
   release-notes-for-humans \
   sensible-commit-flow \
-  simple-github-cli; do
+  simple-github-cli \
+  verify-findings; do
   name="$(__string_replace "$source" '.domfiles-' '')"
   path="$DOMFILES/skills/$source"
 

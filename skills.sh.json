@@ -3,6 +3,14 @@
 	"notGrouped": "bottom",
 	"groupings": [
 		{
+			"title": "Shell Scripting",
+			"description": "Work with the shell, not against it.",
+			"skills": [
+				"fish-shell-scripting",
+				"posix-shell-scripting"
+			]
+		},
+		{
 			"title": "Writing",
 			"description": "Bring meaning into focus and make technical writing easy to follow.",
 			"skills": [
@@ -15,15 +23,16 @@
 			"description": "Keep agent work organized and carry context between conversations.",
 			"skills": [
 				"agent-task-relay",
-				"agent-task-directories"
+				"agent-task-directories",
+				"verify-findings"
 			]
 		},
 		{
-			"title": "Shell Scripting",
-			"description": "Work with the shell, not against it.",
+			"title": "Git and GitHub",
+			"description": "Keep commit history clear and GitHub work focused.",
 			"skills": [
-				"fish-shell-scripting",
-				"posix-shell-scripting"
+				"sensible-commit-flow",
+				"simple-github-cli"
 			]
 		}
 	]

@@ -64,6 +64,8 @@ After fixes are approved, resume the selected preparation path. For pull request
 
 ## Hand Back the Contribution
 
+If a required human checkpoint remains, report the prepared result and exact user action, then pause before the final submission-ready handoff. Do not treat an implementation, commit, or agent review as completing that checkpoint.
+
 Provide the [finalized title and body](references/prepare-post-content.md#finalize-the-content), the intended repository and submission surface, and material evidence or validation limitations. For a pull request, include its head branch, upstream target branch, and the exact user-run Git publication command when publication is needed. Resolve those values from the verified checkout rather than guessing destinations. Deliver the complete package before publication, not in response to the user reporting a push.
 
 An implementation summary or commit result is an intermediate checkpoint. Continue with authorized preparation, or present the next concrete approval request, rather than making the user ask to resume.

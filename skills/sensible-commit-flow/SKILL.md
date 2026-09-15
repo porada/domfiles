@@ -42,6 +42,8 @@ Use external services through their established machine-local authentication and
 
 Use supported permission and sandbox grants. Never weaken approvals, sandboxing, hook trust, signing, operating system trust, TLS verification, package integrity, or credential protection. Do not change execution identity or authentication sources. If the task needs such a boundary change, provide instructions for the user rather than performing it. Preserve required repository hook and signing behavior for approved commit operations.
 
+When repository instructions or pending changes involve a possible human review marker, follow [Preserve Human Review Markers](references/preserve-human-review-markers.md) before selecting commit contents or preparing execution.
+
 ## Plan Before Implementation
 
 Use the intended task scope and available repository evidence to apply [Group Hunks](#group-hunks) prospectively. Identify coherent change units, their dependency order, and assumptions that could alter the breakdown. Respect supplied packaging constraints without inventing changes to satisfy them. Identify a conflict when the proposed scope does not support a coherent requested split. If the plan includes provisional messages, use [Compose Messages](references/compose-messages.md) for their wording.

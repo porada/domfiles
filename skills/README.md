@@ -18,16 +18,16 @@ Global installation is recommended for the best experience. Both [`skills`](http
 
 ## Featured Skills
 
-- ### [agent-task-relay](agent-task-relay)
+- ### [fish-shell-scripting](fish-shell-scripting)
 
-    Paste findings from another thread and see your agent take it from there. Or relay work to another agent just as easily.
+    Write Fish as intended: without bashisms.
 
     ```sh
-    npx skills add porada/domfiles --skill agent-task-relay
+    npx skills add porada/domfiles --skill fish-shell-scripting
     ```
 
     ```sh
-    gh skill install porada/domfiles agent-task-relay
+    gh skill install porada/domfiles fish-shell-scripting
     ```
 
 - ### [human-facing-writing](human-facing-writing)
@@ -42,16 +42,16 @@ Global installation is recommended for the best experience. Both [`skills`](http
     gh skill install porada/domfiles human-facing-writing
     ```
 
-- ### [fish-shell-scripting](fish-shell-scripting)
+- ### [agent-task-relay](agent-task-relay)
 
-    Write Fish as intended: without bashisms.
+    Paste findings from another thread and see your agent take it from there. Or relay work to another agent just as easily.
 
     ```sh
-    npx skills add porada/domfiles --skill fish-shell-scripting
+    npx skills add porada/domfiles --skill agent-task-relay
     ```
 
     ```sh
-    gh skill install porada/domfiles fish-shell-scripting
+    gh skill install porada/domfiles agent-task-relay
     ```
 
 ## Other Skills
@@ -61,6 +61,7 @@ Global installation is recommended for the best experience. Both [`skills`](http
 - [**release-notes-for-humans**](release-notes-for-humans)
 - [**sensible-commit-flow**](sensible-commit-flow)
 - [**simple-github-cli**](simple-github-cli)
+- [**verify-findings**](verify-findings)
 
 The `.domfiles-*` skills are tied to this repository’s [configuration](../home). They aren’t ready for standalone installation.
 
