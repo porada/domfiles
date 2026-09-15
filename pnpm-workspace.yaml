@@ -8,7 +8,7 @@ autoInstallPeers: false
 
 catalog:
   '@standard-config/tsconfig': ^3.2.0
-  '@types/node': ^24.13.3
+  '@types/node': ^24.13.4
   '@vitest/coverage-v8': 4.1.11
   prettier: ^3.9.6
   tinyexec: ^1.3.1
@@ -21,6 +21,7 @@ engineStrict: true
 
 minimumReleaseAgeExclude:
   - '@standard-config/*'
+  - '@oxlint/binding-linux-arm64-gnu@1.83.0'
 
 overrides:
   vite-plus>oxfmt: '-'
@@ -41,7 +42,3 @@ trustPolicyIgnoreAfter: 43200
 trustPolicyExclude:
   - '@vercel/*'
   - vercel
-
-update:
-  ignoreDeps:
-    - '@types/node'
