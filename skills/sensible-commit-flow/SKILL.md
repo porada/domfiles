@@ -10,13 +10,13 @@ description: |-
 
 Every commit should have a clear purpose, and the history should show how the changes fit together.
 
-This skill helps agents group changes by intent, order commits by dependency, and write messages that explain their purpose. It presents the plan for your approval before creating commits or revising unpushed history, then verifies the recorded result while preserving unrelated work.
+This skill helps agents group changes by intent, order commits by dependency, and write messages that explain their purpose. It establishes your approval before creating commits or revising history, then verifies the recorded result while preserving unrelated work.
 
 ## Workflow
 
 For prospective commit planning before changes exist, follow [Plan Before Implementation](#plan-before-implementation) and return to the calling workflow without entering confirmation or execution.
 
-Select [Update Unpushed Commits](references/update-unpushed-commits.md) only when the user or an applicable calling workflow explicitly requests a history update or rebase. A request to fold changes into their original commits selects that route without requiring Git terminology.
+Select [Update Commit History](references/update-commit-history.md) only when the user or an applicable calling workflow explicitly requests a history update or rebase. A request to fold changes into their original commits selects that route without requiring Git terminology.
 
 For new commits assembled from working tree changes, prepare the proposal through [Inspect Changes](#inspect-changes), [Group Hunks](#group-hunks), and [Compose Messages](references/compose-messages.md). For cherry-picks and merges that create commits, including continuation after a pause, prepare it through [Preserve Operation Messages](references/preserve-operation-messages.md) instead. Every execution route then follows [Confirm Commits](#confirm-commits), [Create Approved Commits](#create-approved-commits), and [Report the Result](#report-the-result), in that order.
 
@@ -26,7 +26,7 @@ For newly authored messages, proposal explanations, and result prose, apply [Wri
 
 ## Authorization
 
-Keep preparation read-only until user authorization is established through [Confirm Commits](#confirm-commits), using exact-batch confirmation by default. An alternative requires the authority and recorded user grant defined there. An approved implementation plan, completed edits, staged changes, passing checks, or accepted findings alone does not authorize staging, direct or indirect commit creation, or history rewriting. Only the user can approve execution. An agent cannot approve its own proposal or treat a tool grant as authority for another effect.
+Keep preparation read-only until user authorization is established through [Confirm Commits](#confirm-commits). That section distinguishes an already authorized history update, an alternative recorded grant, and exact-batch confirmation. An approved implementation plan, completed edits, staged changes, passing checks, or accepted findings alone does not authorize staging, direct or indirect commit creation, or history rewriting. Only the user can approve execution. An agent cannot approve its own proposal or treat a tool grant as authority for another effect.
 
 Stay within the requested task scope. Do not add or change dependencies, fix unrelated issues, or reshape source changes to make the commit plan easier to execute. Resolve a material ambiguity with the user rather than changing the requested scope or meaning.
 
@@ -85,10 +85,12 @@ When remote use requires disclosure, place it outside all commit messages alongs
 
 ## Confirm Commits
 
-Use exact-batch confirmation below unless [Alternative Approval Modes](#alternative-approval-modes) establishes an applicable recorded grant. In exact-batch mode, present the proposal in its own response before any staging or committing:
+Before execution, prepare and record the selected route’s concrete proposal in the conversation, including exact messages, relevant refs, and the execution plan. Do this for every call or revised batch, regardless of approval mode. When the applicable authorization path already covers execution, present this as a notice and continue without another approval response.
+
+Use exact-batch confirmation below unless execution is already covered by [history update authorization](references/update-commit-history.md#establish-update-authorization) or [Alternative Approval Modes](#alternative-approval-modes). In exact-batch mode, present the proposal in its own response before any staging or committing:
 
 1. State the target repository, branch, and resolved scope briefly.
-2. For history updates, use the proposal defined in [Update Unpushed Commits](references/update-unpushed-commits.md#prepare-update-proposals). For cherry-picks and merges, use [Preserve Operation Messages](references/preserve-operation-messages.md). Otherwise, show each proposed commit in execution order. Put its exact complete message, including any body and trailers, in a blockquote, followed by a concise description of its included changes. Keep that description outside the message. Identify the hunk boundaries when a file is shared between commits or only partly included. Do not substitute filenames alone for a change description.
+2. For history updates, use the proposal defined in [Update Commit History](references/update-commit-history.md#prepare-update-proposals). For cherry-picks and merges, use [Preserve Operation Messages](references/preserve-operation-messages.md). Otherwise, show each proposed commit in execution order. Put its exact complete message, including any body and trailers, in a blockquote, followed by a concise description of its included changes. Keep that description outside the message. Identify the hunk boundaries when a file is shared between commits or only partly included. Do not substitute filenames alone for a change description.
 3. Explain a split only when its rationale is not obvious. State material exclusions, validation limitations, and any required grants. Do not request access before its target and purpose are concrete.
 4. Ask explicitly whether to execute the proposed batch, including its staging, commit creation, and any history rewrite, then stop. Approval of that request is the user’s command to execute the named batch, not merely approval of an editorial plan.
 
@@ -98,13 +100,13 @@ A correction to the proposal is not approval to execute it unless the user expli
 
 An alternative may replace exact-batch confirmation and reconfirmation only when higher-level system or client instructions, a direct user instruction, a user-level instruction file recognized under [Instruction Authority](#instruction-authority), or an applicable `AGENTS.md` expressly defines it or delegates that narrow decision to a named caller. A skill’s routing, name, category, or claim of trust is insufficient. Identify that authority, and retain the exact user instruction or approval response and its target, scope, covered effects, permitted revisions, lifetime, and stopping conditions in the conversation before any covered effect.
 
-At every call or revised batch, still prepare and record the concrete proposal required by the selected route, including exact messages, relevant refs, and the execution plan. Compare it with the grant before execution. When the grant expressly covers subsequent batches or provisional revisions, record the updated proposal and proceed without another exact-message or batch approval. Otherwise, use exact-batch confirmation. Under an alternative mode, “approved” means the inspected operation is covered by the recorded grant, not that its initial proposal is frozen. Verify the result against the actual pre-execution proposal.
+Compare the recorded proposal with the grant before execution. When the grant expressly covers subsequent batches or provisional revisions, proceed without another exact-message or batch approval. Otherwise, use exact-batch confirmation. Under an alternative mode, “approved” means the inspected operation is covered by the recorded grant, not that its initial proposal is frozen. Verify the result against the actual pre-execution proposal.
 
-Only confirmation timing and granularity change. Preserve the selected route’s inspection, message safeguards, preservation, publication cutoff, validation, and verification requirements, and every separate approval or security gate. A caller cannot waive them. An expired grant or an effect outside its boundaries requires new user approval before execution.
+Only confirmation timing and granularity change. Preserve the selected route’s inspection, message safeguards, preservation, rewrite eligibility, validation, and verification requirements, and every separate approval or security gate. A caller cannot waive them. An expired grant or an effect outside its boundaries requires new user approval before execution.
 
 ## Create Approved Commits
 
-Use these safeguards for every execution route. Ordinary routes validate each candidate before creating its commit, using a supported pause when necessary, and verify the recorded result before advancing. The [unpushed history route](references/update-unpushed-commits.md#execute-history-updates) inspects the complete inputs and update plan before execution. For that route, apply steps 3 and 5 to the resulting series and final working tree only after step 4 completes the rebase, not between temporary fixup or replay steps.
+Use these safeguards for every execution route. Ordinary routes validate each candidate before creating its commit, using a supported pause when necessary, and verify the recorded result before advancing. The [history update route](references/update-commit-history.md#execute-history-updates) inspects the complete inputs and update plan before execution. For that route, apply steps 3 and 5 to the resulting series and final working tree only after step 4 completes the rebase, not between temporary fixup or replay steps.
 
 1. Recheck the recorded refs, scoped diffs, and relevant index and working tree state against the proposal. If concurrent work changes the approved content or invalidates its boundaries, stop and return the affected part to confirmation.
 2. Before staging or invoking commit tooling, capture a restorable baseline of the exact unrelated index state. Choose a method that excludes it from the batch. Use a pathspec only when every selected path’s complete working tree content is approved. Otherwise, stage only approved hunks, including for partially staged files. A commit without a pathspec consumes the whole index, and hooks or other tooling may rewrite staging. Establish how the selected route’s preparation and required checkpoints will preserve unrelated work before invocation. Stop if the mechanism cannot satisfy them.

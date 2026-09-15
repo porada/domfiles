@@ -23,7 +23,7 @@ Keep one pull request focused enough for maintainers to assess on its own. When 
 Use this checkpoint during initial setup, before implementation if the proposal discussion has outlasted the verified baseline, and immediately before final readiness. Apply the pre-implementation and final checkpoints to each approved review fix round, including a fresh upstream check after its history updates.
 
 1. Fetch the intended upstream target through the verified remote under the applicable setup or execution authorization.
-2. Create the contribution branch at the supplied checkout’s current `HEAD` if needed. If it is not current, explicitly request `commit-flow`’s unpushed history update route, supplying the contribution branch and refreshed upstream target as the desired base. Let `commit-flow` establish rewrite eligibility, prepare the proposal, verify coverage under the recorded authorization or obtain the required approval, and perform the synchronization.
+2. Create the contribution branch at the supplied checkout’s current `HEAD` if needed. If it is not current, explicitly request `commit-flow`’s history update route, supplying the contribution branch and refreshed upstream target as the desired base. Let `commit-flow` establish rewrite eligibility, prepare the proposal, verify coverage under the recorded authorization or obtain the required approval, and perform the synchronization.
 3. Use the verified result to confirm that the contribution branch contains the fetched target and the intended contribution still fits. Revalidate any affected integration and review the resulting delta when synchronization changes the reviewed result. Do not repeat the history update mechanics or validation owned by `commit-flow`.
 
 Branch updates are confined to the contribution branch. Do not rebase, merge into, reset, or synchronize the fork’s primary branch as a substitute. If `commit-flow` cannot establish eligibility or complete the approved update, report the remaining synchronization requirement rather than claiming readiness or selecting another rewrite method.
@@ -46,7 +46,7 @@ Before asking for implementation approval, run a quick adversarial design check 
 
 Present the verified repository, checkout, contribution branch, upstream target, draft, intended behavior, exclusions, planned validation, and provisional commit breakdown together. When **Contribution Preparation Authorization** applies, ask once for its bounded execution grant: implementation, validation, independent in-client review, in-scope corrections including later validated findings, local commits, provisional branch and message revisions, and synchronization of task-owned unpublished history. Make the permitted revisions and end of the preparation cycle explicit, then wait for the user’s response and retain the approval record before execution.
 
-Without that governing delegation, ask for implementation approval and retain `commit-flow`’s concrete-batch confirmation for commits and history updates. Approval of a draft or plan alone never substitutes for an execution grant.
+Without that governing delegation, ask for implementation approval and let `commit-flow` establish the applicable execution authorization for commits and history updates. Approval of a draft or plan alone never substitutes for an execution grant.
 
 ### Implement and Review
 
@@ -54,9 +54,9 @@ Implement only the approved contribution scope. Run the repository’s applicabl
 
 ### Prepare the Commits
 
-After review, give `commit-flow` the actual changes, packaging constraints, and applicable authorization record. It still prepares and verifies each concrete execution plan. Within a valid contribution grant, continue through covered commits and provisional revisions without another routine confirmation. Otherwise present its required approval request in the same continuation rather than ending with an uncommitted-work summary and waiting for “Proceed.” An implementation plan or accepted finding alone does not authorize creating or rewriting commits.
+After review, give `commit-flow` the actual changes, packaging constraints, and applicable authorization record. It still prepares and verifies each concrete execution plan. Within a valid contribution grant, continue through covered commits and provisional revisions without another routine confirmation. Otherwise continue through its applicable authorization checks and present only any approval still required, rather than ending with an uncommitted-work summary and waiting for “Proceed.” An implementation plan or accepted finding alone does not authorize creating or rewriting commits.
 
-Keep the authored commits coherent on their own. For approved post-review fixes, ask `commit-flow` to map the pending changes to existing commits or independently useful new commits. Explicitly request its unpushed history update route when existing commits need changes, allowing separate new commits in the same plan. When every change belongs in a new commit, use its ordinary new commit route. Mode selection does not authorize execution.
+Keep the authored commits coherent on their own. For approved post-review fixes, ask `commit-flow` to map the pending changes to existing commits or independently useful new commits. Explicitly request its history update route when existing commits need changes, allowing separate new commits in the same plan. When every change belongs in a new commit, use its ordinary new commit route. Mode selection does not authorize execution.
 
 Continue from the commit result to [final editorial work](#finalize-the-pull-request). Do not mistake completion of the commit operation for completion of contribution preparation.
 
@@ -72,7 +72,7 @@ Validate findings against current evidence and settled decisions before acting. 
 
 Update the draft to reflect the reviewed, committed outcome and resolve the user’s editorial feedback through [content finalization](prepare-post-content.md#finalize-the-content). Reassess the provisional branch name against the actual change. The first committed result is an intermediate checkpoint, not the final handoff.
 
-For a single-commit contribution, a later title change also requires updating the complete commit message through `commit-flow`’s unpushed history update route. If its publication cutoff prevents the update, stop for the user’s decision rather than claiming the title and commit agree. Preserve exact wording the user has settled unless they authorize changing it.
+For a single-commit contribution, a later title change also requires updating the complete commit message through `commit-flow`’s history update route. If its authorization or eligibility rules prevent the update, stop for the user’s decision rather than claiming the title and commit agree. Preserve exact wording the user has settled unless they authorize changing it.
 
 After final code, history, and editorial changes, repeat [upstream synchronization](#synchronize-with-upstream) and the readiness check. A new integration change may require targeted validation or delta review, but not an automatic restart of the entire review.
 

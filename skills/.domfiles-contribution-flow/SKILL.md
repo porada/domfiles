@@ -21,7 +21,7 @@ Load each peer when its responsibility enters scope. Keep its policy under that 
 
 | Peer | Responsibility |
 | --- | --- |
-| `commit-flow` | Prospective commit planning, concrete proposals, authorized execution, unpushed history updates, and verification. |
+| `commit-flow` | Prospective commit planning, concrete proposals, authorized execution, history updates, and verification. |
 | `git-worktrees` | Entry into the supplied checkout, isolation, and worktree lifecycle. |
 | `human-facing-writing` | General editorial guidance, including technical accuracy, templates, and typography. |
 | `simple-github-cli` | Remote GitHub context and separately authorized remote operations through the appropriate interface. |
