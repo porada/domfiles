@@ -5,7 +5,7 @@
 			"default_config_options": {
 				"effort": "max",
 				"mode": "auto",
-				"model": "opus"
+				"model": "opus[1m]"
 			},
 			"type": "registry"
 		}
@@ -114,6 +114,9 @@
 		"button": false
 	},
 	"show_whitespaces": "boundary",
+	"tab_bar": {
+		"show_tab_bar_buttons": false
+	},
 	"tabs": {
 		"git_status": true
 	},
@@ -164,6 +167,7 @@
 		"limit_content_width": false,
 		"sandbox_permissions": {
 			"network_hosts": [
+				"*.actions.githubusercontent.com",
 				"*.dom.engineering",
 				"*.porada.co",
 				"*.spec.whatwg.org",
@@ -356,7 +360,11 @@
 				"zizmor.sh"
 			],
 			"write_paths": [
+				"/Users/dom/.cache",
+				"/Users/dom/.cargo",
+				"/Users/dom/Library/Caches/Homebrew",
 				"/Users/dom/Library/Caches/pnpm",
+				"/Users/dom/Library/Caches/Yarn",
 				"/Users/dom/Library/pnpm",
 				"/Users/dom/Projects"
 			]

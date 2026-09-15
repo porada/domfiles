@@ -20,6 +20,10 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
+### Cargo Shared State
+
+The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to the entire default Cargo home directory rather than enumerating cache directories and metadata files. Under the [shared pnpm store’s mutual-trust model](#pnpm-shared-store), this intentionally includes Cargo configuration, credentials, and installed executables.
+
 ### Dependency Installation Policy
 
 [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids installation-time script execution without disabling esbuild’s runtime build API. It gives up the script’s binary-version check, fallback download, and launcher optimization, so optional dependencies remain required by this installation model.
@@ -57,6 +61,8 @@ When terminal sandboxing is active, a tool permission `allow` does not grant an 
 `agent.tool_permissions.tools.fetch.always_allow` contains one generic HTTPS syntax rule. A path-filtered fetch allowance uses a same-host `always_confirm` complement for every other direct initial path and relies on the generic rule for its approved prefixes. Confirmation precedence makes those prefixes prompt-free at the fetch tool layer without redundant allow rules. The generic rule excludes URL userinfo and explicit ports.
 
 `agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed consumes those entries as host grants for native fetch and, while terminal sandboxing is active, as the sandbox network floor for terminal processes. It matches the grants case-insensitively without a port constraint, and each grant covers every port. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal actions independently inherit the global tool default and remain subject to task authorization and any active sandbox wrapper.
+
+`*.actions.githubusercontent.com` supports recurring GitHub Actions build diagnosis. GitHub’s [published network requirements](https://docs.github.com/en/actions/reference/runners/self-hosted-runners#accessible-domains-by-function) specify a wildcard for Actions service hosts rather than an exhaustive hostname list. Exact enumeration from individual builds would leave newly encountered service hosts subject to repeated approval. This exception accepts every current and future strict subdomain under `actions.githubusercontent.com` within the shared all-port authorization boundary above. Azure Blob Storage destinations remain subject to task-scoped approval because their provider-wide suffix also covers unrelated customers.
 
 `*.dom.engineering` and `*.porada.co` are explicit exceptions to the usual wildcard restriction. Both domains belong to the repository owner, who approved wildcard access to their subdomains.
 
