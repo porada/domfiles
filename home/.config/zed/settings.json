@@ -15,7 +15,6 @@
 		"calt": false
 	},
 	"buffer_font_size": 14,
-	"cli_default_open_behavior": "new_window",
 	"collaboration_panel": {
 		"button": false
 	},
@@ -54,6 +53,9 @@
 		"..."
 	],
 	"languages": {
+		"JSON": {
+			"tab_size": 4
+		},
 		"JavaScript": {
 			"language_servers": [
 				"typescript-ls",
@@ -103,7 +105,6 @@
 		"**/target/**",
 		"**/yarn.lock"
 	],
-	"restore_on_startup": "last_workspace",
 	"scrollbar": {
 		"cursors": false,
 		"selected_symbol": false,
