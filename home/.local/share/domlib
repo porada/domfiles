@@ -556,6 +556,12 @@ __is_vim_plug_installed() {
   [ -s "$DOMFILES_VIM_PLUG" ] && grep -q '[^[:space:]]' "$DOMFILES_VIM_PLUG"
 }
 
+# Returns success when full Xcode is installed and active
+__is_xcode_installed() {
+  xcodebuild -version > /dev/null 2>&1 \
+    && xcodebuild -checkFirstLaunchStatus > /dev/null 2>&1
+}
+
 # Creates directory `$1` with standard permissions, creating any missing
 # parents as needed
 __mkdir() {

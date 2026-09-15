@@ -381,6 +381,10 @@ With `--amend`, `git f` compares its inferred or positional fixup target with th
 
 `git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
 
+### Metal Toolchain
+
+[`domfiles-sync-install`](../home/.local/bin/domfiles-sync-install) treats the Metal Toolchain as optional machine provisioning for non-CI macOS environments with an active full Xcode installation. It checks first-launch readiness and compiler availability on every sync, downloading the component only when the compiler probe fails. Download or post-download verification failures are reported as errors without stopping sync. Xcode selection, license acceptance, and first-launch setup remain user-managed, preserving the [Command Line Tools–only baseline](#supported-environment).
+
 ### Peer Dependency Versions
 
 Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints and are not intended to mirror the currently resolved version.

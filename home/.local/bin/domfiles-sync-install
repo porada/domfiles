@@ -99,6 +99,24 @@ if __is_callable vim && ! __is_vim_plug_installed; then
   __print_confirmation "$DOMFILES_VIM_PLUG"
 fi
 
+# Install Xcode components
+if __is_macos && ! __is_ci && __is_xcode_installed; then
+  __print_heading_dimmed 'Installing Xcode components'
+
+  if xcrun --sdk macosx metal --version > /dev/null 2>&1; then
+    __print_confirmation 'Metal Toolchain'
+  elif __ xcodebuild -downloadComponent MetalToolchain; then
+    if __ xcrun --sdk macosx metal --version; then
+      __print_confirmation 'Metal Toolchain'
+    else
+      __print_error \
+        'Failed to verify the Metal compiler after downloading. Check component settings in Xcode'
+    fi
+  else
+    __print_error 'Failed to download the Metal Toolchain'
+  fi
+fi
+
 # Set `fish` as the default shell
 fish="$(brew --prefix)/bin/fish"
 __is_shell "$fish" && exit 0
