@@ -45,7 +45,7 @@ done
 
 # Install apps
 if ! __is_ci; then
-  for formula in firefox google-chrome imageoptim sketch transmit zed; do
+  for formula in chatgpt firefox google-chrome imageoptim sketch transmit zed; do
     install "$formula" --adopt --cask
   done
 fi

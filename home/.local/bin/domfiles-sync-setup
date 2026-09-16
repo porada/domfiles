@@ -24,8 +24,6 @@ __print_heading_dimmed 'Linking agent skills'
 for source in \
   .domfiles-agent-documentation \
   .domfiles-commit-flow \
-  .domfiles-contribution-flow \
-  .domfiles-git-worktrees \
   .domfiles-harmonize \
   .domfiles-release-notes \
   .domfiles-skill-development \
@@ -36,6 +34,7 @@ for source in \
   posix-shell-scripting \
   release-notes-for-humans \
   sensible-commit-flow \
+  sensible-contribution-flow \
   simple-github-cli \
   verify-findings; do
   name="$(__string_replace "$source" '.domfiles-' '')"

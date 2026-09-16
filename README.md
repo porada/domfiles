@@ -1,4 +1,4 @@
-[![](https://img.shields.io/github/actions/workflow/status/porada/domfiles/test.yaml?style=flat-square)](https://github.com/porada/domfiles/actions/workflows/test.yaml)
+[![](https://skills.sh/b/porada/domfiles)](https://www.skills.sh/porada/domfiles)
 
 # domfiles
 

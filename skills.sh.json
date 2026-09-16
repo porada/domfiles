@@ -32,6 +32,7 @@
 			"description": "Keep commit history clear and GitHub work focused.",
 			"skills": [
 				"sensible-commit-flow",
+				"sensible-contribution-flow",
 				"simple-github-cli"
 			]
 		}
