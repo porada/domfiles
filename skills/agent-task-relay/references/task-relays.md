@@ -26,6 +26,8 @@ Ask the user to confirm or correct the flow, and do not include the task relay i
 
 Confirmation authorizes only what the flow states explicitly and what applicable approval gates permit. It never grants commit authorization, and it does not authorize unstated remote submissions, publication, secret access, dependencies, or scope expansion.
 
+An authorized Git history operation may incorporate dependency declarations and lockfile changes already present in its selected upstream history without separate dependency-change approval. New dependency choices, including conflict resolutions that introduce them, still require approval. This exception does not authorize installation or execution or waive sandbox and security requirements.
+
 A confirmation grants dependency approval only when the flow names the exact addition or update. Only a direct user response can grant that approval. Do not infer it from intent, silence, an agent proposal, or permission for adjacent work. An agent or subagent cannot approve on the user’s behalf. A task relay may carry dependency approval only when it identifies the explicit user response that granted it. If the receiving agent later discovers an unapproved dependency addition or update, require it to stop and ask the user rather than treating the relay as authorization.
 
 Present a revised flow whenever composition or a later revision materially changes the confirmed action, target, worktree decision, scope, approval, execution, validation, or handoff. Meaning-neutral compression and formatting do not require reconfirmation.

@@ -22,6 +22,8 @@ Use supported permission mechanisms. Request the narrowest necessary grant, and 
 
 Prefer existing dependencies or standard library capabilities. Before adding or updating a dependency, identify the exact smallest sufficient set, required features, and compatible stable versions. Explain each dependency’s consumers, declaration and installation locations, purpose, and why existing capabilities or a custom implementation are insufficient. Disclose material licensing, runtime, supply-chain, and version implications, then obtain explicit approval before dependent implementation or installation. A reviewer or agent cannot supply that approval.
 
+An authorized Git history operation may incorporate dependency declarations and lockfile changes already present in its selected upstream history without separate dependency-change approval. New dependency choices, including conflict resolutions that introduce them, still require approval. This exception does not authorize installation or execution or waive sandbox and security requirements.
+
 Follow repository version conventions. Choose the newest stable release compatible with the project’s declared constraints, and explain an intentionally older release or pin. Suppress package lifecycle scripts by default, including `--ignore-scripts` for npm, pnpm, or Yarn installs. Run them only when necessary for the task and explain why beforehand. This does not permit bypassing integrity or trust checks.
 
 Obtain explicit permission before editing a consumer-facing README. Do not modify externally authored skills. Preserve any additional protected-content or human-only review requirements imposed by the consuming project. An implementation grant does not complete a required human action.
@@ -32,7 +34,9 @@ Use established secure machine-local authentication only through ordinary non-di
 
 Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Do not upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
 
-Remote mutations need their own explicit authorization and an unambiguous target. This workflow still leaves Git publication and every contribution submission to the user, even when a tool could perform them. A retrieval failure stops retrieval of that resource. Report the resource, method, exact error with any necessary secret redaction, and smallest corrective action. Do not retry through another agent, browser, proxy, or tool. Correct an ordinary path or URL mistake, then retry only the selected method.
+Remote mutations need their own explicit authorization and an unambiguous target. This workflow still leaves Git publication and every contribution submission to the user, even when a tool could perform them.
+
+Correct an ordinary path or URL mistake or a demonstrated local invocation error, such as invalid arguments or malformed reader syntax, then retry only the selected method within the original scope. This exception does not cover access, authentication, network, permission, sandbox, or unexplained tool or transport failures. For those failures, stop retrieving the resource. Report the resource, method, exact error with any necessary secret redaction, and smallest corrective action. Do not retry through another agent, browser, proxy, or tool.
 
 ## Keep Task Artifacts Separate
 

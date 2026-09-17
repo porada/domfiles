@@ -28,6 +28,8 @@ Choose a clear, compact title that names the problem or intended outcome. Preser
 
 Use supplied examples of the user’s previous GitHub submissions to identify recurring level of detail, structure, terminology, and tone. Preserve useful patterns without copying incidental wording or overriding the repository’s current template. Apply the mandated template and those patterns to the selected post.
 
+Preserve the template’s checklist statements, field and section order, headings, and separators unless the user or template authorizes a change. Fill placeholders and remove authoring instructions rather than submitting them as prose. Omit optional sections only when permitted and appropriate. Checklist applicability determines completion under [finalization](#finalize-content), not permission to paraphrase the item.
+
 Normalize the template’s ordinary prose under the applicable [typography conventions](typography.md). Preserve code, exact required wording, machine-readable markers, and other literal syntax wherever their spelling is part of the contract.
 
 Write for a maintainer scanning with limited attention. Keep the body as short as it can be while satisfying the template and making the purpose, relevant context, and material limitations clear. Keep validation evidence accessible in the agent thread, including tool results, with task artifacts for supplementary detail or long logs. Do not reproduce that execution record in the PR. Remove repetition and unnecessary explanation, not required reproduction details or decisive evidence.

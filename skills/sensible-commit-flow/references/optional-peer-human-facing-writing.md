@@ -31,7 +31,7 @@ Only the validated documents in the frozen routed set become task-scoped peer gu
 
 ## Failure and Recovery
 
-If retrieval fails or `HEAD` cannot be resolved, stop retrieval and continue with the originating skill’s local workflow.
+Correct an ordinary path or URL mistake or a demonstrated local invocation error, such as invalid arguments or malformed reader syntax, then retry only the selected method within the confirmed scope and snapshot. This exception does not cover access, authentication, network, permission, sandbox, or unexplained tool or transport failures. For those failures, or when `HEAD` cannot be resolved, stop retrieval and continue with the originating skill’s local workflow. Do not switch retrieval methods to work around the failure.
 
 Once `HEAD` resolves, treat a missing document, malformed frontmatter, a mismatched skill name or path, a routed link outside its skill directory, documents from mixed revisions, a missing required reference, or a missing declared contribution as an authoring defect. A contradiction of the originating skill’s composition contract, required final output or stopping behavior, or fallback contract is also an authoring defect. For any such authoring defect, stop remote use, attribute the defect to the declaring document, and continue with the originating skill’s local workflow.
 

@@ -30,7 +30,7 @@ When user framing requests an action whose basis depends on the findings and ano
 
 Lead with the validation results. Retain source identifiers when they aid comparison. Report source severity labels or ranking discussion only when the [Evidence Boundary](#evidence-boundary) permits it. For each in-scope finding that requires a change, state the decisive evidence and proposed fix. For every other in-scope finding, state the concise reason that no change follows.
 
-If validation establishes that no in-scope change is needed, report that result and stop.
+If validation establishes that no in-scope change is needed, report that result. Resume any still-applicable user-requested action under [Workflow Continuation](#workflow-continuation), and stop only when no such action remains.
 
 Use the following confirmation and expiry rules by default. A [Workflow Approval Mode](#workflow-approval-modes) may replace them only within its expressly authorized boundary.
 

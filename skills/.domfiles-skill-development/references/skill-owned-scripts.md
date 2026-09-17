@@ -100,11 +100,11 @@ For ephemeral artifacts, have the caller establish storage through `agent-task-d
 
 Before writing:
 
-- Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
-- Do not write Git metadata or files unrelated to the declared artifact contract.
 - Apply the global “Concurrent work” preservation rule to repository destinations.
-- Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
+- Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
+- Do not write files unrelated to the declared artifact contract. Keep host and target repository Git metadata read-only. Limit Git metadata writes to [declared disposable fixture setup](#test-the-contracts).
 - Leave byte-identical output unchanged.
+- Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
 
 ## Write Artifacts Safely
 
@@ -119,6 +119,8 @@ Before writing:
 - Cover every distinct externally observable refusal and every routine that authorizes a mutation on a correctness claim, such as an accounting, containment, or equivalence proof. For a refusal shared by multiple external routes, keep the detailed refusal cases on the shared path and add one lightweight wiring assertion for each route proving that it reaches that path. Add route-specific detailed cases only when the route changes behavior or a caller relies on that distinction. Assert the refusal a caller would rely on, not only that the operation failed.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](#bound-artifact-locations).
 - Run focused tests during implementation and after each behaviorally relevant correction. Run the repository’s root static validation once after the consolidated change batch, then rerun it only when a later correction changes an input or configuration that it covers. Direct execution and focused tests do not replace root typechecking or compilation.
+
+Tests may initialize declared disposable fixture repositories and populate their indexes only when the current task authorizes that setup and the caller has established isolated storage under the [ephemeral-artifact rule](#bound-artifact-locations). Keep these writes inside the fixture repositories. Obtain any required sandbox grants separately. Tests that create commits, including fixture commits, still require explicit user authorization under the global “Commit gate”.
 
 Document focused script and test commands in the owning skill or its repair reference.
 

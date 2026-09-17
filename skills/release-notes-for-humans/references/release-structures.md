@@ -6,8 +6,10 @@ Start with a flat release note list. Use one of these structures only when it ma
 
 A status item communicates release state rather than an ordinary consumer outcome. Render its exact italicized text as one unordered list item using the marker required by the release surface.
 
+For a package section within a non-initial synchronized release, evaluate status eligibility against the package’s exhaustive inventory, including outcomes covered by `All Packages`.
+
 - **Initial release:** Use `_Initial release._` only after the user confirms that the release is initial. In an initial package section within a non-initial synchronized release, use it only when the package’s exhaustive inventory contains no more specific consumer-facing item. Do not substitute unbulleted prose or an emoji-only body.
-- **No functional changes:** Use `_No functional changes._` only for a non-initial package section in a synchronized release whose exhaustive inventory contains no consumer-relevant item, including a dependency update or similar package change. A required synchronized version bump alone does not count as an item. Keep this status as the section’s only release note item.
+- **No functional changes:** Use `_No functional changes._` for a non-initial package section in a synchronized release whose exhaustive inventory contains no consumer-relevant item beyond outcomes already covered by `All Packages`. This status also applies to an initial package section within a non-initial synchronized release when its inventory contains consumer-relevant outcomes and all are covered by `All Packages`. In these shared-outcome cases, the established token means no package-specific changes. A package-specific dependency update or similar consumer-relevant change still requires its own item. A required synchronized version bump alone does not count as an item. Keep this status as the section’s only release note item.
 
 ## Aggregate Release Note Files
 
@@ -40,7 +42,7 @@ Do not repeat migration prose in later patch releases unless the user explicitly
 
 ## Synchronized Multi-Package Releases
 
-Give every package a stable section when one repository publishes several packages under a shared release:
+Give every package a stable section when one repository publishes several packages under a shared release. A non-initial synchronized release might use:
 
 ```text
 ### Breaking Changes
@@ -64,4 +66,4 @@ Put `Breaking Changes` first, followed by `All Packages` when needed. Then use t
 
 Use `All Packages` only for a change that applies uniformly to every package in the synchronized set. Do not repeat that change in package-specific sections.
 
-When synchronized packages must publish together, retain one section for every package in the set. Apply the [status item rules](#status-items) when a package has no consumer-relevant item. Outside a synchronized release, having no item to list normally does not warrant a release.
+When synchronized packages must publish together, retain one section for every package in the set. Apply the [status item rules](#status-items) when a package has no package-specific consumer-relevant item to list. Outside a synchronized release, having no item to list normally does not warrant a release.

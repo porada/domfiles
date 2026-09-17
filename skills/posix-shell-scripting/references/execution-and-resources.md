@@ -73,15 +73,17 @@ When temporary storage is necessary and the target provides `mktemp`, keep creat
 
 ## Recovery and Compensation
 
-Treat a multi-step mutation as a recovery workflow rather than an atomic operation. Before the first mutation, capture the original state needed for recovery. Reject preexisting operation state that compensation could destroy, along with any condition that would make destructive compensation unsafe. Establish how the workflow will prove ownership and unchanged state for every shared resource it may compensate.
+Follow the script’s declared partial-failure and recovery contract. A multi-step mutation does not by itself require recovery infrastructure or imply atomicity. When the contract requires recovery, capture the original state needed for exact restoration before the first mutation. Reject preexisting operation state that compensation could destroy, along with any condition that would make destructive compensation unsafe. Establish how the workflow will prove ownership and unchanged state for every shared resource it may compensate.
 
-Compensate only effects the workflow can identify as its own. An attempted command does not prove that its effect occurred. A before-and-after inventory does not establish ownership of a new shared entry. For a mutable shared resource, hold an exclusive lock from the ownership and state checks through compensation, or use a conditional mutation that succeeds only if the resource still matches the observed version. Rely on a creation-returned stable identifier alone only when the identified resource is immutable and the creation result proves ownership. If ownership or atomic state protection cannot be established, leave the shared resource intact and stop.
+Compensate only effects the workflow can identify as its own. An attempted command does not prove that its effect occurred. A before-and-after inventory does not establish ownership of a new shared entry. Rely on a creation-returned stable identifier alone only when the identified resource is immutable and the creation result proves ownership. If ownership or safe compensation without overwriting others’ changes cannot be established, leave the shared resource intact and stop.
+
+When the established concurrency or risk model or a promised atomic guarantee requires atomic state protection for a mutable shared resource, hold an exclusive lock from the ownership and state checks through compensation, or use a conditional mutation that succeeds only if the resource still matches the observed version. Do not add these mechanisms merely to strengthen recoverability for ordinary cooperative work.
 
 Capture the original failure status before recovery. If recovery succeeds, return that original status. If recovery fails, report both failures, return the recovery failure’s status, and preserve any resource needed for manual recovery. Verify the recovered state before restoring user data or starting another mutation.
 
 Write a completion marker only after establishing the exact condition it represents, including any recovery that condition requires.
 
-Repeat any remaining destructive-safety preflight after earlier recovery steps because they may have changed the inspected state. Perform the decisive mutable-state check under the lock or as part of the conditional mutation, not as a separate preflight.
+Repeat any remaining destructive-safety preflight after earlier recovery steps because they may have changed the inspected state. When atomic state protection is required, perform the decisive mutable-state check under the lock or as part of the conditional mutation, not as a separate preflight.
 
 ## Cleanup Ownership
 

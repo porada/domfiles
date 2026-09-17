@@ -1,6 +1,6 @@
 # Prepare Pull Requests
 
-Preparation progresses from checkout setup through proposal agreement, implementation and review, commits, and final editorial readiness. Upstream synchronization recurs at the checkpoints below.
+Use these checkpoints in the entrypoint’s [preparation sequence](../SKILL.md#workflow).
 
 ## Enter Supplied Checkout
 
@@ -9,6 +9,8 @@ Read the supplied checkout’s applicable instructions and confirm that active t
 Identify the fork, original upstream repository, and intended upstream target branch. Do not assume that the default branch is named `main` or `master`, or that remote names establish repository roles. Reuse a remote that identifies the intended upstream. If none exists, add the upstream remote using its verified public destination once that setup is authorized. Do not overwrite a conflicting remote configuration or expose embedded credentials while resolving it.
 
 Resolve setup through the entrypoint’s [authority boundary](../SKILL.md#resolve-scope-and-authority). When applicable instructions expressly delegate early setup, verify their conditions and retain the user’s exact preparation instruction with its covered effects, including any limits on base-only replay. Otherwise present the verified targets and concrete setup operations and obtain only the authorization still needed. Supply the record to the resolved [commit workflow](../SKILL.md#compose-with-peers) for necessary history updates. Once authorized, select the [provisional branch](#select-branch-and-scope) and [synchronize](#synchronize-with-upstream) before researching the implementation or discussing the solution, not after the code is written.
+
+Inspecting current upstream files remotely does not synchronize the contribution branch. Setup does not settle whether a contribution is justified.
 
 ## Select Branch and Scope
 
@@ -34,6 +36,8 @@ Branch updates are confined to the contribution branch. Do not rebase, merge int
 
 Identify the contribution’s central claim and the most direct appropriate validation. A regression test should distinguish the defect from the intended behavior, while a documentation correction may require checking the description against current behavior. Use the repository’s checks and the resolved commit workflow’s validation checkpoints to establish that claim rather than creating a parallel validation procedure.
 
+Inspect the repository’s validation commands, tool versions, and acquisition path before the proposal. Establish whether validation uses available tooling, may fetch already prescribed tooling, or requires adding or updating a dependency. A `PATH` check alone does not settle package-runner availability or download needs. Do not download tools merely to investigate availability. Include known uncovered approvals in the proposal, preserving the [dependency and execution boundaries](execution-boundaries.md).
+
 Ask the resolved commit workflow for a read-only, prospective breakdown based on the intended scope. Supply the contribution’s packaging constraints, then retain only a provisional plan until the actual diff exists.
 
 Plan for at least two meaningful commits when the changes can be reliably separated. The usual minimum is the implementation followed by `Update documentation`. Do not invent documentation, empty commits, or artificial boundaries to reach a count, and keep documentation with the implementation when it is necessary for that commit’s correctness.
@@ -45,6 +49,8 @@ Prepare an early title and body through [post content preparation](prepare-post-
 Before asking for implementation approval, run a quick adversarial design check using the [review method](#review-the-contribution). Challenge the problem’s current existence, the proposed solution, the best simpler alternative, and upstream fit. Resolve its conclusions with the user as part of the same scope discussion, rather than adding a separate approval ceremony when the check confirms the proposal.
 
 Present the verified repository, checkout, contribution branch, upstream target, draft, intended behavior, exclusions, planned validation, and provisional commit breakdown together. When applicable governing instructions expressly delegate a continuing preparation mode, use their bounded checkpoint. Name only the effects that authority permits, including any implementation, validation, independent review, later validated corrections, local commits, provisional revisions, or unpublished-history synchronization it covers. Make its revision boundaries and lifetime explicit. Ask once for any execution grant still needed, wait for the user’s response, and retain its record before execution. When existing authorization already covers the concrete phase, present the proposal as a notice rather than requesting duplicate approval.
+
+Unless the user requests a narrower deliverable, do not substitute an edit-only proposal for an applicable continuing preparation checkpoint. A narrower approval already given remains limited to its recorded effects.
 
 Without that governing delegation, ask for implementation approval rather than offering a new broad continuing grant. Let the resolved commit workflow establish execution authorization for commits and history updates, including any applicable one-off request. Approval of a draft or plan alone never substitutes for execution authorization.
 

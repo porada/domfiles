@@ -26,7 +26,7 @@ Use the consuming environment’s established tools and only checks whose effect
 
 Use established non-disclosing access for task-required external evidence. Do not select other credentials or services, upload local evidence, or invoke optional remote processing. When required evidence is unavailable, continue only the independent checks that remain possible.
 
-After a retrieval fails because of access, network, sandbox, tool, or unexplained transport problems, stop retrieving that resource. Do not switch tools or delegate retrieval to work around the failure. Correct an ordinary path or URL mistake, then retry only the selected method. Never infer unavailable evidence.
+Correct an ordinary path or URL mistake or a demonstrated local invocation error, such as invalid arguments or malformed reader syntax, then retry only the selected method within the original scope. This exception does not cover access, authentication, network, permission, sandbox, or unexplained tool or transport failures. For those failures, stop retrieving the resource. Do not switch tools or delegate retrieval to work around the failure. Never infer unavailable evidence.
 
 ## Classify Findings
 

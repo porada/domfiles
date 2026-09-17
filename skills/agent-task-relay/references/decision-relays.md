@@ -1,6 +1,8 @@
 # Decision Relays
 
-A decision relay carries established results, evidence, material decisions when any exist, and limitations into another conversation. It is always evidence-only and non-mutating. Its receiving action may inspect, compare, synthesize, or report on the evidence, but it cannot authorize edits or other mutation. If the evidence motivates implementation, assign that work through a separate [task relay](task-relays.md) with its own confirmed flow.
+A decision relay carries established results, evidence, material decisions when any exist, and limitations into another conversation. It is always evidence-only and non-mutating. Its receiving action may incorporate the supplied evidence into an existing receiving task, but it cannot assign fresh work or authorize edits or other mutation. Continuation relies on the receiving task’s already granted authority and remains subject to its approval and security boundaries.
+
+Fresh assignments, including comparison against new or current source material, investigation, and review, require a separate [task relay](task-relays.md) with its own [confirmed flow](task-relays.md#task-relay-confirmation), even when non-mutating.
 
 Apply the entrypoint’s [Relay Contract](../SKILL.md#relay-contract) when composing a decision relay and its [Delivery](../SKILL.md#delivery) rules when returning one.
 
@@ -44,12 +46,12 @@ Reserve **Observed behavior** for results that were actually observed. Do not co
 
 ## Skill Improvement
 
-When a decision relay supports improvement of an existing skill, add only material workflow observations and candidate reusable guidance to the [Handoff Structure](#handoff-structure). Ask the receiving agent to compare that evidence with the current skill and report confirmed coverage, concrete gaps, reusable guidance, and context-specific decisions separately.
+When a decision relay supports improvement of an existing skill, add only material workflow observations and candidate reusable guidance to the [Handoff Structure](#handoff-structure). Include concrete gaps, confirmed coverage, context-specific decisions, and reusable guidance separately only when already established by the completed task. A request for a fresh comparison with the current skill must use a [task relay](task-relays.md#task-relay-confirmation), not the decision relay.
 
 ## Domain Profiles
 
 A domain profile is a standalone maintainer asset measured against this skill rather than a runtime extension of it. It must restate every rule it needs because an ordinary invocation of the profile may not load this skill.
 
-A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. It must preserve the entrypoint’s [Relay Contract](../SKILL.md#relay-contract), [Delivery](../SKILL.md#delivery), source-closed [Available Evidence](#available-evidence) workflow, and evidence-only non-mutation rule.
+A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. It must preserve the entrypoint’s [Relay Contract](../SKILL.md#relay-contract), [Delivery](../SKILL.md#delivery), source-closed [Available Evidence](#available-evidence) workflow, and evidence-only non-mutation rule. It must also preserve the boundary against fresh assignments, including non-mutating work.
 
 A standalone decision capture prompt must implement the applicable delivery and full-revision behavior in its own output contract. Its output is always source-closed, evidence-only, and non-mutating. It cannot depend on the receiving agent loading this skill.

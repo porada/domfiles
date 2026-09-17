@@ -49,7 +49,7 @@ After editing:
 
 1. Run every applicable conditional branch change validation workflow.
 2. Parse each changed settings JSON file with `jq -e 'type == "object"' <path>`.
-3. Check formatting with `pnpm --config.verifyDepsBeforeRun=error exec prettier --check <changed-files>`, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands). If dependencies are unavailable, report the limitation unless the current task separately authorizes reconciliation.
+3. Check formatting with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm exec prettier --check <changed-files>`, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands). If dependencies are unavailable, report the limitation unless the current task separately authorizes reconciliation.
 4. Verify every applicable general and selected-branch Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
 5. Run `git --no-pager diff --check`.
 
