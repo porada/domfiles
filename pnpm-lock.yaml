@@ -200,8 +200,8 @@ importers:
         specifier: ^1.3.4
         version: 1.3.4
       skills:
-        specifier: ^1.5.26
-        version: 1.5.26
+        specifier: ^1.6.0
+        version: 1.6.0
       vercel:
         specifier: ^59.19.0
         version: 59.19.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(supports-color@7.2.0)
@@ -3090,8 +3090,8 @@ packages:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
 
-  skills@1.5.26:
-    resolution: {integrity: sha512-D5jnWoMPDRQ3fJM3RpQH8SBrAS9tmVlTC7OdOB2tk7D6nORbRnw8RLwjVj81IIGlxwWuBthEgUChM7SOZGvTHQ==}
+  skills@1.6.0:
+    resolution: {integrity: sha512-E2tN8PM2ReYtt8xxXFLTIm/4OWjLeuhudgAejN0N/g5Yr6BYdv+YP2PK5Vg9L3Oz3aRgu67ovWzAO3Y6Z3JJWQ==}
     engines: {node: '>=22.20.0'}
     hasBin: true
 
@@ -5949,7 +5949,7 @@ snapshots:
       mrmime: 2.0.1
       totalist: 3.0.1
 
-  skills@1.5.26:
+  skills@1.6.0:
     dependencies:
       tar: 7.5.22
       yaml: 2.9.1
