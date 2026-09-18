@@ -65,7 +65,7 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 
 ## Validate a Change
 
-Keep validation separate from dependency reconciliation. The command-local pnpm overrides below retain version checks, freeze the environment lockfile, and reject outdated project dependencies rather than installing them. If a check needs reconciliation, report the limitation unless the task separately authorizes it.
+Keep validation separate from dependency reconciliation. The command-local pnpm overrides below retain version checks, freeze the environment lockfile, and reject outdated project dependencies rather than installing them. If a check needs reconciliation, apply the global **Dependencies** policy, perform any authorized acquisition separately, then rerun the guarded check. Report a limitation when acquisition is outside the task’s authorization or cannot proceed within applicable boundaries.
 
 After editing, use the narrowest applicable validation scope:
 

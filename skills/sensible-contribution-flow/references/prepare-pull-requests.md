@@ -36,7 +36,7 @@ Branch updates are confined to the contribution branch. Do not rebase, merge int
 
 Identify the contribution’s central claim and the most direct appropriate validation. A regression test should distinguish the defect from the intended behavior, while a documentation correction may require checking the description against current behavior. Use the repository’s checks and the resolved commit workflow’s validation checkpoints to establish that claim rather than creating a parallel validation procedure.
 
-Inspect the repository’s validation commands, tool versions, and acquisition path before the proposal. Establish whether validation uses available tooling, may fetch already prescribed tooling, or requires adding or updating a dependency. A `PATH` check alone does not settle package-runner availability or download needs. Do not download tools merely to investigate availability. Include known uncovered approvals in the proposal, preserving the [dependency and execution boundaries](execution-boundaries.md).
+Inspect the repository’s validation commands, tool versions, and acquisition path before the proposal. Establish whether validation uses available tooling, may acquire already prescribed dependencies or tools, or requires a new dependency choice. A `PATH` check alone does not settle package-runner availability or download needs. Do not download tools merely to investigate availability. Include known uncovered approvals in the proposal, preserving the [dependency and execution boundaries](execution-boundaries.md).
 
 Ask the resolved commit workflow for a read-only, prospective breakdown based on the intended scope. Supply the contribution’s packaging constraints, then retain only a provisional plan until the actual diff exists.
 

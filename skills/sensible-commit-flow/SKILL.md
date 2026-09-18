@@ -28,7 +28,13 @@ For newly authored messages, proposal explanations, and result prose, apply [Wri
 
 Keep preparation read-only until user authorization is established through [Confirm Commits](#confirm-commits). That section distinguishes an already authorized history update, an alternative recorded grant, and exact-batch confirmation. An approved implementation plan, completed edits, staged changes, passing checks, or accepted findings alone does not authorize staging, direct or indirect commit creation, or history rewriting. Only the user can approve execution. An agent cannot approve its own proposal or treat a tool grant as authority for another effect.
 
-Stay within the requested task scope. Do not make new dependency choices, fix unrelated issues, or reshape source changes to make the commit plan easier to execute. An authorized history operation may incorporate dependency declarations and lockfile changes already in its selected upstream history without separate dependency-change approval. New choices, including conflict resolutions that introduce them, require explicit user approval. Installation, execution, and sandbox requirements remain separate. Resolve a material ambiguity with the user rather than changing the requested scope or meaning.
+Stay within the requested task scope. Do not fix unrelated issues or reshape source changes to make the commit plan easier to execute. Resolve a material ambiguity with the user rather than changing the requested scope or meaning.
+
+Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version, including through conflict resolution. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without that approval, stop before dependent implementation, mutation, installation, or mutating delegation.
+
+Authorization to run an established project workflow includes obtaining the dependencies and tools it already prescribes through configuration, lockfiles, manifests, or scripts, using its normal acquisition mechanism. Do not request separate dependency approval solely because those packages are absent locally or downloaded on demand. An agent cannot manufacture this authorization by adding its own dependency declaration or acquisition step. Explicit task restrictions and applicable execution, lifecycle-script, permission, and trust boundaries remain in force.
+
+An authorized history operation may incorporate dependency declarations and lockfile changes already in its selected upstream history without separate dependency-change approval. History integration alone does not authorize installation or execution, but a separately authorized workflow can cover prescribed acquisition. Sandbox and security requirements remain in force.
 
 ## Execution Boundaries
 

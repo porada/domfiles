@@ -74,15 +74,7 @@ Before any `gh copilot` invocation, follow [Copilot CLI](references/copilot-cli.
 
 ## Dependency Changes
 
-Treat installing or updating an extension, skill, or other executable through `gh` as a dependency change.
-
-Apply this section whenever this skill carries dependency approval, prepares an operation that may add or update a dependency, or proposes a dependency change.
-
-Choose the smallest dependency set that completely satisfies the task. Prefer an existing dependency or standard library capability when sufficient. Enable only the required features.
-
-Before requesting approval, identify each proposed addition or update exactly. For each dependency, state its consumers, declaration location, installation location when relevant, and purpose. Explain why existing dependencies or standard library capabilities are insufficient and why a custom implementation would be less correct, maintainable, proportionate, or secure. Disclose any material feature, licensing, runtime, supply chain, or version implications.
-
-Require explicit user approval for the exact dependency addition or update before carrying approval or preparing the operation. An authorized Git history operation may incorporate dependency declarations and lockfile changes already in its selected upstream history without separate dependency-change approval. New dependency choices, including conflict resolutions that introduce them, remain gated. This exception does not authorize installation or execution or waive sandbox and security requirements.
+Before proposing a dependency choice, carrying its approval, or preparing an operation that may acquire dependencies or tools, follow [Dependency Changes](references/dependency-changes.md). That policy distinguishes new choices from prescribed acquisition, including for `gh` extensions and skills.
 
 ## Capability Boundaries
 
