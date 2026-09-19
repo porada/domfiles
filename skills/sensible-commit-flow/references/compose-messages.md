@@ -25,4 +25,4 @@ The role guide is alphabetized by editorial role:
 - **Literal names:** Put exact searchable tokens in backticks, including commands, configuration keys, domains, file labels, package selectors, paths, and rule IDs. Leave conceptual categories and canonically styled product names in prose. For example, `typescript@7` is a literal selector, while TypeScript is a product name.
 - **Bodies:** Use the subject alone unless a short body adds verified motivation, constraints, or consequences that the subject cannot adequately convey. Do not restate the subject, narrate the patch, or add a routine testing checklist. Preserve bodies and trailers required by the selected message constraints, but do not invent issue references, attribution, or boilerplate.
 
-Return the messages to the calling route. Prospective messages remain part of its read-only plan. Concrete commit proposals proceed through the shared [confirmation](../SKILL.md#confirm-commits).
+Return the messages to the calling route. Prospective messages remain part of its read-only plan. Concrete commit proposals proceed through the shared [authorization check](../SKILL.md#confirm-commits).

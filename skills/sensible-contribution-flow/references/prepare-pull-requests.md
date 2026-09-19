@@ -60,7 +60,7 @@ Implement only the approved contribution scope. Respect the execution boundary�
 
 ### Prepare Commits
 
-After review, give the resolved commit workflow the actual changes, packaging constraints, and applicable authorization record. It still records and verifies each concrete execution plan. Continue through covered effects under a valid continuing grant or one-off history-update request without duplicate confirmation. For uncovered effects, present only the approval still required, rather than ending with an uncommitted-work summary and waiting for “Proceed.” An implementation plan or accepted finding alone does not authorize creating or rewriting commits.
+After review, give the resolved commit workflow the actual changes, packaging constraints, and applicable authorization record. It still records and verifies each concrete execution plan. Continue through covered effects under an explicit scoped commit request, a valid continuing grant, or a one-off history-update request without duplicate confirmation. For uncovered effects, present only the approval still required, rather than ending with an uncommitted-work summary and waiting for “Proceed.” An implementation plan or accepted finding alone does not authorize creating or rewriting commits.
 
 Keep the authored commits coherent on their own. For approved post-review fixes, ask the resolved commit workflow to map pending changes to existing commits or independently useful new commits. State explicitly when existing history needs an update, allowing separate new commits in the same plan. When every change belongs in a new commit, request only those new commits. Selecting an operation does not authorize its execution.
 
