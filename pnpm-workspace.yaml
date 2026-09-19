@@ -10,10 +10,10 @@ catalog:
   '@standard-config/tsconfig': ^3.2.0
   '@types/node': ^24.13.5
   '@vitest/coverage-v8': 4.1.11
-  prettier: ^3.9.7
+  prettier: ^3.9.8
   tinyexec: ^1.3.1
   typescript: ^6.0.3
-  vite-plus: ^0.3.2
+  vite-plus: ^0.3.3
 
 color: always
 
