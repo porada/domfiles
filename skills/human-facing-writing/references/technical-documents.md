@@ -37,11 +37,14 @@ For any security report, whether standalone or submitted through an issue or pul
 
 ## Content
 
-- Place prerequisites, caveats, alternatives, and evidence close to the claim or action they constrain.
-- Use a callout for an operational constraint or risk that readers could otherwise miss. Place it beside the affected action, use the least severe established callout type that fits, and keep it concise. Do not use callouts for ordinary notes or decorative emphasis.
-- Present document fragments and heading outlines directly rather than wrapping the entire fragment in an outer code block. Preserve code blocks that belong to the document content.
+- In GitHub collaboration prose, prefer bare `#<number>` references for same-repository discussions, issues, and pull requests. State the relationship directly in the surrounding prose rather than wrapping descriptive text in a Markdown link. Use qualified `<owner>/<repository>#<number>` references across repositories where supported. Use explicit links for destinations or surfaces that do not support reference shorthand.
+
+    Use a comment or review permalink only when the reader needs that exact location, not merely because it supplied evidence during research. Keep precise research citations in the supporting evidence without automatically carrying them into the final copy.
+
 - Keep equivalent package manager or environment paths parallel when the project presents them as equal options.
-- On GitHub surfaces that automatically link same-repository references, prefer bare `#…` references for issues and pull requests when user or repository convention permits them. Reference Discussions by URL, using descriptive Markdown link text when the destination would otherwise be unclear. Use an explicit link for cross-repository, ambiguous, or off-platform references.
+- Place prerequisites, caveats, alternatives, and evidence close to the claim or action they constrain.
+- Present document fragments and heading outlines directly rather than wrapping the entire fragment in an outer code block. Preserve code blocks that belong to the document content.
+- Use a callout for an operational constraint or risk that readers could otherwise miss. Place it beside the affected action, use the least severe established callout type that fits, and keep it concise. Do not use callouts for ordinary notes or decorative emphasis.
 
 ## Validation
 
