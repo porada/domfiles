@@ -41,7 +41,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install fish rust taplo
-      - uses: pnpm/setup@v2.1.0
+      - uses: pnpm/setup@v3.0.0
         with:
           cache: true
           runtime: node@24
