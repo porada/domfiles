@@ -1,6 +1,6 @@
 # Typography
 
-Apply these conventions only when no narrower user, project, surface, language, or syntax rule governs the same choice.
+Apply these conventions only when no narrower user, project, surface, language, or syntax rule governs the same choice. Observed punctuation in repository text or previous submissions does not override applicable writing instructions.
 
 ## Prose
 
@@ -13,9 +13,9 @@ These rules apply to all prose, whether atomic or connected. Natural language in
 
 ## Hyphenation
 
-These defaults apply only to modifiers before nouns in documentation prose. Choices between hyphenated and closed spellings remain outside scope, as do predicative uses and verbs.
+These defaults apply to modifiers before nouns in all human-facing prose, including GitHub collaboration. Choices between hyphenated and closed spellings remain outside scope, as do predicative uses and verbs.
 
-- **Noun phrases:** Keep normally open noun phrases open, as in `book review criteria`, `sentence structure advice`, and `technical copy workflow`. Use a hyphen within such a phrase only when needed to prevent a plausible misreading.
+- **Noun phrases:** Keep normally open noun phrases open when they modify another noun. Their position before a noun is not, by itself, a reason to add a hyphen. Write `file pattern imports`, not `file-pattern imports`. Use a hyphen only to prevent a specific, plausible misreading.
 - **Adverb modifiers:** Do not join `already` or an adverb ending in `-ly` to the adjective or participle it modifies with a hyphen. Write `already published articles`, `highly readable prose`, and `widely quoted passages`.
 - **Other compound adjectives:** Otherwise retain conventional hyphenation, as in `best-known authors`, `fast-moving narratives`, `long-running columns`, `longest-running series`, and `well-defined terms`.
 

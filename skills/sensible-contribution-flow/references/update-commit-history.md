@@ -1,6 +1,6 @@
 # Update Commit History
 
-This route adds history-specific steps for contribution-branch synchronization, approved corrections folded into existing commits, and requested message revisions before submission. It does not authorize other history maintenance or publication. Use the common [commit lifecycle](prepare-commits.md) for authorization, execution safeguards, and reporting rather than starting a second lifecycle here.
+This route adds history-specific steps for approved corrections folded into existing commits, contribution branch synchronization, and requested message revisions during initial preparation or [revisions to existing PRs](prepare-pull-requests.md#revise-existing-pull-requests). It does not authorize other history maintenance or publication. Use the common [commit lifecycle](prepare-commits.md) for authorization, execution safeguards, and reporting rather than starting a second lifecycle here.
 
 ## Define Rewrite Scope
 

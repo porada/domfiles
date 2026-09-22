@@ -67,7 +67,7 @@ Do not announce the skill or narrate the editorial process while applying it. Pr
 
 ### Typography
 
-Apply the [typography conventions](references/typography.md) to every writing task.
+Apply the [typography conventions](references/typography.md) to every writing task. Before delivery, check hyphenated modifiers in the final prose against those rules.
 
 ### Secrets and Authentication
 

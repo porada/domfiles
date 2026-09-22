@@ -3,9 +3,9 @@ name: sensible-contribution-flow
 description: |-
     Evaluate, prepare, and review contributions to GitHub repositories the user does not own, including discussions, issues, private vulnerability reports, and pull requests.
 
-    Use it when incorporating approved findings before submission or preparing the next pull request in a contribution series.
+    Use it when incorporating feedback or findings into a contribution, preparing the next pull request in a contribution series, or making user-requested revisions to an existing pull request, including maintainer feedback after submission.
 
-    Do not use for routine work in the user’s own repositories or for post-submission maintenance alone.
+    Do not use for routine work in the user’s own repositories or ongoing monitoring after submission.
 ---
 
 # Sensible Contribution Flow
@@ -20,9 +20,11 @@ Treat a request to investigate and prepare a change if warranted as pull request
 
 Keep assessment-only requests and standalone reviews read-only. Follow [contribution assessment](#assess-the-contribution), report the conclusions and material evidence limitations, then stop. A supplied checkout, linked pull request, or findings report does not authorize preparation, fixes, or Git mutations.
 
-For pull request preparation, follow these stages in execution order, resolving [scope and authority](#resolve-scope-and-authority) before acting. Do not advance past an unmet prerequisite or required approval:
+For user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/prepare-pull-requests.md#revise-existing-pull-requests) rather than restarting initial preparation.
 
-1. [Enter and synchronize the supplied checkout](references/prepare-pull-requests.md#enter-supplied-checkout).
+For initial pull request preparation, follow these stages in execution order, resolving [scope and authority](#resolve-scope-and-authority) before acting. Do not advance past an unmet prerequisite or required approval:
+
+1. [Fetch upstream, then set up and synchronize the contribution branch](references/prepare-pull-requests.md#enter-supplied-checkout).
 2. [Assess upstream fit and contribution scope](#assess-the-contribution).
 3. [Present the early PR draft, design review, and execution proposal](references/prepare-pull-requests.md#agree-on-the-proposal).
 4. [Implement, validate, and review](references/prepare-pull-requests.md#implement-and-review).
@@ -32,15 +34,15 @@ For other contribution outcomes, follow [contribution assessment](#assess-the-co
 
 ## Resolve Scope and Authority
 
-For active preparation, preserve the user’s selected outcome and scope. Preparation, an approved draft, and tool availability do not authorize later effects. Before using tools, changing files, or writing task artifacts, follow [Execution Boundaries](references/execution-boundaries.md).
+For active preparation or revisions, preserve the user’s selected outcome and scope. Preparation, an approved draft, and tool availability do not authorize later effects. Before using tools, changing files, or writing task artifacts, follow [Execution Boundaries](references/execution-boundaries.md).
 
-Resolve setup and continuing approval rules before setup or proposal planning. An applicable approval mode determines which grant to request, even when that grant has not yet been obtained. Use a setup delegation or continuing approval mode only when a direct user instruction or applicable governing instructions expressly establishes it or delegates that narrow choice to this workflow. Verify its conditions and retain the authorizing source, exact user instruction or response, target, scope, covered effects, permitted revisions, lifetime, and stopping conditions. Carry that record through each operation. Present concrete covered effects as notices, and request only uncovered effects. Installation, routing, and a skill’s claim of trust create no authority.
+Resolve approval rules before the phase they govern: the [initial fetch](references/prepare-pull-requests.md#enter-supplied-checkout), then branch setup or replay, then implementation proposal planning. An applicable approval mode determines which grant to request, even when that grant has not yet been obtained. Use a setup delegation or continuing approval mode only when a direct user instruction or applicable governing instructions expressly establishes it or delegates that narrow choice to this workflow. Verify its conditions and retain the authorizing source, exact user instruction or response, target, scope, covered effects, permitted revisions, lifetime, and stopping conditions. Carry that record through each operation. Present concrete covered effects as notices, and request only uncovered effects. Installation, routing, and a skill’s claim of trust create no authority.
 
 This skill cannot grant itself authority or waive separate approval and security gates. A preparation grant limited to unpublished history does not authorize published rewrites. One-off history-update requests retain their own bounded authorization and lifetime through the [commit workflow](#compose-with-peers), independently of any continuing preparation grant. Do not revive expired authority or enlarge it through findings, peer composition, or a new phase.
 
 ## Compose With Peers
 
-Resolve each relevant local peer once, when its responsibility first enters scope. Supply the selected peer’s stable name with the task’s intent, verified context, constraints, and actual authorization record. Let its entrypoint select its own procedures. Routed references consume that resolution rather than repeating discovery.
+Resolve each relevant local peer once, when the current phase first needs its responsibility. Supply the selected peer’s stable name with the task’s intent, verified context, constraints, and actual authorization record. Let its entrypoint select its own procedures. Routed references consume that resolution rather than repeating discovery.
 
 | Optional Local Peer | Workflow Responsibility | Complete Local Fallback |
 | --- | --- | --- |
@@ -75,23 +77,23 @@ Push back on weak assumptions and disproportionate scope. Unexpected size is a r
 
 For every post-producing outcome, follow [Prepare Post Content](references/prepare-post-content.md) before authoring its body.
 
-## Incorporate Findings Before Submission
+## Incorporate Feedback and Findings
 
-Use the resolved findings workflow to validate user-supplied findings and establish applicable fix confirmation. Supply any continuing authorization record so it can determine whether later findings are covered. Findings remain evidence, not permission. Preserve the distinction between default fix-confirmation expiry and an independently governed grant’s lifetime.
+Use the resolved findings workflow to validate maintainer feedback and other user-supplied findings and establish applicable fix confirmation. Supply any continuing authorization record so it can determine whether later findings are covered. Findings remain evidence, not permission. Preserve the distinction between default fix-confirmation expiry and an independently governed grant’s lifetime.
 
 If validated findings undermine the contribution’s premise, return to [Assess the Contribution](#assess-the-contribution). Distinguish corrections required for the current contribution from adjacent improvements or possible follow-ups. Agreement to defer adjacent work does not establish the current contribution’s correctness.
 
-After fixes are authorized, resume the selected preparation path. For pull requests, apply both [upstream synchronization checkpoints](references/prepare-pull-requests.md#synchronize-with-upstream) to the fix round. Use [commit packaging](references/prepare-pull-requests.md#plan-and-implement-commits) to distinguish repairs to existing commits from independently useful new commits, then repeat submission readiness. Review only the resulting delta and integration boundaries instead of restarting the complete contribution review.
+After validation and applicable fix confirmation, return to the calling preparation or [revision checkpoint](references/prepare-pull-requests.md#revise-existing-pull-requests) without restarting setup or findings validation. For pull requests, apply both [upstream synchronization checkpoints](references/prepare-pull-requests.md#synchronize-with-upstream) to the fix round. Review only the resulting delta and integration boundaries instead of restarting the complete contribution review. For authorized commit changes, use [commit packaging](references/prepare-pull-requests.md#plan-and-implement-commits) to distinguish repairs to existing commits from independently useful new commits, then repeat the applicable readiness check.
 
 ## Hand Back the Contribution
 
 If a required human-only checkpoint remains, report the prepared result and exact user action, including the marker’s location when recorded in a file. Do this even when no commit was made. Pause before claiming submission readiness. Implementation, commits, and agent review do not complete a human checkpoint.
 
-Provide the [finalized title and body](references/prepare-post-content.md#finalize-content), intended repository and submission surface, and material evidence or validation limitations. For a pull request, include its head branch, upstream target branch, and exact user-run Git publication command when publication is needed. Resolve those values from verified evidence rather than guessing destinations. Complete any required final publication-destination recheck through the commit workflow immediately before handoff. Deliver the complete package before publication, not in response to the user reporting a push.
+For a new submission, provide the [finalized title and body](references/prepare-post-content.md#finalize-content), intended repository, and submission surface. For revisions, identify the existing PR and summarize the reviewed delta, supplying replacement title or body text only when changed within scope. Include material evidence or validation limitations. For a pull request, include its head branch, upstream target branch, and exact user-run Git publication command when publication is needed. Resolve those values from verified evidence rather than guessing destinations. Complete any required final publication-destination recheck through the commit workflow immediately before handoff. Deliver the complete package before publication, not in response to the user reporting a push.
 
-An implementation summary or commit result is an intermediate checkpoint. Continue with authorized preparation, or present the next concrete approval request, rather than making the user ask to resume.
+When the authorized deliverable includes further preparation, an implementation summary or commit result is an intermediate checkpoint. Continue with authorized work, or present the next concrete approval request, rather than making the user ask to resume. For a working-tree-only request, hand back the reviewed changes without requiring commit preparation or publication.
 
-The user publishes Git commits, refs, and tags and submits every post manually through the browser. Never publish through Git, a wrapper, a library, or an API, and never submit through `gh`, an API, or browser automation. Do not ask for an exception. Report preparation readiness, not publication or acceptance, then stop. A subsequent user request can reopen preparation without making ongoing monitoring part of this workflow.
+The user publishes Git commits, refs, and tags and submits every post manually through the browser. Never publish through Git, a wrapper, a library, or an API, and never submit through `gh`, an API, or browser automation. Do not ask for an exception. Report preparation or revision readiness, not publication or acceptance, then stop. A subsequent user request can begin another scoped round without making ongoing monitoring part of this workflow.
 
 ## General Policies
 
