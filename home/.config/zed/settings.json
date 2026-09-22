@@ -88,6 +88,7 @@
 		"hide_root": true
 	},
 	"read_only_files": [
+		"**/*.editorconfig",
 		"**/*.snap",
 		"**/*.tsbuildinfo",
 		"**/.next/**",
@@ -114,6 +115,20 @@
 		"button": false
 	},
 	"show_whitespaces": "boundary",
+	"ssh_connections": [
+		{
+			"host": "homeassistant.local",
+			"nickname": "Home Assistant",
+			"projects": [
+				{
+					"paths": [
+						"/homeassistant"
+					]
+				}
+			],
+			"username": "root"
+		}
+	],
 	"tab_bar": {
 		"show_tab_bar_buttons": false
 	},
@@ -154,7 +169,7 @@
 			"threshold": "85%"
 		},
 		"default_model": {
-			"effort": "max",
+			"effort": "xhigh",
 			"enable_thinking": true,
 			"model": "gpt-6-astra",
 			"provider": "openai-subscribed"
