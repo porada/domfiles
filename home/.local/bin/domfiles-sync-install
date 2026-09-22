@@ -22,6 +22,10 @@ install() (
     __ brew install --quiet "$@"
   fi
 
+  if ! __is_ci; then
+    __ brew tab --installed-on-request "$1" > /dev/null
+  fi
+
   if __is_brew_keg_only "$1"; then
     if __is_brew_linked "$1"; then
       return 0
@@ -59,6 +63,11 @@ if ! __is_ci; then
   for formula in claude-code codex; do
     install "$formula" --cask
   done
+fi
+
+# Clean up `brew`
+if ! __is_ci; then
+  __ brew cleanup --prune=all > /dev/null
 fi
 
 # Configure `pnpm`
@@ -125,8 +134,9 @@ if __is_ci; then
   exit 0
 fi
 
-if ! __is_tty; then
-  __print_error_and_exit 'Setting `fish` as the default shell requires an interactive terminal'
+if ! __is_stdin_tty; then
+  __print_warning 'Setting `fish` as the default shell requires an interactive terminal'
+  exit 0
 fi
 
 if ! grep -qFx -- "$fish" /etc/shells; then

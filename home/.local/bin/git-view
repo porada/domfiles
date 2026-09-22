@@ -36,8 +36,9 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
     # shellcheck disable=SC2086
     stat_output="$(git show --show-signature --stat --color="$color_mode" "$1" -- $excluded_paths)" \
       || exit $?
+
     # shellcheck disable=SC2086
-    patch_output="$(git show --pretty=format: --color="$color_mode" "$1" -- . $exclude_params)" \
+    patch_output="$(git show --pretty=format: --color="$color_mode" "$1^{commit}" -- . $exclude_params)" \
       || exit $?
 
     __git_diff_page show "$stat_output" "$patch_output"

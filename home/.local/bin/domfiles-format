@@ -5,7 +5,7 @@
 
 # Format selected files with domfiles’ Prettier configuration
 format() {
-  pnpm --config.verifyDepsBeforeRun=error exec prettier \
+  pnpm --config.verify-deps-before-run=error exec prettier \
     --config "$DOMFILES/prettier.config.ts" \
     --ignore-path /dev/null \
     --no-editorconfig \
@@ -40,7 +40,7 @@ for param; do
   esac
 
   if [ ! -r "$file" ] || [ ! -w "$file" ]; then
-    __print_error_and_exit "Failed to format. \`$file\` isn’t readable or writable"
+    __print_error_and_exit "Failed to format \`$file\`. It must be readable and writable"
   fi
 
   set -- "$@" "$file"

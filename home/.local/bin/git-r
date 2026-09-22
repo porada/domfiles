@@ -7,18 +7,40 @@
 available=0
 count_param=''
 manual=false
+parse_options=true
+
+for param in "$@"; do
+  if [ "$parse_options" = true ]; then
+    case "$param" in
+      --)
+        parse_options=false
+        continue
+        ;;
+      --manual)
+        manual=true
+        continue
+        ;;
+      -*)
+        __print_error_and_exit "Unknown option: \`$param\`"
+        ;;
+    esac
+  fi
+
+  if [ -n "$count_param" ]; then
+    __print_error_and_exit '`git r` accepts at most one commit count'
+  fi
+
+  if ! __is_uint "$param"; then
+    __print_error_and_exit \
+      'Commit count must be a nonnegative integer within the shell’s integer range'
+  fi
+
+  count_param="$param"
+done
 
 __git_cd_root
 
-for param in "$@"; do
-  if [ "$param" = '--manual' ]; then
-    manual=true
-  elif [ -z "$count_param" ]; then
-    count_param="$param"
-  fi
-done
-
-if __is_uint "$count_param"; then
+if [ -n "$count_param" ]; then
   count="$count_param"
 else
   count="$(git rev-list --first-parent --count '@{u}..HEAD' 2> /dev/null || true)"

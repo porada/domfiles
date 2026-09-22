@@ -73,7 +73,7 @@ if [ "$sync_repository" = true ]; then
       skipped_files="$(__git_skipped_files "$DOMFILES")"
 
       if [ -n "$skipped_files" ]; then
-        __print_error 'Cannot update the repository while it contains skipped files'
+        __print_warning 'The repository contains skipped files. Unskip them before updating'
       else
         __print_heading 'Updating the repository'
 
@@ -123,7 +123,8 @@ if [ "$sync_repository" = true ]; then
       skipped_files="$(__git_skipped_files "$DOMFILES")"
 
       if [ -n "$skipped_files" ]; then
-        __print_error_and_exit 'Cannot restore the original state while the repository contains skipped files'
+        __print_error_and_exit \
+          'The repository contains skipped files. Unskip them before restoring the original state'
       fi
 
       __ git -C "$DOMFILES" reset --hard "$current_revision" || {

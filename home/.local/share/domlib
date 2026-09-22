@@ -533,11 +533,6 @@ __is_stdout_tty() {
   [ -t 1 ]
 }
 
-# Returns success in an interactive terminal
-__is_tty() {
-  __is_stdin_tty && __is_stdout_tty
-}
-
 # Returns success when `$1` contains only decimal digits. Rejects values outside
 # of the shell’s integer range
 __is_uint() {

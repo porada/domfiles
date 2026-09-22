@@ -7,7 +7,7 @@
 skipped="$(__git_skipped_files .)"
 
 if [ -n "$skipped" ]; then
-  __print_error_and_exit 'Cannot reset the repository while it contains skipped files'
+  __print_error_and_exit 'The repository contains skipped files. Unskip them before resetting'
 fi
 
 __ git reset --hard "$@"
