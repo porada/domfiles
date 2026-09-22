@@ -1,6 +1,7 @@
 [alias]
 	a = add --verbose
 	c = commit
+	f = fixup
 	p = pull
 	v = view
 
@@ -24,6 +25,7 @@
 	unstage = restore --staged --
 
 	# Quick commits
+	ai = commit --all --message 'Update agent instructions'
 	boom = commit --all --allow-empty --message '💥' --no-verify
 	deps = commit --all --message 'Update dependencies'
 	rd = commit --all --message 'Update `README`'
