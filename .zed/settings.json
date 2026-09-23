@@ -31,5 +31,9 @@
 		"Rust": {
 			"enable_language_server": false
 		}
-	}
+	},
+	"read_only_files": [
+		".editorconfig",
+		"..."
+	]
 }

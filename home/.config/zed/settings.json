@@ -88,7 +88,6 @@
 		"hide_root": true
 	},
 	"read_only_files": [
-		"**/*.editorconfig",
 		"**/*.snap",
 		"**/*.tsbuildinfo",
 		"**/.next/**",
@@ -397,6 +396,7 @@
 		},
 		"show_merge_conflict_indicator": false,
 		"sidebar_side": "right",
+		"threads_sidebar_default_width": 200,
 		"tool_permissions": {
 			"default": "allow",
 			"tools": {
