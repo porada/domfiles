@@ -29,15 +29,16 @@ overrides:
   vite: npm:@voidzero-dev/vite-plus-core@latest
 
 peerDependencyRules:
-  allowAny:
-    - '@vitest/coverage-v8'
+  ignoreMissing:
+    - eslint
+    - vitest
 
 strictPeerDependencies: true
 
 trustPolicy: no-downgrade
 
-trustPolicyIgnoreAfter: 43200
-
 trustPolicyExclude:
   - '@vercel/*'
   - vercel
+
+trustPolicyIgnoreAfter: 43200
