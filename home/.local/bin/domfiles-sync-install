@@ -22,23 +22,41 @@ install() (
     __ brew install --quiet "$@"
   fi
 
-  if ! __is_ci; then
-    __ brew tab --installed-on-request "$1" > /dev/null
+  # Cask-installed apps don’t need any additional treatment
+  for param; do
+    if [ "$param" = '--cask' ]; then
+      return 0
+    fi
+  done
+
+  is_keg_only=false
+  is_linked=false
+  is_requested=true
+
+  info="$(brew info "$1" --json=v2)" || return 2
+
+  case "$info" in
+    *'"keg_only": true'*) is_keg_only=true ;;
+  esac
+
+  case "$info" in
+    *'"linked_keg": ""'*) ;;
+    *'"linked_keg": "'*) is_linked=true ;;
+  esac
+
+  # Treat only an explicit `false` receipt flag as needing protection
+  # from `brew autoremove`
+  case "$info" in
+    *'"installed_on_request": false'*) is_requested=false ;;
+  esac
+
+  if [ "$is_requested" = false ] && ! __is_ci; then
+    __ brew tab --formula --installed-on-request "$1" > /dev/null
   fi
 
-  if __is_brew_keg_only "$1"; then
-    if __is_brew_linked "$1"; then
-      return 0
-    else
-      status="$?"
-      [ "$status" -eq 1 ] || return "$status"
-    fi
-
+  if [ "$is_keg_only" = true ] && [ "$is_linked" = false ]; then
     __print_heading_dimmed "Linking \`$1\`"
     __ brew link --quiet --overwrite --force "$1"
-  else
-    status="$?"
-    [ "$status" -eq 1 ] || return "$status"
   fi
 )
 

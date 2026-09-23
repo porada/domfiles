@@ -474,20 +474,6 @@ __is_brew_installed() {
   fi
 }
 
-# Returns success when `$1` is a keg-only Homebrew package. Returns 1 when it
-# is not, or 2 if querying Homebrew fails
-__is_brew_keg_only() (
-  metadata="$(brew info "$1" --json=v2)" || return 2
-  printf '%s\n' "$metadata" | grep -q '"keg_only": true'
-)
-
-# Returns success when `$1` is a linked Homebrew package. Returns 1 when it
-# is not, or 2 if querying Homebrew fails
-__is_brew_linked() (
-  metadata="$(brew info "$1" --json=v2)" || return 2
-  printf '%s\n' "$metadata" | grep -q '"linked_keg": "[^"]'
-)
-
 # Returns success when `$1` is available as a command
 __is_callable() {
   sh -c 'command -v "$1"' sh "$1" > /dev/null 2>&1
