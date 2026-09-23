@@ -15,6 +15,7 @@
 		"calt": false
 	},
 	"buffer_font_size": 14,
+	"cli_default_open_behavior": "existing_window",
 	"collaboration_panel": {
 		"button": false
 	},
@@ -107,6 +108,7 @@
 	],
 	"scrollbar": {
 		"cursors": false,
+		"diagnostics": "none",
 		"selected_symbol": false,
 		"selected_text": false
 	},
@@ -168,7 +170,7 @@
 			"threshold": "85%"
 		},
 		"default_model": {
-			"effort": "max",
+			"effort": "xhigh",
 			"enable_thinking": true,
 			"model": "gpt-6-astra",
 			"provider": "openai-subscribed"

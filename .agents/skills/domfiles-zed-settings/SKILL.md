@@ -18,8 +18,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 ## Apply the General Policy
 
 - When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and `skill-development` for skill script contracts.
-- Keep `home/.config/zed/settings.json` free of entries that only restate Zed defaults.
-- Keep `.zed/settings.json` free of entries that only restate `home/.config/zed/settings.json` or Zed defaults.
+- Keep `.zed/settings.json` and `home/.config/zed/settings.json` free of redundant entries. Treat configuration as redundant only when omitting it preserves the supported workflow. Matching a default or inherited value is not sufficient. Include tool-managed state and subsequent invocations in that comparison. The [CLI persistence rationale](../../PROJECT.md#zed-cli-open-behavior) illustrates this distinction.
 - Sort Zed settings object arrays by the value of their identifying field.
     - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
 
