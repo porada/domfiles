@@ -19,7 +19,7 @@
 		"vercel": "^59.23.2"
 	},
 	"devDependencies": {
-		"@standard-config/oxlint": "^2.8.0",
+		"@standard-config/oxlint": "^2.9.0",
 		"@standard-config/oxlint-stylistic": "^2.8.0",
 		"@standard-config/prettier": "^1.21.1",
 		"@standard-config/tsconfig": "catalog:",
