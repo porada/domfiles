@@ -16,7 +16,7 @@ This skill helps agents prepare discussions, issues, security reports, and pull 
 
 ## Workflow
 
-Treat a request to investigate and prepare a change if warranted as pull request preparation, including documentation-only changes, unless the user explicitly requests assessment alone or edits without pull request preparation. Uncertainty about whether the problem exists does not make that request assessment-only.
+Treat a request to investigate and prepare a change if warranted as pull request preparation, including documentation-only changes, unless the user explicitly requests assessment alone or edits without pull request preparation. Explicitly deferring the decision to contribute selects assessment-only, even when a future PR is contemplated. Uncertainty about whether the problem exists or postponing fork creation alone does not make an otherwise authorized preparation request assessment-only.
 
 Keep assessment-only requests and standalone reviews read-only. Follow [contribution assessment](#assess-the-contribution), report the conclusions and material evidence limitations, then stop. A supplied checkout, linked pull request, or findings report does not authorize preparation, fixes, or Git mutations.
 
@@ -49,7 +49,7 @@ Resolve each relevant local peer once, when the current phase first needs its re
 | `agent-task-relay` | Findings validation and applicable fix confirmation | [Review Findings](references/review-findings.md) |
 | `human-facing-writing` | Writing accuracy, editorial guidance, and security-report prose | [Prepare Post Content](references/prepare-post-content.md), adding [Prepare Security Reports](references/prepare-security-reports.md) for private reports |
 | `sensible-commit-flow` | Commit planning, authorized execution, history updates, and verification | [Prepare Commits](references/prepare-commits.md) |
-| `simple-github-cli` | Bounded GitHub evidence gathering | [Gather GitHub Evidence](references/gather-github-evidence.md) |
+| `simple-github-cli` | Bounded GitHub evidence gathering and authorized fork creation | [Gather GitHub Evidence](references/gather-github-evidence.md) and user-created forks under [Resolve Publication Destination](references/prepare-pull-requests.md#resolve-publication-destination) |
 
 References call these the commit, evidence, findings, and writing workflows. Use the corresponding fallback only when its peer is unavailable, not to bypass a resolved peer’s authority or evidence stop. Do not install or remotely retrieve peers. Local procedures remain sufficient without network access, repository-managed policy, sibling skills, or the source checkout, while missing capabilities or required evidence still stop the affected operation.
 

@@ -41,4 +41,4 @@ A successful lookup with no useful matches establishes only that the bounded loo
 
 Apply the [retrieval failure boundary](execution-boundaries.md#limit-data-and-service-access), including its narrow correction allowance for path, URL, and demonstrated local invocation mistakes. Identify any necessary secret redaction in the reported error. Access and transport failures are not empty search results or permission to switch interfaces.
 
-Return the decisive evidence, its currency, and material limitations to [contribution assessment](../SKILL.md#assess-the-contribution) or [writing context](prepare-post-content.md#gather-writing-context). Local drafting may continue where useful, but do not certify current upstream fit, synchronization, or template compliance when the necessary evidence was not obtained.
+Return the decisive evidence, its currency, and material limitations to the calling contribution checkpoint. Local drafting may continue where useful, but do not certify current upstream fit, synchronization, or template compliance when the necessary evidence was not obtained.
