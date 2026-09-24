@@ -15,8 +15,8 @@ lint_default_files() {
     'home/.local/share/*'
 }
 
-lint_file() {
-  __ shellcheck --external-sources -- "$1"
+lint_files() {
+  __ shellcheck --external-sources -- "$@"
 }
 
 __domfiles_dev_lint 'POSIX shell scripts' "$@"

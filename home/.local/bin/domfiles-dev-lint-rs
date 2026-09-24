@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
+
+if [ $# -eq 0 ]; then
+  set -- \
+    --all-features --all-targets --locked --workspace -- \
+    --deny warnings
+elif [ $# -eq 1 ] && [ "$1" = '--fix' ]; then
+  set -- \
+    --all-features --all-targets --allow-dirty --allow-no-vcs --allow-staged \
+    --fix --locked --workspace
+else
+  __print_error_and_exit '`domfiles-dev-lint-rs` accepts at most one argument: `--fix`'
+fi
+
+__domfiles_cd_root
+
+__print_heading 'Linting Rust workspace'
+__ cargo clippy "$@"

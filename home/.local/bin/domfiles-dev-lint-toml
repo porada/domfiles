@@ -11,8 +11,8 @@ lint_default_files() {
   git ls-files --cached --others --exclude-standard -- '*.toml'
 }
 
-lint_file() {
-  __ tombi lint --offline -- "$1"
+lint_files() {
+  __ tombi lint --offline -- "$@"
 }
 
 __domfiles_dev_lint 'TOML files' "$@"

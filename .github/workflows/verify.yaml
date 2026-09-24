@@ -53,11 +53,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew install rust
-      - uses: pnpm/setup@v3.0.0
-        with:
-          cache: true
-          runtime: node@24
-      - run: pnpm lint:rs:check
+      - run: home/.local/bin/domfiles-dev-lint-rs
 
   lint-sh:
     name: lint / sh

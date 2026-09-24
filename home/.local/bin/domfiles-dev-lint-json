@@ -14,7 +14,7 @@ lint_default_files() {
 lint_file() {
   __suppress __ jq --slurp \
     'if length == 1 then empty else error("expected exactly one JSON value, received \(length)") end' \
-    -- "$1"
+    -- "$1" || return
   __print_confirmation "$1"
 }
 
