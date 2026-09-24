@@ -10,7 +10,6 @@ __domfiles_cd_root
 lint_default_files() {
   git ls-files --cached --others --exclude-standard -- \
     '*.sh' \
-    '.hooks/*' \
     'home/.local/bin/*' \
     'home/.local/share/*'
 }

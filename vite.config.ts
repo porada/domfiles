@@ -10,7 +10,10 @@ export default defineConfig({
 	},
 	lint: defineOxlintConfig(),
 	staged: {
-		'*': 'pnpm prettier --ignore-unknown --write',
+		'*': [
+			() => 'pnpm install --frozen-lockfile --ignore-scripts',
+			'pnpm prettier --ignore-unknown --write',
+		],
 		'*.fish': 'pnpm lint:fish',
 		'*.json': 'pnpm lint:json',
 		'*.rs': [
