@@ -74,7 +74,7 @@ fi
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in actionlint ast-grep fd gh jq just mole pandoc ripgrep shellcheck taplo yarn yq zizmor; do
+  for formula in actionlint ast-grep fd gh jq just mole pandoc ripgrep shellcheck tombi yarn yq zizmor; do
     install "$formula"
   done
 

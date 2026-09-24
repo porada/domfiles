@@ -113,7 +113,7 @@ These instructions delegate only **contribution preparation** mode to `sensible-
 
 ### System-Available Tooling
 
-- **Availability:** Assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `ast-grep`, `cargo`, `fd`, `fish`, `gh`, `jq`, `just`, `node`, `pandoc`, `plugins`, `pnpm`, `rg`, `rustc`, `shellcheck`, `skills`, `taplo`, `vercel`, `yarn`, `yq`, and `zizmor`.
+- **Availability:** Assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `ast-grep`, `cargo`, `fd`, `fish`, `gh`, `jq`, `just`, `node`, `pandoc`, `plugins`, `pnpm`, `rg`, `rustc`, `shellcheck`, `skills`, `tombi`, `vercel`, `yarn`, `yq`, and `zizmor`.
 - **Purpose:** Where the name does not carry it, `plugins` installs agent plugins, `skills` manages agent skills, and `zizmor` reviews GitHub Actions security.
 - **Usage:** Prefer `fd` over `find` for ad hoc terminal path discovery. Default to `fish --no-config` when using Fish as a noninteractive interpreter unless Fish startup configuration or configured runtime behavior is in scope. Follow the [GitHub CLI policy](#github-cli) for `gh`. Run `*.ts` files directly with `node`. Use `pandoc --sandbox` for document parsing and conversion when the reader and writer need access only to files supplied on the command line. Treat `--sandbox` as a reader and writer boundary only. It does not constrain filters or PDF engines. Always pass `--no-config` to `rg`. Use `rustc` for standalone source files and `yarn` for Yarn-based projects.
 - **Package manager:** Prefer `pnpm`. Always invoke a `package.json` script as `pnpm run <script>` rather than `pnpm <script>`, and use `exec` for local binaries and `dlx` for undeclared one-offs.

@@ -28,11 +28,15 @@ export const parsers: Plugin['parsers'] = {
 			options: ParserOptions
 		): Promise<TOMLAst> => {
 			try {
-				const { stdout } = await exec('taplo', ['fmt', '-'], {
-					nodePath: false,
-					stdin: text,
-					throwOnError: true,
-				});
+				const { stdout } = await exec(
+					'tombi',
+					['format', '--offline', '-'],
+					{
+						nodePath: false,
+						stdin: text,
+						throwOnError: true,
+					}
+				);
 
 				return {
 					formattedText: stdout,

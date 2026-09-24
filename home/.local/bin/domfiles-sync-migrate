@@ -28,3 +28,9 @@ for skill in \
     fi
   done
 done
+
+# Uninstall `taplo`
+if __is_brew_installed taplo; then
+  __print_heading_dimmed 'Uninstalling `taplo` in favor of `tombi`'
+  __ brew uninstall taplo
+fi

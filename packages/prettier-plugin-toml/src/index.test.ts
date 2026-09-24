@@ -11,6 +11,11 @@ const TEST_TOML = `
 [package]
 name="prettier-plugin-toml"
 version="0.0.0"
+license="MIT"
+edition="2024"
+
+[package.metadata]
+steps=["build","lint","test",]
 
 [dependencies]
 tinyexec={version="1.0.0"}
@@ -160,9 +165,9 @@ test('reports formatting errors', async () => {
 		`"[prettier-plugin-toml] Failed to format:"`
 	);
 	expect(errorWithoutSource.message).toContain(
-		'\n\nThe command `taplo fmt -` exited with a non-zero status (1)'
+		'\n\nThe command `tombi format --offline -` exited with a non-zero status (1)'
 	);
-	expect(stderr).toContain('-:1:6');
+	expect(stderr).toContain('line 1 column 6');
 	expect(stderr).toContain('expected value');
 	expect(errorWithoutSource.message.endsWith(stderr)).toBe(true);
 });

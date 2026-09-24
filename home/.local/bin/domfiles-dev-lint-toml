@@ -12,7 +12,7 @@ lint_default_files() {
 }
 
 lint_file() {
-  __ env RUST_LOG=warn taplo lint --no-schema -- "$1"
+  __ tombi lint --offline -- "$1"
 }
 
 __domfiles_dev_lint 'TOML files' "$@"

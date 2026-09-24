@@ -1,10 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`formats TOML files 1`] = `
-"
-[package]
+"[package]
 name = "prettier-plugin-toml"
 version = "0.0.0"
+license = "MIT"
+edition = "2024"
+
+[package.metadata]
+steps = [
+    "build",
+    "lint",
+    "test",
+]
 
 [dependencies]
 tinyexec = { version = "1.0.0" }
