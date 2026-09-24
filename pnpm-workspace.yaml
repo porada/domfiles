@@ -4,6 +4,8 @@ packages:
 allowBuilds:
   esbuild: false
 
+autoDedupe: true
+
 autoInstallPeers: false
 
 catalog:
