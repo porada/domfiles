@@ -16,53 +16,39 @@ gh skill install porada/domfiles --scope user
 
 Global installation is recommended for the best experience. Both [`skills`](https://www.skills.sh/docs/cli) and [`gh skill`](https://cli.github.com/manual/gh_skill) install only the skills you choose. Neither sets up any other tooling or configuration from this repository.
 
-## Featured Skills
+## Available Skills
 
-- ### [fish-shell-scripting](fish-shell-scripting)
+### Shell Scripting
 
-    Write Fish as intended: without bashisms.
+Work with the shell, not against it.
 
-    ```sh
-    npx skills add porada/domfiles --skill fish-shell-scripting
-    ```
+- [**fish-shell-scripting**](fish-shell-scripting)
+- [**posix-shell-scripting**](posix-shell-scripting)
 
-    ```sh
-    gh skill install porada/domfiles fish-shell-scripting
-    ```
+### Writing
 
-- ### [human-facing-writing](human-facing-writing)
+Bring meaning into focus and make technical writing easy to follow.
 
-    Raise the standard of every piece your agent writes, from general long-form text to small technical copy. No more slop under your name.
+- [**human-facing-writing**](human-facing-writing)
+- [**release-notes-for-humans**](release-notes-for-humans)
 
-    ```sh
-    npx skills add porada/domfiles --skill human-facing-writing
-    ```
+### Agent Coordination
 
-    ```sh
-    gh skill install porada/domfiles human-facing-writing
-    ```
-
-- ### [agent-task-relay](agent-task-relay)
-
-    Paste findings from another thread and see your agent take it from there. Or relay work to another agent just as easily.
-
-    ```sh
-    npx skills add porada/domfiles --skill agent-task-relay
-    ```
-
-    ```sh
-    gh skill install porada/domfiles agent-task-relay
-    ```
-
-## Other Skills
+Keep agent work organized and carry context between conversations.
 
 - [**agent-task-directories**](agent-task-directories)
-- [**posix-shell-scripting**](posix-shell-scripting)
-- [**release-notes-for-humans**](release-notes-for-humans)
+- [**agent-task-relay**](agent-task-relay)
+- [**verify-findings**](verify-findings)
+
+### Git and GitHub
+
+Keep commit history clear and GitHub work focused.
+
 - [**sensible-commit-flow**](sensible-commit-flow)
 - [**sensible-contribution-flow**](sensible-contribution-flow)
 - [**simple-github-cli**](simple-github-cli)
-- [**verify-findings**](verify-findings)
+
+## Internal Skills
 
 The `.domfiles-*` skills are tied to this repository’s [configuration](../home). They aren’t ready for standalone installation.
 

@@ -26,6 +26,16 @@ Use the frontmatter `name` for `<skill-name>`. For `<intro-paragraph>`, copy all
 
 For public skills from other repositories, follow their README conventions rather than this publisher-specific template.
 
+## Maintain Public Skill Catalogs
+
+Treat a public skill catalog and its collection README as consumer-facing documentation under the global consumer documentation policy. Their copy and information architecture serve readers browsing the collection.
+
+When `skills.sh.json` and a collection README present the same catalog, use the JSON file as the canonical source for group descriptions, group order, group titles, skill membership, and skill order. Mirror those values exactly in the README’s catalog section, linking each skill identifier to its public directory. Keep the README’s other content independent.
+
+Within catalog work, propose improvements to the canonical groupings when useful, but apply grouping changes only with explicit user approval. A direct request specifying the grouping change supplies that approval. General maintenance or synchronization permission does not approve regrouping.
+
+When authorized shared catalog content changes, update both surfaces together, obtaining any required README edit permission before changing either. Validate the complete correspondence, not just changed entries, alongside JSON syntax, public skill identifiers, and schema constraints.
+
 ## Include Standardized Public Mirrors
 
 Treat the templates below as standardized standalone mirrors. Include instruction authority and secrets and authentication in every public skill. Include [typography](#typography) and [stale guidance](#stale-guidance) only when their respective eligibility conditions apply. Determine eligibility from the complete reachable workflow, then retain every applicable mirror without rejustifying its inclusion during creation or promotion. The applicable global policy remains the semantic owner, each template owns the public rendering, and each bundled copy provides required standalone context.

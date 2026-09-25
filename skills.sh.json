@@ -22,8 +22,8 @@
 			"title": "Agent Coordination",
 			"description": "Keep agent work organized and carry context between conversations.",
 			"skills": [
-				"agent-task-relay",
 				"agent-task-directories",
+				"agent-task-relay",
 				"verify-findings"
 			]
 		},

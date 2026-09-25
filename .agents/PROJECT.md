@@ -210,7 +210,9 @@ The [skill distribution contract](../AGENTS.md#skills) defines project-authored 
 
 Authoring and maintenance records stay outside skill directories so installed guidance stays focused on use rather than the history of its creation. The [skill content boundary](../skills/.domfiles-skill-development/SKILL.md#keep-skill-contents-operational) owns this requirement.
 
-[`skills/README.md`](../skills/README.md) targets visitors who install public skills without synchronizing the rest of this repository. Its top-level examples select user-wide installation to enact the README’s recommendation. Its featured `npx skills add … --skill …` examples intentionally preserve the form documented by skills.sh, including the omission of `--global`.
+[`skills/README.md`](../skills/README.md) targets visitors who install public skills without synchronizing the rest of this repository. Its top-level examples select user-wide installation to enact the README’s recommendation. The root [`README.md`](../README.md) carries the featured `npx skills add … --skill …` examples, which intentionally preserve the form documented by skills.sh, including the omission of `--global`.
+
+The collection README’s [Available Skills](../skills/README.md#available-skills) section presents the catalog defined in [`skills.sh.json`](../skills.sh.json). Their shared content follows the [catalog contract](../skills/.domfiles-skill-development/references/public-skill-portability.md#maintain-public-skill-catalogs).
 
 The [public skill README template](../skills/.domfiles-skill-development/assets/readme-skill.txt) fixes shared publisher and license details because all public skills share the same source repository and attribution.
 
