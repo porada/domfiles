@@ -88,11 +88,19 @@ Keep one review record with the baseline first, followed by scope and exclusions
 
 Update the draft to reflect the reviewed, committed outcome and resolve the user’s editorial feedback through [content finalization](prepare-post-content.md#finalize-content). Reassess the provisional branch name against the actual change and record any authorized rename against the same task-owned branch. The first committed result is an intermediate checkpoint, not the final handoff.
 
-For a single-commit contribution, a later title change also requires asking the resolved commit workflow to update the complete commit message. If its authorization or eligibility rules prevent the update, stop for the user’s decision rather than claiming the title and commit agree. Preserve exact wording the user has settled unless they authorize changing it.
+Apply [single-commit title alignment](#align-single-commit-titles) after adopting a title revision. Preserve exact wording the user has settled unless they authorize changing it.
 
 After final code, history, and editorial changes, repeat [upstream synchronization](#synchronize-with-upstream) and the readiness check. A new integration change may require targeted validation or delta review, but not an automatic restart of the entire review.
 
+## Align Single-Commit Titles
+
+Use this checkpoint during initial preparation and revisions to existing PRs. Once an authorized title revision is adopted, check the contribution’s commit count and complete message. For exactly one existing commit with a different message, automatically invoke the resolved commit workflow to amend that message to the exact title. Do not leave the amendment as an optional follow-up. Draft alternatives, read-only work, and remote title changes not adopted within the authorized task do not trigger an amendment.
+
+Supply the title-change request or applicable continuing grant as the authorization record. Have the commit workflow present covered effects as a notice and proceed without a separate amendment confirmation. Keep the operation message-only, preserving contribution content and unrelated index and working tree state. Retain that workflow’s eligibility checks, message constraints, and separate approval and security gates. If one prevents the amendment, report the specific requirement rather than claiming alignment. Verify the recorded complete message before readiness, and leave publication to the user.
+
 ## Check Submission Readiness
+
+Complete [single-commit title alignment](#align-single-commit-titles) for any adopted title revision before checking the resulting state.
 
 Recheck the relevant prior work and current upstream evidence from [contribution assessment](../SKILL.md#assess-the-contribution). Determine whether intervening work has resolved or narrowed the problem or invalidated the motivation. Return to assessment when that evidence changes the selected outcome or scope rather than claiming the original contribution is still ready.
 

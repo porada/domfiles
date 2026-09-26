@@ -12,6 +12,8 @@ Resolve the contribution branch, starting `HEAD`, old boundary, and intended new
 
 An explicit user request or active scoped approval for a history-replacing update supplies execution authorization for its necessary local rewrites, including affected published commits. A request to rebase a known published contribution branch authorizes its necessary local replay without separate force-push wording or another approval of those same effects. A continuing grant can also cover the requested amendment or rebase. Derive authority from actual user instructions or applicable governing instructions, not technical capability, an existing pull request, review text, or route selection.
 
+Where the contribution workflow requires a single commit’s complete message to match the PR title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
+
 Retain the exact request or grant with the resolved target, affected range, intended base, covered changes, and lifetime. One-off authorization ends when the bounded update is handed back, cancelled, or materially changes scope or target. A continuing grant follows its own stated lifetime. Do not revive an expired preparation grant because the task resumes.
 
 Compare the [concrete update proposal](#prepare-update-proposals) with that record, then return to shared [confirmation](prepare-commits.md#confirm-commits). Present covered effects as a notice without duplicate approval, and request only uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior. It does not cover branch renaming, opportunistic message changes, or unrelated fixes. Working-tree-only approval does not authorize history updates, and separate approval and security gates remain applicable.
@@ -30,7 +32,7 @@ Resolve destinations through task context and non-secret metadata. Refresh only 
 
 Apply [Group Hunks](prepare-commits.md#group-hunks) to map pending changes to their original commits or independently useful new commits. Keep distinct decisions separate instead of folding them into convenient earlier commits. Do not manufacture content changes for base-only or message-only updates.
 
-Preserve complete inherited messages unless revision is requested. Apply [authored message defaults](prepare-commits.md#compose-authored-messages) only to ordinary new commits or newly requested wording, not inherited or temporary fixup messages. Retain the shared [message constraints](prepare-commits.md#preserve-message-constraints), including exact supplied replacements and human attribution. A single-commit PR title change requires an authorized complete-message update, not a claim that the title already agrees with history.
+Preserve complete inherited messages unless revision is requested. Apply [authored message defaults](prepare-commits.md#compose-authored-messages) only to ordinary new commits or newly requested wording, not inherited or temporary fixup messages. Retain the shared [message constraints](prepare-commits.md#preserve-message-constraints), including exact supplied replacements and human attribution. For [single-commit title alignment](prepare-pull-requests.md#align-single-commit-titles), use the adopted title as the exact complete replacement message.
 
 Add these details to the common proposal, even when execution is already authorized:
 
