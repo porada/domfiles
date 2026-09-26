@@ -387,6 +387,7 @@
 				"zizmor.sh"
 			],
 			"write_paths": [
+				"/private/tmp",
 				"/Users/dom/.cache",
 				"/Users/dom/.cargo",
 				"/Users/dom/Library/Caches/Homebrew",

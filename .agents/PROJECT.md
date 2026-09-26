@@ -74,6 +74,12 @@ The same-host complement is an initial-fetch prompt filter rather than a path-sc
 
 `Cargo.toml` pins the Rust `regex` version used to validate Zed permission patterns. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) compares the direct version with current Zed source.
 
+### Zed Shared Temporary Directory
+
+The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to `/private/tmp`, macOS’s canonical target for `/tmp`, rather than enumerating individual tools’ temporary directories. This avoids repeated permission requests for tools that use fixed `/tmp` paths instead of Zed’s per-thread `TMPDIR`. For example, pnpm 12.7.0 places store operation locks under `/tmp/pnpm-store-operation-locks-<effective-uid>/`, outside its home and cache directories.
+
+Under the [shared pnpm store’s mutual-trust model](#pnpm-shared-store), this deliberately allows sandboxed terminal commands to create, modify, or delete entries throughout the shared temporary directory, including unrelated applications’ temporary files owned by the same user. Normal macOS permissions and Zed’s Git metadata protection still apply.
+
 ### Zed Worktree Permission Coupling
 
 When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of directory and branch names.
