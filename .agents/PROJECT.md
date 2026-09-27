@@ -327,8 +327,6 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
-The `rust` row reports whether both `cargo` and `rustc` are available, matching the managed Homebrew formula rather than either executable name.
-
 `vim` is intentionally omitted from the checklist even though synchronization installs it as a primary Homebrew dependency. Its availability does not affect the command’s output or exit status.
 
 ### Development Lint Wrapper Architecture

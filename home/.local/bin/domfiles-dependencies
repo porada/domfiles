@@ -13,7 +13,7 @@ check() {
   dependency_bin 'git'
   dependency_bin 'node'
   dependency_bin 'pnpm'
-  dependency_exec 'rust' '__is_callable cargo && __is_callable rustc'
+  dependency_bin 'rustc'
 
   if ! __is_ci; then
     dependency_exec 'ssh' '__is_ssh_configured'
@@ -22,7 +22,7 @@ check() {
 
 dependency_bin() {
   if __is_callable "$1"; then
-    __print_success "$1"
+    dependency_success "$1"
   else
     __print_error "$1"
     status=1
@@ -31,7 +31,7 @@ dependency_bin() {
 
 dependency_exec() {
   if eval "$2" > /dev/null 2>&1; then
-    __print_success "$1"
+    dependency_success "$1"
   else
     __print_error "$1"
     status=1
@@ -46,6 +46,19 @@ dependency_path() {
     status=1
   fi
 }
+
+dependency_success() (
+  if version="$("$1" --version 2> /dev/null)"; then
+    __print_success --inline -- "$1"
+  elif __is_callable fish && version="$(fish --command "$1 --version" 2> /dev/null)"; then
+    __print_success --inline -- "$1"
+  else
+    __print_success -- "$1"
+    return
+  fi
+
+  __print_info -- "$(printf '%s\n' "$version" | head -n 1)"
+)
 
 status=0
 check

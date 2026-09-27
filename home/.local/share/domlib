@@ -701,9 +701,9 @@ __print_styled() (
   fi
 )
 
-# Prints the given text as a success
+# Prints the given text as a success. Accepts `--inline`
 __print_success() {
-  __print_styled '0;32' '✓ %s\n' -- "$*"
+  __print_styled '1;32' '✓ %s\n' "$@"
 }
 
 # Prints the given text as a URL
