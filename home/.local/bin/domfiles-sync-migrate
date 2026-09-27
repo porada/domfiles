@@ -29,6 +29,12 @@ for skill in \
   done
 done
 
+# Uninstall `codex`
+if __is_brew_installed codex; then
+  __print_heading_dimmed 'Uninstalling `codex`'
+  __ brew uninstall codex
+fi
+
 # Uninstall `taplo`
 if __is_brew_installed taplo; then
   __print_heading_dimmed 'Uninstalling `taplo` in favor of `tombi`'

@@ -124,7 +124,7 @@ The user creates disposable worktrees through Zed’s UI and starts agents bound
 
 ### Claude Agent Integration
 
-The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-codex-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
+The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
 
 `domfiles sync` also links [`home/.claude/settings.json`](../home/.claude/settings.json) to `~/.claude/settings.json`. The tracked file defines the shared, non-secret preference set. Claude Code [uses this user settings path for configuration updates](https://code.claude.com/docs/en/settings), and the file is managed as mutable public configuration. Credentials and private machine or account values are excluded from this settings surface.
 
@@ -132,9 +132,11 @@ The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers C
 
 Claude follows the [External Agent permission layering](#zed-agent-permission-model): Zed’s operating system sandbox does not isolate it. At Zed commit `1662f5f3`, Claude Agent’s ACP permission requests and its own permission system govern its tools without passing through Zed’s native tool permission evaluator.
 
-### Claude, Codex, and Zed Global Instructions
+### Claude and Zed Global Instructions
 
-The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped.
+The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped.
+
+The ChatGPT app still uses `~/.codex`, where synchronization continues to link this source as `AGENTS.md`. The Codex CLI is no longer provisioned, and the [migration stage](../home/.local/bin/domfiles-sync-migrate) removes its Homebrew installation.
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.agents/GLOBAL.md`.
 
@@ -184,7 +186,7 @@ The [global system-available tooling list](GLOBAL.md#system-available-tooling) c
 
 The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package manager workflow, respectively.
 
-The list intentionally omits `claude`, `codex`, `fisher`, `git`, `mole`, and `vim`. `claude` and `codex` are agent runtimes rather than supporting commands. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system maintenance utility outside coding workflows. `vim` is an interactive editor.
+The list intentionally omits `claude`, `fisher`, `git`, `mole`, and `vim`. `claude` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system maintenance utility outside coding workflows. `vim` is an interactive editor.
 
 `brew` is intentionally absent because it is a supported environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
 
@@ -308,12 +310,6 @@ The final dependency status is advisory. Its result remains visible while synchr
 
 `claude` is intentionally installed through Homebrew’s `claude-code` cask rather than declared as an `@anthropic-ai/claude-code` project dependency. This keeps the CLI machine-level, follows Anthropic’s stable Homebrew channel, and excludes it from dependency installation in CI because `claude` is a development Homebrew dependency. The Homebrew CLI installation is separate from the `claude-acp` registry package managed by Zed.
 
-### Codex Distribution
-
-`codex` is intentionally installed through Homebrew rather than declared as an `@openai/codex` project dependency. The Homebrew cask runs the native executable directly, provisions Fish completions, and remains excluded from dependency installation in CI because `codex` is a development Homebrew dependency.
-
-The npm package adds a large platform-specific native package to every environment that installs the root pnpm dependencies. Lockfile ownership does not outweigh that installation and CI overhead for this machine-level command.
-
 ### Cross-Shell Helper Differences
 
 Accepted shell-specific contract differences between paired `domlib` and Fish helpers are recorded here with their rationale:
@@ -431,9 +427,7 @@ Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as
 
 ### Repository-Scoped Commands
 
-`plugins`, `skills`, and `vercel` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
-
-`domfiles-sync-update` intentionally does not invoke `plugins update` because the current CLI treats unknown subcommands as plugin source paths, so the command can exit successfully without updating anything. This decision can be revisited if upstream adds a supported update workflow.
+`skills` and `vercel` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
 
 The corresponding scripts in `home/.local/bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
