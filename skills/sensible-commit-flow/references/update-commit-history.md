@@ -14,7 +14,7 @@ Where a calling workflow requires a single commit’s complete message to match 
 
 Retain the exact user instruction or continuing grant with the resolved target, affected range, intended base, covered changes, and lifetime. A one-off request ends when the bounded update is handed back, cancelled, or materially changes scope or target. Use a continuing grant’s stated lifetime, and do not revive an expired authorization from an earlier preparation or publication phase.
 
-Prepare the concrete proposal below and compare it with that authorization. When the plan is covered, continue through [Confirm Commits](../SKILL.md#confirm-commits) without another execution approval response. Otherwise use the shared confirmation path for the uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior, not unrelated fixes, branch renaming, or opportunistic message changes. An approval limited to working tree edits is not history-update authorization. Separate approval and security gates remain applicable.
+Use the concrete proposal below unless explicitly waived, and compare the intended effects with that authorization. When the operation is covered, continue through [Confirm Commits](../SKILL.md#confirm-commits) without another execution approval response. Otherwise use the shared confirmation path for the uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior, not unrelated fixes, branch renaming, or opportunistic message changes. An approval limited to working tree edits is not history-update authorization. Separate approval and security gates remain applicable.
 
 ## Establish Rewrite Eligibility
 
@@ -32,7 +32,7 @@ Apply [Group Hunks](../SKILL.md#group-hunks) to map each pending change to its a
 
 Preserve each existing commit’s complete message unless a message change is requested. Use [Compose Messages](compose-messages.md) for ordinary new commits and newly requested wording, not for inherited messages or Git’s temporary fixup messages. Treat a supplied exact replacement as a constraint, retaining the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints).
 
-Prepare these additions to the shared [confirmation](../SKILL.md#confirm-commits), including when execution is already authorized:
+When the user has not waived proposal preparation, add these details to shared [confirmation](../SKILL.md#confirm-commits), including when execution is already authorized:
 
 1. Name the old boundary, new base, selected branch, starting `HEAD`, complete rewritten range, and publication evidence. For a published update, include the destination ref, recorded remote head, and disposition of differences from local history.
 2. Show the intended final series in order, mapping each fixup’s hunks to its original commit and identifying separate new commits. Make partial-file boundaries explicit. Put exact new or replacement messages in blockquotes, and identify complete inherited messages without rewriting them.
@@ -66,8 +66,8 @@ Return to [Report the Result](../SKILL.md#report-the-result), including the old-
 
 ## Hand Back Published Updates
 
-Recheck the publication destination before handing back the result. If its head has changed, inspect and reconcile the new work within the current authorization, then repeat affected validation. Stop when reconciliation requires new scope. Do not merely substitute a newer object ID into the lease expectation.
+Recheck the publication destination before publication or handing back its command. If its head has changed, inspect and reconcile the new work within the current authorization, then repeat affected validation. Stop when reconciliation requires new scope. Do not merely substitute a newer object ID into the lease expectation.
 
-Provide the exact publication command for the user to run. Target only the single verified publication destination and full branch ref, use `--force-with-lease=<remote-ref>:<expected-remote-oid>` with the recorded expected object ID, and use the reviewed new tip’s object ID as the explicit refspec source. Do not use implicit destinations or plain `--force`. A later remote-head change should make the lease reject the command rather than replace unseen work. Do not execute publication or ask for permission to do so.
+Under the entrypoint’s [publication authorization](../SKILL.md#report-the-result), execute the bounded publication only when directly requested. Otherwise, provide the exact command for the user to run. Target only the single verified publication destination and full branch ref, use `--force-with-lease=<remote-ref>:<expected-remote-oid>` with the recorded expected object ID, and use the reviewed new tip’s object ID as the explicit refspec source. Do not use implicit destinations or plain `--force`. A later remote-head change must make the lease reject the command rather than replace unseen work.
 
 Suppress automatic tag publication for that invocation, and use `--recurse-submodules=check` so submodule validation cannot publish extra commits. Preserve repository-required checks and confirm that configuration cannot expand the invocation to other destinations or refs.

@@ -1,6 +1,6 @@
 # Fetch and Network Permissions
 
-Apply this branch with the shared [agent permission workflow](agent-permissions.md).
+Apply this branch with the shared [agent permission workflow](agent-permissions.md). The parent skill’s user-direction route governs departures from these configuration conventions and validation procedures. The described outcomes assume this default model. A departure still needs explicit access scope and supported tool behavior, and a waived check must not be reported as completed.
 
 ## Apply the Fetch and Network Permission Policy
 
@@ -44,7 +44,7 @@ Do not add or modify a fetch regex for a hostname allowance. A path-qualified al
 
 Rust regex does not support look-around. Build each same-host confirmation complement from anchored prefix alternatives that match the first differing path byte, including every truncated prefix. Validate every alternative through the [fetch rule corpus](#build-the-fetch-rule-corpus), and do not use an unverified hand-written negation as a permission boundary.
 
-Before editing a candidate, build the complete guard for the hostname’s full approved prefix set and apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound). If the decoded pattern exceeds `1,000` Unicode scalars, report that the requested path scope is unsupported by the one-guard model and stop before settings mutation. Do not split the guard or weaken the approved scope to fit the bound.
+Before editing a candidate, build the complete guard for the hostname’s full approved prefix set and apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound). If the decoded pattern exceeds `1,000` Unicode scalars, report that the ordinary one-guard workflow and its evaluator do not support that pattern. An explicit departure from the convention requires a supported validation route or separately authorized implementation work, not a claim that the existing evaluator accepts it. Do not silently split the guard or weaken the approved scope to fit the bound.
 
 ## Validate a Change
 

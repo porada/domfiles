@@ -16,7 +16,7 @@ Where the contribution workflow requires a single commit’s complete message to
 
 Retain the exact request or grant with the resolved target, affected range, intended base, covered changes, and lifetime. One-off authorization ends when the bounded update is handed back, cancelled, or materially changes scope or target. A continuing grant follows its own stated lifetime. Do not revive an expired preparation grant because the task resumes.
 
-Compare the [concrete update proposal](#prepare-update-proposals) with that record, then return to shared [confirmation](prepare-commits.md#confirm-commits). Present covered effects as a notice without duplicate approval, and request only uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior. It does not cover branch renaming, opportunistic message changes, or unrelated fixes. Working-tree-only approval does not authorize history updates, and separate approval and security gates remain applicable.
+Use the [concrete update proposal](#prepare-update-proposals) unless explicitly waived, compare the intended effects with that record, then return to shared [confirmation](prepare-commits.md#confirm-commits). Present covered effects as a notice without duplicate approval, and request only uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior. It does not cover branch renaming, opportunistic message changes, or unrelated fixes. Working-tree-only approval does not authorize history updates, and separate approval and security gates remain applicable.
 
 ## Establish Rewrite Eligibility
 
@@ -34,7 +34,7 @@ Apply [Group Hunks](prepare-commits.md#group-hunks) to map pending changes to th
 
 Preserve complete inherited messages unless revision is requested. Apply [authored message defaults](prepare-commits.md#compose-authored-messages) only to ordinary new commits or newly requested wording, not inherited or temporary fixup messages. Retain the shared [message constraints](prepare-commits.md#preserve-message-constraints), including exact supplied replacements and human attribution. For [single-commit title alignment](prepare-pull-requests.md#align-single-commit-titles), use the adopted title as the exact complete replacement message.
 
-Add these details to the common proposal, even when execution is already authorized:
+When the user has not waived proposal preparation, add these details to the common proposal, even when execution is already authorized:
 
 1. Record the old boundary, selected base, contribution branch, starting `HEAD`, complete rewritten range, topology, and publication evidence. For published replacement, include the verified destination and full ref, recorded remote head, and disposition of differences from local history.
 2. Show the intended final series in order. Map each repair’s hunks to the recorded object ID of its original commit and identify independently useful new commits. Make partial-file boundaries explicit. Put exact new or replacement messages in blockquotes, including all bodies and trailers. Identify complete inherited messages by their inspected source commits without paraphrasing or normalizing them.
@@ -70,13 +70,13 @@ The PR workflow then repeats its applicable [synchronization checkpoints](prepar
 
 ## Hand Back Published Updates
 
-Immediately before the contribution’s final handoff, recheck the publication destination independently of the upstream base. If its head changed, inspect and reconcile the new work within current authorization, then repeat affected validation and review. Stop for a user decision when reconciliation requires new scope. Do not merely substitute a newer object ID into the lease expectation. An earlier post-replay check does not replace this final check.
+Immediately before publication or handing back its command, recheck the publication destination independently of the upstream base. If its head changed, inspect and reconcile the new work within current authorization, then repeat affected validation and review. Stop for a user decision when reconciliation requires new scope. Do not merely substitute a newer object ID into the lease expectation. An earlier post-replay check does not replace this final check.
 
-Provide an exact publication command for the user to run, resolved from the verified values rather than placeholders. Never execute publication or ask for permission to do so.
+Resolve the exact publication command from verified values rather than placeholders. Execute it only under the entrypoint’s [direct, scoped publication authorization](../SKILL.md#hand-back-the-contribution). Otherwise, provide it for the user to run. In either case, preserve these safeguards:
 
 1. Verify the effective destination and full remote branch ref. Confirm that configuration cannot expand the command to additional destinations or refs, without exposing credentials or bulk machine-local configuration. If that cannot be established, pause for the user’s target or configuration decision rather than silently changing configuration.
 2. Use the reviewed final tip’s full object ID as the explicit refspec source, targeting only that one full ref. Do not use a moving branch name as the source. Exclude extra refspecs and implicit destinations.
 3. Use `--force-with-lease=<remote-ref>:<expected-remote-oid>` with the recorded head whose contents the reviewed result reconciles. Do not use plain `--force` or an implicit lease. A later head change must cause rejection rather than overwrite unseen work.
 4. Suppress automatic tag publication for this invocation, use `--recurse-submodules=check` so submodule validation cannot publish commits, and retain repository-required checks and hooks. Do not add all-ref, mirror, recursive, or tag publication.
 
-Keep publication instructions outside the final PR copy. Return the verified command with the local result to the PR workflow’s final delivery. The user alone publishes the prepared history.
+Keep publication instructions outside the final PR copy. Return the actual publication result or the verified user-run command with the local result to the PR workflow’s final delivery. Do not claim publication when only the command was prepared.

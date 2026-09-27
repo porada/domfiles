@@ -39,6 +39,6 @@ For private security reports, use only legitimately available examples suitable 
 
 A successful lookup with no useful matches establishes only that the bounded lookup found none. Use the available template and facts without inventing prior work or an established writing style. A truncated response or an exhausted search budget leaves a stated evidence limit.
 
-Apply the [retrieval failure boundary](execution-boundaries.md#limit-data-and-service-access), including its narrow correction allowance for path, URL, and demonstrated local invocation mistakes. Identify any necessary secret redaction in the reported error. Access and transport failures are not empty search results or permission to switch interfaces.
+Apply the [retrieval failure boundary](execution-boundaries.md#limit-data-and-service-access) for bounded retries or equivalent retrieval after ordinary technical failures. Preserve the target, authorized effects, authentication, and disclosure boundaries, and never evade denied access or a security control. Identify necessary secret redaction in the reported error. A retrieval failure is not an empty search result.
 
 Return the decisive evidence, its currency, and material limitations to the calling contribution checkpoint. Local drafting may continue where useful, but do not certify current upstream fit, synchronization, or template compliance when the necessary evidence was not obtained.

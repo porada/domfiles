@@ -1,21 +1,27 @@
 # Copilot CLI
 
-`gh copilot` runs a separate agent CLI, can grant it tool permissions, and may download it automatically. After the entrypoint’s opt-in, do not execute the command. This workflow ends with a command for the user to run locally.
+`gh copilot` runs a separate agent CLI, can grant it tool permissions, and may download it automatically. A direct, scoped request may authorize agent execution under [Execution Choice](#execution-choice). Otherwise, prepare a command for the user to run locally.
 
 ## Availability and Dependency Approval
 
 Establish from read-only machine-local evidence whether a Copilot CLI is already available. Do not invoke `copilot` or `gh copilot` to check.
 
-If the CLI is unavailable or its presence cannot be established, tell the user that `gh copilot` may download the GitHub Copilot CLI into GitHub CLI’s machine-local data directory. Classify that acquisition under the entrypoint’s [Dependency Changes](../SKILL.md#dependency-changes) policy before preparing the command. Opting into `gh copilot` alone does not approve a new dependency choice. Prescribed acquisition covered by an authorized project workflow needs no separate dependency approval, but the command remains user-run.
+If the CLI is unavailable or its presence cannot be established, tell the user that `gh copilot` may download the GitHub Copilot CLI into GitHub CLI’s machine-local data directory. Classify that acquisition under the entrypoint’s [Dependency Changes](../SKILL.md#dependency-changes) policy before preparing the command. Opting into `gh copilot` alone does not approve a new dependency choice. Prescribed acquisition covered by an authorized project workflow needs no separate dependency approval. Dependency approval alone does not authorize a task, tool permissions, or remote processing.
 
 ## Task Handoffs
 
-When the command gives Copilot a task or tool permission and the entrypoint resolves `agent-task-relay`, use it for confirmation and assignment composition only. The [User-Run Command](#user-run-command) replaces its normal delivery, so do not also return the assignment as a relay.
+When the command gives Copilot a task or tool permission and the entrypoint resolves `agent-task-relay`, use it for applicable confirmation and assignment composition only. Carry the user’s actual authorization so covered effects do not trigger duplicate confirmation. Return to [Execution Choice](#execution-choice) instead of the peer’s normal delivery, and do not also return the assignment as a relay.
 
 When the entrypoint does not resolve `agent-task-relay`, do not compose or expand a task or its tool permissions. Preserve task text and permissions the user supplied directly, and leave unresolved values as named placeholders for the user to review and fill locally.
 
+## Execution Choice
+
+Execute only when a direct user request covers the concrete task, target, tool permissions, and any data sent to Copilot, and all applicable dependency, remote mutation, and access requirements are satisfied. Verify a supported invocation for those effects without choosing a different source or version on the user’s behalf. Keep scope and runtime bounded, preserve approval controls, and do not enable unrestricted tool permissions or untrusted startup configuration to make execution unattended.
+
+Do not execute with unresolved placeholders or infer permission for operations the receiving agent might choose. Carry explicit commit or publication authority only when the user supplied it. Credential and key handling remain user-run. If the invocation cannot preserve required prompts or another genuine human-only checkpoint, use the user-run path instead.
+
 ## User-Run Command
 
-After resolving every applicable opt-in, dependency approval, handoff confirmation, and remote mutation authorization, provide the exact `gh copilot …` command in a `sh` code block. Use named placeholders for unresolved task text and tool permissions.
+When execution was not requested or a human-only step remains, provide the exact `gh copilot …` command in a `sh` code block after resolving applicable opt-ins and approvals. Use named placeholders for unresolved task text and tool permissions, clearly identifying what the user must review and fill locally.
 
 Tell the user to copy, paste, and run the command locally, review every prompt and tool permission before accepting it, and never share credentials, secret values, private material, or secret-bearing output in chat. Ask only whether the operation succeeded or for a sanitized error containing no private values.

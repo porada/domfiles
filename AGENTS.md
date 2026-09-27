@@ -30,6 +30,7 @@
 
 ## General
 
+- **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. Explicit, task-scoped instructions may replace or waive those requirements without changing the standing policy. The public repository boundary, secret protection, required security controls, and genuine human-only checkpoints remain applicable.
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
 - **Navigation:** Read only the section of `.agents/PROJECT.md` that applies, reaching it through an existing link or by locating its heading first, rather than reading the document.
 - **Durable knowledge:** Document newly discovered durable project knowledge in `.agents/PROJECT.md` when the task permits that documentation edit. Otherwise report the update as deferred follow-up work.
@@ -39,7 +40,7 @@
 - **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-audit-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
-- **Symlink:** Do not analyze the contents of `home/.local/bin/git-diff-highlight` (it’s a symlink).
+- **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because it’s a symlink. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
 - **Secret-bearing local files:** Do not read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
 ## Reporting

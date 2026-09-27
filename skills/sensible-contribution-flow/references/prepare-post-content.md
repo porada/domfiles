@@ -2,7 +2,7 @@
 
 ## Gather Writing Context
 
-Before authoring any contribution body, complete this sequence through the entrypoint’s resolved [evidence and writing workflows](../SKILL.md#compose-with-peers). Consume their existing peer choices rather than resolving them again:
+By default, gather this context through the entrypoint’s resolved [evidence and writing workflows](../SKILL.md#compose-with-peers) before authoring a contribution body. Apply explicit evidence-check waivers under [Instruction Authority](../SKILL.md#instruction-authority), reporting material gaps. Consume the existing peer choices rather than resolving them again:
 
 1. Identify the required repository template or form for the selected pull request, issue, discussion, or private security report. Resolve a materially ambiguous template choice rather than inventing a requirement.
 2. Look for a bounded, relevant sample of the user’s previous submissions of the same type in that repository. Use ordinary non-disclosing author filter operations or an author already established by the user, not direct authentication identity inspection. Do not search other repositories for writing examples.
@@ -28,7 +28,7 @@ The following procedure remains complete when the writing peer is absent. When i
 
 Choose a clear, compact title that names the problem or intended outcome. Preserve the user’s meaning, voice, exact technical tokens, and settled wording. Keep claims proportional to verified evidence, distinguish inference from observation, and never invent a motivation or result to improve the prose.
 
-Use supplied examples of the user’s previous GitHub submissions to identify recurring level of detail, structure, terminology, and tone. Preserve useful patterns without copying incidental wording or overriding the repository’s current template. Apply the mandated template and those patterns to the selected post.
+Use supplied examples of the user’s previous GitHub submissions to identify recurring level of detail, structure, terminology, and tone. Preserve useful patterns without copying incidental wording. Apply the current repository template and those patterns unless explicit user direction changes them, without claiming compliance with requirements the result does not meet.
 
 Preserve the template’s checklist statements, field and section order, headings, and separators unless the user or template authorizes a change. Fill placeholders and remove authoring instructions rather than submitting them as prose. Omit optional sections only when permitted and appropriate. Checklist applicability determines completion under [finalization](#finalize-content), not permission to paraphrase the item.
 
@@ -36,7 +36,7 @@ Normalize the template’s ordinary prose under the applicable [typography conve
 
 Write for a maintainer scanning with limited attention. Keep the body as short as it can be while satisfying the template and making the purpose, relevant context, and material limitations clear. Keep validation evidence accessible in the agent thread, including tool results, with task artifacts for supplementary detail or long logs. Do not reproduce that execution record in the PR. Remove repetition and unnecessary explanation, not required reproduction details or decisive evidence.
 
-For every pull request body, explain the intended outcome and strongest verified reason to pursue it. When the limitation of an existing alternative is decisive, make that limitation clear. Never narrate the code changes or paraphrase the diff. Apply this rule within the mandated template rather than replacing its fields. If an explicit repository requirement cannot be satisfied without a change inventory, ask the user to resolve that conflict.
+For a pull request body, explain the intended outcome and strongest verified reason to pursue it. When the limitation of an existing alternative is decisive, make that limitation clear. By default, focus on purpose rather than narrating changes or paraphrasing the diff. Follow an explicit user request or repository template that calls for a change inventory without requiring another wording confirmation.
 
 When the repository has no template, use these defaults:
 
@@ -57,6 +57,6 @@ In an early draft, describe planned validation as planned. Before final delivery
 
 Review the title and body against the selected surface, current template, supplied examples, and verified outcome. Keep only useful optional sections, and do not add boilerplate beyond the repository’s requirements.
 
-Resolve required checklist items before final delivery. Mark applicable items whose completion is established. Obtain the user’s confirmation for personal attestations that the agent cannot make on their behalf, and resolve unmet requirements or permitted not-applicable treatment rather than checking boxes speculatively. Do not present a body with unresolved required items as ready to submit.
+Resolve unwaived required checklist items before final delivery. Mark only items whose completion is established. Report an explicitly waived procedural check as omitted, not completed. Obtain the user’s confirmation for personal attestations that the agent cannot make on their behalf, and resolve unmet requirements or permitted not-applicable treatment rather than checking boxes speculatively. Do not claim compliance with an unmet receiving requirement or present an outstanding human-only checkpoint as complete.
 
 Use blockquotes when discussing the draft. For the final copy-ready handoff, provide the title in its own plain-text code block and the complete body in a separate `markdown` code block, using a longer outer fence when the body contains code fences. Keep labels, publication instructions, and any thread-only validation detail outside those blocks. Return the complete content to the entrypoint’s [handoff](../SKILL.md#hand-back-the-contribution), not fragments the user must assemble.

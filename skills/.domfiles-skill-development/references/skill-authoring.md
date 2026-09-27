@@ -22,7 +22,7 @@ In every invocation mode, define the overlay’s added or narrower behavior in i
 
 When a supported installation does not guarantee the base, keep the overlay independently complete. For a public overlay, follow the [public skill portability contract](public-skill-portability.md), preserve standalone behavior, and make any base composition optional.
 
-Keep each customization within the defaults the base permits or choices governing instructions expressly delegate. Overlay applicability supplies neither precedence nor execution authority. Preserve the base’s required workflow and safeguards, including required notices and stopping behavior. Pass separately established authorization through the base’s applicable authorization route rather than deriving it from customization.
+Keep each customization within the defaults the base permits or choices governing instructions expressly delegate, including an explicit user override under the global **Explicit user direction** policy. Overlay applicability supplies neither precedence nor execution authority. Preserve the base’s workflow unless such an override covers the departure, and retain every separate approval and security boundary. Pass separately established authorization through the base’s applicable authorization route rather than deriving it from customization.
 
 Combine compatible differences after applying the governing instruction hierarchy and any expressly established customization precedence. Do not infer precedence from load order or narrower applicability. Do not use a blanket “strictest wins” rule. If a material conflict remains, pause the affected decision and ask one focused question. Do not treat composition itself as a reason to reopen valid approvals.
 

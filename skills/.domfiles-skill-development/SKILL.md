@@ -19,7 +19,7 @@ Resolve each in-scope skill through [Skill Installation](references/skill-instal
 
 For documentation work, including assets, catalogs, metadata, public READMEs, and references, compose with `agent-documentation`. It owns the shared authority, ownership, writing composition, change, review, validation, and reporting lifecycle. Add the contracts selected below without restarting that lifecycle. For script-only work without documentation changes, follow the script route directly.
 
-An explicit change takes precedence when the request also uses review or audit language. Standalone reviews and audits remain read-only. Select every applicable contract before the work it governs, and load each once.
+An explicit change takes precedence when the request also uses review or audit language. Standalone reviews and audits remain read-only. Apply the global **Explicit user direction** policy to this skill’s authoring conventions and procedures, including routed contracts. A procedural waiver does not change a script’s implemented capabilities or bypass native access controls. Select every applicable contract before the work it governs, and load each once.
 
 ## Select the Contracts
 

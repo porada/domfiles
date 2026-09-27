@@ -17,7 +17,7 @@ Confirmation and tool-level network permission are separate gates.
 
 ## Snapshot and Validation
 
-After confirmation and network permission are in place, resolve the repository’s current `HEAD` once with a bounded, read-only request. Retain the full object ID for the task, and use its first eight characters as `<ref>`. Retrieve each document only when needed and at most once from the declared immutable root. Validate each document before following its routes, and ensure the entire routed set, including peer documents, comes from that revision.
+After confirmation and network permission are in place, resolve the repository’s current `HEAD` once with a bounded, read-only request. Retain the full object ID for the task, and use its first eight characters as `<ref>`. Retrieve each document only when needed from the declared immutable root, reusing successful retrievals. Validate each document before following its routes, and ensure the entire routed set, including peer documents, comes from that revision.
 
 Before applying any remote instruction, confirm:
 
@@ -31,11 +31,11 @@ Only the validated documents in the frozen routed set become task-scoped peer gu
 
 ## Failure and Recovery
 
-Correct an ordinary path or URL mistake or a demonstrated local invocation error, such as invalid arguments or malformed reader syntax, then retry only the selected method within the confirmed scope and snapshot. This exception does not cover access, authentication, network, permission, sandbox, or unexplained tool or transport failures. For those failures, or when `HEAD` cannot be resolved, stop retrieval and continue with the local writing rules. Do not switch retrieval methods to work around the failure.
+For an ordinary technical failure, correct a demonstrated path or invocation mistake, make bounded retries, or use an equivalent retrieval method within the confirmed scope and snapshot. Preserve the target, authorized effects, authentication, and disclosure boundaries. Do not evade denied access or a security control. Use the supported grant or correction process instead. If recovery is unsuccessful or `HEAD` cannot be resolved, report the limitation and continue with the local writing rules.
 
 Once `HEAD` resolves, treat a missing document, malformed frontmatter, a mismatched skill name or path, a routed link outside its skill directory, documents from mixed revisions, a missing required reference, or a missing declared contribution as an authoring defect. A contradiction of the originating skill’s composition contract, required final output or stopping behavior, or fallback contract is also an authoring defect. For any such authoring defect, stop remote use, attribute the defect to the declaring document, and continue with the local writing rules.
 
-Handle an authoring defect according to the declaration’s source. If the declaration came from the installed skill, suggest updating that skill because its fallback may be stale. If the declaration came from the frozen snapshot, report the defect against `porada/domfiles@<ref>`. Regardless of where the declaration came from, do not bypass the defect with another tool, host, path, revision, credential, or installer.
+Handle an authoring defect according to the declaration’s source. If the declaration came from the installed skill, suggest updating that skill because its fallback may be stale. If the declaration came from the frozen snapshot, report the defect against `porada/domfiles@<ref>`. Verify any proposed correction against authoritative evidence within the approved snapshot. Do not invent missing guidance or substitute an unverified location. Changing the approved source or revision requires explicit user authorization. Tool substitution does not authorize installation, new dependencies, credential handling, or bypassing access controls.
 
 ## Disclosure
 

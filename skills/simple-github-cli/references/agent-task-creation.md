@@ -4,13 +4,13 @@
 
 ## Handoff Confirmation
 
-Before drafting the task description or composing the command, present the proposed handoff flow in its own response. Include the receiving action, target repository and base, scope and exclusions, source and access constraints, mutation and approval boundaries, required process and validation, and completion or return mode.
+Establish the receiving action, target repository and base, scope and exclusions, source and access constraints, mutation and approval boundaries, required process and validation, and completion or return mode before execution.
 
-Resolve any material ambiguity before presenting the flow. Ask the user to confirm or correct it, and do not include the task description or command in that response.
+When a direct user request already authorizes the clear, bounded handoff and task creation, present covered effects as a notice and continue without duplicate confirmation. Otherwise, present the proposed flow in its own response before drafting the task description or command, and ask only for the missing authorization or material decision.
 
 Confirmation authorizes only the stated handoff. It satisfies the entrypoint’s [Remote Changes](../SKILL.md#remote-changes) gate only when the user explicitly authorizes creating the agent task against the named target.
 
-Confirmation never grants commit authorization. It does not authorize unstated remote submissions, publication, secret access, dependency changes, or scope expansion. When the receiving task requires a commit, obtain the user’s explicit command authorizing it before command execution.
+Handoff confirmation alone does not grant commit authorization. Carry an explicit user command to commit when the receiving task needs it, whether supplied in the same response or separately. Do not infer permission for unstated remote submissions, publication, secret access, dependency changes, or scope expansion.
 
 Before presenting a flow that may acquire dependencies or tools or introduce a new dependency choice, apply the entrypoint’s [Dependency Changes](../SKILL.md#dependency-changes) policy. Preserve its distinction between approval of a new choice and prescribed acquisition covered by workflow authorization.
 
@@ -18,7 +18,7 @@ Confirmation grants approval for a new dependency choice only when the flow name
 
 ## Task Description
 
-After confirmation, compose a task description with a descriptive heading and an explicit receiving action. Define the bounded assignment, owned scope, exclusions, source and access constraints, mutation and approval boundaries, required process and validation, stop conditions, and output or handoff contract.
+After establishing authorization, compose a task description with a descriptive heading and an explicit receiving action. Define the bounded assignment, owned scope, exclusions, source and access constraints, mutation and approval boundaries, required process and validation, stop conditions, and output or handoff contract.
 
 Preserve the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary, and must return any boundary request to the user rather than crossing it.
 
@@ -32,7 +32,7 @@ End the task description with the exact standalone line:
 
 ## Command Execution
 
-Write the confirmed task description to a task-local temporary file. Apply the entrypoint’s [Remote Changes](../SKILL.md#remote-changes) gate, then use explicit repository and base targets:
+Write the authorized task description to a task-local temporary file. Apply the entrypoint’s [Remote Changes](../SKILL.md#remote-changes) gate, then use explicit repository and base targets:
 
 ```sh
 gh agent-task create \

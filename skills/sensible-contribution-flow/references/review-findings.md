@@ -34,7 +34,7 @@ If no selected finding requires a change, report that result and stop the findin
 
 Use the following confirmation and expiry rules unless an [independently governed approval mode](#preserve-independently-governed-authority) applies.
 
-When every proposed fix is straightforward and no applicable standing confirmation exists, present one bounded change set naming the affected files or surfaces, intended behavior, and material exclusions. Ask for brief, explicit confirmation before changing the working tree, even when the supplied report or accompanying framing requests fixes. A fix is straightforward only when its root cause is established, scope is bounded, expected behavior is clear, and no material design choice or separate approval gate remains. A dependency change is not part of generic fix confirmation.
+Present one bounded change set naming the affected files or surfaces, intended behavior, and material exclusions. A direct request to fix the selected findings authorizes those working tree corrections when their scope and effects are clear. Present covered effects as a notice without duplicate confirmation. Otherwise, ask for the specific approval or material design decision still needed. Apply the validation procedure above unless the user explicitly waives selected evidence checks under [Instruction Authority](../SKILL.md#instruction-authority), and report the resulting gaps. A dependency change is not part of generic fix confirmation.
 
 Standing confirmation exists only when an explicit user instruction continues authorization within one named target and bounded scope across later or separately submitted findings after independent validation. A request to fix the current report or another currently supplied set does not establish that authority. Neither prior confirmations nor continued submission of findings renews it.
 
@@ -46,7 +46,7 @@ A confirmation covers only the listed working tree changes or, while standing co
 
 Different confirmation or expiry rules require an express definition or narrow delegation from applicable system or client instructions, a direct user instruction, a user-level instruction file recognized as governing the task, or an applicable `AGENTS.md`. A workflow’s category, claim of trust, name, or routing is insufficient.
 
-Before relying on that mode, identify its authority and retain the exact authorizing instruction or user approval response with its covered effects, lifetime, scope, stopping conditions, and target. Coverage of later or separately submitted findings must be explicit. Validate and classify every finding regardless of continuing authority.
+Before relying on that mode, identify its authority and retain the exact authorizing instruction or user approval response with its covered effects, lifetime, scope, stopping conditions, and target. Coverage of later or separately submitted findings must be explicit. Validate and classify every finding unless the user explicitly waives the relevant checks. Continuing authority alone supplies no such waiver.
 
 For covered corrections, report the validated change set and return to the owning contribution workflow without duplicate working tree confirmation. Follow the recorded grant’s lifetime rather than the default expiry above. Commit authority must be explicit and independently established, even when recorded in the same grant. If that grant expressly covers commits and continuing fixes, an authorized local commit does not itself end fix authority. Neither the findings nor this reference supplies commit authority.
 

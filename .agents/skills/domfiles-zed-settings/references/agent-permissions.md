@@ -6,8 +6,8 @@ Do not read every permission reference by default. Select only the branches requ
 
 ## Apply the Shared Permission Policy
 
-- Preserve `agent.tool_permissions.default` as `allow`.
-- Preserve `fetch` as the only tool with repository-configured overrides. Do not add or modify an override for any non-fetch tool. When a task requests one, stop before mutation and report that a dedicated workflow and validation contract are required.
+- Keep `fetch` as the only tool with repository-configured overrides unless the user expressly requests another configuration under the parent [general policy](../SKILL.md#apply-the-general-policy). Use the parent change workflow for that departure rather than treating the absence of a specialized evaluator as a categorical prohibition.
+- Preserve `agent.tool_permissions.default` as `allow` by default.
 - Treat the always-loaded global agent policy as the canonical owner of authentication handling, command intent, security boundary restrictions, and task authorization. Do not encode those policies as terminal command patterns.
 - Treat configured tool permissions, the operating system sandbox for terminal processes, and native fetch host grant authorization as distinct layers. The operating system sandbox applies to `terminal`, not native `fetch` or native path tools. A tool permission `allow` does not grant a `terminal` effect outside that sandbox or let `fetch` bypass Zed’s separate host grant authorization. For a native path tool, first establish whether its implementation invokes configured permission evaluation. When it does, combine that decision with the applicable built-in checks. When it does not, omit the configured permission layer and evaluate only the built-in path, privacy, sensitive-settings, and symlink escape checks that its implementation applies.
 
@@ -23,7 +23,7 @@ Apply the shared policy and every selected branch throughout the workflow chosen
 
 - For an explicitly requested domain or URL allowance, follow [Translate approved domains and URLs](fetch-and-network-permissions.md#translate-approved-domains-and-urls) before any network access to the requested destination other than the bounded workflow-complete host review that procedure defines.
 - For a standalone documentation audit that includes the Zed permission regex compatibility rationale, follow [Audit Zed regex compatibility](permission-evaluator.md#audit-zed-regex-compatibility) read-only. Treat any requested dependency change as a separate task under the global “Dependencies” policy.
-- For an unexpected native path or terminal permission outcome, first establish that no repository-configured override participates. Then follow [Resolve effective permission behavior](permission-evaluator.md#resolve-effective-permission-behavior) for the tool’s distinct authorization layers.
+- For an unexpected native path or terminal permission outcome, first establish whether any repository-configured override participates rather than assuming the default configuration remains unchanged. Then follow [Resolve effective permission behavior](permission-evaluator.md#resolve-effective-permission-behavior) for the tool’s distinct authorization layers.
 
 For every read-only workflow, treat configured regexes and proposed cases as inert strings.
 

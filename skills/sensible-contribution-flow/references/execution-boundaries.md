@@ -28,7 +28,7 @@ An authorized Git history operation may incorporate dependency declarations and 
 
 For an approved dependency change, follow repository version conventions. When selecting a new dependency or tool version, choose the newest stable release compatible with the project’s declared constraints, and explain an intentionally older release or pin. Suppress package lifecycle scripts by default, including `--ignore-scripts` for npm, pnpm, or Yarn installs. Run them only when necessary for the task and explain why beforehand. This does not permit bypassing integrity or trust checks.
 
-Obtain explicit permission before editing a consumer-facing README. Do not modify externally authored skills. Preserve any additional protected-content or human-only review requirements imposed by the consuming project. An implementation grant does not complete a required human action.
+Obtain explicit permission before editing a consumer-facing README. Do not modify externally authored skills unless the user explicitly requests that operation. Preserve any additional protected-content or human-only review requirements imposed by the consuming project. An implementation grant does not complete a required human action.
 
 ## Limit Data and Service Access
 
@@ -36,9 +36,9 @@ Use established secure machine-local authentication only through ordinary non-di
 
 Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Do not upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
 
-Remote mutations need their own explicit authorization and an unambiguous target. This workflow still leaves Git publication and every contribution submission to the user, even when a tool could perform them.
+Remote mutations require an unambiguous target and explicit authorization for their effects under [Hand Back the Contribution](../SKILL.md#hand-back-the-contribution). A direct, scoped user command may supply that authorization without another workflow confirmation. Preparation alone does not authorize Git publication or contribution submission.
 
-Correct an ordinary path or URL mistake or a demonstrated local invocation error, such as invalid arguments or malformed reader syntax, then retry only the selected method within the original scope. This exception does not cover access, authentication, network, permission, sandbox, or unexplained tool or transport failures. For those failures, stop retrieving the resource. Report the resource, method, exact error with any necessary secret redaction, and smallest corrective action. Do not retry through another agent, browser, proxy, or tool.
+After an ordinary technical retrieval failure, correct a demonstrated path or invocation mistake, make bounded retries, or use an equivalent method while the target, authorized effects, authentication, and disclosure boundaries remain unchanged. Verify replacement guidance against authoritative evidence, and ask before changing an explicitly selected version or another material task assumption. Do not use another agent, browser, proxy, or tool to evade denied access, authentication requirements, or a security control. Use the supported grant or correction process instead. If recovery is unsuccessful, report the resource, attempted methods, exact error with necessary secret redaction, and smallest corrective action. Continue independent authorized work without claiming the affected step succeeded. New dependencies, destinations, or broader effects retain their own approval requirements.
 
 ## Keep Task Artifacts Separate
 

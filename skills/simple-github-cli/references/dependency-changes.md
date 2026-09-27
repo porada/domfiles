@@ -14,7 +14,7 @@ Obtain the user’s explicit approval for that exact choice before carrying appr
 
 Authorization to run an established project workflow includes obtaining the dependencies and tools it already prescribes through configuration, lockfiles, manifests, or scripts, using its normal acquisition mechanism. Do not request separate dependency approval solely because those packages are absent locally or downloaded on demand. An agent cannot manufacture this authorization by adding its own dependency declaration or acquisition step. Explicit task restrictions and applicable execution, lifecycle-script, permission, and trust boundaries remain in force.
 
-Dependency authorization does not waive the entrypoint’s command-family opt-ins, handoff confirmation, remote mutation authorization, or user-run-only requirements.
+Dependency authorization alone does not supply the entrypoint’s command-family opt-ins, handoff authorization, or remote mutation authorization. A direct request may cover those effects together, but credential handling and genuine human-only checkpoints remain user-run.
 
 ## History Integration
 

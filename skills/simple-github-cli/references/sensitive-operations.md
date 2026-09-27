@@ -1,8 +1,10 @@
 # Sensitive Operations
 
-Do not execute a command routed here. Require explicit user opt-in for its exact authentication, key management, secret, or variable operation, including any alternate authentication method, host, account, configuration source, or broader scopes. Apply the entrypoint’s [Authentication](../SKILL.md#authentication) and [Remote Changes](../SKILL.md#remote-changes) boundaries before preparing it.
+Require explicit user direction for the exact operation and apply the entrypoint’s [Authentication](../SKILL.md#authentication) and [Remote Changes](../SKILL.md#remote-changes) boundaries. Authentication, key management, `gh secret` operations, and commands that directly handle credentials or private machine or account values remain user-run, including changes to authentication sources or scopes.
 
-After resolving the applicable host, account, repository, or resource target and every required remote mutation or key management authorization, provide the exact command in a `sh` code block for the user to copy, paste, and run locally.
+A direct, scoped request may authorize non-secret `gh variable` operations without duplicate confirmation. Execute only when the target and effects are clear and the necessary inputs and outputs are established as non-secret without inspecting private values to decide. A variable’s command family or name alone does not establish that its value is safe to read or disclose. If that boundary cannot be established, keep the operation user-run. Do not enumerate unrelated values or use a variable operation to retrieve credentials.
+
+For a user-run operation, resolve the applicable host, account, repository, or resource target and every required remote mutation or key management authorization, then provide the exact command in a `sh` code block for the user to copy, paste, and run locally.
 
 Keep credentials, tokens, private keys, secret values, one-time codes, and other private authentication material out of command literals, environment variable examples, repository files, and the conversation. Use named placeholders and an interactive terminal prompt or an established secure machine-local source.
 

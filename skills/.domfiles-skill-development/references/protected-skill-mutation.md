@@ -4,6 +4,8 @@ Use this policy for every authorized change within the project-authored public `
 
 A tree to which this policy applies is a protected skill tree. The policy covers each skill’s `SKILL.md`, assets, references, scripts, adjacent tests, and durable fixtures. Keep read-only work unstaged. Do not apply it to root `AGENTS.md`, `.agents/PROJECT.md`, other `.agents` paths outside `skills`, or any other root `skills/<skill>` tree.
 
+The global **Explicit user direction** policy permits a task-scoped replacement of the staging procedure, not a bypass of native protected-path confirmation or another access control. An alternate editing route must remain supported, preserve unrelated and concurrent work, and stay within the authorized target and effects. Without such a direction, follow the procedure below.
+
 The target checkout contains the canonical protected skill tree. Use its root as the staging host.
 
 Use the staging workflow below when native file tools expose both the canonical protected skill tree and the staging host through current project roots. Zed’s native mutation tools force confirmation for a directly named or canonical path containing consecutive `.agents` and `skills` components. Staging preserves the canonical layout required for project discovery without bypassing that confirmation boundary. The `skills/human-facing-writing` source uses the same staging and reviewed promotion boundary for every agent because changes to its writing contract can affect every project-authored agent documentation writing surface composed through it, even though its path does not trigger Zed’s classification.

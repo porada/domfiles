@@ -12,7 +12,7 @@ metadata:
 
 ## Public Workflow
 
-For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay adds only the `/release-notes` procedure, bullet rendering, and package links defined below.
+For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay adds the `/release-notes` procedure, bullet rendering, and package links below. Apply the global **Explicit user direction** policy to task-scoped overrides of this overlay’s procedure and presentation conventions.
 
 ## `/release-notes` Command
 
@@ -20,9 +20,9 @@ The `/release-notes` command runs this complete procedure:
 
 1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
 2. Use `release-notes-for-humans` to resolve the affected publishable release units and their release boundaries. Stop and ask whenever that workflow requires user direction.
-3. For each resolved release unit, either use the user-confirmed initial release status item or draft the release notes from a complete evidence inventory and material consumer outcomes. If a complete required range or artifact cannot be inspected, stop before drafting and state the evidence boundary instead of continuing to the output-only step.
+3. For each resolved release unit, either use the user-confirmed initial release status item or draft the release notes from a complete evidence inventory and material consumer outcomes. If required evidence cannot be inspected or a required check is omitted, state the limitation and stop before drafting unless the user explicitly authorizes a draft from the available evidence. Do not imply exhaustive verification.
 4. Apply the [presentation conventions](#presentation-conventions).
-5. Output only the ready-to-paste changelog Markdown, with nothing before or after it and without mutating or submitting anything.
+5. By default, output only the ready-to-paste changelog Markdown, with any required disclosures or material evidence limitations reported separately. Drafting alone does not authorize file changes or submission.
 
 ## Presentation Conventions
 

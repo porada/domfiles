@@ -1,20 +1,20 @@
 # Decision Relays
 
-A decision relay carries established results, evidence, material decisions when any exist, and limitations into another conversation. It is always evidence-only and non-mutating. Its receiving action may incorporate the supplied evidence into an existing receiving task, but it cannot assign fresh work or authorize edits or other mutation. Continuation relies on the receiving task’s already granted authority and remains subject to its approval and security boundaries.
+A decision relay carries established results, evidence, material decisions when any exist, and limitations into another conversation. Its default receiving action is evidence-only and non-mutating. The evidence does not authorize edits or other effects. Any continuation needs authority from the receiving task or explicit user direction under [Instruction Authority](../SKILL.md#instruction-authority).
 
-Fresh assignments, including comparison against new or current source material, investigation, and review, require a separate [task relay](task-relays.md) with its own [confirmed flow](task-relays.md#task-relay-confirmation), even when non-mutating.
+By default, put fresh assignments, including comparison against new or current source material, investigation, and review, in a separate [task relay](task-relays.md). If the user expressly requests a combined handoff, distinguish the assignment and its authorization from the evidence. Apply [Task Relay Confirmation](task-relays.md#task-relay-confirmation) and the [Assignment Contract](task-relays.md#assignment-contract) to every assignment, whether separate or combined.
 
 Apply the entrypoint’s [Relay Contract](../SKILL.md#relay-contract) when composing a decision relay and its [Delivery](../SKILL.md#delivery) rules when returning one.
 
 ## Available Evidence
 
-Use only context and artifacts already available from the completed task. Do not continue the task, call tools, reopen files, rerun validation, browse, delegate, or draft a receiving task patch. Record any material gap instead of gathering or reconstructing what is unavailable.
+Use only context and artifacts already available from the completed task unless the user expressly requests additional evidence gathering. Otherwise, do not browse, call tools, continue the task, delegate, draft a receiving task patch, reopen files, or rerun validation. Record any material gap instead of gathering or reconstructing what is unavailable. A request for more evidence does not authorize a patch or other mutation.
 
 ## Handoff Structure
 
 Use only the material parts of this sequence. Combine overlapping items, and omit empty sections.
 
-1. Title, explicit evidence-only receiving action, and stopping point.
+1. Title, explicit receiving action, and stopping point.
 2. Task context, final result, and acceptance status.
 3. Representative evidence and validation.
 4. Material decisions using `Before`, `After`, `Why`, and `Decision basis` when those fields clarify the result.
@@ -46,12 +46,12 @@ Reserve **Observed behavior** for results that were actually observed. Do not co
 
 ## Skill Improvement
 
-When a decision relay supports improvement of an existing skill, add only material workflow observations and candidate reusable guidance to the [Handoff Structure](#handoff-structure). Include concrete gaps, confirmed coverage, context-specific decisions, and reusable guidance separately only when already established by the completed task. A request for a fresh comparison with the current skill must use a [task relay](task-relays.md#task-relay-confirmation), not the decision relay.
+When a decision relay supports improvement of an existing skill, add only material workflow observations and candidate reusable guidance to the [Handoff Structure](#handoff-structure). Include concrete gaps, confirmed coverage, context-specific decisions, and reusable guidance separately only when established by the task’s permitted evidence gathering.
 
 ## Domain Profiles
 
 A domain profile is a standalone maintainer asset measured against this skill rather than a runtime extension of it. It must restate every rule it needs because an ordinary invocation of the profile may not load this skill.
 
-A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. It must preserve the entrypoint’s [Relay Contract](../SKILL.md#relay-contract), [Delivery](../SKILL.md#delivery), source-closed [Available Evidence](#available-evidence) workflow, and evidence-only non-mutation rule. It must also preserve the boundary against fresh assignments, including non-mutating work.
+A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. Carry the entrypoint’s [Relay Contract](../SKILL.md#relay-contract), [Delivery](../SKILL.md#delivery), and [Instruction Authority](../SKILL.md#instruction-authority), together with the [Available Evidence](#available-evidence) defaults and the distinction between evidence and user-authorized assignments.
 
-A standalone decision capture prompt must implement the applicable delivery and full-revision behavior in its own output contract. Its output is always source-closed, evidence-only, and non-mutating. It cannot depend on the receiving agent loading this skill.
+A standalone decision capture prompt must implement the applicable delivery and full-revision defaults in its own output contract. Keep its output source-closed, evidence-only, and non-mutating by default, with explicit user changes governed by **Instruction Authority**. It cannot depend on the receiving agent loading this skill.

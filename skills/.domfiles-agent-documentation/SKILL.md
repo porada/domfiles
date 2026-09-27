@@ -15,7 +15,7 @@ metadata:
 
 ## Apply the Documentation Principles
 
-- Preserve requested scope and every applicable read-only, approval, mutation, and submission boundary. Findings alone never authorize edits.
+- Apply the global **Explicit user direction** policy to this workflow’s procedural requirements and conventions, including its routed references. Preserve requested scope and every applicable approval, mutation, security, and submission boundary. Findings alone never authorize edits.
 - Write instructions that require no conversational context. Define non-obvious terms, and keep consuming project documentation independent of this skill, its canonical repository, and its installation path.
 - Apply `human-facing-writing` whenever authoring, reviewing, auditing, or maintaining any project-authored agent documentation writing surface or any human-facing writing in an asset owned by that documentation. Preserve the agent documentation contract and exact machine-readable, externally owned, and quoted content. Treat this as source authoring composition rather than an installed runtime dependency. When maintaining `human-facing-writing` itself, apply the composition once without routing recursively.
 - Optimize the complete context path loaded for a task rather than an individual file’s size. Treat applicable `AGENTS.md` files, skill descriptions, and `SKILL.md` entrypoints as direct-path context. Keep wording there only when most invocations need it, and move coherent conditional detail into a conditional reference in the existing skill when the saved direct-path context exceeds the navigation cost.

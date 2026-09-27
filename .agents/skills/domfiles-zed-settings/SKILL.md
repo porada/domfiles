@@ -17,14 +17,15 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 ## Apply the General Policy
 
-- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and `skill-development` for skill script contracts.
+- Apply the global **Explicit user direction** policy to configuration conventions and workflow requirements. An override does not change Zed’s implemented behavior, waive native sensitive-settings confirmation, or authorize bypassing a security control.
 - Keep `.zed/settings.json` and `home/.config/zed/settings.json` free of redundant entries. Treat configuration as redundant only when omitting it preserves the supported workflow. Matching a default or inherited value is not sufficient. Include tool-managed state and subsequent invocations in that comparison. The [CLI persistence rationale](../../PROJECT.md#zed-cli-open-behavior) illustrates this distinction.
 - Sort Zed settings object arrays by the value of their identifying field.
     - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
+- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and `skill-development` for skill script contracts.
 
 ## Choose the Workflow
 
-- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. A non-fetch tool permission override has no supported mutation route. Stop that change until the agent permission branch defines a dedicated workflow and validation contract.
+- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. For an expressly requested departure from the default permission model, establish the supported settings semantics and use this general route when no specialized route applies. Do not claim that a fetch-only evaluator validates another tool’s behavior.
 - For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, and report all findings together. Skip change planning, change validation, formatting, and implementation.
 - For a standalone review, keep the task read-only and skip change planning, change validation, formatting, and implementation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.

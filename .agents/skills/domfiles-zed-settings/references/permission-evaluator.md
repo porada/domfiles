@@ -177,11 +177,11 @@ The compatibility audit owns no repair route. Do not mutate `Cargo.toml` or `Car
 
 After resolving version-sensitive behavior through the parent [investigation workflow](../SKILL.md#investigate-and-plan):
 
-1. Identify the selected tool’s implementation and whether it invokes configured permission evaluation. Only when it does, identify every participating Zed settings layer and resolve the tool’s effective default and accumulated pattern arrays.
+1. Identify the selected tool’s implementation and whether it invokes configured permission evaluation. Only when it does, identify every participating Zed settings layer and any tool-specific overrides, then resolve the tool’s effective default and accumulated pattern arrays.
 2. For fetch, treat any empty or regex-invalid effective pattern as denying the tool before pattern precedence.
 3. When every effective fetch pattern is valid, apply deny, confirm, allow, then default precedence to the initial URL. Evaluate shared host grant authorization for the initial hostname and every redirect hostname independently.
-4. For `terminal`, establish that this repository contributes no tool-specific override, then evaluate Zed’s built-in behavior, the inherited global default, task authorization, and operating system sandbox effects separately.
-5. For a native path tool, establish that this repository contributes no tool-specific override. When its implementation invokes configured permission evaluation, evaluate the inherited global default, task authorization, and applicable built-in path, privacy, sensitive-settings, and symlink escape checks. When it does not, omit the configured permission layer and evaluate task authorization plus those built-in checks. Do not attribute native path behavior to the operating system sandbox.
+4. For `terminal`, evaluate Zed’s built-in behavior, the effective configured decision, task authorization, and operating system sandbox effects separately.
+5. For a native path tool, when its implementation invokes configured permission evaluation, evaluate the effective configured decision, task authorization, and applicable built-in path, privacy, sensitive-settings, and symlink escape checks. When it does not, omit the configured permission layer and evaluate task authorization plus those built-in checks. Do not attribute native path behavior to the operating system sandbox.
 
 The matcher evaluates one selected settings file rather than constructing Zed’s complete effective configuration. When another participating layer contributes fetch rules or a different default, inspect and account for that layer separately.
 
