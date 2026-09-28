@@ -20,7 +20,7 @@ Apply these release scope exclusions before using a mapping:
 - Keep the package currently being documented and every package in the current synchronized release set backticked and unlinked.
 - When the resolved release scope contains an `@standard-config/*` package, keep every `@standard-config/*` package name backticked and unlinked.
 
-For every other listed package, always render its name as a code-formatted link to the exact mapped destination: ``[`<package>`](<destination>)``.
+For every other listed package, wrap its complete code-formatted reference in a link to the exact mapped destination.
 
 Keep every unlisted package name backticked and unlinked. Do not infer or search for an unlisted mapping during the release note task.
 
