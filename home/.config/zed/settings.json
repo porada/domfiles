@@ -3,9 +3,9 @@
 	"agent_servers": {
 		"claude-acp": {
 			"default_config_options": {
-				"effort": "max",
+				"effort": "xhigh",
 				"mode": "auto",
-				"model": "opus[1m]"
+				"model": "opus"
 			},
 			"type": "registry"
 		}
@@ -54,6 +54,9 @@
 		"..."
 	],
 	"languages": {
+		"Editorconfig": {
+			"soft_wrap": "none"
+		},
 		"JSON": {
 			"tab_size": 4
 		},
