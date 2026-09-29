@@ -21,8 +21,6 @@ color: always
 
 engineStrict: true
 
-minimumReleaseAge: 0
-
 minimumReleaseAgeExclude:
   - '@standard-config/*'
 
