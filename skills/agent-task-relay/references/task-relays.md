@@ -1,10 +1,18 @@
 # Task Relays
 
-Task relays assign future work to an external agent. Apply the entrypoint’s [Relay Contract](../SKILL.md#relay-contract) when composing them and its [Delivery](../SKILL.md#delivery) rules when returning them.
+Task relays assign future work to an external agent operating in another conversation or execution environment rather than as an in-client subagent.
+
+## External Handoffs
+
+A direct request to assign work begins this workflow. A tentative question suggests a relay and waits for the user’s choice. An incidental or quoted mention of another agent does not route the task.
+
+When the task requires access available only in another conversation, client, host, authenticated session, or project, suggest a relay as soon as that boundary is established. If an attempted access operation revealed the boundary, report the exact limitation before proposing the handoff.
+
+Never use an in-client subagent to cross or circumvent an environment, access, authentication, repository, or permission boundary. Identify the receiving environment only as precisely as execution requires, never transfer credentials or other secret material, and rely only on access already available to the external agent.
 
 ## Task Relay Confirmation
 
-Confirm the proposed handoff before drafting a task relay unless the user’s direct instruction already settles the flow’s targets and covered effects or expressly replaces this process under [Instruction Authority](../SKILL.md#instruction-authority).
+Apply the [Assignment Contract](assignment-prompts.md#assignment-contract) before resolving or confirming the flow. Confirm the proposed handoff before drafting unless the user’s direct instruction already settles the flow’s targets and covered effects or expressly replaces this process under [Instruction Authority](../SKILL.md#instruction-authority).
 
 ### Resolve Repository Isolation
 
@@ -18,41 +26,19 @@ If a material choice remains unresolved, ask the user explicitly, and emit neith
 
 When confirmation is still needed, present the final flow in its own response. Keep it succinct, but include the receiving action, material target environment, worktree decision when repository work is involved, scope and exclusions, mutation and approval boundaries, required execution steps, validation, and handoff mode.
 
-For a new dependency or tool choice, choose the smallest sufficient set. Prefer an existing dependency or standard library capability when sufficient, and enable only required features. Before requesting approval, identify each proposed addition or update exactly and state its consumers, declaration location, installation location when relevant, and purpose. Explain why existing dependencies or standard library capabilities are insufficient and why a custom implementation would be less correct, maintainable, proportionate, or secure. Disclose any material feature, licensing, runtime, supply chain, or version implications.
-
 When flow confirmation is still needed, ask the user to confirm or correct it, and do not include the task relay in that response. Once the flow is authorized, emit the complete relay without recapping the flow.
 
 ### Keep Confirmation Narrow
 
-Confirmation authorizes only what the flow states explicitly and what applicable approval gates permit. It does not substitute for the user command required for commit-writing effects under [Assignment Contract](#assignment-contract) or authorize unstated dependency choices, publication, remote submissions, scope expansion, or secret access.
-
-Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without existing approval, stop before dependency-premised implementation, mutation, installation, or mutating delegation.
-
-Authorization to run an established project workflow includes obtaining the dependencies and tools it already prescribes through configuration, lockfiles, manifests, or scripts, using its normal acquisition mechanism. Do not request separate dependency approval solely because those packages are absent locally or downloaded on demand. An agent cannot manufacture this authorization by adding its own dependency declaration or acquisition step. Explicit task restrictions and applicable execution, lifecycle-script, permission, and trust boundaries remain in force.
-
-An authorized Git history operation may incorporate dependency declarations and lockfile changes already present in its selected upstream history without separate dependency-change approval. New dependency choices, including conflict resolutions that introduce them, still require approval. History integration alone does not authorize installation or execution, but a separately authorized workflow can cover prescribed acquisition. Sandbox and security requirements remain in force.
-
-A confirmation grants approval for a new dependency choice only when the flow names that exact choice. Only a direct user response can grant that approval. Do not infer it from intent, silence, an agent proposal, or permission for adjacent work. An agent or subagent cannot approve on the user’s behalf. A task relay may carry dependency approval only when it identifies the explicit user response that granted it. If the receiving agent later needs an unapproved new dependency choice, require it to stop and ask the user rather than treating the relay as authorization.
+Confirmation authorizes only what the flow states explicitly and what applicable approval gates permit. It does not substitute for the user command required for commit-writing effects under the **Assignment Contract** or authorize unstated dependency choices, publication, remote submissions, scope expansion, or secret access.
 
 Reassess the flow whenever composition or a later revision materially changes the confirmed action, target, worktree decision, scope, approval, execution, validation, or handoff. Ask only about material ambiguity, uncovered effects, or a separate gate, not changes already expressly authorized by the user. Meaning-neutral compression and formatting do not require reconfirmation.
 
 This confirmation gate applies only to task relays. It does not apply to autonomous in-client delegation or evidence-only decision relays.
 
-## Assignment Contract
-
-By default, end every initial or follow-up prompt that assigns future work with the exact standalone line `**Do not drift.**`. This applies to evidence gathering, mutation, and review assignments.
-
-Define the bounded assignment, owned scope, exclusions, source and access constraints, stop conditions, and output contract. When the guard is included, put every required result, process, validation step, and handoff instruction before it.
-
-Every assignment inherits the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary. Require it to return any boundary request to its coordinator or the user rather than crossing it.
-
-An assignment may authorize an operation that writes a commit in any repository, directly or indirectly, only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working tree changes only.
-
-Use the guard only when the prompt assigns future work. Omit it from evidence-only decision relays and other transfers of established data. A receiving action alone does not turn an evidence handoff into an assignment.
-
 ## Task Relay Composition
 
-Compose the task relay from the flow established by direct user instruction or confirmation. If drafting exposes a material ambiguity or an effect outside that authorization, return to confirmation instead of choosing silently.
+Compose the task relay under the entrypoint’s [Relay Contract](../SKILL.md#relay-contract) from the flow established by direct user instruction or confirmation. If drafting exposes a material ambiguity or an effect outside that authorization, return to confirmation instead of choosing silently.
 
 Include only the applicable parts of this sequence:
 
@@ -62,7 +48,7 @@ Include only the applicable parts of this sequence:
 4. Required result, mandatory process constraints, validation, and known limitations.
 5. Handoff mode, stopping point, and exact final anti-drift guard when applicable.
 
-Apply the [Assignment Contract](#assignment-contract), and carry only approvals whose applicable gate has been satisfied. Treat the confirmed flow as a record of those approvals rather than a substitute for their authorization source.
+Carry only approvals whose applicable gate has been satisfied. Treat the confirmed flow as a record of those approvals rather than a substitute for their authorization source.
 
 Omit the receiving location by default. Include a repository, checkout, worktree, directory, host, or other execution location only when it is needed to find the inputs, distinguish possible targets, preserve isolation, or satisfy a submission or integration boundary. Material target paths may still be required.
 
@@ -70,8 +56,6 @@ Default to a one-way handoff in which the receiving conversation owns completion
 
 Record only the confirmed isolation requirement. The receiving environment’s repository policy governs worktree creation, operation, and cleanup.
 
-## User-Requested Subagent Prompts
+## Delivery
 
-When the user explicitly asks to draft or review a subagent assignment, apply the [Assignment Contract](#assignment-contract). Preserve the inherited scope, source, access, approval, mutation, stopping, and output boundaries.
-
-Do not frame the assignment as a relay, present a relay flow, or ask for confirmation merely because in-client delegation will occur. This workflow does not mediate autonomous in-client delegation. A boundary in the underlying task may still require a user decision through the policy that owns it.
+Once the handoff is authorized, apply [Assignment Delivery](assignment-prompts.md#delivery). Unless delivery returns to a calling workflow, precede each fenced prompt with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready to relay.

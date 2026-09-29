@@ -1,5 +1,5 @@
 ---
-name: commit-flow
+name: dom-sensible-commit-flow
 description: |-
     Use whenever `sensible-commit-flow` applies.
 
@@ -13,7 +13,7 @@ Load `sensible-commit-flow` and apply these personal conventions as defaults for
 
 ## Contribution Preparation Authorization
 
-Apply the global **Contribution Preparation Authorization** policy only when its managed-installation and task conditions hold. That policy alone delegates this mode. Supply its recorded setup authorization or checkpoint grant to `sensible-commit-flow` at **Confirm Commits → Alternative Approval Modes**, then apply the public workflow’s inspection, execution, and verification requirements with any explicit user waiver covered by the global **Explicit user direction** policy. The grant itself supplies no waiver.
+Apply the global **Contribution Preparation Authorization** policy only when its managed-installation and task conditions hold. That policy alone delegates this mode. Supply its recorded setup authorization or checkpoint grant to `sensible-commit-flow` through its **Alternative Approval Modes** reference, then apply the public workflow’s inspection, execution, and verification requirements with any explicit user waiver covered by the global **Explicit user direction** policy. The grant itself supplies no waiver.
 
 For each call, supply the verified target, actual change scope, and requested operation. Carry the grant’s express request for provisional message revisions without treating supplied exact wording or all inherited messages as adjustable. Return each commit result to `sensible-contribution-flow` while the recorded lifetime continues. Other calls follow the public skill’s applicable authorization path, including already authorized history updates.
 

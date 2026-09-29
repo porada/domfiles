@@ -53,16 +53,7 @@ metadata:
 
 ## Compose the Change
 
-- Update the selected canonical owner before adjusting secondary documents.
-- When a set’s order encodes information a reader must recover, such as precedence, priority, complexity, or containment, state its ordering principle beside the set or in the rule that governs it, so every new entry has a determinable position. This applies to table rows, category sequences, and section sequences alike. Agent documentation authority tables use one canonical principle instead, listing instruction surfaces before reference surfaces, each from the most general to the most specific, with a client bridge following the surface it imports.
-- Preserve exact user terminology only when the terminology itself is required or established.
-- Before compressing a rule or introducing a case beside it, identify what carries its scope. Labels, unqualified quantifiers, and the range of cases that existed when it was written all bind meaning without reading as conditions. State the scope explicitly whenever the edit changes any of them.
-- Phrase reusable guidance against the subject’s declared contract rather than a presumed success model. Do not assume that “completion” means failure-free execution, that a stable identifier proves unchanged state, or that a wrapper must reproduce an underlying tool’s automatic behavior. Before adding a named exception, determine whether an evidence-backed decision criterion explains the case and comparable cases. Prefer that criterion when it preserves the intended behavior and boundaries. Retain a named exception when its identity carries information the general rule cannot express.
-- Let rationale explain why a policy exists and link to its owner without repeating maintenance steps or exact inventory.
-- Keep `PROJECT.md` declarative and organized under broad second-level sections. Order second-level sections topically, appending a new section when no topical position is evident, and alphabetize third-level sections within each. Move agent actions, reporting exclusions, and workflows to the applicable `AGENTS.md` or domain skill, leaving facts, constraints, maintenance decisions, and rationale in `PROJECT.md`.
-- For agent documentation about a versioned tool, runtime, or language, establish one authoritative behavioral baseline before editing. Use its most recent stable release unless direct user instruction or authoritative target environment evidence establishes another version. For newly authored or materially revised security boundary claims, verify behavior against the selected upstream baseline and retain the exact revision and supporting source paths in the conversation or task artifacts. Record verification evidence in the source project’s reference documentation, outside skill directories, only when the user explicitly requests a durable audit trail. Version requirements and explanatory source links remain ordinary documentation, not verification records. Evaluate conflicting evidence against the selected baseline before changing documentation. Do not combine current documentation, pinned source, and upstream `main` as if they describe one implementation. Write only the interfaces, semantics, and syntax of the selected baseline. Do not add compatibility branches, historical caveats, legacy forms, version detection, or version migration guidance. Report when the baseline cannot be verified rather than guessing.
-- For a new, renamed, or rewritten project-authored Markdown document without a required filename, let its content and scope determine the top-level title, then derive the filename as `<lower-kebab-case>.md`. Never choose or rewrite a title to preserve an existing filename. If the current filename does not match the resulting title, rename the file and update every inbound link in the same change. A filename required by a client, tool, ecosystem, document format, or more specific contract takes precedence.
-- Before composing a change across routed or layered surfaces, use the [documentation boundary checks](references/documentation-boundary-checks.md) to identify the canonical side of each boundary.
+Before editing, follow [Compose Documentation](references/compose-documentation.md). Reviews and audits use its applicable authoring rules as criteria without composing or mutating content.
 
 ## Validate the Documentation
 
@@ -79,20 +70,7 @@ For a review or audit, use only read-only diagnostics and identify anything that
 
 ### Complete Change Validation
 
-After capturing all task-authorized documentation updates intended for the current change:
-
-1. Resolve every unjustified direct-path increase found by the complete-scope footprint check. Move conditional guidance into a reference in the existing skill, and remove obsolete direct-path wording in the same change.
-2. Resolve every missing behavioral distinction, condition, exception, or route found by the complete-scope moved guidance check.
-3. Run targeted diagnostics and `git diff --check` for the changed documentation without formatting unrelated files. Inspect task-owned untracked documentation directly because Git diff checks do not include it. Do not stage files solely for validation.
-4. Perform one bounded final alignment pass over the changed documentation against the [documentation principles](#apply-the-documentation-principles), the resolved local authority model, applicable project values, and explicit user decisions. Include [workflow compatibility](#workflow-compatibility) in that pass. Correct concrete discrepancies within the authorized scope before delivery. Treat this as a completion check rather than a drafting gate: do not withhold useful documentation, reopen settled decisions, repeatedly rewrite compliant content, or expand scope for speculative improvements. If a correction requires new authorization, preserve the completed changes and report that boundary.
-
-#### Workflow Compatibility
-
-Before finalizing new or materially changed operational guidance, identify the failure it is meant to prevent and the supported work it must still permit. Derive expected outcomes from governing instructions, explicit user decisions, and verified behavior, not from the proposed wording alone.
-
-Within the existing bounded alignment pass, trace concrete cases through the applicable inherited rules and routed workflows. When a change alters how a workflow is entered, revisit the assumptions that depended on the previous entry point. Verify the default path and how each remaining branch is selected. Cover the permitted path, the relevant stop or approval boundary, and any affected exception, recovery, or continuation. Check that prerequisites are available at the phase that requires them and that valid authorization remains effective through composition. For commands, verify effective configuration and implicit effects in the supported invocation context, not merely accepted syntax.
-
-Reuse established evidence and choose only cases needed for the changed behavior and its direct integration boundaries. Preserve existing complete-scope checks and approval requirements. Report uncertainty or conflicts rather than inventing a workaround.
+For changes, complete [Validate Documentation Changes](references/validate-documentation-changes.md) after the shared checks above and before delivery. Reviews and audits remain on the read-only validation path.
 
 ## Report the Result
 

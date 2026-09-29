@@ -1,5 +1,5 @@
 ---
-name: release-notes
+name: dom-release-notes-for-humans
 description: |-
     Compose release notes for Dom’s packages.
 
@@ -12,11 +12,11 @@ metadata:
 
 ## Public Workflow
 
-For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay adds the `/release-notes` procedure, bullet rendering, and package links below. Apply the global **Explicit user direction** policy to task-scoped overrides of this overlay’s procedure and presentation conventions.
+For every invocation, load `release-notes-for-humans` and follow its complete workflow. This overlay adds the `/dom-release-notes-for-humans` procedure, bullet rendering, and package links below. Apply the global **Explicit user direction** policy to task-scoped overrides of this overlay’s procedure and presentation conventions.
 
-## `/release-notes` Command
+## `/dom-release-notes-for-humans` Command
 
-The `/release-notes` command runs this complete procedure:
+The `/dom-release-notes-for-humans` command runs this complete procedure:
 
 1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
 2. Use `release-notes-for-humans` to resolve the affected publishable release units and their release boundaries. Stop and ask whenever that workflow requires user direction.

@@ -15,9 +15,9 @@ metadata:
 | Priority | Rule |
 | --- | --- |
 | Security exclusions | Preserve credential protection, access controls, and higher-priority read restrictions. Explicit scope does not bypass these boundaries. |
-| Explicit scope | Apply the global **Explicit user direction** policy to non-secret exclusions and procedural requirements. When the user specifies paths, categories, inclusions, or exclusions, treat them as authoritative over publication audit and default scope rules. Include explicitly named untracked paths and symbolic links without dereferencing a link unless the request or applicable policy requires its target. |
+| Explicit scope | Override only the corresponding publication audit or default scope rules. Interpret the request through [Audit Path Selection](references/audit-path-selection.md). |
 | Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from its regular files rather than the active checkout, and exclude every untracked path, including `home/.config/fish/local.fish`. When the audit requires an isolated copy of that tree, follow [Publication audit staging](references/publication-audit-staging.md). |
-| Default scope | Without explicit scope, start with Git-tracked regular files, exclude symbolic links and untracked paths except `home/.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
+| Default scope | Start with Git-tracked regular files, exclude symbolic links and untracked paths except `home/.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.

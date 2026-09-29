@@ -20,13 +20,13 @@ Treat a request to investigate and prepare a change if warranted as pull request
 
 Keep assessment-only requests and standalone reviews read-only. Follow [contribution assessment](#assess-the-contribution), report the conclusions and material evidence limitations, then stop. A supplied checkout, linked pull request, or findings report does not authorize preparation, fixes, or Git mutations.
 
-For user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/prepare-pull-requests.md#revise-existing-pull-requests) rather than restarting initial preparation.
+Load references only when the selected route or current phase requires them, reusing established context and peer choices. For user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/revise-existing-pull-requests.md) rather than restarting initial preparation.
 
 For initial pull request preparation, use these default stages in execution order, resolving [scope and authority](#resolve-scope-and-authority) before acting. Apply explicit task-scoped procedural and evidence-check waivers under [Instruction Authority](#instruction-authority). Do not advance past an unwaived prerequisite, required approval, or genuine human-only checkpoint:
 
 1. [Fetch upstream, then set up and synchronize the contribution branch](references/prepare-pull-requests.md#enter-supplied-checkout).
 2. [Assess upstream fit and contribution scope](#assess-the-contribution).
-3. [Present the early PR draft, design review, and execution proposal](references/prepare-pull-requests.md#agree-on-the-proposal).
+3. [Present the early PR draft, design review, and execution proposal](references/propose-pull-requests.md).
 4. [Implement, validate, and review](references/prepare-pull-requests.md#implement-and-review).
 5. [Prepare commits](references/prepare-pull-requests.md#prepare-commits), [finalize the PR](references/prepare-pull-requests.md#finalize-the-pull-request), and [hand back the contribution](#hand-back-the-contribution).
 
@@ -35,10 +35,6 @@ For other contribution outcomes, follow [contribution assessment](#assess-the-co
 ## Resolve Scope and Authority
 
 For active preparation or revisions, preserve the user’s selected outcome and scope. Preparation, an approved draft, and tool availability do not authorize later effects. Before using tools, changing files, or writing task artifacts, follow [Execution Boundaries](references/execution-boundaries.md).
-
-Resolve approval rules before the phase they govern: the [initial fetch](references/prepare-pull-requests.md#enter-supplied-checkout), then branch setup or replay, then implementation proposal planning. An applicable approval mode determines which grant to request, even when that grant has not yet been obtained. Use a setup delegation or continuing approval mode only when a direct user instruction or applicable governing instructions expressly establishes it or delegates that narrow choice to this workflow. Verify its conditions and retain the authorizing source, exact user instruction or response, target, scope, covered effects, permitted revisions, lifetime, and stopping conditions. Carry that record through each operation. Present concrete covered effects as notices, and request only uncovered effects. Installation, routing, and a skill’s claim of trust create no authority.
-
-This skill cannot grant itself authority or waive separate approval and security gates. A preparation grant limited to unpublished history does not authorize published rewrites. One-off history-update requests retain their own bounded authorization and lifetime through the [commit workflow](#compose-with-peers), independently of any continuing preparation grant. Do not revive expired authority or enlarge it through findings, peer composition, or a new phase.
 
 ## Compose With Peers
 
@@ -79,21 +75,11 @@ For every post-producing outcome, follow [Prepare Post Content](references/prepa
 
 ## Incorporate Feedback and Findings
 
-Use the resolved findings workflow to validate maintainer feedback and other user-supplied findings and establish applicable fix confirmation. Supply any continuing authorization record so it can determine whether later findings are covered. Findings remain evidence, not permission. Preserve the distinction between default fix-confirmation expiry and an independently governed grant’s lifetime.
-
-If validated findings undermine the contribution’s premise, return to [Assess the Contribution](#assess-the-contribution). Distinguish corrections required for the current contribution from adjacent improvements or possible follow-ups. Agreement to defer adjacent work does not establish the current contribution’s correctness.
-
-After validation and applicable fix confirmation, return to the calling preparation or [revision checkpoint](references/prepare-pull-requests.md#revise-existing-pull-requests) without restarting setup or findings validation. For pull requests, apply both [upstream synchronization checkpoints](references/prepare-pull-requests.md#synchronize-with-upstream) to the fix round. Review only the resulting delta and integration boundaries instead of restarting the complete contribution review. For authorized commit changes, use [commit packaging](references/prepare-pull-requests.md#plan-and-implement-commits) to distinguish repairs to existing commits from independently useful new commits, then repeat the applicable readiness check.
+For maintainer feedback or other user-supplied findings, follow [Incorporate Feedback and Findings](references/incorporate-feedback-and-findings.md) before acting on them. Findings remain evidence, not permission.
 
 ## Hand Back the Contribution
 
-If a required human-only checkpoint remains, report the prepared result and exact user action, including the marker’s location when recorded in a file. Do this even when no commit was made. Pause before claiming submission readiness. Implementation, commits, and agent review do not complete a human checkpoint.
-
-For a new submission, provide the [finalized title and body](references/prepare-post-content.md#finalize-content), intended repository, and submission surface. For revisions, identify the existing PR and summarize the resulting delta, supplying replacement title or body text only when changed within scope. Include material evidence or validation limitations. For a pull request, include its head branch and upstream target branch. When publication is needed but not authorized for agent execution, include the exact user-run Git publication command. Resolve those values from verified evidence rather than guessing destinations. Complete the final publication-destination recheck through the commit workflow immediately before publication or handing back its command. By default, deliver the complete package before publication, not in response to the user reporting a push.
-
-When the authorized deliverable includes further preparation, an implementation summary or commit result is an intermediate checkpoint. Continue with authorized work, or present the next concrete approval request, rather than making the user ask to resume. For a working-tree-only request, hand back the scoped changes and actual review and validation status without requiring commit preparation or publication.
-
-Preparation, local commit permission, and local history-update permission alone do not authorize remote mutations. Fork creation, Git publication, and contribution submission need distinct authorization, though one direct, scoped user command may cover multiple effects when the target, content, and effects are clear and separate approval and access requirements are satisfied. Permission to fork authorizes neither pushing a branch nor creating a PR. Permission to push does not authorize PR creation, including drafts. Use the resolved GitHub peer when available, or a documented available interface without installing a replacement. Do not request duplicate confirmation for covered effects. Keep unrequested publication and submission user-run. Hand back the prepared result rather than proposing or requesting those effects as the next step. Published history replacement requires the commit workflow’s verified destination, explicit expected-head lease, and preservation of remote work. Credential and key handling remain user-run. Report the actual prepared or submitted result and material limitations without claiming acceptance, then stop. A subsequent request may begin another scoped round, not ongoing monitoring.
+For final delivery or any remote mutation, follow [Hand Back the Contribution](references/hand-back-the-contribution.md). Preparation and local Git authorization do not authorize publication or submission. Keep unrequested remote effects user-run, preserve human-only checkpoints, and stop at the scoped handoff rather than monitoring afterward.
 
 ## General Policies
 

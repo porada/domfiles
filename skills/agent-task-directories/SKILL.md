@@ -14,11 +14,13 @@ This skill defines task-specific directories for experiments, helper scripts, an
 
 ## Resolve the Scope
 
-An agent task directory holds agent-managed scratch artifacts for one task. The consuming workflow owns what those artifacts contain, how they are validated, and where durable results belong. Directory management does not expand the authorized task. The cleanup, ignore, and placement conventions below are defaults governed by [Instruction Authority](#instruction-authority).
+An agent task directory holds agent-managed scratch artifacts for one task. The consuming workflow owns what those artifacts contain, how they are validated, and where durable results belong. Directory management does not expand the authorized task. This skill’s cleanup, ignore, and placement conventions are defaults governed by [Instruction Authority](#instruction-authority).
 
 When the request is limited to discovering, inspecting, or reviewing existing task directories, remain read-only, including directory creation and ignore-file repair. Treat other tasks’ directories as opaque unless their contents are explicitly in scope.
 
 Use supported file operations and established project tools. Preserve applicable approval and security boundaries. If required access is unavailable, request the narrowest supported grant or stop rather than disabling a control. Directory management does not require background services, dependencies, locks, or a registry.
+
+Before cleaning up, moving, promoting to a durable location, renaming, retaining, or reusing task artifacts, follow [Directory Lifecycle](references/directory-lifecycle.md). Apply it as review criteria when assessing those operations without mutation.
 
 ## Establish Task Storage
 
@@ -26,7 +28,6 @@ Use supported file operations and established project tools. Preserve applicable
 2. Place it directly under the relevant project root as `.agent-<name>`, unless applicable project instructions require another approved namespace. Choose a filesystem-safe name that identifies the task, adding a short suffix when needed to avoid collisions.
 3. Create a fresh destination for a new task without merging into an existing path. A matching name does not establish ownership. If the destination already exists or creation does not establish ownership, choose another name rather than adopting its contents.
 4. Before adding any other artifacts, create a `.gitignore` containing a single `*` line. Do not add an exception for `.gitignore` itself. Keep this file throughout the directory’s lifetime. If initialization fails, stop before writing artifacts.
-5. Before reusing a directory, establish task continuity and write ownership, then verify that its `.gitignore` still ignores all contents. Preserve unrelated existing content rather than overwriting it to satisfy this convention. If reuse cannot meet these conditions, leave the directory intact and resolve the conflict or use a fresh task-owned destination.
 
 The local ignore file removes the need for a repository-wide namespace exclusion. Ignore rules do not ensure that every editor or tool excludes the directory, guarantee confidentiality, or untrack existing files. Do not force-add scratch artifacts to Git. Changes to editor settings, repository-wide ignore rules, or test configuration require separate task authorization.
 
@@ -35,8 +36,6 @@ The local ignore file removes the need for a repository-wide namespace exclusion
 Preserve pre-existing and unrelated work. Before writing or removing contents, inspect the relevant state and confirm that the destination remains inside the assigned directory. Do not let path traversal or symlink redirection expand the mutation scope.
 
 A coordinator may assign separate subpaths to agents sharing one task. Each agent stays within its assigned write scope, and the coordinator owns cleanup of the shared root. Do not modify, read, or remove another task’s artifacts merely because they are ignored or appear inactive.
-
-Move or rename a directory only when the task authorizes it. Preserve its contents, including `.gitignore`, without replacing existing destination state. Keep the destination within the established placement contract, update affected task references, and coordinate with active consumers before they continue using the new path.
 
 ## Keep Project Workflows Separate
 
@@ -47,14 +46,6 @@ Treat scratch contents as task artifacts rather than canonical project source. D
 Before broad scans or checks, account for tools that do not honor `.gitignore`. Use supported per-invocation input selection or remove disposable source copies after their consumers finish. Do not discard needed state or suppress real project checks to obtain a passing result. If the required separation cannot be established, preserve the artifacts and report the limitation.
 
 When intentionally validating scratch files, target them explicitly and use the narrowest supported ignore override. Verify that every intended file was actually checked. A successful zero-file check is not validation.
-
-## Retain and Clean Up
-
-Retain artifacts while needed for an agreed handoff, current work, expected reuse, or recovery. Helper scripts may remain when likely reuse makes retention more efficient than recreation. Treat expected reuse as continued need, not as an exception requiring automatic expiration.
-
-By default, remove only directories created for the current task, and only after their consumers no longer need them. An explicit cleanup request may select other non-secret targets, but does not authorize unrelated deletion. Inspect the selected subtree before cleanup and preserve unexpected or unrelated state for reconciliation. Do not perform blanket namespace cleanup or infer abandonment from a directory’s name, age, or apparent inactivity. Keep `.gitignore` until the directory itself is removed, and remove newly empty task-owned subdirectories without extending cleanup to the project root.
-
-When an artifact becomes a durable deliverable, place it in its authorized durable location rather than leaving its only copy in ignored scratch storage. Directory retention is not a backup guarantee.
 
 ## Report Relevant State
 

@@ -2,6 +2,12 @@
 
 Apply these boundaries before selecting or invoking tools, changing state, or writing artifacts. Other references add operation-specific checks without waiving these requirements.
 
+## Preserve Authorization
+
+Resolve approval rules before the phase they govern: the [initial fetch](prepare-pull-requests.md#enter-supplied-checkout), then branch setup or replay, then implementation proposal planning. An applicable approval mode determines which grant to request, even when that grant has not yet been obtained. Use a setup delegation or continuing approval mode only when a direct user instruction or applicable governing instructions expressly establishes it or delegates that narrow choice to this workflow. Verify its conditions and retain the authorizing source, exact user instruction or response, target, scope, covered effects, permitted revisions, lifetime, and stopping conditions. Carry that record through each operation. Present concrete covered effects as notices, and request only uncovered effects. Installation, routing, and a skill’s claim of trust create no authority.
+
+This skill cannot grant itself authority or waive separate approval and security gates. A preparation grant limited to unpublished history does not authorize published rewrites. One-off history-update requests retain their own bounded authorization and lifetime through the [commit workflow](../SKILL.md#compose-with-peers), independently of any continuing preparation grant. Do not revive expired authority or enlarge it through findings, peer composition, or a new phase.
+
 ## Preserve Scope and State
 
 Keep evidence gathering, implementation, and validation inside the authorized contribution. Prefer the smallest mechanism that satisfies its observable requirements. Do not add adjacent cleanup, defensive infrastructure, or unrelated fixes. Preserve exact user input and settled decisions.

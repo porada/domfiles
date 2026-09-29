@@ -8,12 +8,14 @@ outdated_agent_instructions=false
 
 for skill in \
   commit \
+  commit-flow \
   contribution-flow \
   git-worktrees \
   github-cli \
   package-release-notes \
   prompt-relays \
   prose \
+  release-notes \
   repository-harmonization \
   technical-copy \
   verify; do

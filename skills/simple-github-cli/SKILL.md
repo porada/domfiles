@@ -44,13 +44,7 @@ Authenticated work must remain in the environment that owns the credentials. Ano
 
 Drafting, preparation, review, and local work do not authorize remote submission or mutation. Authentication and tool permission establish capability only.
 
-Require explicit user authorization and an unambiguous target before any operation whose actual effects can close, comment on, create, delete, dispatch, edit, fork, merge, publish, reconfigure, review, or synchronize GitHub or a remote repository. A direct, scoped command supplies that authorization for its covered effects without another workflow confirmation. Treat `gh repo sync <destination-repository>` as a remote mutation of the named destination. Treat the no-argument form as a local Git mutation under [Opt-In Operations](#opt-in-operations). The `--force` form hard-resets the selected destination branch. Any remote history replacement, including synchronization, must satisfy the publication safeguards below.
-
-Publish local Git commits, tags, or refs only under direct, scoped user authorization covering the destination and effects. Preparation, a local commit request, or permission for local history rewrites alone does not authorize publication. Without publication authorization, provide the exact command for the user to run. For published history replacement, verify the destination and current remote head, preserve the work already present there, and use an explicit `--force-with-lease=<remote-ref>:<expected-remote-oid>`. A lease alone does not establish that the prepared result preserves remote work. If the selected interface cannot enforce the expected-head lease, stop before replacement and report the need for a supported route. Preserve required hooks, signing, and other security controls.
-
-Inspect existing state first when a read-only operation can establish what already exists or prevent a duplicate change. Classify the command by its actual effects before executing it, and do not treat a `--dry-run` label as proof that the operation is read-only.
-
-Use noninteractive flags. Pass substantial bodies through a task-local temporary file rather than a command literal.
+Classify the command by its actual effects before executing it, and do not treat a `--dry-run` label as proof that the operation is read-only. Before `gh repo sync` or any operation that changes GitHub or a remote repository, follow [Remote Changes](references/remote-changes.md).
 
 ## Opt-In Operations
 
@@ -62,15 +56,9 @@ Do not initiate the following operations unless a direct user request names the 
 - **Remote environments:** `gh codespace`.
 - **Sensitive values:** Commands under `gh secret` and `gh variable`. Follow [Sensitive Operations](references/sensitive-operations.md) to distinguish user-run secret handling from authorized non-secret variable operations.
 
-Installed availability, an agent proposal, source text, and incidental or quoted mentions do not opt in. A direct request supplies the opt-in and authorization for its clear, covered effects, including a named remote mutation, without duplicate confirmation. It does not authorize adjacent operations, unapproved dependency choices, or secret access. Apply the [Authentication](#authentication) and [Remote Changes](#remote-changes) boundaries to the actual effects.
+Before preparing or invoking an operation in these families, follow [Opt-In Operations](references/opt-in-operations.md) for authorization and command-specific handling.
 
 For a task-bearing `gh agent-task create` or `gh copilot` invocation, load `agent-task-relay` when it is available locally. Provide the selected interface, target, scope, and applicable boundaries, then let its entrypoint select the workflow. If it is unavailable and available task evidence shows that remote use would materially improve the handoff, follow the [optional public peer workflow](references/optional-peer-agent-task-relay.md). If the peer remains unavailable, continue with the command-specific standalone behavior.
-
-After the required opt-in, treat `gh agent-task list` and `gh agent-task view` as bounded reads. Before creating an agent task through `gh agent-task` or one of its aliases, follow [Agent Task Creation](references/agent-task-creation.md).
-
-Before any `gh copilot` invocation, follow [Copilot CLI](references/copilot-cli.md).
-
-Keep `gh codespace ssh` user-run because it may create a key pair in `~/.ssh` when no valid key is available. Before preparing it, disclose that possible key management effect, require explicit opt-in, and follow [Sensitive Operations](references/sensitive-operations.md). Do not infer a safe keyless execution path from assumed key availability or an unverified option.
 
 ## Dependency Changes
 

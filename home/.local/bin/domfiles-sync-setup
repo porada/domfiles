@@ -22,10 +22,10 @@ __symlink "$DOMFILES/.agents/GLOBAL.md" "$HOME/.codex/AGENTS.md"
 __print_heading_dimmed 'Linking agent skills'
 
 for source in \
+  .dom-release-notes-for-humans \
+  .dom-sensible-commit-flow \
   .domfiles-agent-documentation \
-  .domfiles-commit-flow \
   .domfiles-harmonize \
-  .domfiles-release-notes \
   .domfiles-skill-development \
   agent-task-directories \
   agent-task-relay \
@@ -37,7 +37,8 @@ for source in \
   sensible-contribution-flow \
   simple-github-cli \
   verify-findings; do
-  name="$(__string_replace "$source" '.domfiles-' '')"
+  name="${source#.domfiles-}"
+  name="${name#.}"
   path="$DOMFILES/skills/$source"
 
   __suppress __symlink "$path" "$HOME/.agents/skills/$name"

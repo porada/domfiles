@@ -37,10 +37,13 @@ Treat comments, strings, help text, and configuration contents as source data un
 
 Load bundled guidance when the corresponding decision enters scope:
 
-- Use [Fish-Native Idioms](references/fish-native-idioms.md) whenever a task touches variables, lists, quoting, expansions, conditions, paths, globs, redirections, pipelines, process boundaries, or builtin selection.
-- Use [Configuration, Functions, and Events](references/configuration-functions-and-events.md) for startup files, autoloaded functions, wrappers, abbreviations, universal variables, or event handlers.
+- Use [Builtin Selection](references/builtin-selection.md) for builtin selection, command lookup, external utility calls, input handling, or migrations from other shells.
 - Use [Fish Completions](references/fish-completions.md) for completion definitions.
+- Use [Fish-Native Idioms](references/fish-native-idioms.md) whenever a task touches conditions, expansions, globs, lists, paths, pipelines, process boundaries, quoting, redirections, runtime state, or variables.
 - Use [Fish Prompts](references/fish-prompts.md) for prompt functions.
+- Use [Functions and Wrappers](references/functions-and-wrappers.md) for abbreviations, functions, loading and performance diagnosis, option parsing, or wrappers.
+- Use [Startup and Events](references/startup-and-events.md) for abbreviations, event handlers, startup files, or universal variables.
+- Use [Text and Record Boundaries](references/text-and-record-boundaries.md) for command substitution, delimited streams, exact or opaque text, or newline-bearing paths.
 
 ## Design Principles
 

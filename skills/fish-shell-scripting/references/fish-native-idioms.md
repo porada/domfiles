@@ -29,6 +29,12 @@ By default, a called Fish function cannot read its caller’s unexported local v
 
 When caller scope inheritance is not part of the function’s contract, use a single-command override such as `NAME=value function_name` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
 
+## Runtime State
+
+Capture `$status` as the first command in any function whose behavior depends on the preceding command, especially prompt and event functions. Avoid mutable global state when a local or function-scoped value is sufficient, and remember that a global variable can shadow a universal variable of the same name.
+
+Never define a user function whose name begins with `__fish_`, because it can shadow one of Fish’s internal helpers. Do not modify other undocumented Fish internals. Call or configure an existing `__fish_*` interface only when official Fish documentation exposes it for that use.
+
 ## Argument Lists
 
 Every Fish variable is a one-dimensional list. Keep ordinary command arguments in that representation from construction through execution. Store one logical argument per element, then expand the list unquoted when the receiving command should get those elements separately.
@@ -43,6 +49,8 @@ $editor README.md
 ```
 
 Do not route ordinary arguments through `eval`. Use it only when generated Fish syntax, such as a pipeline or compound construct, must be parsed again. Use 1-based indices and slices such as `$items[1]`, `$items[2..-1]`, and `$items[-1]`. Do not rely on `$IFS` for ordinary variable expansion because Fish performs no post-expansion word splitting.
+
+When a verified command interface supports it, place `--` after fixed options and before externally supplied positional arguments.
 
 ## Expansion Cardinality
 
@@ -64,79 +72,6 @@ or return 2
 
 set --local target "$root/cache"
 ```
-
-## Text and Record Boundaries
-
-Choose whether command output represents lines, one opaque document, or delimited records before capturing it. Use `$(command)` for command substitution, including inside double quotes. Use `string split` or `string split0` when another delimiter defines records. Use `string collect` when output must be collected without newline splitting.
-
-```fish
-set --local lines $(command tool)
-set --local document "$(command tool)"
-set --local exact_document $(
-    command tool |
-        string collect --allow-empty --no-trim-newlines
-)
-```
-
-A normal command substitution splits on newlines and produces no elements for empty output. A final terminating newline does not create another empty element. A quoted substitution produces exactly one argument but still trims trailing newlines. A final `string collect --allow-empty --no-trim-newlines` preserves empty output as one element and retains trailing newlines.
-
-Treat JSON, SQL, generated source, and similar opaque documents as text rather than line lists unless their interface says otherwise.
-
-Use NUL-delimited streams when records can contain newlines, especially for filenames:
-
-```fish
-find . -type f -print0 |
-    while read --null file
-        process_file $file
-    end
-
-set --local files $(
-    find . -type f -print0 |
-        string split0
-)
-```
-
-Keep `string split0` as the final pipeline stage when collecting a NUL stream into a Fish list so its element boundaries survive command substitution. Use `path`’s `--null-in` and `--null-out` options while NUL-delimited data remains a stream. Do not send NUL output directly to a terminal or command substitution. Pipe it to a final `string split0` when collecting it.
-
-Direct `path` output captured by command substitution preserves item boundaries, including embedded newlines. An intervening command can serialize those boundaries away. Ordinary `path` standard input remains newline-delimited unless NUL input is selected or detected.
-
-## Purpose-Built Operations
-
-Do not replace an external command mechanically. Use a Fish builtin when it expresses the required semantics without losing portability or behavior. The tables group operations under three headings: Fish Data, Shell Boundaries, and Input and Command State. Entries within each group are alphabetical by need.
-
-### Fish Data
-
-| Need | Prefer | Avoid When Fish Owns the Operation |
-| --- | --- | --- |
-| Count arguments or list elements | `count` | `$#`, scalar counters, `wc -w` |
-| Inspect or transform paths | `path` | Routine `basename`, `dirname`, `realpath`, or string slicing |
-| Inspect or transform strings | `string` | `${…}` operators or routine `grep`, `sed`, `tr`, or `awk` pipelines |
-| Perform arithmetic | `math` | `$((…))`, `((…))`, `expr` |
-
-### Shell Boundaries
-
-| Need | Prefer | Avoid When Fish Owns the Operation |
-| --- | --- | --- |
-| Inspect shell, command, or script context | `status` | `$0` or shell-specific context variables |
-| Manage path list additions | `fish_add_path` or list-valued path variables | Manual colon concatenation |
-| Parse function or script options | `argparse` | `getopts`, `getopt`, or hand-written option shifting |
-| Read Fish’s process ID | `$fish_pid` | `$$` or another shell’s PID variable |
-
-### Input and Command State
-
-| Need | Prefer | Avoid When Fish Owns the Operation |
-| --- | --- | --- |
-| Read structured input | `read` with an explicit delimiter or tokenization mode | Non-Fish `read` flags or implicit `$IFS` assumptions |
-| Resolve an external path despite shadowing | `type --force-path` | Assuming `type --path` bypasses functions |
-| Resolve any command Fish would invoke | `type --query` | `which` |
-| Resolve external program availability | `command --query` | Accepting a function or builtin by mistake |
-| Test list membership | `contains` | Regex or loop-based membership checks |
-
-Use `read --prompt-str <prompt-text>` for literal prompt text. When the prompt has already been printed, use `--prompt-str ''` to suppress Fish’s default `read>` prompt. Reserve `--prompt` for prompts intentionally generated by a Fish command.
-
-When porting input handling from another shell, compare delimiters, tokenization, backslash handling, leading and trailing whitespace, and EOF behavior explicitly.
-
-When a verified command interface supports it, place `--` after fixed options and before externally supplied positional arguments.
 
 ## Command Conditions
 
@@ -191,6 +126,4 @@ Prefer a pipe when a consumer accepts standard input. Use `$(producer | psub)` o
 
 ## Official Sources
 
-Fish’s overall design is documented in the official [design principles](https://fishshell.com/docs/current/design.html). Expansion and state behavior are documented in the [Fish language](https://fishshell.com/docs/current/language.html), [`set` reference](https://fishshell.com/docs/current/cmds/set.html), [`string collect` reference](https://fishshell.com/docs/current/cmds/string-collect.html), and [`string split0` reference](https://fishshell.com/docs/current/cmds/string-split0.html).
-
-Path, input, and command resolution behavior are documented in the [`path` reference](https://fishshell.com/docs/current/cmds/path.html), [`read` reference](https://fishshell.com/docs/current/cmds/read.html), [`command` reference](https://fishshell.com/docs/current/cmds/command.html), and [`type` reference](https://fishshell.com/docs/current/cmds/type.html). Generated Fish syntax is covered by the [`eval` reference](https://fishshell.com/docs/current/cmds/eval.html).
+Fish’s overall design is documented in the official [design principles](https://fishshell.com/docs/current/design.html). Expansion and state behavior are documented in the [Fish language](https://fishshell.com/docs/current/language.html) and [`set` reference](https://fishshell.com/docs/current/cmds/set.html). Generated Fish syntax is covered by the [`eval` reference](https://fishshell.com/docs/current/cmds/eval.html).
