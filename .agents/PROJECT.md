@@ -50,69 +50,51 @@ The [Zed settings](../home/.config/zed/settings.json) grant every sandboxed term
 
 ### Zed Agent Permission Model
 
-Zed Agent tool permissions intentionally use `agent.tool_permissions.default: "allow"`. `fetch` is the only tool with tool-specific configuration. A tool that invokes configured permission evaluation and has no tool-specific entry falls back to the global baseline. A tool that bypasses that evaluator receives no decision from this setting.
+The terminal intentionally has no configured command patterns because they classify normalized text rather than semantic capabilities. Equivalent effects can remain available through another executable, generated code, or a native tool.
 
-The terminal intentionally has no configured command patterns. Command patterns classify normalized command text rather than semantic capabilities, so equivalent effects can remain available through another executable, generated code, or a native tool. Always-loaded agent policy governs intent and task authorization. At Zed commit `1662f5f3`, Zed wraps a terminal command in its operating system sandbox only when the sandboxing feature is enabled, the project is local, the platform has a macOS, Linux, or Windows integration, and persistent `agent.sandbox_permissions.allow_unsandboxed` is false. An approved once-only or thread-wide unsandboxed grant runs the selected command without that wrapper while leaving the sandboxed tool surface available. The tracked settings do not persist `allow_unsandboxed`. Native `fetch` runs in Zed rather than inside the terminal sandbox and separately consumes the same per-host grants that authorize sandboxed terminal networking.
+At Zed commit `1662f5f3`, terminal sandboxing requires the feature to be enabled, a local project, a Linux, macOS, or Windows integration, and persistent `agent.sandbox_permissions.allow_unsandboxed` to be false. A once-only or thread-wide unsandboxed grant removes the wrapper for selected commands without removing the sandboxed tool surface. Commands without the wrapper run with Zed’s ambient process permissions.
 
-When terminal sandboxing is active, a tool permission `allow` does not grant an effect outside that sandbox. When sandboxing is unavailable, disabled, or bypassed by an approved unsandboxed grant, the selected command runs with Zed’s ambient process permissions. For native `fetch`, a tool permission `allow` does not bypass the shared host grant authorization. Native path tools do not run inside the operating system sandbox. No permission layer authorizes work prohibited by agent policy. Fetch permissions retain their separate explicit prompt model. External Agents do not run inside Zed Agent’s operating system sandbox. At Zed commit `1662f5f3`, native Zed Agent tools that call `ToolCallEventStream::authorize` use the configured tool permission evaluator together with any built-in checks their implementations apply. Other native tools, including `diagnostics`, `find_path`, `grep`, `list_directory`, and `read_file`, do not call `decide_permission_from_settings` and instead use their built-in path, privacy, and safety checks. External Agent permission requests enter `AcpThread::request_tool_call_authorization`, which uses ACP-supplied permission options and does not consult the native evaluator.
+At that revision, native tools calling `ToolCallEventStream::authorize` use configured permission evaluation plus built-in checks. `diagnostics`, `find_path`, `grep`, `list_directory`, and `read_file` bypass `decide_permission_from_settings` and use their built-in checks. External Agents are outside Zed Agent’s operating system sandbox. Their `AcpThread::request_tool_call_authorization` path uses ACP-supplied options, not the native evaluator.
 
 ### Zed Fetch and Sandbox Host Scope
 
-`agent.tool_permissions.tools.fetch.always_allow` contains one generic HTTPS syntax rule. A path-filtered fetch allowance uses a same-host `always_confirm` complement for every other direct initial path and relies on the generic rule for its approved prefixes. Confirmation precedence makes those prefixes prompt-free at the fetch tool layer without redundant allow rules. The generic rule excludes URL userinfo and explicit ports.
-
-`agent.sandbox_permissions.network_hosts` is the canonical persistent hostname inventory shared by native fetch and sandboxed terminal actions. Zed consumes those entries as host grants for native fetch and, while terminal sandboxing is active, as the sandbox network floor for terminal processes. It matches the grants case-insensitively without a port constraint, and each grant covers every port. This all-port, whole-host trust is a separate decision from the prompt-free initial prefixes. It is intentional where minimizing prompts outweighs path containment. Terminal actions independently inherit the global tool default and remain subject to task authorization and any active sandbox wrapper.
+Zed matches `network_hosts` grants case-insensitively across all ports. Whole-host trust is intentional where minimizing prompts outweighs path containment. The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-the-fetch-and-network-permission-policy) owns the approval boundaries.
 
 `*.actions.githubusercontent.com` supports recurring GitHub Actions build diagnosis. GitHub’s [published network requirements](https://docs.github.com/en/actions/reference/runners/self-hosted-runners#accessible-domains-by-function) specify a wildcard for Actions service hosts rather than an exhaustive hostname list. Exact enumeration from individual builds would leave newly encountered service hosts subject to repeated approval. This exception accepts every current and future strict subdomain under `actions.githubusercontent.com` within the shared all-port authorization boundary above. Azure Blob Storage destinations remain subject to task-scoped approval because their provider-wide suffix also covers unrelated customers.
 
 `*.dom.engineering` and `*.porada.co` are explicit exceptions to the usual wildcard restriction. Both domains belong to the repository owner, who approved wildcard access to their subdomains.
 
-`*.spec.whatwg.org` supports recurring web platform research across WHATWG’s complete, changing standards catalog. The current catalog assigns each listed specification a dedicated `<spec-name>.spec.whatwg.org` hostname. Exact enumeration can lag catalog changes, interrupting that workflow with host confirmations whenever research follows a newly listed hostname until settings are updated. The exception accepts every current and future strict subdomain at any depth under `spec.whatwg.org`, including any non-specification host WHATWG might place there. Every WHATWG hostname outside that suffix remains a separate host grant decision. The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-the-fetch-and-network-permission-policy) owns the wildcard exception gate.
-
-The same-host complement is an initial-fetch prompt filter rather than a path-scoped network boundary. Zed does not re-evaluate a same-host redirect path against fetch patterns, and the complement does not filter sandboxed terminal networking.
-
-### Zed Permission Regex Compatibility
-
-`Cargo.toml` pins the Rust `regex` version used to validate Zed permission patterns. The root `Cargo.lock` may update that crate’s transitive dependencies independently. The [Zed regex compatibility audit](skills/domfiles-zed-settings/references/permission-evaluator.md#audit-zed-regex-compatibility) compares the direct version with current Zed source.
+`*.spec.whatwg.org` supports recurring web platform research across WHATWG’s complete, changing standards catalog. The current catalog assigns each listed specification a dedicated `<spec-name>.spec.whatwg.org` hostname. Exact enumeration can lag catalog changes, interrupting that workflow with host confirmations whenever research follows a newly listed hostname until settings are updated. The exception accepts every current and future strict subdomain at any depth under `spec.whatwg.org`, including any non-specification host WHATWG might place there. Every WHATWG hostname outside that suffix remains a separate host grant decision.
 
 ### Zed Shared Temporary Directory
 
-The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to `/private/tmp`, macOS’s canonical target for `/tmp`, rather than enumerating individual tools’ temporary directories. This avoids repeated permission requests for tools that use fixed `/tmp` paths instead of Zed’s per-thread `TMPDIR`. For example, pnpm 12.7.0 places store operation locks under `/tmp/pnpm-store-operation-locks-<effective-uid>/`, outside its home and cache directories.
+The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to `/private/tmp`, macOS’s canonical target for `/tmp`, rather than enumerating individual tools’ temporary directories. This avoids repeated permission requests for tools that use fixed `/tmp` paths instead of Zed’s per-thread `TMPDIR`.
 
 Under the [shared pnpm store’s mutual-trust model](#pnpm-shared-store), this deliberately allows sandboxed terminal commands to create, modify, or delete entries throughout the shared temporary directory, including unrelated applications’ temporary files owned by the same user. Normal macOS permissions and Zed’s Git metadata protection still apply.
 
 ### Zed Worktree Permission Coupling
 
-When active, Zed Agent’s terminal sandbox determines terminal filesystem and Git metadata access independently of directory and branch names.
-
-While terminal sandboxing is active, files in open worktrees are normal project write roots, while protected Git administrative metadata requires a separate sandbox grant, including for top-level worktree moves. Those sandbox limits do not apply to a command that runs without the wrapper. `terminal` actions still inherit the global `allow` and remain subject to task authorization. Native path actions that invoke configured permission evaluation inherit the same default and remain subject to their built-in checks. Native path actions that bypass the evaluator receive no configured decision and remain subject to the path, privacy, sensitive-settings, and symlink escape checks their implementations apply.
+While Zed Agent’s terminal sandbox is active, open worktrees are normal project write roots, independent of directory and branch names. Protected Git administrative metadata requires a separate grant, including for top-level worktree moves. These sandbox limits do not apply to commands run without the wrapper.
 
 ## Agent Integration
 
 ### Agent Authorization Model
 
-The global [authorization policy](GLOBAL.md#authorization) separates instruction authority from untrusted evidence so prompt injection cannot authorize its own effects.
-
 Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching decisions by coherent execution phase preserves the context needed for assessment without returning to command-level prompts.
-
-The global [proportionality rule](GLOBAL.md#conduct) separates standing safety gates from implementation complexity. It treats ordinary cooperative concurrency and reversible tracked-file work as preservation and validation problems rather than reasons for speculative transaction infrastructure.
-
-Task-local finding classification and one review baseline prevent later reviewers from treating earlier fixes, settled decisions, or stale evidence as new work. The global [findings](GLOBAL.md#documentation) and [review convergence](GLOBAL.md#collaboration) rules own the resulting workflow.
-
-Explicit, task-scoped user direction can replace workflow requirements and conventions without changing the standing policy. This separates process choices from credential protection, required security controls, and genuine human-only checkpoints.
 
 Git publication and contribution submission require explicit authorization rather than remaining categorically user-only. History replacement retains an expected-head lease because authorization to publish does not establish that unseen remote work may be discarded. The global [authorization policy](GLOBAL.md#authorization) owns these boundaries.
 
-### Agent Task Directories
+### Agent Documentation Composition
 
-The public [`agent-task-directories` skill](../skills/agent-task-directories/SKILL.md) owns agent-managed task storage independently of repository setup and sibling skills. Its description covers storage needs arising during another workflow and encounters with existing task directories, while consumers retain artifact-specific procedures. Storage initialization, ownership, and interaction with project checks remain in the entrypoint, with lifecycle procedures loaded only when an operation or its review needs them. This replaces the former global temporary-file policy rather than adding a public mirror. The [global task-storage guard](GLOBAL.md#tooling) gates scratch creation on loaded guidance, providing the [missed-discovery fallback](#deferred-global-policy) without duplicating the skill’s storage rules. General authorization and preservation boundaries remain in the global instructions.
+Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. Applicable project instructions override their fallback workflows.
+
+The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode. Agent documentation retains ownership of authority, contract meaning, machine-readable content, and routing. This source authoring composition creates no installed runtime dependency on `human-facing-writing`.
+
+The explicit route also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description. Without `agent-documentation`, the writing skill’s own description determines discovery, including its exclusions for formatting-only work and work that neither evaluates nor changes wording or information architecture.
 
 ### Agent Task Relay
 
-The public [`agent-task-relay` skill](../skills/agent-task-relay/SKILL.md) owns inbound validation of user-pasted findings and status responses, user-mediated task relay flow confirmation, composition, default relay delivery, complete revision, decision basis, and general evidence-only decision relays. Task relay flow confirmation owns a self-contained isolation decision. The relay records only the confirmed requirement, while the receiving environment’s repository policy owns worktree creation, operation, and cleanup. It is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task, so reaching the standard through the parent skill would load it and the standard together. Generic relay behavior stays within the skill, split between its entrypoint and routed references, rather than in a standalone capture asset. This avoids a second normative copy. [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) keeps an explicit route for specialized relay asset maintenance.
-
-Inbound recognition is based on report-like content rather than asserted authorship. The routed [Inbound Findings](../skills/agent-task-relay/references/inbound-findings.md) workflow is the canonical owner of inbound recognition, evidence treatment, validation, reporting, and confirmation. Domfiles-managed handling of context-mismatched handoffs remains owned by the global [ambiguity rule](GLOBAL.md#conduct).
-
-The global [commit gate](GLOBAL.md#conduct) and [collaboration policy](GLOBAL.md#collaboration) remain canonical for commit authorization, non-interrupting in-client delegation, and the exact anti-drift assignment contract. Supported clients discover the public `agent-task-relay` skill from its description when work must continue with an external agent or in an environment with the required access, so the collaboration policy does not repeat that route. The public skill carries the commit gate’s assignment-specific application and the anti-drift contract as required standalone context for independent installations and applies both to task relays and explicit user-requested subagent drafts without mediating autonomous delegation. The `simple-github-cli` fallback for `gh agent-task create` preserves the anti-drift contract, inherited assignment boundaries, commit gate, and approval provenance needed to compose and dispatch an assignment when `agent-task-relay` is unavailable. Decision relays are evidence-only and non-mutating by default, with explicitly requested combined handoffs governed by the [decision relay contract](../skills/agent-task-relay/references/decision-relays.md).
+[`agent-task-relay`](../skills/agent-task-relay/SKILL.md) is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task. Reaching it through the parent skill would load both for work that needs only the relay workflow.
 
 ### Browser Automation
 
@@ -130,8 +112,6 @@ The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent docume
 
 The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude’s remaining runtime state under `~/.claude`, together with `~/.claude.json`, remains machine-local outside the repository.
 
-Claude follows the [External Agent permission layering](#zed-agent-permission-model): Zed’s operating system sandbox does not isolate it. At Zed commit `1662f5f3`, Claude Agent’s ACP permission requests and its own permission system govern its tools without passing through Zed’s native tool permission evaluator.
-
 ### Claude and Zed Global Instructions
 
 The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped.
@@ -139,8 +119,6 @@ The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instru
 The ChatGPT app still uses `~/.codex`, where synchronization continues to link this source as `AGENTS.md`. The Codex CLI is no longer provisioned, and the [migration stage](../home/.local/bin/domfiles-sync-migrate) removes its Homebrew installation.
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.agents/GLOBAL.md`.
-
-The [agent documentation ownership model](../AGENTS.md#agent-documentation) defines the repository-specific instruction surfaces.
 
 ### Commit Workflow
 
@@ -150,43 +128,23 @@ The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-f
 
 Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [outcome reporting policy](GLOBAL.md#communication) has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
 
-The [commit authorization check](../skills/sensible-commit-flow/references/commit-execution.md#confirm-commits) separates permission to commit from exact message wording, avoiding a second editorial checkpoint after a scoped commit request. The entrypoint separates read-only planning and message work from the conditional authorization and execution lifecycle. Its [early Git access checkpoint](../skills/sensible-commit-flow/references/early-git-access.md) surfaces capability requirements before implementation when commits are part of the requested outcome. Advance acquisition depends on the client’s supported permission interface, without introducing otherwise unnecessary Git operations to trigger a prompt. Conditional message guidance keeps planning and message-preserving operations independent of authored message conventions. The [history update route](../skills/sensible-commit-flow/references/update-commit-history.md) distinguishes unpublished history from authorized replacement of a selected branch’s published history. The global [history update authorization](GLOBAL.md#authorization) defines when a current request supplies execution authority, independently of an expired contribution preparation grant. Existing remote content and the destination’s expected head remain separate preservation concerns. Fixups preserve the intended boundaries of earlier commits without forcing independently useful additions into them. Post-rebase validation assesses the resulting series rather than temporary fixups and replay states.
+The [early Git access checkpoint](../skills/sensible-commit-flow/references/early-git-access.md) surfaces capability requirements before implementation so a requested commit does not introduce a late permission interruption.
 
-Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b8631c30f97ae1adb61bcdc) is the behavioral baseline, verified as the latest stable release through [git-scm.com](https://git-scm.com/). Its [commit semantics](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-commit.adoc#L81-L279) distinguish editor suppression from verbatim cleanup and content fixups from message replacements. [Rebase semantics](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-rebase.adoc#L579-L636) explain the recorded-ID check for title-based autosquash matching. `--no-autostash` and `--no-update-refs` suppress automatic stashing and automatic updates to other branches without preventing the selected branch from advancing.
-
-An explicit [push lease](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L230-L291) checks the destination against a supplied expected object ID rather than a mutable remote-tracking ref. The history update handoff uses that form so background fetches cannot silently refresh its lease expectation. Its command-local constraints exclude [automatic tags](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L180-L186) and use [submodule checks](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L404-L428) without recursive publication.
-
-Native [cherry-pick](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-cherry-pick.adoc#L18-L122) replay and [merge](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-merge.adoc#L36-L179) preparation define the preservation route’s message inputs and parent relationships. `--no-ext-diff` and `--no-textconv` control optional [diff helpers](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/diff.c), while `--no-pager` controls [pager selection](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/git.c#L126-L203). These are helper-specific controls, not a general Git execution sandbox.
+Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b8631c30f97ae1adb61bcdc) is the recorded behavioral baseline. The history update handoff uses an explicit expected-object-ID [push lease](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L230-L291) so background fetches cannot silently refresh its lease expectation.
 
 ### Contribution Flow
 
-The public [`sensible-contribution-flow` skill](../skills/sensible-contribution-flow/SKILL.md) coordinates contribution preparation and [user-requested PR revisions](../skills/sensible-contribution-flow/references/revise-existing-pull-requests.md) in repositories the user does not own, including maintainer feedback after submission. Each round ends at the requested handoff rather than extending into ongoing monitoring. Publication and submission remain user-run unless [explicitly authorized for agent execution](../skills/sensible-contribution-flow/SKILL.md#hand-off-contributions). Independent installation uses optional peers with complete contribution-scoped fallbacks. It does not require global instructions, a sibling installation, or remote peer retrieval.
-
-Contribution-level decisions, prewriting context collection, and consistency with previous submissions live in this workflow so `human-facing-writing` remains useful independently of remote retrieval. Existing-work assessment and reference relationships connect the contribution’s justification to its eventual prose. Opinionated reference preferences remain in this contribution workflow rather than changing the public writing skill’s defaults. The entrypoint’s [ordered preparation route](../skills/sensible-contribution-flow/SKILL.md#workflow) keeps conditional and documentation-only changes inside the contribution lifecycle rather than treating them as edit-only tasks. The early PR draft and design check make the proposed contribution visible before implementation agreement. The [initial draft’s source note](../skills/sensible-contribution-flow/references/propose-pull-requests.md) distinguishes verified repository requirements from example-based structure, making the draft’s origin visible before approval. Initial implementation review assesses the complete changeset, while requested revisions use their recorded baseline to focus review on the delta and affected integration boundaries. Conditional references separate feedback, handoff, proposal, and revision details from shared checkpoints so each phase loads only its applicable guidance.
-
-Contribution [packaging constraints](../skills/sensible-contribution-flow/references/prepare-pull-requests.md#plan-and-implement-commits) and upstream checkpoints belong to this workflow. The [fetch-first setup checkpoint](../skills/sensible-contribution-flow/references/prepare-pull-requests.md#enter-supplied-checkout) keeps later branch and rewrite planning from delaying client permission requests without broadening setup authority. Including tool acquisition in validation planning avoids late permission round trips without changing dependency or sandbox policy. Validation evidence remains accessible in the thread, with task artifacts for supplementary detail or long logs, while PR prose gives maintainers concise context and testing reassurance. The public caller composes with `sensible-commit-flow` by name, while the independently applicable `dom-sensible-commit-flow` overlay retains managed message conventions. Without the public commit peer, the bundled fallback owns only contribution-scoped preparation and history updates. No additional contribution overlay is needed.
+Contribution research and preferences live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval. The existing commit overlay supplies managed message conventions without a separate contribution overlay.
 
 The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [external-skill edit gate](GLOBAL.md#documentation) remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied-checkout default, existing state, and consuming-project protections without imposing those personal gates.
 
-The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) remains the owner of managed setup and continuing execution authority, subject to its named-workflow and installation conditions. Public installation alone supplies no authority. Standalone execution preserves both independently established continuing grants and explicit one-off history-update requests, with concrete-batch confirmation for uncovered effects. Findings retain their separate confirmation and expiry rules. The first committed result remains inside contribution preparation through final editorial work. Renaming the installed skill requires alignment of the policy’s named delegate as well as the installation mapping and retired-name migration.
+The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) delegates authority to named, domfiles-managed workflows. Renaming the installed skill therefore requires alignment of the policy’s named delegate as well as the installation mapping and retired-name migration.
 
 ### Deferred Global Policy
 
 Conditional global policy may move into a globally exposed skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
 
 The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
-
-### Dependency Choice
-
-The public [`intentional-dependency-choice` skill](../skills/intentional-dependency-choice/SKILL.md) owns dependency selection, informed approval disclosures, version selection, and declaration conventions. Its read-only workflow separates new choices and their declarations from acquisition and implementation. Ordinary reuse of an existing project dependency does not trigger it. This meets the [global policy deferral criteria](#deferred-global-policy): a recognizable decision triggers the workflow, while the [global dependency policy](GLOBAL.md#dependencies) retains approval, prescribed-acquisition, history-integration, and lifecycle safeguards plus a safe stop when the skill is unavailable. The global script workflow composes with this guaranteed sibling, including before choosing bespoke implementations of mature capabilities. `agent-task-relay` and `sensible-contribution-flow` resolve it locally first, with conditional remote use through their optional-peer references and bundled selection guidance when the peer remains unavailable. Their authorization, acquisition, history, and lifecycle boundaries remain caller-owned. Reused decisions and approvals avoid duplicate selection and confirmation. The managed installation needs no peer retrieval or added prompt, while complete fallbacks preserve independent installation without peer acquisition.
-
-### GitHub CLI Agent Integration
-
-The public [`simple-github-cli` skill](../skills/simple-github-cli/SKILL.md) owns conditional agent behavior for `gh`. It carries the authentication and remote mutation rules its workflow needs plus the [command-specific standalone handoff fallback](#agent-task-relay) for `gh agent-task create`, so the skill remains independently usable. Supported clients discover the skill from its description when a task calls for `gh` or direct GitHub work. Detailed remote-change and opted-in command procedures load conditionally, keeping ordinary reads independent of those procedures while authentication, effect classification, and opt-in gates remain in the entrypoint. The global [GitHub CLI policy](GLOBAL.md#github-cli) retains aligned domfiles-managed copies of the authentication and remote mutation gates so those boundaries remain directly loaded across projects without repeating the route.
-
-`gh agent-task` and the other non-simple families in [Opt-In Operations](../skills/simple-github-cli/SKILL.md#opt-in-operations) are never chosen without a direct user request. The boundary is scope-based rather than tied to preview status. User-requested external task handoffs use `agent-task-relay` for confirmation and assignment composition when it is available, while `simple-github-cli` owns the selected `gh` interface and terminal command delivery for `gh agent-task create` and task-bearing `gh copilot` invocations. `simple-github-cli` declares `agent-task-relay` through one entrypoint route and one bundled [optional peer reference](../skills/simple-github-cli/references/optional-peer-agent-task-relay.md). `agent-task-relay` carries a generic workflow-owned delivery deferral, and the `simple-github-cli` agent-task fallback preserves standalone behavior without the peer.
-
-CLI, extension, and skill acquisition uses the [opted-in operation’s authorization](../skills/simple-github-cli/references/opt-in-operations.md#tool-acquisition), not a package-selection workflow. The GitHub CLI skill discloses implicit downloads and preserves applicable project requirements without imposing an independent dependency approval gate. Managed dependency policy still applies through the global instructions.
 
 ### Global System-Available Tooling
 
@@ -198,13 +156,9 @@ The list intentionally omits `claude`, `fisher`, `git`, `mole`, and `vim`. `clau
 
 `brew` is intentionally absent because it is a supported environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
 
-In shell sessions configured by `domfiles` after synchronization, direct invocation assumes repository-managed commands are available through `PATH` in addition to the [supported environment](#supported-environment) prerequisites.
-
 ### Package Release Note Skills
 
-The global [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-humans/SKILL.md) is invoked explicitly as `/dom-release-notes-for-humans` and builds on the public [`release-notes-for-humans` skill](../skills/release-notes-for-humans/SKILL.md). Its `disable-model-invocation: true` frontmatter prevents automatic model invocation. The dependency remains one-way so the public skill stays independently installable. Conditional references keep package discovery and default boundary details off known single-package paths with explicit change scopes, without narrowing the evidence inventory.
-
-The global overlay retains `*` through its [presentation conventions](../skills/.dom-release-notes-for-humans/SKILL.md#presentation-conventions) because previously published notes use that marker. This keeps release notes produced through `/dom-release-notes-for-humans` consistent with earlier releases, even though Markdown accepts other unordered list markers.
+The [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-humans/SKILL.md#presentation-conventions) retains `*` as its unordered list marker to stay consistent with previously published release notes.
 
 ### Protected Skill Mutation
 
@@ -214,9 +168,13 @@ The public `skills/human-facing-writing` source does not receive Zed’s agent-s
 
 The [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions.
 
-### Repository Harmonization
+### Shell Skill Composition
 
-The global [`harmonize` skill](../skills/.domfiles-harmonize/SKILL.md) is invoked explicitly as `/harmonize` and owns its change-oriented cross-repository consistency workflow. Its `disable-model-invocation: true` frontmatter prevents automatic model invocation.
+The [POSIX terminal-presentation compatibility paragraph](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) is canonical. [Fish’s copy](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) supplies required standalone context for independent installation. They form one documentation family under the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-the-complete-scope-checks).
+
+### Skill Catalogs
+
+[`skills/README.md`](../skills/README.md) targets visitors installing public skills without synchronizing the repository. Its examples select user-wide installation to enact its recommendation. Root [`README.md`](../README.md) examples intentionally preserve the skills.sh form `npx skills add … --skill …`, including omission of `--global`.
 
 ### Skill Description Limit
 
@@ -224,77 +182,19 @@ The 1,024-byte figure in the [skill description policy](../skills/.domfiles-skil
 
 ### Skill Distribution
 
-The [skill distribution contract](../AGENTS.md#skills) defines project-authored skill categories and installation surfaces. Every tracked skill remains subject to the repository’s public disclosure boundary.
+None of the `skills/` source namespaces is a project-local discovery surface. Client-specific project discovery remains backed by `.agents/skills/*`. Hidden source directories keep global skills, including personal overlays, out of the default repository discovery performed by `gh skill`.
 
-None of the `skills/` source namespaces is a project-local discovery surface. Client-specific project discovery remains backed by `.agents/skills/*`.
+Client-specific installation roots and differing canonical and installed basenames motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
 
-Authoring and maintenance records stay outside skill directories so installed guidance stays focused on use rather than the history of its creation. The [skill content boundary](../skills/.domfiles-skill-development/SKILL.md#keep-skill-contents-operational) owns this requirement.
-
-[`skills/README.md`](../skills/README.md) targets visitors who install public skills without synchronizing the rest of this repository. Its top-level examples select user-wide installation to enact the README’s recommendation. The root [`README.md`](../README.md) carries the featured `npx skills add … --skill …` examples, which intentionally preserve the form documented by skills.sh, including the omission of `--global`.
-
-The collection README’s [Available Skills](../skills/README.md#available-skills) section presents the catalog defined in [`skills.sh.json`](../skills.sh.json). Their shared content follows the [catalog contract](../skills/.domfiles-skill-development/references/public-skill-portability.md#maintain-public-skill-catalogs).
-
-The [public skill README template](../skills/.domfiles-skill-development/assets/readme-skill.txt) fixes shared publisher and license details because all public skills share the same source repository and attribution.
-
-[`home/.local/bin/domfiles-sync-setup`](../home/.local/bin/domfiles-sync-setup) defines the exact source-to-destination mappings for globally exposed skills. Synchronization removes only the leading dot from overlay source names and the `.domfiles-` prefix from other global source names, keeping each installed directory basename identical to its frontmatter `name`.
-
-Documentation for global skills is maintained under the assumption that an installation exposing one global skill exposes the complete set. The skills form a complementary ecosystem on top of the same global instructions, allowing one skill to defer an overlapping domain to its canonical sibling instead of repeating fallback guidance.
-
-Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill-specific packaging and scripting guidance. Skill documentation still follows the shared documentation lifecycle, while public promotion and script contracts load only for their applicable tasks. Composition and change-only validation have separate references, with version-sensitive evidence guidance loaded only for its applicable documentation.
-
-The public [`posix-shell-scripting`](../skills/posix-shell-scripting/SKILL.md) and [`fish-shell-scripting`](../skills/fish-shell-scripting/SKILL.md) skills respectively own portable POSIX shell and Fish authoring, review, audit, diagnosis, and validation guidance. The repository-internal [`domfiles-shell-integration`](skills/domfiles-shell-integration/SKILL.md) skill retains domfiles-specific shell invariants and integration policy. Its commands for validating changes load conditionally, while common integration rules and read-only validation remain in the entrypoint. General wording remains owned by [`human-facing-writing`](../skills/human-facing-writing/SKILL.md), keeping shell semantics separate from editorial guidance.
-
-Fish’s reference routes separate builtin selection, core idioms, function and wrapper contracts, record handling, and startup and event behavior, so unrelated specialized guidance need not load for an ordinary shell task. Validation scope and the optional writing peer remain owned by its entrypoint.
-
-POSIX shell routing separates [resource ownership and recovery](../skills/posix-shell-scripting/references/resources-and-recovery.md) from routine execution guidance. Validation scope and check discovery remain in the entrypoint, while [validation tool safeguards](../skills/posix-shell-scripting/references/validation-tools.md) load before ShellCheck execution or validator selection and acquisition.
-
-The [POSIX terminal-presentation compatibility paragraph](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) is the canonical definition, and [Fish’s copy](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) provides required standalone context for independent installation. The two paragraphs form one documentation family under the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-the-complete-scope-checks).
-
-The public `human-facing-writing` skill applies its [Writing Principles](../skills/human-facing-writing/SKILL.md#writing-principles) standard to every task, then routes connected prose and technical copy to separate references, giving overlapping work one precedence contract while preserving a complete nontechnical path. The [shared hyphenation defaults](GLOBAL.md#writing) and [final typography check](../skills/human-facing-writing/SKILL.md#typography) keep the open noun phrase preference portable when agents adapt prose to another repository’s examples. The global **Numbering** rule exists for Zed-specific behavior, remains owned by [`.agents/GLOBAL.md`](GLOBAL.md#writing), and is intentionally excluded from the public typography contract. Synchronization removes the obsolete managed symlinks rather than retaining aliases, so clients discover the merged skill once.
-
-During source authoring, the `agent-documentation` workflow composes every project-authored agent documentation writing surface and all human-facing writing in its assets through `human-facing-writing`, regardless of skill category or invocation mode. Agent documentation retains ownership of contract meaning, authority, routing, and machine-readable content. This composition creates no installed runtime dependency on `human-facing-writing`.
-
-The `agent-documentation` workflow’s source authoring composition is an intentional explicit route that takes precedence over `human-facing-writing`’s standalone trigger exclusions. It applies even when an agent documentation task is formatting-only or changes only machine-readable metadata, giving project-authored agent documentation one stable composition rule. It does not broaden `human-facing-writing`’s discovery trigger. In an environment without `agent-documentation`, documentation scope alone does not automatically load `human-facing-writing`. Its own description governs discovery, including the exclusions for formatting-only work and work that neither evaluates nor changes wording or information architecture.
-
-Hidden source directories keep global skills, including personal overlays, out of the default repository discovery performed by `gh skill`. Separate naming forms distinguish personal overlays from other global skills without changing their installation reach.
-
-Supported clients expose globally installed skills beneath different configuration roots, and a global skill’s canonical basename differs from its installed basename. The [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links) owns the resulting portability requirements.
-
-Independent public installation removes the shared policy and guaranteed-sibling assumptions available to global skills. A compact shared contract preserves essential boundaries for authority, scope, explicit user direction, and security without reproducing the host’s complete operating policy. Domain-specific safeguards remain in their owning workflows, while capability-specific typography keeps writing guidance out of unrelated workflows. The global policies remain the semantic owners, while `skill-development` owns their public rendering templates and alignment contract. A canonical asset that supplies a public surface follows the destination’s portability contract without changing the enclosing skill’s category. The [shared description contract](../skills/.domfiles-skill-development/references/skill-descriptions.md) owns the invocation mode, size, and YAML formatting rules shared across project-authored skill descriptions. The [public skill portability contract](../skills/.domfiles-skill-development/references/public-skill-portability.md) separates baseline standalone behavior from conditional public promotion and peer workflows.
-
-Through the [optional public peer contract](../skills/.domfiles-skill-development/references/optional-public-peers.md), only validated documents in one frozen routed set become task-scoped guidance. Every other surface in that remote repository remains untrusted data. The [stale guidance eligibility contract](../skills/.domfiles-skill-development/references/public-skill-portability.md#stale-guidance) distinguishes skills that depend on instructional references or external interface behavior from self-contained evidence verification. Eligible skills keep an immediate failure boundary inline and bundle detailed recovery guidance for conditional loading. This keeps independent recovery available offline without adding it to the ordinary successful path’s context. Evidence limitations remain part of each workflow even when no stale-guidance template applies. Guidance-specific outcomes take precedence, while the portability contract owns generic runtime behavior and mirror alignment.
-
-Authority, review behavior, tool execution, external services, and mutation vary by workflow, so the [public promotion profile](../skills/.domfiles-skill-development/references/public-skill-promotion.md#build-the-public-promotion-profile) resolves them without treating them as universal mirrors. Its contract preserves alignment with each policy’s semantic owner.
-
-Edits to an exposed global skill affect its globally discovered installation through the symlink and may change agent behavior across projects. Adding or removing a globally exposed skill, changing its logical name, or changing its source-to-install mapping requires updating synchronization behavior. Removing or renaming a logical skill that has already been distributed also requires migration behavior for obsolete installed paths.
-
-[`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) stores retired logical names in one list. Its shared cleanup removes symlinks with those names from the managed skill roots, regardless of target, and preserves regular files and directories. Retiring another name changes only that list, with no per-name checks or branches.
-
-Every supported installation of the global `agent-documentation` and `skill-development` skills is assumed to load an equivalent domfiles-managed global instruction layer. The skills rely on that layer’s documentation, writing, and review policies instead of restating them. External repositories remain self-contained and do not name, require, or link to either skill. Applicable project instructions continue to override their fallback workflows. Follow-up finding verification belongs to the public command-only [`verify-findings` skill](../skills/verify-findings/SKILL.md).
+Edits to an exposed global skill affect its installation through the symlink and may change agent behavior across projects. Changes to the exposed set, logical names, or source-to-install mapping require synchronization changes. [`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) removes retired names rather than retaining compatibility aliases, so clients discover each logical skill once.
 
 ### Skill-Owned Script Scope
 
-`domfiles-zed-settings` is the sole script owner today, and the root `Cargo.toml` registers its binaries and adjacent tests so the root Cargo workspace validates them.
-
-A global skill’s scripts stay hosted here. `domfiles sync` symlinks each global skill rather than copying it, so the installed skill is this checkout and the host toolchain, dependencies, and root validation remain reachable while an agent works in an unrelated project. That symlink is the precondition the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md) depends on, and it is why those scripts take every separate project they inspect or change as an explicitly selected target instead of resolving one from their installed path.
-
-Agent script tests are not excluded from the repository’s test workflow. Collecting a TypeScript agent script test would additionally require a Vitest project entry covering the skill tree, which waits until the first such script exists.
-
-The [smallest sufficient contract](../skills/.domfiles-skill-development/references/script-contract-design.md) gate challenges necessity before correctness. Adversarial design review runs before implementation and remains bounded to declared consumers, evidence, and the operating model, so it removes unsupported contract elements instead of hardening a script around speculative requirements.
-
-The [shared script contract](../skills/.domfiles-skill-development/references/skill-owned-scripts.md) retains common safeguards while routing to artifact, design, and Rust integration details only when relevant, so routine fixes and read-only checks load less unrelated context.
+`domfiles sync` symlinks global skills into this checkout rather than copying them. Their host toolchain, dependencies, and root validation remain reachable from unrelated projects, satisfying the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md)’s reachable-host prerequisite.
 
 ### Verify Findings Skill
 
-The public [`verify-findings` skill](../skills/verify-findings/SKILL.md) owns read-only verification of previously reported findings against current evidence, instructions, and settled decisions. Its command-only invocation keeps this follow-up procedure out of sessions that do not request it. The user-selected name favors an intuitive action over avoiding an existing descriptive name on skills.sh.
-
-Standalone verification uses no bundled references, operational assets, or prescribed external interface recipes. The skill’s own evidence and reporting rules handle unavailable evidence without depending on stale-guidance recovery, and status reporting alone does not require the typography reference. Its shared intro is owned by `SKILL.md` and mirrored in the public README.
-
-Synchronization exposes `/verify-findings` and removes the obsolete `/verify` symlinks through the shared migration rather than retaining a compatibility alias.
-
-### Version-Sensitive Agent Documentation
-
-Version-sensitive agent documentation uses one authoritative upstream baseline because current documentation, pinned source, and upstream `main` can describe different implementations. The canonical [version-sensitive documentation guidance](../skills/.domfiles-agent-documentation/references/version-sensitive-documentation.md) resolves conflicts against that baseline before editing and ties security boundary claims to exact implementation evidence.
+The user-selected [`verify-findings`](../skills/verify-findings/SKILL.md) name favors an intuitive action over avoiding an existing descriptive name on skills.sh.
 
 ### Zed Selection-to-New-Thread Key Binding
 
@@ -351,17 +251,11 @@ File-oriented wrappers’ default discovery intentionally uses line-delimited `g
 
 ### Domlib Helper Documentation
 
-Every `domlib` function has one adjacent contract comment. The uniform surface lets readers compare helpers without reconstructing shell bodies. Comment prose wraps at 80 columns while preserving ordinary sentence flow, so a wrapped line remains a continuation rather than a separate statement. Internal periods may separate sentences, while terminal punctuation remains omitted under the shell prose policy.
-
-Comments describe the semantic contract domfiles adds. They omit ordinary behavior already implied by a command-shaped name, implementation values canonically owned by source, validation and fallback details, and cross-cutting policy owned elsewhere unless the omission would make the contract misleading. The `__touch` comment therefore emphasizes file existence, standard permissions, and parent creation while timestamp updates remain implied by `touch`. The `__print_command` and `__suppress` comments leave the CI exception to [suppressed command output](#suppressed-command-output), which canonically owns that policy.
-
-In helper comments, domfiles is an unformatted plural noun parallel to “dotfiles” when it denotes the repository or managed configuration, while `domfiles` is code-formatted only when it denotes the CLI command. The phrase “domfiles have …” is therefore intentional. The postpositive modifiers in “heading, dimmed” and “text, formatted” preserve the shared base description across related helpers rather than introducing separate terminology for each variant.
+In helper comments, domfiles is an unformatted plural noun parallel to “dotfiles” when it denotes the repository or managed configuration, while `domfiles` is code-formatted only when it denotes the CLI command. The phrase “domfiles have …” is therefore intentional. The postpositive modifier in “heading, dimmed” preserves the shared base description across related helpers.
 
 `__is_brew_installed` intentionally owns both the no-argument Homebrew installation check and the optional package check. Repeating “returns success” makes the result of each branch explicit. `__git_skipped_files` intentionally describes semantic skipped files while preserving tagged `git ls-files -v` entries because `git-skipped` owns display path extraction and its other callers only test whether output exists. `__git_diff_list_changed_excluded_paths` lets `--commit` and `--worktree` stand for their complete modes, with the commit reference implied by the `--commit` context.
 
-`__ssh_add`’s comment intentionally relies on the command-shaped name for ordinary success and failure semantics. The helper reports failures before returning nonzero, allowing `domfiles-sync` to tolerate the status without silencing the diagnostic.
-
-The `__symlink` comment states the normal replacement contract and omits source-containment rejection because that rejection is a safety precondition rather than an alternate supported outcome. The helper creates the complete missing destination parent chain through `__mkdir` and `mkdir -p`. Standard permissions apply to the final parent passed to `__mkdir`, while any ancestors created by `mkdir -p` retain their ordinary creation modes.
+The `__symlink` comment states the normal replacement contract and omits source-containment rejection because that rejection is a safety precondition rather than an alternate supported outcome.
 
 ### FFmpeg Media Preset Compatibility
 
@@ -382,10 +276,6 @@ The managed Fish configuration intentionally erases every existing abbreviation 
 The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Use `git clone` directly for option-bearing invocations. An unsupported invocation can reach Git without a reliable follow-up directory change, which is an accepted consequence of keeping the wrapper simple.
 
 For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
-
-### Fish Interactive Configuration
-
-Tracked aliases and colors load only during interactive Fish sessions. `home/.config/fish/config.fish` keeps both sources inside its `status is-interactive` guard so noninteractive Fish invocations do not inherit interactive-only aliases or color configuration.
 
 ### Fish Local Configuration
 
@@ -413,7 +303,7 @@ With `--amend`, `git f` compares its inferred or positional fixup target with th
 
 ### Metal Toolchain
 
-[`domfiles-sync-install`](../home/.local/bin/domfiles-sync-install) treats the Metal Toolchain as optional machine provisioning for non-CI macOS environments with an active full Xcode installation. It checks first-launch readiness and compiler availability on every sync, downloading the component only when the compiler probe fails. Download or post-download verification failures are reported as errors without stopping sync. Xcode selection, license acceptance, and first-launch setup remain user-managed, preserving the [Command Line Tools–only baseline](#supported-environment).
+The Metal Toolchain is optional provisioning for non-CI macOS environments with full Xcode. First-launch setup, license acceptance, and Xcode selection remain user-managed, preserving the [Command Line Tools–only baseline](#supported-environment).
 
 ### Peer Dependency Versions
 
@@ -421,17 +311,15 @@ Every peer dependency in workspace packages intentionally uses the version `"*"`
 
 ### Prettier Formatter Command
 
-[`domfiles-format`](../home/.local/bin/domfiles-format) accepts existing file paths, resolves symlinks, and lists each destination once with `$HOME` abbreviated to `~` before asking for confirmation through `__confirm`. It has no recursive mode or `--write` option. Resolved paths containing control characters are unsupported so the numbered confirmation list stays unambiguous. After confirmation, a non-writing Prettier check runs across the complete selection to catch formatting errors before any writes. Writes follow Prettier’s normal per-file behavior rather than a batch transaction.
+[`domfiles-format`](../home/.local/bin/domfiles-format) intentionally has no recursive mode or `--write` option. Resolved paths containing control characters are unsupported so its confirmation list stays unambiguous. Its preflight check does not make subsequent per-file writes a batch transaction.
 
-Formatting runs from the domfiles checkout with its installed Prettier, explicit configuration, and full plugin set. Target-side Prettier configuration, `.editorconfig`, and ignore files do not supply formatting policy. Prettier’s built-in exclusions still apply. The caller’s relative paths are resolved before changing directories, which also keeps native formatter configuration discovery rooted in domfiles. The command uses the existing workspace installation and does not install dependencies automatically.
+Formatting policy comes from domfiles, not target-side Prettier configuration, `.editorconfig`, or ignore files. Native formatter configuration discovery also stays rooted in domfiles.
 
 ### Prettier Formatter Wrappers
 
-`prettier-plugin-fish`, `prettier-plugin-rust`, and `prettier-plugin-toml` are intentionally thin whole-file wrappers around Homebrew-provided `fish_indent`, `rustfmt`, and `tombi`, respectively. Each native formatter’s output is preserved verbatim, and that formatter owns its language’s formatting semantics. Prettier options such as `tabWidth` and `useTabs` intentionally do not affect their output. The Fish and Rust wrappers declare the `fish` and `rust-script` interpreters so Prettier infers their parsers for extensionless files with matching hashbangs.
+The Fish, Rust, and TOML Prettier plugins are thin whole-file wrappers. Their native formatters own formatting semantics, so output is preserved verbatim rather than reinterpreted through Prettier options.
 
-Markdown files directly under `skills/posix-shell-scripting/references/` use a two-space Prettier indentation override so embedded `sh` examples follow the skill’s POSIX indentation convention. The override intentionally excludes `skills/posix-shell-scripting/SKILL.md` because applying the same indentation setting to the whole file would reindent its YAML frontmatter. The skill’s example-bearing guidance is therefore structured as references, while `SKILL.md` retains the rules and routes needed by every invocation.
-
-The Rust wrapper invokes `rustfmt --edition 2024 --emit stdout`. The explicit edition is required because direct stdin formatting otherwise defaults to Rust 2015. Native `rustfmt` defaults own all remaining Rust formatting policy, so the repository intentionally has no `rustfmt.toml` and exposes no duplicate Prettier options. The TOML wrapper invokes `tombi format --offline -` with anonymous stdin. Prettier’s `filepath` is used only in wrapper-generated error messages. [`tombi.toml`](../tombi.toml) sets four-space indentation to match Rust and disables automatic schema selection for formatting and linting. Explicit `#:schema` document directives can still select a schema. Native defaults own the remaining formatting settings, with no duplicate Prettier options. Both TOML commands run offline to avoid remote schema fetching. Homebrew’s `fish`, `rust`, and `tombi` formulas provision all three native formatters, while `rustup` and `rust-analyzer` are intentionally unmanaged.
+The Rust wrapper requires an explicit edition because direct stdin formatting otherwise defaults to Rust 2015. Native defaults own the remaining policy, so there is no `rustfmt.toml`. TOML indentation matches Rust, and formatting and linting run offline to avoid remote schema fetching.
 
 Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. None of the native formatters has a range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged. Prettier’s standalone mode is also intentionally unsupported because these wrappers require a Node.js process to execute their external formatter binaries.
 
@@ -463,11 +351,9 @@ The `__string_*` helpers are optional conveniences rather than a mandatory abstr
 
 ### Suppressed Command Output
 
-`DOMFILES_SUPPRESSED` suppresses the `$ …` command echo emitted by the paired `__print_command` and `__domfiles_print_command` helpers. It defaults to `false`. `domlib` and Fish normalize user-supplied values through the paired `__read_boolean_from_env` and `__domfiles_read_boolean_from_env` helpers, then only normalized `true` enables suppression. Gating the command-printing helpers covers Fish `__domfiles_print_and_run` and every POSIX caller: `__`, and therefore `__chmod`, `__mkdir`, `__touch`, and `__symlink`, plus `__ssh_add` and `__domfiles_exec --print`. Only the echo is suppressed, so a wrapped command’s own output, headings, confirmations, and errors continue to print.
+`DOMFILES_SUPPRESSED` affects only the `$ …` command echo, not command output, confirmations, errors, or headings.
 
 `__is_ci` and `__domfiles_is_ci` override suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
-
-`__suppress` overrides `DOMFILES_SUPPRESSED` only inside its own subshell. The variable is runtime control state that Fish configuration intentionally does not initialize. The [`domlib` maintenance policy](skills/domfiles-shell-integration/references/domlib-integration.md#maintain-domlib) requires `domlib` counterparts for Fish-defined `$DOMFILES_*` variables but permits variables defined only in `domlib`, including `DOMFILES_SUPPRESSED`.
 
 A Fish counterpart remains unwanted. Fish does not export `set -g`, which every `DOMFILES_*` entry in Fish configuration uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
 

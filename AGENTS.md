@@ -33,7 +33,7 @@
 - **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. Explicit, task-scoped instructions may replace or waive those requirements without changing the standing policy. The public repository boundary, secret protection, required security controls, and genuine human-only checkpoints remain applicable.
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
 - **Navigation:** Read only the section of `.agents/PROJECT.md` that applies, reaching it through an existing link or by locating its heading first, rather than reading the document.
-- **Durable knowledge:** Document newly discovered durable project knowledge in `.agents/PROJECT.md` when the task permits that documentation edit. Otherwise report the update as deferred follow-up work.
+- **Durable knowledge:** Add project knowledge to `.agents/PROJECT.md` only when its absence would likely cause a wrong future decision or substantial repeated investigation. Capture non-obvious constraints and rationale not already clear from canonical configuration, instructions, or source. Do not record optimization recaps, routine implementation details, or workflow summaries. Prefer updating existing material over appending another explanation. When the task does not permit the edit, report deferred documentation work only if it meets this threshold.
 
 ## Scope
 
@@ -54,7 +54,7 @@
 
 ## Skills
 
-Classify every project-authored skill by its canonical source and supported installation surface. `metadata.internal: true` marks a skill as unsupported for public installation. It does not make tracked source private. The table below is ordered by widening installation surface, with the global overlay naming variant beside its category.
+Classify every project-authored skill by canonical source and supported installation. `metadata.internal: true` means public installation is unsupported, not that tracked source is private. Categories below widen installation reach, with the global overlay variant beside its category.
 
 | Category | Canonical source | `name` | `metadata.internal` | Supported installation |
 | --- | --- | --- | --- | --- |
@@ -63,9 +63,9 @@ Classify every project-authored skill by its canonical source and supported inst
 | Global overlay | `skills/.dom-<base-name>` | `dom-<base-name>` | `true` | Same installation surface as the global category. |
 | Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
 
-Global overlays share the global category’s requirements. Their `<base-name>` is the base skill’s exact frontmatter `name`, without shortening, rewording, or removing qualifiers.
+Global overlays inherit global requirements. Their `<base-name>` must exactly match the base skill’s frontmatter `name`, without shortening, rewording, or dropping qualifiers.
 
-Skills in the global category may rely on the domfiles-managed global instructions and complete globally exposed skill set. Skills in the public category must provide their advertised behavior when installed independently.
+Global skills may rely on domfiles-managed global instructions and the complete globally exposed skill set. Public skills must deliver their advertised behavior when independently installed.
 
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
 - **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.
