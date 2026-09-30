@@ -31,6 +31,7 @@ for source in \
   agent-task-relay \
   fish-shell-scripting \
   human-facing-writing \
+  intentional-dependency-choice \
   posix-shell-scripting \
   release-notes-for-humans \
   sensible-commit-flow \

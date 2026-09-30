@@ -25,6 +25,8 @@ Select only the applicable route and its conditional references. An unframed han
 - **Revision:** Follow the selected artifact route and [Revisions](#revisions). Resolve material task handoff changes through [Task Relay Confirmation](references/task-relays.md#task-relay-confirmation).
 - **Review or audit:** Use the selected route as review criteria, and keep the task read-only. Report findings against this entrypoint and the routed reference. Do not compose or deliver a replacement, and do not mutate anything.
 
+For a new dependency or tool choice, including changed features, source, or version, resolve `intentional-dependency-choice` once. Use it locally when available. Otherwise, if available evidence shows that remote use would materially improve the decision, follow the [optional public peer workflow](references/optional-peer-intentional-dependency-choice.md). Supply the task context, constraints, evidence, and approval record, reusing an established resolution. If the peer remains unavailable, use [Dependency Choice](references/dependency-choice.md), never to bypass a resolved peer’s stop. Ordinary reuse, prescribed acquisition, inherited declarations, and merely carrying approval do not trigger this route.
+
 ## Relay Contract
 
 A relay is the complete prompt carried into another conversation. Make its purpose, authority, and stopping point clear.

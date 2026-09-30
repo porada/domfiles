@@ -12,17 +12,9 @@ When the resolved scope explicitly includes implementation, follow applicable pr
 
 ## Design the Smallest Sufficient Contract
 
-The optimal contract is the least complex one that completely serves its named consumers within the declared operating model. Apply this gate before implementing a new script or materially expanding an existing script. A material expansion adds a dependency, durable artifact, input schema, mutation-authorizing decision, observable failure or status behavior, operation mode, or side effect. A fix reuses the accepted contract without reopening design when it only restores conformance to that contract and adds none of those material expansion elements.
+The optimal contract is the least complex one that completely serves its named consumers within the declared operating model. For a new script or material expansion, follow [Script Contract Design](script-contract-design.md) before implementation, and use it as criteria when reviewing or auditing that design. A material expansion adds a dependency, durable artifact, input schema, mutation-authorizing decision, observable failure or status behavior, operation mode, or side effect. A fix reuses the accepted contract without reopening design when it only restores conformance to that contract and adds none of those material expansion elements.
 
-1. **Establish necessity.** Name the recurring consumer and the single job the script must perform. First attempt to remove the script, use an existing repository workflow, or use a bounded direct tool sequence. Do not create a script for a one-time transition or merely to encode review preferences.
-2. **Draft only the observable contract.** Define its authority, concurrency and threat model, failure boundaries, inputs, non-goals, outputs, side effects, and statuses. Do not select dependencies or internal architecture yet.
-3. **Run one bounded adversarial design pass.** Challenge necessity before correctness. First try to delete the script or each retained contract element. Then test the remaining contract against boundary values, concurrency inside the declared model, malformed inputs, output failures, and partial operations. Derive a requirement only from a ground allowed by the global “Proportionality” rule or from authoritative behavior, a named recurring consumer, or a script-specific standing policy. The pass must identify the smallest viable alternative and must not invent future consumers, threats, or use cases.
-4. **Choose the smallest sufficient design.** Proceed only when no simpler design satisfies the established requirements. If the adversarial pass turns a small helper into a general framework, protocol, or transactional system, stop and return to the direct workflow or narrow the requirement before implementation.
-5. **Freeze the accepted contract for implementation.** Implementation and review verify conformance to that contract. Reopen design only when new evidence invalidates an accepted assumption. A hypothetical case outside the declared operating model does not expand the contract.
-
-Use one adversarial pass and, after any revision, one focused check of the changed contract. Do not begin an open-ended design review loop. Ask the user only when two materially different designs remain viable. Otherwise choose the smallest reversible design autonomously, while following every standing approval gate.
-
-Keep rejected alternatives and adversarial notes in task context. Document only the accepted observable contract and non-obvious rationale.
+Implementation and review verify conformance to the accepted contract. Reopen design only when new evidence invalidates an accepted assumption, using the same design procedure. A hypothetical case outside the declared operating model does not expand the contract.
 
 ## Define the Observable Interface
 
@@ -86,67 +78,30 @@ Before changing a skill-owned script within a protected skill tree, follow the [
 - Choose human-readable or structured output according to the consumer’s needs. Do not require JSON without a consumer that needs it.
 - Do not invent an output filename in the current directory. Use a declared repository destination or require the caller to supply one.
 
-## Bound Artifact Locations
+## Select Artifact Guidance
 
-Every filesystem write must remain within one of these authorized categories:
-
-- A declared repository artifact at its canonical path, whether intentionally tracked or stored in an established repository-owned output location.
-- An explicit file or directory supplied by the caller.
-- A short-lived sibling used exclusively to atomically replace an otherwise authorized destination.
-
-Do not repurpose a location merely because it is ignored. Never modify `.gitignore` while running the script, and do not add an ignore rule solely to accommodate script-specific output. If repository-wide toolchain output exposes a missing ignore policy, handle that as a separate repository configuration change under the current task’s authorization.
-
-For ephemeral artifacts, have the caller establish storage through `agent-task-directories` before invoking the script. Accept the resolved task-specific destination instead of establishing a separate temporary output convention.
-
-Before writing:
-
-- Apply the global “Concurrent work” preservation rule to repository destinations.
-- Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
-- Do not write files unrelated to the declared artifact contract. Keep host and target repository Git metadata read-only. Limit Git metadata writes to [declared disposable fixture setup](#test-the-contracts).
-- Leave byte-identical output unchanged.
-- Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
-
-## Write Artifacts Safely
-
-- When atomic replacement requires a same-filesystem temporary file, use a short-lived sibling as an internal implementation detail and remove it after success or a handled failure.
-- Remove stale paths only when they belong to a declared script-owned output set and exact synchronization is part of the documented contract.
-- Do not provide a generic `--force` or `--fix` escape hatch that bypasses ownership or destination checks.
-- Report every artifact created, updated, unchanged, or removed.
+For scripts or tests with filesystem writes, including fixture setup and temporary outputs, follow [Script Artifact Boundaries](script-artifact-boundaries.md) before planning, reviewing, or performing those writes.
 
 ## Test the Contracts
 
-- Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
 - Cover every distinct externally observable refusal and every routine that authorizes a mutation on a correctness claim, such as an accounting, containment, or equivalence proof. For a refusal shared by multiple external routes, keep the detailed refusal cases on the shared path and add one lightweight wiring assertion for each route proving that it reaches that path. Add route-specific detailed cases only when the route changes behavior or a caller relies on that distinction. Assert the refusal a caller would rely on, not only that the operation failed.
-- Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](#bound-artifact-locations).
+- Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Contain runtime-created fixture outputs, repositories, and scratch state through the [ephemeral-artifact rule](script-artifact-boundaries.md#bound-artifact-locations).
 - Run focused tests during implementation and after each behaviorally relevant correction. Run the repository’s root static validation once after the consolidated change batch, then rerun it only when a later correction changes an input or configuration that it covers. Direct execution and focused tests do not replace root typechecking or compilation.
+- Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
 
-Tests may initialize declared disposable fixture repositories and populate their indexes only when the current task authorizes that setup and the caller has established isolated storage under the [ephemeral-artifact rule](#bound-artifact-locations). Keep these writes inside the fixture repositories. Obtain any required sandbox grants separately. Tests that create commits, including fixture commits, still require explicit user authorization under the global “Commit gate”.
+Tests may initialize declared disposable fixture repositories and populate their indexes only when the current task authorizes that setup and the caller has established isolated storage under the [ephemeral-artifact rule](script-artifact-boundaries.md#bound-artifact-locations). Keep these writes inside the fixture repositories. Obtain any required sandbox grants separately. Tests that create commits, including fixture commits, still require explicit user authorization under the global “Commit gate”.
 
 Document focused script and test commands in the owning skill or its repair reference.
 
 ## Choose Dependencies Before Implementation
 
-- Do not reimplement a mature general-purpose capability merely to avoid adding a dependency or requesting approval. This includes cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior.
-- When the best implementation requires a dependency change, follow the global “Dependencies” policy before implementation or mutating delegation.
-- If approval is declined, propose the strongest constrained alternative and explain its limitations.
+Apply `intentional-dependency-choice` before choosing a new dependency or changing its prescribed features, source, or version, and before choosing a bespoke implementation of a mature general-purpose capability. Such capabilities include cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior. Reuse established decisions and approvals. The global “Dependencies” policy still governs implementation and mutating delegation.
 
 ## Integrate Root Validation
 
 When a script reveals that root validation omits a source category, extend the root contract for that complete category rather than hardcoding one skill path. For example, add `.agents/**` to a TypeScript repository’s root include patterns when they do not cover skill-owned sources. Ensure the root check covers both the script and its test. Do not broaden configuration prospectively before a real script establishes the need.
 
-For standard-library-only Rust scripts:
-
-- Compile the script directly with stable `rustc` and compile its adjacent test with `rustc --test`.
-- Pass the repository’s supported Rust edition explicitly. Pass an explicit valid crate name when the repository’s filename pattern contains characters that Rust crate names do not accept.
-- Resolve compiled binaries and other transient output through the [ephemeral-artifact rule](#bound-artifact-locations).
-- Include both compile commands in root static validation. Do not register Cargo targets merely because the repository otherwise uses Cargo.
-
-When a Rust script requires a non-standard-library dependency:
-
-- Use Cargo through an existing repository-owned tooling package or, when the current task authorizes it, one shared tooling package for skill-owned scripts.
-- Let a root package own the targets in a package root workspace. In a virtual workspace, let a package member own them because the virtual manifest cannot define targets.
-- Use repository-unique, skill-qualified target names and the repository’s normal shared Cargo target directory. Do not override `CARGO_TARGET_DIR` merely to isolate a script.
-- Keep target registration and applicable root manifests committed, follow the repository’s lockfile policy, and keep generated `target/` contents ignored and uncommitted.
+For Rust scripts, follow [Rust Script Integration](rust-script-integration.md) for the standard-library-only and Cargo build routes.
 
 ## Resolve File Names
 

@@ -28,6 +28,13 @@
 			]
 		},
 		{
+			"title": "Dependencies",
+			"description": "Choose dependencies deliberately and understand their impact.",
+			"skills": [
+				"intentional-dependency-choice"
+			]
+		},
+		{
 			"title": "Git and GitHub",
 			"description": "Keep commit history clear and GitHub work focused.",
 			"skills": [

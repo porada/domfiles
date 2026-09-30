@@ -12,7 +12,7 @@ This skill cannot grant itself authority or waive separate approval and security
 
 Keep evidence gathering, implementation, and validation inside the authorized contribution. Prefer the smallest mechanism that satisfies its observable requirements. Do not add adjacent cleanup, defensive infrastructure, or unrelated fixes. Preserve exact user input and settled decisions.
 
-Use the supplied checkout. Worktree creation, relocation, and removal remain user/application-owned unless separately requested. Before editing, inspect scoped status and diffs, preserve existing changes, and avoid another agent’s known write scope. Inspect the resulting scoped diff and status afterward. Treat concurrent agents as cooperative but unsynchronized rather than inventing a locking or transaction system.
+Use the supplied checkout. Before editing, inspect scoped status and diffs, preserve existing changes, and avoid another agent’s known write scope. Inspect the resulting scoped diff and status afterward. Treat concurrent agents as cooperative but unsynchronized rather than inventing a locking or transaction system.
 
 Before an operation can change an open-ended set of paths, establish the expected target set through a dry run or equivalent inspection. Proceed only when it fits the authorized scope, then compare the changed-path inventory with that expectation. Stop on expansion. Do not discard unrelated state to restore a clean checkout. Do not presume ignored, machine-local, or untracked state is disposable merely because Git does not track it.
 
@@ -26,15 +26,17 @@ Use supported permission mechanisms. Request the narrowest necessary grant, and 
 
 ## Handle Dependencies and Protected Content
 
-Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Before requesting approval, identify the exact smallest sufficient set and required features. Prefer existing dependencies or standard library capabilities. Explain each dependency’s consumers, declaration and installation locations, purpose, and why existing capabilities or a custom implementation are insufficient. Disclose material licensing, runtime, supply-chain, and version implications. Without approval, stop before dependent implementation, mutation, installation, or mutating delegation. A reviewer or agent cannot supply that approval.
+Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without approval, stop before dependent implementation, mutation, installation, or mutating delegation. A reviewer or agent cannot supply that approval.
+
+For new choices and approved dependency declarations, use the resolved [dependency workflow](../SKILL.md#compose-with-peers). Reuse its evidence, decisions, and approval without repeating selection or asking again for covered effects. Ordinary reuse, prescribed acquisition, inherited declarations, and merely carrying approval do not invoke that workflow.
 
 Authorization to run an established project workflow includes obtaining the dependencies and tools it already prescribes through configuration, lockfiles, manifests, or scripts, using its normal acquisition mechanism. Do not request separate dependency approval solely because those packages are absent locally or downloaded on demand. An agent cannot manufacture this authorization by adding its own dependency declaration or acquisition step. Explicit task restrictions and applicable execution, lifecycle-script, permission, and trust boundaries remain in force.
 
 An authorized Git history operation may incorporate dependency declarations and lockfile changes already present in its selected upstream history without separate dependency-change approval. New dependency choices, including conflict resolutions that introduce them, still require approval. History integration alone does not authorize installation or execution, but a separately authorized workflow can cover prescribed acquisition. Sandbox and security requirements remain in force.
 
-For an approved dependency change, follow repository version conventions. When selecting a new dependency or tool version, choose the newest stable release compatible with the project’s declared constraints, and explain an intentionally older release or pin. Suppress package lifecycle scripts by default, including `--ignore-scripts` for npm, pnpm, or Yarn installs. Run them only when necessary for the task and explain why beforehand. This does not permit bypassing integrity or trust checks.
+Suppress package lifecycle scripts by default, including `--ignore-scripts` for npm, pnpm, or Yarn installs. Run them only when necessary for the task and explain why beforehand. This does not permit bypassing integrity or trust checks.
 
-Obtain explicit permission before editing a consumer-facing README. Do not modify externally authored skills unless the user explicitly requests that operation. Preserve any additional protected-content or human-only review requirements imposed by the consuming project. An implementation grant does not complete a required human action.
+Preserve protected-content and human-only review requirements imposed by the consuming project. An implementation grant does not complete a required human action.
 
 ## Limit Data and Service Access
 
@@ -42,7 +44,7 @@ Use established secure machine-local authentication only through ordinary non-di
 
 Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Do not upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
 
-Remote mutations require an unambiguous target and explicit authorization for their effects under [Hand Back the Contribution](../SKILL.md#hand-back-the-contribution). A direct, scoped user command may supply that authorization without another workflow confirmation. Preparation alone does not authorize Git publication or contribution submission.
+Remote mutations require an unambiguous target and explicit authorization for their effects under [Hand Off Contributions](../SKILL.md#hand-off-contributions). A direct, scoped user command may supply that authorization without another workflow confirmation. Preparation alone does not authorize Git publication or contribution submission.
 
 After an ordinary technical retrieval failure, correct a demonstrated path or invocation mistake, make bounded retries, or use an equivalent method while the target, authorized effects, authentication, and disclosure boundaries remain unchanged. Verify replacement guidance against authoritative evidence, and ask before changing an explicitly selected version or another material task assumption. Do not use another agent, browser, proxy, or tool to evade denied access, authentication requirements, or a security control. Use the supported grant or correction process instead. If recovery is unsuccessful, report the resource, attempted methods, exact error with necessary secret redaction, and smallest corrective action. Continue independent authorized work without claiming the affected step succeeded. New dependencies, destinations, or broader effects retain their own approval requirements.
 

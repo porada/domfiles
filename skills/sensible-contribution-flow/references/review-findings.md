@@ -54,7 +54,7 @@ Preserve every separate approval and security gate. Pause an effect lacking appr
 
 ## Resume Contribution Work
 
-If validated findings undermine the contribution’s premise, return to [contribution assessment](../SKILL.md#assess-the-contribution). Separate corrections necessary for the current contribution from adjacent improvements. Agreement to defer adjacent work does not establish the current contribution’s correctness.
+If validated findings undermine the contribution’s premise, return to [contribution assessment](../SKILL.md#assess-contribution-fit). Separate corrections necessary for the current contribution from adjacent improvements. Agreement to defer adjacent work does not establish the current contribution’s correctness.
 
 Consolidate required corrections into one authorized fix batch. After implementation and applicable validation, inspect the scoped result and review only its delta and integration boundaries. Do not restart a whole-contribution review or reopen settled classifications for optional preferences. If a second fix round exposes another issue in the same construct, stop extending it. Narrow, replace, or remove it within valid authority, or ask the user to choose among materially different options.
 

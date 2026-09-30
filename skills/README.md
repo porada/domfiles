@@ -40,6 +40,12 @@ Keep agent work organized and carry context between conversations.
 - [**agent-task-relay**](agent-task-relay)
 - [**verify-findings**](verify-findings)
 
+### Dependencies
+
+Choose dependencies deliberately and understand their impact.
+
+- [**intentional-dependency-choice**](intentional-dependency-choice)
+
 ### Git and GitHub
 
 Keep commit history clear and GitHub work focused.
@@ -50,7 +56,7 @@ Keep commit history clear and GitHub work focused.
 
 ## Internal Skills
 
-Each `.dom-*` skill is an overlay that applies my personal conventions on top of a skill listed above, while `.domfiles-*` skills depend on this repository’s [configuration](../home). They’re not suitable for standalone installation.
+`.dom-*` skills add my personal conventions on top of published skills, while `.domfiles-*` skills depend on this repository’s [configuration](../home). These skills aren’t suitable for standalone installation.
 
 ## License
 

@@ -60,10 +60,6 @@ Before preparing or invoking an operation in these families, follow [Opt-In Oper
 
 For a task-bearing `gh agent-task create` or `gh copilot` invocation, load `agent-task-relay` when it is available locally. Provide the selected interface, target, scope, and applicable boundaries, then let its entrypoint select the workflow. If it is unavailable and available task evidence shows that remote use would materially improve the handoff, follow the [optional public peer workflow](references/optional-peer-agent-task-relay.md). If the peer remains unavailable, continue with the command-specific standalone behavior.
 
-## Dependency Changes
-
-Before proposing a dependency choice, carrying its approval, or preparing an operation that may acquire dependencies or tools, follow [Dependency Changes](references/dependency-changes.md). That policy distinguishes new choices from prescribed acquisition, including for `gh` extensions and skills.
-
 ## Capability Boundaries
 
 For ordinary technical retrieval failures, use the bounded recovery in [Guidance Recovery](references/guidance-recovery.md) without changing the target, authorized effects, authentication, or disclosure boundaries. Handle authentication and scope boundaries under [Authentication](#authentication), and use supported grants for required access rather than another method to evade a denial. If recovery is unsuccessful, report the exact limitation and continue independent authorized work. Do not use aliases or extensions to approximate unavailable behavior unless the user explicitly opted into that exact family.

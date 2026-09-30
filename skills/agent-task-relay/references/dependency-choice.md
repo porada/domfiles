@@ -1,0 +1,3 @@
+# Dependency Choice
+
+For a new dependency or tool choice, choose the smallest sufficient set. Prefer an existing dependency or standard library capability when sufficient, and enable only required features. Before requesting approval, identify each proposed addition or update exactly and state its consumers, declaration location, installation location when relevant, and purpose. Explain why existing dependencies or standard library capabilities are insufficient and why a custom implementation would be less correct, maintainable, proportionate, or secure. Disclose any material feature, licensing, runtime, supply chain, or version implications.

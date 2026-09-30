@@ -72,7 +72,7 @@ The PR workflow then repeats its applicable [synchronization checkpoints](prepar
 
 Immediately before publication or handing back its command, recheck the publication destination independently of the upstream base. If its head changed, inspect and reconcile the new work within current authorization, then repeat affected validation and review. Stop for a user decision when reconciliation requires new scope. Do not merely substitute a newer object ID into the lease expectation. An earlier post-replay check does not replace this final check.
 
-Resolve the exact publication command from verified values rather than placeholders. Execute it only under the entrypoint’s [direct, scoped publication authorization](../SKILL.md#hand-back-the-contribution). Otherwise, provide it for the user to run. In either case, preserve these safeguards:
+Resolve the exact publication command from verified values rather than placeholders. Execute it only under the entrypoint’s [direct, scoped publication authorization](../SKILL.md#hand-off-contributions). Otherwise, provide it for the user to run. In either case, preserve these safeguards:
 
 1. Verify the effective destination and full remote branch ref. Confirm that configuration cannot expand the command to additional destinations or refs, without exposing credentials or bulk machine-local configuration. If that cannot be established, pause for the user’s target or configuration decision rather than silently changing configuration.
 2. Use the reviewed final tip’s full object ID as the explicit refspec source, targeting only that one full ref. Do not use a moving branch name as the source. Exclude extra refspecs and implicit destinations.
