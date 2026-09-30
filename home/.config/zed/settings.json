@@ -401,8 +401,11 @@
 			]
 		},
 		"show_merge_conflict_indicator": false,
-		"sidebar_side": "right",
-		"threads_sidebar_default_width": 200,
+		"threads_sidebar": {
+			"auto_open": true,
+			"default_width": 200,
+			"position": "right"
+		},
 		"tool_permissions": {
 			"default": "allow",
 			"tools": {
