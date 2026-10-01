@@ -12,6 +12,8 @@ Start by identifying the technical concepts the intended reader can be expected 
 
 For new technical copy or any edit that changes technical meaning, inspect the relevant implementation, tests, and other authoritative evidence. Use verified facts to bound what the copy may claim rather than dictate every detail it must include. A meaning-neutral wording edit may rely on the supplied text.
 
+Verify documented defaults against shipped values, not merely another documentation copy. Agreement between documents does not establish correctness. Correct stale copy rather than changing implementation to match it unless a behavior change is explicitly in scope.
+
 ### Composition
 
 Lead with the answer, action, identity, failure, or observable behavior. Put the useful point before introductory context, but keep every distinction that affects behavior.
@@ -28,7 +30,7 @@ When a value’s representation is used only for comparison or lookup, describe 
 
 ### Propagation
 
-When propagating or unifying copy, align verified shared facts and reader-facing terminology. Reuse wording only when the roles, constraints, and observable behavior are semantically equivalent. Then review destination-specific and adjacent copy independently.
+When propagating or unifying copy, align verified shared facts and use consistent reader-facing terminology for the same concept in the same role. Reuse wording only when the roles, constraints, and observable behavior are semantically equivalent. After each replacement, move, or removal, review every affected passage and its surrounding copy independently in context. Confirm that surviving headings, lead sentences, and quoted fragments still match the remaining content, and that references such as “both,” “below,” and “that decision” still identify the intended subjects or locations. When behavior changes, revise contradictory existing wording rather than appending a correct explanation beneath it.
 
 ### Validation
 
@@ -48,7 +50,7 @@ Apply the [typography and technical token conventions](typography.md). Distingui
 
 ## Supporting Material
 
-Make every material claim specific enough to check. Use exact names, values, conditions, or observable results as evidence only when they are appropriate to expose under the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries).
+Make every material claim specific enough to check. Use exact names, values, conditions, or observable results as evidence only when they are appropriate to expose under the entrypoint’s [Secrets and Authentication](../SKILL.md#secrets-and-authentication) policy.
 
 Evidence and illustration are not substitutes for each other. Neither an unnamed category nor a generic scenario is a concrete case. Include an example only when it clarifies non-obvious behavior, a required action, or a meaningful contrast. Use the smallest example that remains complete, and place it next to what it demonstrates.
 

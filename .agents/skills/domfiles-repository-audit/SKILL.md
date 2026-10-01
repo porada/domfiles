@@ -16,21 +16,27 @@ metadata:
 | --- | --- |
 | Security exclusions | Preserve credential protection, access controls, and higher-priority read restrictions. Explicit scope does not bypass these boundaries. |
 | Explicit scope | Override only the corresponding publication audit or default scope rules. Interpret the request through [Audit Path Selection](references/audit-path-selection.md). |
-| Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from its regular files rather than the active checkout, and exclude every untracked path, including `home/.config/fish/local.fish`. When the audit requires an isolated copy of that tree, follow [Publication audit staging](references/publication-audit-staging.md). |
+| Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from its regular files rather than the active checkout, and exclude every untracked path, including `home/.config/fish/local.fish`. Apply the [publication audit requirements](#inspect-publication-audit-trees). |
 | Default scope | Start with Git-tracked regular files, exclude symbolic links and untracked paths except `home/.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.
 3. Exclude these paths in publication audit mode and in every default repository scope, including `/domfiles-repository-audit` without an explicit scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the security exclusions above:
-    - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed-settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
+    - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
     - `home/.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Security exclusions still apply, and supporting evidence does not become reportable.
 
-## Partition a Large Audit
+## Inspect Publication Audit Trees
 
-- Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
+By default, inspect tracked `HEAD` directly rather than materializing an isolated filesystem copy. Capture its exact commit once and use that commit for every read-only Git inspection. Select the repository root through the tool’s working directory parameter or `git -C <repository-root>`, and do not let a moving ref, the current shell subdirectory, or the working tree narrow or alter the evidence.
+
+An explicit user direction may select another route, but it does not establish that an existing tool preserves the selected tree. Do not design or implement a materializer without authorization for that additional work. When the audit requires an isolated copy, follow [Publication Audit Staging](references/publication-audit-staging.md).
+
+## Partition Large Audits
+
+- Divide a large scope into complete, nonoverlapping passes and treat them as one continuous audit.
 - Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate without loading their bodies into the coordinating context.
-- Apply the global “Prompt contract” policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
+- Apply the global **Prompt contract** policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
 
 ## Audit Contents
 
@@ -45,7 +51,7 @@ For every path in the reportable scope:
 
 ## Keep Audits Read-Only
 
-- Do not modify repository files or run linters or formatters as part of the analysis.
+- Do not modify repository files or run linters or formatters as part of the analysis, including read-only check modes.
 - Do not report findings outside the reportable scope.
 - Base findings on the current repository contents under review. When current behavior must be verified, use authoritative installed tool behavior or official documentation and source as supporting evidence.
 - Never speculate about intent or hypothetical implementations.

@@ -24,15 +24,15 @@ Set and reset color or style at deliberate boundaries with `set_color` so one se
 
 Enable transient prompts with `set --global fish_transient_prompt 1`. Fish then reruns the prompt functions with the `--final-rendering` argument before executing a command line. The `--final-rendering` branch may simplify the prompt left in terminal scrollback, but any information it keeps must mean the same thing as in the normal rendering.
 
-Define and validate the behavior for both states of every distinction the design communicates, including root versus non-root users, local versus remote sessions, version control state present versus absent, and successful versus failed commands. A state may intentionally produce no visible segment.
+Define and validate the behavior for both states of every distinction the design communicates, including local versus remote sessions, root versus non-root users, successful versus failed commands, and version control state present versus absent. A state may intentionally produce no visible segment.
 
 ## Validation
 
-- Exercise successful and failed previous commands, including pipelines when the prompt renders `$pipestatus`. Confirm that no prompt operation replaces captured state before rendering it.
 - Check each supported state and layout, including local and remote sessions, root and non-root users, version control state present and absent, multiline prompts, right prompts, mode prompts, and transient rendering.
 - Check inherited prompt color defaults in an interactive Fish process. A noninteractive `fish --command` invocation does not establish the interactive default theme state.
-- Inspect color and style boundaries and line endings in an interactive Fish session or an established prompt test harness.
 - Confirm that prompt output remains absent from noninteractive startup paths.
+- Exercise successful and failed previous commands, including pipelines when the prompt renders `$pipestatus`. Confirm that no prompt operation replaces captured state before rendering it.
+- Inspect color and style boundaries and line endings in an interactive Fish session or an established prompt test harness.
 
 ## Official Sources
 

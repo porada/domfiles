@@ -21,23 +21,23 @@ For documentation work, including assets, catalogs, metadata, public READMEs, an
 
 An explicit change takes precedence when the request also uses review or audit language. Standalone reviews and audits remain read-only. Apply the global **Explicit user direction** policy to this skill’s authoring conventions and procedures, including routed contracts. A procedural waiver does not change a script’s implemented capabilities or bypass native access controls. Select every applicable contract before the work it governs, and load each once.
 
-## Select the Contracts
+## Select Contracts
 
 - **Documentation:** When authoring, reviewing, auditing, or maintaining skill documentation, follow [Skill Authoring](references/skill-authoring.md) for entrypoints, references, overlays, examples, and inherited policy.
 - **Descriptions:** When authoring or assessing a skill’s description or invocation mode, follow [Skill Descriptions](references/skill-descriptions.md).
-- **Public behavior:** For every public skill or canonical public-surface asset in scope, follow [Public Skill Portability](references/public-skill-portability.md). Also follow it for every public mirror affected by a global instruction change or evaluation, even when the request names only the global source. Select its conditional creation, promotion, naming, and optional-peer contracts before the corresponding work. Its README contract applies when creating or updating a public skill README.
+- **Public behavior:** For every public skill or canonical public-surface asset in scope, follow [Public Skill Portability](references/public-skill-portability.md). Also follow it for every public mirror affected by a global instruction change or evaluation, even when the request names only the global source. Select its conditional creation, promotion, naming, and optional peer contracts before the corresponding work. Its README contract applies when creating or updating a public skill README.
 - **Public catalogs:** When maintaining a public skill catalog or its collection README, follow [Maintain Public Skill Catalogs](references/public-skill-portability.md#maintain-public-skill-catalogs).
 - **Script contracts:** Before planning a new or changed skill-owned script, adjacent contract test, or script-owned artifact, or reviewing or auditing one, follow [Skill-Owned Scripts](references/skill-owned-scripts.md). This skill owns necessity, canonical ownership and location, observable interfaces, operation modes, effects, artifacts, schemas, invocation, and contract coverage. The owning domain skill supplies domain semantics, and applicable implementation workflows govern internal concerns.
 
 ## Preserve Protected Mutation
 
-Before changing any project-authored path under `.agents/skills` or `skills/human-facing-writing`, resolve its canonical owner. Follow the [protected skill mutation policy](references/protected-skill-mutation.md) before every mutation under `skills/human-facing-writing` and, when your agent identity is Zed Agent, under `.agents/skills`. Keep standalone reviews and audits read-only.
+Before changing any project-authored path under `.agents/skills` or `skills/human-facing-writing`, resolve its canonical owner. Follow the [protected skill mutation policy](references/protected-skill-mutation.md) before every mutation under `skills/human-facing-writing` and, when your agent identity is Zed Agent, under `.agents/skills`.
 
 ## Keep Skill Contents Operational
 
 Never document auxiliary information anywhere in a project-authored skill directory. Auxiliary information records how the skill itself was authored or maintained without helping a reader understand or execute its advertised workflow, such as change histories, research logs, review records, and verification baselines. Keep durable context in the source project’s reference documentation and task-local evidence in the conversation or task artifacts outside the skill. Preserve operational requirements, safety boundaries, and supporting explanations needed to apply the skill.
 
-## Validate the Selected Contracts
+## Validate Selected Contracts
 
 For every change, review, or audit, run the installation contract’s identity and link checks and every applicable check from the selected references. Validate complete declared scopes, including affected mirror families and the full description set when required. Conditional loading does not reduce an invariant to changed lines or omit validation of an unchanged declaration that the active contract covers.
 

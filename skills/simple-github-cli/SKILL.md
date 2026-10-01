@@ -14,7 +14,7 @@ This skill helps agents choose the narrowest interface that can handle the task.
 
 ## Interface Choice
 
-Use `gh` when the user explicitly requests that interface or a specific `gh` command. An interface preference alone does not authorize effects. A direct, scoped command can also supply the applicable opt-in and mutation authorization without duplicate confirmation, while separate authentication, permission, and security boundaries remain in force. Otherwise, use the first applicable interface in this order:
+Use `gh` when the user explicitly requests that interface or a specific `gh` command. An interface preference alone does not authorize effects. A direct, scoped command can also supply the applicable opt-in and mutation authorization. Otherwise, use the first applicable interface in this order:
 
 - Use local Git or source search tooling for checked-out source and local repository state.
 - Use direct HTTP retrieval for a directly addressable public resource.
@@ -62,7 +62,7 @@ For a task-bearing `gh agent-task create` or `gh copilot` invocation, load `agen
 
 ## Capability Boundaries
 
-For ordinary technical retrieval failures, use the bounded recovery in [Guidance Recovery](references/guidance-recovery.md) without changing the target, authorized effects, authentication, or disclosure boundaries. Handle authentication and scope boundaries under [Authentication](#authentication), and use supported grants for required access rather than another method to evade a denial. If recovery is unsuccessful, report the exact limitation and continue independent authorized work. Do not use aliases or extensions to approximate unavailable behavior unless the user explicitly opted into that exact family.
+For ordinary technical retrieval failures, use the bounded recovery in [Guidance Recovery](references/guidance-recovery.md). Handle authentication and scope boundaries under [Authentication](#authentication). If recovery is unsuccessful, continue independent authorized work. Do not use aliases or extensions to approximate unavailable behavior unless the user explicitly opted into that exact family.
 
 ## General Policies
 

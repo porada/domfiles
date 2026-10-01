@@ -6,7 +6,7 @@ Use this workflow for project-authored runtime failure messages and warnings, in
 
 Treat project-authored context, destination-supplied values, and original error text owned by an upstream dependency as separate layers. Edit only the layer owned by the task.
 
-Determine which surrounding context identifies the message’s source and which dynamic values would help the intended reader act. Before exposing any value, apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries).
+Determine which surrounding context identifies the message’s source and which dynamic values would help the intended reader act. Before exposing any value, apply the entrypoint’s [Secrets and Authentication](../SKILL.md#secrets-and-authentication) policy and the exposure criteria under [Actionable Detail](#actionable-detail) and [Upstream Errors](#upstream-errors).
 
 Add a module name prefix only when a message may appear in a shared or ambient context, such as CLI output, and its source would otherwise be difficult to identify. Use the established module name and prefix syntax. When the reporting context already makes ownership clear, omit attribution. Follow any applicable nearby prefix or project policy instead of imposing a universal bracketed form.
 

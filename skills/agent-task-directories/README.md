@@ -2,7 +2,7 @@
 
 # agent-task-directories
 
-Temporary agent files should have a predictable location in your project, be ignored by Git, and be cleaned up when no longer needed.
+Temporary agent files should have a predictable location in your project and be cleaned up when no longer needed. Git-ignored task directories are the default, with an exception for a single short-lived file.
 
 This skill defines task-specific directories for experiments, helper scripts, and notes, with clear rules for ownership, reuse, and cleanup. Agents can retain what they need and remove what they don’t without disturbing another task’s work.
 

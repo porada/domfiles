@@ -6,7 +6,7 @@ Evaluate syntax, utilities, and process boundaries as separate contracts.
 
 Use this table to distinguish portable forms from target-gated extensions. The routed guidance for each need owns the behavior behind its POSIX form. Rows are alphabetized by need.
 
-| Need | POSIX form | Reject unless the target contract permits it |
+| Need | POSIX Form | Reject Unless the Target Contract Permits It |
 | --- | --- | --- |
 | Alias and function bypass | `command <name>` with direct status handling | Treating `command -v` as a matching preflight |
 | Any invocable command | `command -v <name>`, then ordinary invocation | `which` or invoking through `command` after that check |

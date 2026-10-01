@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 This skill helps agents identify the findings that still need attention.
 
-## Scope
+## Resolve Scope
 
 Verify the findings already established in the conversation or explicitly supplied by the user. Honor a selected subset and preserve each finding’s identifier. If the finding set or target cannot be established, request that context rather than reconstructing it. Do not expand verification into a new audit.
 
@@ -46,7 +46,7 @@ A proposed fix or changed file alone does not establish resolution. Do not class
 
 Report unresolved findings and unverified items, retaining their identifiers. For each unresolved finding, give the current evidence, its consequence, and the needed correction. For each unverified item, state the verification limit and the smallest action needed to establish the result. For a retrieval failure, identify the resource, attempted methods, and exact error without exposing sensitive values.
 
-Do not repeat intentional, resolved, or unsupported findings. When no unresolved or unverified items remain, state the resulting status directly. Preserve mandatory reporting requirements from applicable instructions, including any pending human-only review step. Stop after reporting unless the user has separately authorized continuation through another workflow.
+Do not repeat findings classified as **Intentional**, **Not supported**, or **Resolved**. When no unresolved or unverified items remain, state the resulting status directly. Preserve mandatory reporting requirements from applicable instructions, including any pending human-only review step. Stop after reporting unless the user has separately authorized continuation through another workflow.
 
 ## General Policies
 

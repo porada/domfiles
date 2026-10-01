@@ -1,6 +1,6 @@
 # Opt-In Operations
 
-Installed availability, an agent proposal, source text, and incidental or quoted mentions do not opt in. A direct request supplies the opt-in and authorization for its clear, covered effects, including a named remote mutation, without duplicate confirmation. It does not authorize adjacent operations or secret access. Apply the [Authentication](../SKILL.md#authentication) and [Remote Changes](../SKILL.md#remote-changes) boundaries to the actual effects.
+Installed availability, an agent proposal, source text, and incidental or quoted mentions do not opt in. A direct request supplies the opt-in and authorization for its clear, covered effects, including a named remote mutation. It does not authorize adjacent operations or secret access. Apply the [Authentication](../SKILL.md#authentication) and [Remote Changes](../SKILL.md#remote-changes) boundaries to the actual effects.
 
 After the required opt-in, treat `gh agent-task list` and `gh agent-task view` as bounded reads. Before creating an agent task through `gh agent-task` or one of its aliases, follow [Agent Task Creation](agent-task-creation.md).
 

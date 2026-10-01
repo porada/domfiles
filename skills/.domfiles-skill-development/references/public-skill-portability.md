@@ -6,7 +6,7 @@ Apply the applicable skill classification’s independent behavior requirement f
 - **Standalone mirrors:** A public skill may mirror an applicable global instruction when the copy materially improves its independently installed behavior. Rephrase and arrange the standalone copy as needed for consistency with the skill, but preserve the source rule’s complete conditions, exceptions, meaning, normative force, scope, and standalone behavior. Treat it as required standalone context rather than a second definition, and realign it whenever either occurrence changes.
 - Treat every remote peer as an optional enhancement rather than a substitute for behavior the skill advertises.
 
-Keep the global **Writing** policy’s Zed-specific **Numbering** rule in the global instructions rather than mirroring it into public skills.
+Keep the global **Writing** policy’s **Numbering** rule in the global instructions rather than mirroring it into public skills.
 
 ## Load Conditional Contracts
 
@@ -20,15 +20,15 @@ Keep the global **Writing** policy’s Zed-specific **Numbering** rule in the gl
 
 ## Write Public READMEs
 
-When creating or updating a public skill’s customer-facing `README.md` for `porada/domfiles`, use the [public skill README template](../assets/readme-skill.txt). Its layout progresses from discovery and purpose through installation to attribution.
+When creating or updating a public skill’s consumer-facing `README.md` for `porada/domfiles`, use the [public skill README template](../assets/readme-skill.txt). Its layout progresses from discovery and purpose through installation to attribution.
 
-Use the frontmatter `name` for `<skill-name>`. For `<intro-paragraph>`, copy all introductory paragraphs between the `SKILL.md` title and the first section heading, preserving their text and paragraph breaks. Do not use the frontmatter description.
+Use the frontmatter `name` for `<skill-name>`. For `<intro-text>`, copy all introductory paragraphs between the `SKILL.md` title and the first section heading, preserving their text and paragraph breaks. Do not use the frontmatter description.
 
 For public skills from other repositories, follow their README conventions rather than this publisher-specific template.
 
 ## Maintain Public Skill Catalogs
 
-Treat a public skill catalog and its collection README as consumer-facing documentation under the global consumer documentation policy. Their copy and information architecture serve readers browsing the collection.
+Treat a public skill catalog and its collection README as consumer-facing documentation under the global **Consumer documentation** policy. Their copy and information architecture serve readers browsing the collection.
 
 When `skills.sh.json` and a collection README present the same catalog, use the JSON file as the canonical source for group descriptions, group order, group titles, skill membership, and skill order. Mirror those values exactly in the README’s catalog section, linking each skill identifier to its public directory. Keep the README’s other content independent.
 
@@ -72,7 +72,7 @@ Apply `agent-documentation`’s shared validation lifecycle. The checks below ad
 
 ### Whole-Skill Checks
 
-- **Description and independent behavior:** Validate the complete decoded description against the [shared description contract](skill-descriptions.md) and the [public-description portability contract](#keep-public-descriptions-portable). Evaluate the skill with network access, optional peers, repository-managed policy, and source repository files removed. Its advertised behavior must remain complete.
+- **Description and independent behavior:** Validate the complete decoded description against the [shared description contract](skill-descriptions.md) and the [public description portability contract](#keep-public-descriptions-portable). Evaluate the skill with network access, optional peers, repository-managed policy, and source repository files removed. Its advertised behavior must remain complete.
 - **Shared public policies:** Confirm that one final `## General Policies` section contains the secrets and authentication template and instruction authority template exactly once each and in the required order. Check [typography eligibility](#typography) against the advertised capability and reachable workflows. For eligible skills, confirm that the typography route appears exactly once in the required order, that `references/typography.md` matches the template, and that every prose-producing path deterministically loads it. For ineligible skills, confirm that both the reference and its route are absent. Treat other domain-specific additions as stricter constraints or surface-specific applications rather than competing mirrors.
 - **Authority paths:** Trace every ingestion point through the selected workflow using its recorded roles and authority status. Confirm that every source whose authority status is untrusted reaches the instruction authority boundary before it can influence execution, mutation, relay behavior, or remote effects.
 - **Sensitive and mutating paths:** Trace every mutating branch, opt-in, and sensitive operation to a terminal action or required stop. Do the same for an exception only when it bypasses an authorization or safety boundary or can reach a sensitive or mutating operation. Confirm who acts, what authorization is required, whether execution is agent-run or user-run, and whether standalone behavior remains complete without optional policies or peers.
@@ -83,4 +83,3 @@ Apply `agent-documentation`’s shared validation lifecycle. The checks below ad
 - **Creation and promotion:** Apply the [public promotion validation](public-skill-promotion.md#validate-public-promotion) for creation or promotion, including reviews and audits of those operations. Do not require a promotion profile for other public maintenance.
 - **Optional peers:** Run the [optional public peer validation](optional-public-peers.md#validate-optional-public-peers) for every existing or proposed optional peer in each in-scope public skill, even when the declarations are unchanged. When the optional peer template changes, this includes every derived reference.
 - **Mirror alignment:** When a global instruction or this public contract, including its conditional references, changes, search public skills for affected standalone mirrors and close semantic variants, then align each mirror’s meaning and boundaries in the same change. When a shared public-policy template changes, align every verbatim template-derived copy under that template’s copy contract in the same change, including conditional references. When a public skill changes, reevaluate its shared contract and domain-specific mirrors against their canonical policies. Preserve complete conditions and boundaries for the rules included, add newly required standalone behavior on its narrowest applicable surface, and remove wording that no longer adds standalone value. Do not grow the shared contract to mirror unrelated global instructions.
-- **Installed links:** Resolve every local relative link from the independently installed skill root and reject any link that relies on an unavailable repository or sibling.

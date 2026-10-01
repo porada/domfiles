@@ -2,7 +2,7 @@
 
 # <skill-name>
 
-<intro-paragraph>
+<intro-text>
 
 ## Install
 

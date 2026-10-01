@@ -4,7 +4,7 @@
 
 A useful contribution starts with understanding what would benefit a project, not just what could be changed.
 
-This skill helps agents prepare discussions, issues, security reports, and pull requests with upstream fit in mind. Deciding not to contribute is also a valid outcome.
+This skill helps agents prepare discussions, issues, pull requests, and security reports with upstream fit in mind. Deciding not to contribute is also a valid outcome.
 
 ## Install
 

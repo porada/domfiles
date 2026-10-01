@@ -6,7 +6,7 @@ This route adds history-specific steps for approved corrections folded into exis
 
 Apply [Inspect Changes](prepare-commits.md#inspect-changes), adding the complete existing commit series to the evidence scope. Base-only and message-only updates can be eligible without pending working tree changes.
 
-Resolve the contribution branch, starting `HEAD`, old boundary, and intended new base. Identify every commit the operation would drop, replace, or replay, including unchanged descendants after the earliest affected commit. Inspect each commit’s authorship, complete message, parents, and patch rather than only the aggregate diff. Keep the base unchanged for a fixup-only update. For synchronization, use the verified upstream target supplied by the PR workflow. Account for merge topology and root commits before selecting the native operation. Do not silently flatten history, update another branch, or widen the range.
+Resolve the contribution branch, starting `HEAD`, old boundary, and intended new base. The old boundary is the excluded starting commit of the original range. For a range that includes the root commit, record root replay instead of an excluded commit. Identify every commit the operation would drop, replace, or replay, including unchanged descendants after the earliest affected commit. Inspect each commit’s authorship, complete message, parents, and patch rather than only the aggregate diff. Keep the base unchanged for a fixup-only update. For synchronization, use the verified upstream target supplied by the PR workflow. Account for merge topology and root commits before selecting the native operation. Do not silently flatten history, update another branch, or widen the range.
 
 ## Establish Update Authorization
 
@@ -14,7 +14,7 @@ An explicit user request or active scoped approval for a history-replacing updat
 
 Where the contribution workflow requires a single commit’s complete message to match the PR title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
 
-Retain the exact request or grant with the resolved target, affected range, intended base, covered changes, and lifetime. One-off authorization ends when the bounded update is handed back, cancelled, or materially changes scope or target. A continuing grant follows its own stated lifetime. Do not revive an expired preparation grant because the task resumes.
+Retain the exact request or grant with the resolved target, affected range, intended base, covered changes, and lifetime. One-off authorization ends when the bounded update is handed back or cancelled, or when its scope or target materially changes. A continuing grant follows its own stated lifetime. Do not revive an expired preparation grant because the task resumes.
 
 Use the [concrete update proposal](#prepare-update-proposals) unless explicitly waived, compare the intended effects with that record, then return to shared [confirmation](prepare-commits.md#confirm-commits). Present covered effects as a notice without duplicate approval, and request only uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior. It does not cover branch renaming, opportunistic message changes, or unrelated fixes. Working-tree-only approval does not authorize history updates, and separate approval and security gates remain applicable.
 
@@ -64,7 +64,7 @@ After replay, apply the common validation and verification checkpoints to the re
 
 Assess every resulting commit’s independent coherence rather than treating a passing final checkout as proof about each commit. Return further corrections through the scoped proposal and authorization check. Continue without another approval only while the current authorization covers them.
 
-Return to [Report the Result](prepare-commits.md#report-the-result) with the old-to-new commit mapping and any branch advancement that created no commits. Report final commits, not temporary fixups. If execution stopped, identify the remaining operation state rather than claiming completion.
+Return to [Report Results](prepare-commits.md#report-results) with the old-to-new commit mapping and any branch advancement that created no commits. Report final commits, not temporary fixups. If execution stopped, identify the remaining operation state rather than claiming completion.
 
 The PR workflow then repeats its applicable [synchronization checkpoints](prepare-pull-requests.md#synchronize-with-upstream) and [readiness check](prepare-pull-requests.md#check-submission-readiness), including affected integration validation and delta review. Amendments and rebases invalidate earlier readiness. Published replacement also requires the final destination check below.
 

@@ -2,7 +2,7 @@
 
 ## Gather Writing Context
 
-By default, gather this context through the entrypoint’s resolved [evidence and writing workflows](../SKILL.md#compose-with-peers) before authoring a contribution body. Apply explicit evidence-check waivers under [Instruction Authority](../SKILL.md#instruction-authority), reporting material gaps. Consume the existing peer choices rather than resolving them again:
+By default, gather this context through the entrypoint’s resolved [evidence and writing workflows](../SKILL.md#compose-with-peers) before authoring a contribution body. Apply explicit evidence check waivers under [Instruction Authority](../SKILL.md#instruction-authority), reporting material gaps. Consume the existing peer choices rather than resolving them again:
 
 1. Identify the required repository template or form for the selected pull request, issue, discussion, or private security report. Resolve a materially ambiguous template choice rather than inventing a requirement.
 2. Look for a bounded, relevant sample of the user’s previous submissions of the same type in that repository. Use ordinary non-disclosing author filter operations or an author already established by the user, not direct authentication identity inspection. Do not search other repositories for writing examples.
@@ -41,17 +41,23 @@ For a pull request body, explain the intended outcome and strongest verified rea
 When the repository has no template, use these defaults:
 
 - **Issues and discussions:** Keep useful in-repository writing patterns and use the shortest structure that establishes the purpose, decisive evidence, material limitations, and any requested action.
-- **Pull requests:** Use one short prose paragraph outlining the purpose. Add a second succinct paragraph only when necessary. This limit governs the fallback, not mandated template fields.
+- **Pull requests:** Use one short prose paragraph outlining the purpose. Add a second succinct paragraph only when necessary. This limit applies to the purpose summary, not mandated template fields or [necessary reviewer procedures](#describe-testing).
 
 Do not present a fallback as a repository requirement. Ask for missing context only when it materially prevents a useful draft.
 
-For vulnerability reports and CVE preparation, use the writing peer’s security-report guidance when selected. Otherwise follow [Prepare Security Reports](prepare-security-reports.md) before drafting. Provide a title and body by default. Supply additional fields only when the user requests them, and flag any required form fields that still need their input.
+For vulnerability reports and CVE preparation, use the writing peer’s security report guidance when selected. Otherwise follow [Prepare Security Reports](prepare-security-reports.md) before drafting. Provide a title and body by default. Supply additional fields only when the user requests them, and flag any required form fields that still need their input.
 
 ## Describe Testing
 
-Use a short, truthful reassurance about what was tested or not tested. State the relevant result and any limitation that materially affects confidence in the contribution. Do not turn Testing into a catalogue of irrelevant checks not run, command transcript, diagnostic report, or inventory of checks. Include such detail only when a repository requirement or the contribution’s reproducibility makes it necessary.
+Use a short, truthful reassurance about what was tested or not tested. State the relevant result and any limitation that materially affects confidence in the contribution. Do not turn Testing into a catalog of irrelevant checks not run, command transcript, diagnostic report, or inventory of checks. Include such detail only when the user requests it or a repository requirement or the contribution’s reproducibility makes it necessary.
 
 In an early draft, describe planned validation as planned. Before final delivery, replace plans with actual results. Do not imply that a check ran, passed, or covered behavior beyond the available evidence.
+
+Provide manual review procedures only when requested by the user, required by the repository, or needed to make the contribution reproducible. Present them as reviewer instructions, not completed checks. Use numbered steps in the template’s appropriate section, or a short testing section after the purpose summary when no template applies. Keep short procedures visible, and give each substantial scenario its own labeled group within that section. Include each scenario’s necessary prerequisites, setup, and working directory instructions.
+
+Prefer copyable shell one-liners that create required fixtures and state over manual construction. Keep each to one logical setup or state change, chaining dependent commands with `&&`. Stop before a boundary requiring observation, UI interaction, or waiting rather than chaining across it. Introduce each shell operation with a short explanation ending in a colon, then a blank line and a fenced block labeled for the shell. Keep the explanation with its numbered step and indent the block beneath that step.
+
+Give UI actions separate prose steps, naming the relevant resource or configuration scope. Put expected results beside the actions, distinguish the original failure from fixed behavior, and retain timing conditions and relevant build qualifications.
 
 ## Finalize Content
 

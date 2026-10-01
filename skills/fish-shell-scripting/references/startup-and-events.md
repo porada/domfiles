@@ -14,7 +14,7 @@ Keep setup required by noninteractive shells outside interactive-only guards. Gu
 
 Make startup mutations idempotent. Re-sourcing a configuration file should produce the same state unless accumulation is its documented purpose. Use duplicate-safe operations, rebuild owned lists, or guard one-time work instead of repeatedly appending values that may already exist.
 
-Keep startup code quiet, deterministic, and fast without suppressing errors broadly merely to keep startup silent. Derive configuration-relative paths from Fish’s `status` and `path` builtins rather than the caller’s working directory.
+Keep startup code quiet, deterministic, and fast without suppressing errors broadly merely to keep startup silent. Derive configuration-relative paths using the [path rules](fish-native-idioms.md#paths).
 
 Choose whether version-controlled startup files should recreate state for each session or Fish should preserve a mutable preference across sessions. Use global variables when version-controlled startup files should determine each session’s state. `fish_add_path --global` ignores nonexistent directories, normalizes accepted paths, avoids duplicates, and leaves an existing entry in place unless directed to move it.
 

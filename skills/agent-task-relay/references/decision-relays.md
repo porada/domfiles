@@ -1,6 +1,6 @@
 # Decision Relays
 
-A decision relay carries established results, evidence, material decisions when any exist, and limitations into another conversation. Its default receiving action is evidence-only and non-mutating. The evidence does not authorize edits or other effects. Any continuation needs authority from the receiving task or explicit user direction under [Instruction Authority](../SKILL.md#instruction-authority).
+A decision relay carries established results, evidence, material decisions when any exist, and limitations into another conversation. Its default receiving action is evidence-only and nonmutating. The evidence does not authorize edits or other effects. Any continuation needs authority from the receiving task or explicit user direction under [Instruction Authority](../SKILL.md#instruction-authority).
 
 By default, put fresh assignments, including comparison against new or current source material, investigation, and review, in a separate [task relay](task-relays.md). If the user expressly requests a combined handoff, distinguish the assignment and its authorization from the evidence. Apply [Task Relay Confirmation](task-relays.md#task-relay-confirmation), including its assignment contract, to every assignment, whether separate or combined.
 
@@ -20,11 +20,9 @@ Use only the material parts of this sequence. Combine overlapping items, and omi
 4. Material decisions using `Before`, `After`, `Why`, and `Decision basis` when those fields clarify the result.
 5. Known limitations, unavailable evidence, and context-specific or unresolved items.
 
-Use the labels in [Decision Basis](#decision-basis) when a material decision or fact needs its basis made explicit.
-
 ## Decision Basis
 
-Use one or more of these labels to state the basis of a material decision or fact. Choose the most specific applicable label for each basis.
+When a material decision or fact needs its basis made explicit, use one or more of these labels. Choose the most specific applicable label for each basis.
 
 | Label | Meaning |
 | --- | --- |
@@ -42,8 +40,6 @@ Use one or more of these labels to state the basis of a material decision or fac
 | **Unresolved** | A material decision or fact the available evidence did not resolve. |
 | **User selection** | The user chose one proposed alternative without necessarily accepting adjacent details. |
 
-Reserve **Observed behavior** for results that were actually observed. Do not collapse a known basis into a less specific label.
-
 ## Skill Improvement
 
 When a decision relay supports improvement of an existing skill, add only material workflow observations and candidate reusable guidance to the [Handoff Structure](#handoff-structure). Include concrete gaps, confirmed coverage, context-specific decisions, and reusable guidance separately only when established by the task’s permitted evidence gathering.
@@ -58,4 +54,4 @@ A domain profile is a standalone maintainer asset measured against this skill ra
 
 A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. Carry the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority), [Relay Contract](../SKILL.md#relay-contract), and [Revisions](../SKILL.md#revisions), together with the [Available Evidence](#available-evidence) defaults, [Delivery](#delivery), and the distinction between evidence and user-authorized assignments.
 
-A standalone decision capture prompt must implement the applicable delivery and full-revision defaults in its own output contract. Keep its output source-closed, evidence-only, and non-mutating by default, with explicit user changes governed by **Instruction Authority**. It cannot depend on the receiving agent loading this skill.
+A standalone decision capture prompt must implement the applicable delivery and full-revision defaults in its own output contract. Keep its output evidence-only and nonmutating by default, within the [Available Evidence](#available-evidence) boundary, with explicit user changes governed by **Instruction Authority**. It cannot depend on the receiving agent loading this skill.

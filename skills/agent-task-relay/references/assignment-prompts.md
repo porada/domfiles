@@ -18,7 +18,7 @@ Use the guard only when the prompt assigns future work. Omit it from evidence-on
 
 When another applicable workflow invokes this skill for confirmation and assignment composition and explicitly defines the required final output and stopping behavior, return the composed assignment to that workflow instead of delivering it as a relay. Do not perform both.
 
-Otherwise, put each complete assignment in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Use the heading and ending specified by the selected route.
+Otherwise, put each complete assignment in its own three-backtick `markdown` block. Raise the fence to four backticks only when the prompt itself contains a three-backtick code block. Apply a route-specific heading or response ending only when that route specifies one. Keep the prompt guard governed by the [Assignment Contract](#assignment-contract).
 
 ## User-Requested Subagent Prompts
 

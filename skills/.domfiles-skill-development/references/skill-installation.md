@@ -2,7 +2,7 @@
 
 Use the applicable project’s skill classification to resolve each skill’s category, canonical source, logical name, metadata, supported installation, and whether the category permits bundled scripts before applying these rules. Evaluate changes, reviews, and audits against the complete supported installation model rather than inferring reach from the source location.
 
-## Identify the Skill
+## Skill Identity
 
 Keep each project-authored skill’s frontmatter `name` identical to its discovery name. For internal and public skills, this is the canonical directory basename. For global skills, including overlays, use the project’s mapping from canonical source directories to installed names so the name matches every final symlink basename.
 
@@ -10,7 +10,7 @@ Keep each project-authored skill’s frontmatter `name` identical to its discove
 
 Before moving content in a promotion that retains an overlay or another source owner, classify every existing rule and reference as promoted, retained under a named owner, or removed.
 
-Before moving or rewriting content in a promotion to the public category, complete the [public promotion profile](public-skill-promotion.md#build-the-public-promotion-profile).
+Before moving or rewriting content in a promotion to the public category, complete the [public promotion profile](public-skill-promotion.md#build-public-promotion-profiles).
 
 For every category change, update the canonical location, metadata, documentation links, and installation behavior together.
 

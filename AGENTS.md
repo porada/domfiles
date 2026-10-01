@@ -19,21 +19,30 @@
 
 ## Agent Documentation
 
-| Source | Authority and ownership |
+| Source | Authority and Ownership |
 | --- | --- |
-| `.agents/GLOBAL.md` | Defines global user defaults. Applicable project agent instructions override it. |
+| `.agents/GLOBAL.md` | Defines global user defaults. |
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
 | `CLAUDE.md` | Bridges Claude to the canonical project instructions in `AGENTS.md`. It defines no independent policy. |
 | Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. Distribution follows the [skill classification](#skills). |
-| `.agents/PROJECT.md` | Records durable facts, rationale, constraints, and maintenance decisions. It does not override agent instructions. |
+| `.agents/PROJECT.md` | Records constraints, durable facts, maintenance decisions, and rationale. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |
+
+Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, refer to `.agents/GLOBAL.md`.
 
 ## General
 
-- **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. Explicit, task-scoped instructions may replace or waive those requirements without changing the standing policy. The public repository boundary, secret protection, required security controls, and genuine human-only checkpoints remain applicable.
+- **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. The [public repository boundary](#public-repository-boundary) remains applicable.
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
 - **Navigation:** Read only the section of `.agents/PROJECT.md` that applies, reaching it through an existing link or by locating its heading first, rather than reading the document.
+- **Documentation alignment:** When changing behavior, interfaces, or defaults, search tracked documentation for affected identifiers and descriptions. Update statements the change invalidates, following the applicable documentation workflow and mutation requirements. Keep the search focused on the changed contract.
 - **Durable knowledge:** Add project knowledge to `.agents/PROJECT.md` only when its absence would likely cause a wrong future decision or substantial repeated investigation. Capture non-obvious constraints and rationale not already clear from canonical configuration, instructions, or source. Do not record optimization recaps, routine implementation details, or workflow summaries. Prefer updating existing material over appending another explanation. When the task does not permit the edit, report deferred documentation work only if it meets this threshold.
+
+## Validation
+
+Prefix every agent-selected pnpm-backed validation command with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error`, including checks selected through domain skills. Keep validation separate from dependency reconciliation. If a check needs reconciliation, apply the global **Dependencies** policy, perform any authorized acquisition separately, then rerun the guarded check. Report a limitation when acquisition is outside the task’s authorization or cannot proceed within applicable boundaries. See the [repository command rationale](.agents/PROJECT.md#repository-scoped-commands) for the overrides’ effects.
+
+For changed JSON or TOML files, run `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm run lint:<format> <changed-format-files>`. The JSON wrapper requires exactly one parsed JSON value, and the TOML wrapper runs `tombi lint --offline`. Pass paths explicitly unless repository-wide validation is intended.
 
 ## Scope
 
@@ -56,7 +65,7 @@
 
 Classify every project-authored skill by canonical source and supported installation. `metadata.internal: true` means public installation is unsupported, not that tracked source is private. Categories below widen installation reach, with the global overlay variant beside its category.
 
-| Category | Canonical source | `name` | `metadata.internal` | Supported installation |
+| Category | Canonical Source | `name` | `metadata.internal` | Supported Installation |
 | --- | --- | --- | --- | --- |
 | Internal | `.agents/skills/domfiles-<skill-name>` | `domfiles-<skill-name>` | `true` | Project-local to `domfiles`. |
 | Global | `skills/.domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
@@ -66,6 +75,8 @@ Classify every project-authored skill by canonical source and supported installa
 Global overlays inherit global requirements. Their `<base-name>` must exactly match the base skill’s frontmatter `name`, without shortening, rewording, or dropping qualifiers.
 
 Global skills may rely on domfiles-managed global instructions and the complete globally exposed skill set. Public skills must deliver their advertised behavior when independently installed.
+
+When changing a public skill contract or its standalone fallback, consult the [fallback family map](.agents/PROJECT.md#public-skill-fallback-families) to identify related guidance.
 
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
 - **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.

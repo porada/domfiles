@@ -22,7 +22,7 @@ Use an isolated worktree only for an explicit user request, another active agent
 
 If a material choice remains unresolved, ask the user explicitly, and emit neither the flow nor the relay. Do not ask merely because no worktree was mentioned.
 
-### Present the Flow
+### Present Relay Flow
 
 When confirmation is still needed, present the final flow in its own response. Keep it succinct, but include the receiving action, material target environment, worktree decision when repository work is involved, scope and exclusions, mutation and approval boundaries, required execution steps, validation, and handoff mode.
 
@@ -34,7 +34,7 @@ Confirmation authorizes only what the flow states explicitly and what applicable
 
 Reassess the flow whenever composition or a later revision materially changes the confirmed action, target, worktree decision, scope, approval, execution, validation, or handoff. Ask only about material ambiguity, uncovered effects, or a separate gate, not changes already expressly authorized by the user. Meaning-neutral compression and formatting do not require reconfirmation.
 
-This confirmation gate applies only to task relays. It does not apply to autonomous in-client delegation or evidence-only decision relays.
+This confirmation gate applies only to live task handoffs. It does not apply to autonomous in-client delegation, evidence-only decision relays, or reusable artifact maintenance.
 
 ## Task Relay Composition
 

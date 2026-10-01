@@ -2,19 +2,19 @@
 
 Use this security-specific drafting procedure when the entrypoint’s existing [peer choice](../SKILL.md#compose-with-peers) selects the local fallback for `human-facing-writing`. Do not rediscover the peer or substitute this procedure for its required stop. The shared [post content workflow](prepare-post-content.md) owns checklists, common prose, templates, and title/body delivery. Apply the [execution boundaries](execution-boundaries.md) to evidence gathering and any reproduction.
 
-## Establish the Private Boundary
+## Establish Private Boundaries
 
-Identify the affected project and its designated private reporting channel from the available security policy or verified platform guidance. Establish the receiving template and supported submission route. If no suitable private channel is available or its use requires effects outside the current authorization, stop for the user’s decision. Do not substitute a public issue or pull request.
+Identify the affected project and its designated private reporting channel from the available security policy or verified platform guidance. Establish the receiving template and supported submission route. Apply the [private reporting boundary](../SKILL.md#assess-contribution-fit).
 
 Keep undisclosed details out of public queries, public repository artifacts, and unrelated services. Use only legitimately available evidence within its disclosure boundary. Do not request access to private report history merely for writing examples. A drafting request does not authorize testing against a third party or transmitting the report. Submission requires the entrypoint’s [explicit authorization](../SKILL.md#hand-off-contributions).
 
-## Establish the Verified Mechanism
+## Establish Verified Mechanisms
 
 Identify the affected revision or version and relevant configuration, the intended security decision, and the boundary the observed behavior crosses. Trace what an attacker controls through the causal steps to the demonstrated consequence. Preserve only the source identifiers needed to locate important transitions. If investigation disproves the original theory, replace it with the verified mechanism rather than retaining it behind a caveat.
 
 Separate direct observations from source-based inference and untested possibilities. Do not generalize a tested configuration into an unsupported affected-version range. State missing evidence and its effect on confidence. If a necessary claim cannot be verified safely, limit the draft to what is established and identify the required evidence before claiming readiness.
 
-## Prepare a Safe Reproduction
+## Prepare Safe Reproductions
 
 Describe a complete, repeatable, minimally hazardous reproduction using an authorized isolated environment and synthetic data. Preserve the structural setup, relevant configuration, control cases, and expected and actual behavior. Make the attacker’s prerequisites explicit, including required access and control over the input. Distinguish steps actually exercised from steps proposed for the recipient to verify.
 
@@ -22,7 +22,7 @@ Use clearly named placeholders such as `<test-account>` or `<test-token>` instea
 
 Prefer a harmless demonstration of the boundary failure over unnecessary exploitation. Do not access real user data, run destructive tests, or test an external target merely to strengthen the narrative. If safe repeatability depends on unavailable authority or an unsuitable environment, stop that execution and report the limitation rather than claiming successful reproduction.
 
-## Draft the Security Content
+## Draft Security Content
 
 Follow the receiving template’s structure. When it separates these roles, give each fact one primary home without removing unique evidence:
 
@@ -36,6 +36,6 @@ Include remediation or mitigation only when evidence supports it. Explain what i
 
 ## Separate Reports From CVE Requests
 
-Reporting a vulnerability and requesting a CVE identifier are distinct actions. Establish which the user is preparing, and use only verified requirements for that receiving process. Do not infer eligibility or invent an identifier. A request is not an assignment. If eligibility or assignment cannot be established, leave it explicitly unverified.
+Establish whether the user is preparing a vulnerability report or a CVE request, and use only verified requirements for that receiving process. Do not infer eligibility or invent an identifier. A request is not an assignment. If eligibility or assignment cannot be established, leave it explicitly unverified.
 
 Return the draft through [content finalization](prepare-post-content.md#finalize-content), preserving the private destination in the [handoff](../SKILL.md#hand-off-contributions). Required personal attestations or fields that the agent cannot supply remain for the user, not guessed values. Pause readiness for an unmet requirement or unsuitable channel. Leave submission to the user unless a direct, scoped command authorizes agent submission through the designated private channel. Preserve every personal attestation, disclosure boundary, and separate access requirement.

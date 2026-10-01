@@ -6,6 +6,8 @@ Apply these skill-specific requirements within the shared documentation workflow
 
 Keep each `SKILL.md` as an entrypoint. Keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves. Apply [Skill Descriptions](skill-descriptions.md) when authoring or assessing the description or invocation mode.
 
+During `agent-documentation`’s **Workflow Compatibility** pass, trace each affected skill route from its actual invocation and supported installation state. Use only instructions and prerequisites guaranteed on that route, not context acquired while maintaining other routes. Include relevant optional peer availability cases.
+
 When maintaining `posix-shell-scripting`, keep code block examples out of its `SKILL.md` because the skill’s two-space Prettier indentation override applies only to its references and would reindent the YAML frontmatter if extended to the entrypoint. Structure the surrounding guidance as a coherent routed reference instead of moving examples alone, and retain the governing rule and the reference’s activation condition in the entrypoint.
 
 ## Base Skills and Overlays

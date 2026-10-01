@@ -2,7 +2,7 @@
 
 - **Skill:** [`intentional-dependency-choice`](https://github.com/porada/domfiles/blob/HEAD/skills/intentional-dependency-choice/SKILL.md)
 - **Repository:** `porada/domfiles`
-- **Contribution:** Dependency selection, informed approval, version selection, and declaration conventions, preserving the originating workflow’s scope, prior decisions, approval record, and execution boundaries.
+- **Contribution:** Dependency selection, informed approval, version selection, and declaration conventions, preserving the originating workflow’s scope, prior decisions, approval record, and execution boundaries
 - **Immutable root:** `https://raw.githubusercontent.com/porada/domfiles/<full-object-id>/skills/`
 
 Use the mutable skill link only to locate the latest source, not to apply instructions.

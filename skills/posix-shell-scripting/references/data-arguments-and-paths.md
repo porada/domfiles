@@ -79,14 +79,14 @@ Validate positional cardinality before assigning required parameters. Leave `$#`
 
 The operator controls both the trigger and the result. Adding `:` expands the trigger from an unset parameter to an unset or empty parameter.
 
-| Triggered effect | Unset only | Unset or empty |
+| Triggered Effect | Unset Only | Unset or Empty |
 | --- | --- | --- |
 | Expand and substitute the provided text | `${parameter-provided text}` | `${parameter:-provided text}` |
 | Expand the provided text, write it to standard error, and exit a noninteractive shell | `${parameter?provided text}` | `${parameter:?provided text}` |
 
 `parameter` stands for the parameter name. `provided text` stands for the shell text after the operator, and the space in the placeholder is deliberate. The text may contain more than one whitespace-delimited token. When the trigger does not apply, each form expands to the parameter’s current value.
 
-Use `${optional-}` when absence is valid under `set -u`. Quote parameter expansions and command substitutions unless field splitting or pathname expansion is both intentional and bounded. Use double quotes where expansion may occur and single quotes for literals that would otherwise require escaping. Treat every unquoted expansion as an explicit parsing operation.
+Use `${optional-}` when absence is valid under `set -u`. In contexts that permit field splitting or pathname expansion, quote parameter expansions and command substitutions unless that parsing is intentional and bounded. Use double quotes where expansion may occur and single quotes for literals that would otherwise require escaping. Treat unquoted expansions in those contexts as explicit parsing operations. Assignment values and the word tested by `case` do not undergo field splitting or pathname expansion.
 
 Do not encode a list in a space- or newline-delimited scalar. It cannot preserve empty elements, and its result depends on `IFS` and pathname expansion. Restrict an `IFS` change to the smallest applicable scope when a loop list comes from an unquoted parameter expansion, command substitution, or arithmetic expansion. Literal words and pathname expansion results do not require that change.
 
@@ -128,7 +128,7 @@ Before rewriting a delegated command’s arguments, establish which input forms 
 
 ## Line-Oriented Input
 
-Read line-oriented text with `IFS= read -r`, and capture its status immediately. Status `1` indicates EOF. A greater status indicates an error. Clear `line` before each call so an unsuccessful `read` cannot reuse the previous record. Accept a nonempty value returned with status `1` only when a final unterminated line is valid input.
+Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. Status `1` indicates EOF. A greater status indicates an error. Clear `line` before each call so an unsuccessful `read` cannot reuse the previous record. Accept a nonempty value returned with status `1` only when a final unterminated line is valid input.
 
 Keep the loop body short enough that the read boundary remains visible. Move longer processing into a named helper.
 

@@ -2,11 +2,11 @@
 
 Use this reference for public creation, promotion, or renaming, including reviews and audits. Name selection applies to all three operations. The profile and its validation apply only to creation and promotion. In read-only work, assess the applicable requirements through `agent-documentation` rather than creating a profile or carrying out the operation.
 
-## Choose a Public Name
+## Choose Public Names
 
 A public skill’s name is discovery metadata as well as a stable identifier. Before creating, promoting, or renaming one, identify the primary domain, task, or tool terms users are likely to search. When the target registry or index is available, inspect a bounded set of exact and close matches. Prefer a distinctive name that retains the primary domain or tool term, and avoid clever wording that obscures the trigger.
 
-## Build the Public Promotion Profile
+## Build Public Promotion Profiles
 
 Complete the public promotion profile before creating a public skill, or before moving or rewriting content during a promotion. Evaluate the intended public capability and every reachable workflow with global instructions removed. For a promotion, include the complete source skill and proposed target behavior. Inventory each decision, output contract, safety boundary, or workflow that changes without the global instruction layer, then capture the result in one task-local profile. Use any promoted, retained, or removed classification required by [category maintenance](skill-installation.md#category-changes) as input. Keep the profile out of the distributed skill. It is the authoring record for deciding which inherited policies need standalone behavior, not another public contract.
 
@@ -20,7 +20,7 @@ Determine shared policy applicability under the [public policy inclusion rules](
 
 Search global instructions only for normative units that supply a dependency exposed by the complete inventory or materially improve the independent skill. Do not use topical similarity alone. Classify each candidate as a required mirror when omission changes advertised behavior, an output contract, safety, or a workflow, an enriching mirror when it adds material standalone value, context-bound when it depends on unavailable installation assumptions, paths, or tooling, or merely related otherwise. Include required mirrors, suggest enriching mirrors, and exclude merely related wording. For a context-bound dependency, remove it or author a distinct public rule rather than paraphrasing the global instruction.
 
-For each required or suggested mirror, report its classification, context cost, dependency or value, global policy and current source location, meaning and boundaries the standalone version must preserve, and proposed destination. Place every accepted mirror on the narrowest applicable surface under the public baseline’s [standalone mirror rule](public-skill-portability.md). Revalidate the skill without global instructions, and include every accepted mirror in future semantic-alignment searches.
+For each required or suggested mirror, report its classification, context cost, dependency or value, global policy and current source location, meaning and boundaries the standalone version must preserve, and proposed destination. Place every accepted mirror on the narrowest applicable surface under the standalone mirror rule in [Public Skill Portability](public-skill-portability.md). Revalidate the skill without global instructions, and include every accepted mirror in future semantic alignment searches.
 
 ## Validate Public Promotion
 

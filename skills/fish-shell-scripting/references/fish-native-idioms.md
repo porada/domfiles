@@ -85,7 +85,7 @@ Recognize `&&`, `||`, `!`, and `$()` as valid Fish syntax during review. For an 
 
 Fish has no direct equivalent of `set -euo pipefail`. Do not add that option sequence or invent a blanket strict mode.
 
-Use `return` from a function and `exit` from a script. Preserve a failing status deliberately instead of allowing a logging or cleanup command to overwrite it. Treat stdout as returned data and stderr as diagnostics unless the receiving interface defines another contract. An `argparse` validator is an exception because it writes its diagnostic fragment to stdout for `argparse` to consume.
+Use `return` from a function and `exit` from a script. Preserve a failing status deliberately instead of allowing a logging or cleanup command to overwrite it. Treat standard output as returned data and standard error as diagnostics unless the receiving interface defines another contract. An `argparse` validator is an exception because it writes its diagnostic fragment to standard output for `argparse` to consume.
 
 Capture one command substitution’s output and status together when both matter:
 

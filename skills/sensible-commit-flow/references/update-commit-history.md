@@ -4,7 +4,7 @@
 
 Use [Inspect Changes](../SKILL.md#inspect-changes) for repository and change inspection, adding the complete existing commit series to the evidence scope. A base-only or message-only update can be eligible without pending working tree changes.
 
-Resolve the selected branch, starting `HEAD`, old boundary, and intended new base. Identify every existing commit the operation would replay, replace, or drop, including unchanged descendants after the earliest affected commit. For a fixup-only update, keep the base unchanged. For upstream synchronization, use the verified target supplied by the calling workflow. Account for merge topology and root commits before choosing the native operation, rather than silently flattening history or widening the range.
+Resolve the selected branch, starting `HEAD`, old boundary, and intended new base. The old boundary is the excluded starting commit of the original range. For a range that includes the root commit, record root replay instead of an excluded commit. Identify every existing commit the operation would replay, replace, or drop, including unchanged descendants after the earliest affected commit. Inspect each original commit’s authorship, complete message, parents, and patch rather than only the aggregate diff. For a fixup-only update, keep the base unchanged. For upstream synchronization, use the verified target supplied by the calling workflow. Account for merge topology and root commits before choosing the native operation, rather than silently flattening history or widening the range.
 
 ## Establish Update Authorization
 
@@ -12,9 +12,9 @@ An explicit user request or active scoped approval for a history-replacing branc
 
 Where a calling workflow requires a single commit’s complete message to match the PR title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
 
-Retain the exact user instruction or continuing grant with the resolved target, affected range, intended base, covered changes, and lifetime. A one-off request ends when the bounded update is handed back, cancelled, or materially changes scope or target. Use a continuing grant’s stated lifetime, and do not revive an expired authorization from an earlier preparation or publication phase.
+Retain the exact user instruction or continuing grant with the resolved target, affected range, intended base, covered changes, and lifetime. Use the shared [one-off request lifetime](commit-execution.md#confirm-commits) or a continuing grant’s stated lifetime, and do not revive an expired authorization from an earlier preparation or publication phase.
 
-Use the concrete proposal below unless explicitly waived, and compare the intended effects with that authorization. When the operation is covered, continue through [Confirm Commits](commit-execution.md#confirm-commits) without another execution approval response. Otherwise use the shared confirmation path for the uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior, not unrelated fixes, branch renaming, or opportunistic message changes. An approval limited to working tree edits is not history-update authorization. Separate approval and security gates remain applicable.
+Use the concrete proposal below unless explicitly waived, and compare the intended effects with that authorization. When the operation is covered, continue through [Confirm Commits](commit-execution.md#confirm-commits) without another execution approval response. Otherwise use the shared confirmation path for the uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior, not unrelated fixes, branch renaming, or opportunistic message changes. An approval limited to working tree edits is not history update authorization. Separate approval and security gates remain applicable.
 
 ## Establish Rewrite Eligibility
 
@@ -24,7 +24,7 @@ With authorization to replace the selected branch’s published history, verify 
 
 Distinguish the upstream base from the publication destination. Before replay, compare the local starting history and contents with the destination’s recorded head. Account for remote-only commits and other differences, incorporating work within the authorized scope or stopping for a scope decision. Recording a remote head does not authorize discarding its contents. A lease checks the current remote head, not whether the local result preserves the work already present there.
 
-Identify destinations from task context and non-secret metadata. Refresh only the remote information required for scope, eligibility, and the intended base, under the shared [execution boundaries](../SKILL.md#execution-boundaries). A current update request or continuing grant that covers those scoped reads and ref refreshes suffices without another workflow approval. Obtain any separately required tool grant. Unavailable evidence stops the affected rewrite, not unrelated local planning.
+Identify destinations from task context and non-secret metadata. Refresh only the remote information required for scope, eligibility, and the intended base, under the shared [execution boundaries](../SKILL.md#preserve-execution-boundaries). A current update request or continuing grant that covers those scoped reads and ref refreshes suffices without another workflow approval. Obtain any separately required tool grant. Unavailable evidence stops the affected rewrite, not unrelated local planning.
 
 ## Prepare Update Proposals
 
@@ -62,12 +62,12 @@ At the shared post-rebase checkpoint, compare the original series plus approved 
 
 Assess each resulting commit’s independent coherence rather than treating a passing final checkout as proof that every commit is coherent. Any further corrections return through the scoped proposal and authorization check. Continue without another approval only while the existing authorization covers them.
 
-Return to [Report the Result](commit-execution.md#report-the-result), including the old-to-new commit mapping and any branch advancement that created no commits. Report final commits rather than temporary fixups. If execution stopped, identify the remaining rebase state instead of claiming the series is complete. When a published branch needs replacement, complete the handoff below.
+Return to [Report Results](commit-execution.md#report-results), including the old-to-new commit mapping and any branch advancement that created no commits. Report final commits rather than temporary fixups. If execution stopped, identify the remaining rebase state instead of claiming the series is complete. When a published branch needs replacement, complete the handoff below.
 
 ## Hand Back Published Updates
 
 Recheck the publication destination before publication or handing back its command. If its head has changed, inspect and reconcile the new work within the current authorization, then repeat affected validation. Stop when reconciliation requires new scope. Do not merely substitute a newer object ID into the lease expectation.
 
-Under the shared [publication authorization](commit-execution.md#report-the-result), execute the bounded publication only when directly requested. Otherwise, provide the exact command for the user to run. Target only the single verified publication destination and full branch ref, use `--force-with-lease=<remote-ref>:<expected-remote-oid>` with the recorded expected object ID, and use the reviewed new tip’s object ID as the explicit refspec source. Do not use implicit destinations or plain `--force`. A later remote-head change must make the lease reject the command rather than replace unseen work.
+Under the shared [publication authorization](commit-execution.md#report-results), target only the single verified publication destination and full branch ref, use `--force-with-lease=<remote-ref>:<expected-remote-oid>` with the recorded expected object ID, and use the reviewed new tip’s object ID as the explicit refspec source. Do not use implicit destinations or plain `--force`. A later remote-head change must make the lease reject the command rather than replace unseen work.
 
 Suppress automatic tag publication for that invocation, and use `--recurse-submodules=check` so submodule validation cannot publish extra commits. Preserve repository-required checks and confirm that configuration cannot expand the invocation to other destinations or refs.

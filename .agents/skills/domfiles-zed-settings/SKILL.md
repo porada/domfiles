@@ -15,20 +15,20 @@ Use this skill as the entrypoint and canonical owner of settings-wide Zed policy
 
 When agent tool or sandbox permissions, fetch or network allowances, native path or terminal permission behavior, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/agent-permissions.md) before investigation or planning. Read only the branch references it selects.
 
-## Apply the General Policy
+## Apply General Policy
 
 - Apply the global **Explicit user direction** policy to configuration conventions and workflow requirements. An override does not change Zed’s implemented behavior, waive native sensitive-settings confirmation, or authorize bypassing a security control.
 - Keep `.zed/settings.json` and `home/.config/zed/settings.json` free of redundant entries. Treat configuration as redundant only when omitting it preserves the supported workflow. Matching a default or inherited value is not sufficient. Include tool-managed state and subsequent invocations in that comparison. The [CLI persistence rationale](../../PROJECT.md#zed-cli-open-behavior) illustrates this distinction.
 - Sort Zed settings object arrays by the value of their identifying field.
-    - Within URL-pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
+    - Within URL pattern arrays, alphabetize the complete array by each pattern’s first represented hostname rather than its raw escaped regex text. Do not group patterns by hostname coverage.
 - When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and `skill-development` for skill script contracts.
 
-## Choose the Workflow
+## Choose Workflows
 
-- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. For an expressly requested departure from the default permission model, establish the supported settings semantics and use this general route when no specialized route applies. Do not claim that a fetch-only evaluator validates another tool’s behavior.
-- For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, and report all findings together. Skip change planning, change validation, formatting, and implementation.
-- For a standalone review, keep the task read-only and skip change planning, change validation, formatting, and implementation.
-- For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
+- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. For an expressly requested departure from the default permission model, establish the supported settings semantics and use this general route when no specialized route applies. Do not claim that the fetch pattern matcher validates another tool’s behavior.
+- For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, follow the [read-only validation workflow](#validate-zed-settings-audits-diagnoses-and-reviews), and report all findings together. Skip change planning, change validation, formatting, and implementation.
+- For a standalone review, keep the task read-only and follow the [read-only validation workflow](#validate-zed-settings-audits-diagnoses-and-reviews). Skip change planning, change validation, formatting, and implementation.
+- For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest nonmutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 
 ## Investigate and Plan
 
@@ -43,19 +43,19 @@ Do not mutate settings during this shared investigation. Mutation begins only th
 - Treat an editor deprecation banner as a lead, not proof that a specific property is deprecated.
 - When Zed produces a migrated backup, compare the parsed values and relevant migration code before removing a setting.
 
-## Validate a Change
+## Validate Changes
 
-After editing:
+After editing, apply the [repository validation policy](../../../AGENTS.md#validation):
 
 1. Run every applicable conditional branch change validation workflow.
 2. Parse each changed settings JSON file with `jq -e 'type == "object"' <path>`.
-3. Check formatting with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm exec prettier --check <changed-files>`, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands). If dependencies are unavailable, apply the global **Dependencies** policy, perform any authorized acquisition separately, then rerun this guarded check. Report a limitation when acquisition is outside the task’s authorization or cannot proceed within applicable boundaries.
+3. Check formatting with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm exec prettier --check <changed-files>`, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands).
 4. Verify every applicable general and selected-branch Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
 5. Run `git --no-pager diff --check`.
 
 Do not run the entire repository formatter when a targeted formatting check is sufficient.
 
-## Validate a Zed Settings Audit, Review, or Diagnosis
+## Validate Zed Settings Audits, Diagnoses, and Reviews
 
 1. Parse each relevant settings JSON file with `jq -e 'type == "object"' <path>`.
 2. Run every applicable conditional branch read-only validation workflow.

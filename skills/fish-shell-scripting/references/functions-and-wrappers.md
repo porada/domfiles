@@ -30,11 +30,11 @@ argparse \
 or return
 ```
 
-- Use `--strict-longopts` when abbreviated or single-dash long options are outside the interface.
 - Use `--min-args` and `--max-args` to set the accepted number of positional arguments. Repeat `--exclusive` for each set of incompatible options.
-- Use option validators for constraints on individual option values. Validate relationships between positional arguments, rules spanning several options, and other command semantics after parsing when they do not belong to one option value.
-- Write validator error fragments to stdout because `argparse` consumes them. `argparse` reports the resulting failure to stderr.
 - Use `--name` when diagnostics must identify a stable public interface rather than the current helper function. Otherwise, keep the default function name.
+- Use `--strict-longopts` when abbreviated or single-dash long options are outside the interface.
+- Use option validators for constraints on individual option values. Validate relationships between positional arguments, rules spanning several options, and other command semantics after parsing when they do not belong to one option value.
+- Write validator error fragments to standard output because `argparse` consumes them. `argparse` reports the resulting failure to standard error.
 
 Return immediately when parsing fails unless the function deliberately translates the parser’s diagnostic or status contract.
 
@@ -62,13 +62,13 @@ When a wrapper takes over a command’s terminal presentation, preserve the conf
 
 ## Loading Diagnosis
 
+- Use `fish_trace` for execution tracing without source edits or persisted state during read-only diagnosis.
+- Use `status print-stack-trace` at an existing breakpoint when call context matters.
 - Use `type --all <name>` and `functions <name>` to inspect command resolution and loaded function definitions.
-- Use `status print-stack-trace` at a breakpoint when call context matters.
-- Use `fish_trace` for execution tracing.
 
 ## Performance Profiling
 
-Use `fish --profile=<path>` to measure commands executed after startup and `fish --profile-startup=<path>` to measure startup and configuration loading. Cache only measured repeated work with a defined validity and invalidation contract. Do not add mutable cache state merely because a path is performance-sensitive. Remove temporary tracing, profiles, or breakpoints after diagnosis unless the task explicitly adds a durable debugging mode.
+With explicit authorization to create profile artifacts, use `fish --profile=<path>` to measure commands executed after startup and `fish --profile-startup=<path>` to measure startup and configuration loading. Cache only measured repeated work with a defined validity and invalidation contract. Do not add mutable cache state merely because a path is performance-sensitive. Remove temporary breakpoints, profiles, or tracing introduced under explicit authorization when the authorized work is complete unless the task explicitly adds a durable debugging mode.
 
 ## Official Sources
 

@@ -36,7 +36,7 @@ Keep the two escaping boundaries distinct. First preserve the stored Fish expres
 
 Prefer static candidates when the set is fixed. Generate dynamic candidates only with bounded, side-effect-free commands suitable for interactive latency. Emit one candidate per line from a dynamic command substitution. For tab-separated descriptions, ensure neither candidate values nor descriptions can introduce ambiguous separators.
 
-Use `string`, `path`, and list operations to transform candidate data instead of importing POSIX word splitting. Do not call an undocumented helper whose name begins with `__fish_`. Use one only when official Fish documentation exposes its behavior for completion authors.
+Use `string`, `path`, and list operations to transform candidate data instead of importing POSIX word splitting. Apply the [runtime state rules](fish-native-idioms.md#runtime-state) when calling Fish helpers for candidate generation.
 
 ## Validation
 

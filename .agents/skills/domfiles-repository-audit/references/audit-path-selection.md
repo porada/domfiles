@@ -1,6 +1,6 @@
 # Audit Path Selection
 
-Resolve explicit audit scope in two steps: select candidate paths, then apply the exclusions that remain. Without an explicit selection, use the audit workflow’s default scope.
+Resolve explicit audit scope in two steps: select candidate paths, then apply the exclusions that remain.
 
 ## Select Candidate Paths
 
@@ -13,8 +13,8 @@ A request for untracked content alone does not select ignored paths.
 
 ## Apply Remaining Exclusions
 
-Explicit selection overrides the corresponding Git status defaults. Retain every other non-secret default exclusion unless the user names the excluded path itself or expressly selects its path category. Naming an ancestor directory alone does not lift an exclusion on a descendant.
+Explicit selection overrides the corresponding Git status defaults. Apply the entrypoint’s [exhaustive scope exceptions](../SKILL.md#resolve-audit-scope). Otherwise, retain every other non-secret default exclusion unless the user names the excluded path itself or expressly selects its path category. Naming an ancestor directory alone does not lift an exclusion on a descendant.
 
-Preserve access controls, credential protection, and scope rules required by higher-priority instructions. Path selection does not waive required approvals or authorize changes.
+Path selection does not waive required approvals or authorize changes.
 
 Selecting a symbolic link does not select its target. Dereference it only when the request or applicable policy requires the target.

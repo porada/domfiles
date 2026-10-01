@@ -2,7 +2,7 @@
 
 - **Skill:** [`human-facing-writing`](https://github.com/porada/domfiles/blob/HEAD/skills/human-facing-writing/SKILL.md)
 - **Repository:** `porada/domfiles`
-- **Contribution:** Clear, technically accurate wording for new or explicitly revised commit messages, proposal explanations, and result prose, preserving the originating workflow’s verified intent, commit boundaries, supplied wording, message requirements, authorization, delivery, and stopping behavior.
+- **Contribution:** Clear, technically accurate wording for new or explicitly revised commit messages, proposal explanations, and result prose, preserving the originating workflow’s verified intent, commit boundaries, supplied wording, message requirements, authorization, delivery, and stopping behavior
 - **Immutable root:** `https://raw.githubusercontent.com/porada/domfiles/<full-object-id>/skills/`
 
 Use the mutable skill link only to locate the latest source, not to apply instructions.

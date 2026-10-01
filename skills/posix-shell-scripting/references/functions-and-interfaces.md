@@ -43,13 +43,13 @@ Separate reusable library definitions from an executable entrypoint when combini
 
 Do not assume `$0` identifies the entrypoint file. When `sh` finds a slashless command file through `PATH`, POSIX still sets `$0` to the original command file operand. Establish the library location through an installation contract, a caller-provided interface, or an invocation contract that guarantees `$0` denotes the actual file. Define the contract’s symlink behavior as well.
 
-ShellCheck’s static source route serves a different consumer. Add one only after the source belongs to the resolved validation scope, and keep it aligned with the runtime location contract.
+ShellCheck’s `source` directive (`# shellcheck source=<path>`) serves static analysis rather than runtime loading. Add one only after the source belongs to the resolved validation scope, and keep it aligned with the runtime location contract.
 
 ## Output and Status
 
 Treat standard output, standard error, and exit status as separate interfaces unless the receiving contract says otherwise. They progress from returned data through diagnostics to outcome.
 
-| Interface       | Default role       |
+| Interface       | Default Role       |
 | --------------- | ------------------ |
 | Standard output | Returned data      |
 | Standard error  | Diagnostics        |

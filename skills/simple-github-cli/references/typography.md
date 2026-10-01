@@ -4,12 +4,12 @@ Apply these conventions only when no narrower user, project, surface, language, 
 
 ## Prose
 
-These rules apply to all prose, whether atomic or connected. Natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings counts as prose.
+These rules apply to all prose, from short labels to connected passages. Natural language in documentation, source comments, help output, diagnostics, test titles, and other human-facing strings counts as prose.
 
 - **Quotation marks and apostrophes:** Use typographic “quotation marks” and apostrophes in prose. Preserve exact punctuation where literal syntax requires it.
 - **Oxford commas:** In a list of three or more items, place a comma before the final conjunction.
 - **Semicolons:** Never introduce semicolons in prose or human-facing technical copy. Preserve a supplied semicolon only when the user explicitly wants it retained.
-- **Pause punctuation:** Limit dashes and other punctuation used to create a pause. Use a dash only when its additional pause or emphasis materially improves the reading unit. Never surround an em dash with spaces.
+- **Pause punctuation:** Limit dashes and other punctuation used to create a pause. Use a dash only when its additional pause or emphasis materially improves the text. Never surround an em dash with spaces.
 
 ## Hyphenation
 
@@ -21,7 +21,11 @@ These defaults apply to modifiers before nouns in all human-facing prose, includ
 
 ## Headings
 
-Use title case, and keep peer headings grammatically parallel. Prefer equally clear, natural wording that avoids a word title case would lowercase. Keep the lowercased word when no alternative preserves the meaning or the user requires it.
+Use title case, and keep peer headings grammatically parallel. Prefer equally clear, natural wording that avoids a word title case would lowercase. Keep the lowercased word when no alternative preserves the meaning or the user requires it. Apply these conventions to prose table headers, preserving literal field names.
+
+## Links
+
+Write link text to read naturally within the sentence, even when it uses the same words as a document or section title. When naming a document or section by its title, keep the title’s exact wording and capitalization.
 
 ## Technical Text
 

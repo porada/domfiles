@@ -1,7 +1,7 @@
 ---
 name: release-notes-for-humans
 description: |-
-    Use this skill to write package release notes, changelog entries, and hosted release descriptions from supplied drafts or verified changes, or to review release copy for wording and consistency.
+    Use this skill to write package release notes, changelog entries, and hosted release descriptions from supplied drafts or verified changes, or to review release copy for completeness, consistency, and wording.
 
     The work can cover a commit, commit range, pull request, branch, tag, diff, or every change since the latest release.
 
@@ -19,9 +19,10 @@ This skill keeps the evidence maintainers need separate from the notes readers s
 Choose the route that matches the requested result. An explicit change takes precedence when the request also uses review language.
 
 - **Existing draft:** Treat supplied text or a supplied file as the working draft. Apply the [approval gates](references/approval-gates.md) to a user-supplied or previously approved draft.
-- **Inferred draft:** Honor the user’s explicit change scope, then edit the supplied note target or return a new draft after completing the shared scope and evidence workflow below.
+- **Inferred draft:** Honor the user’s explicit evidence scope, then edit the supplied note target or return a new draft after completing the shared scope and evidence workflow below.
 - **Review:** Keep the task read-only. Report evidence-backed omissions and concrete consistency problems without rewriting the notes, and distinguish defects from intentional or harmless variations.
-- **Local conventions:** Apply this skill’s structure, ordering, and prose rules without inspecting prior release notes or changelog entries. Inspect earlier notes only when they are the requested draft or the user explicitly asks for comparison or consistency.
+
+Apply this skill’s structure, ordering, and prose rules without inspecting prior release notes or changelog entries. Inspect earlier notes only when they are the requested draft or the user explicitly asks for comparison or consistency.
 
 Whenever a route uses repository evidence or supplied change evidence, resolve the [release scope](#release-scope) first. Load only its applicable references, then build the [evidence inventory](#evidence-inventory) for every resolved non-initial scope and continue through final review and delivery.
 
@@ -31,7 +32,7 @@ Drafting, editing, or reviewing release prose does not authorize publishing a re
 
 For each non-initial release unit, keep two distinct layers throughout the task:
 
-- **Evidence inventory:** Inspect the complete resolved change scope and record every verified release-relevant change, including details that may not appear in the final prose.
+- **Evidence inventory:** Inspect the complete resolved evidence scope and record every verified release-relevant change, including details that may not appear in the final prose.
 - **Release note:** Draft from independently material consumer outcomes rather than converting inventory clusters into prose. Select the smallest accurate set. Omit subordinate behavior when it only substantiates a broader outcome and does not change a consumer decision. Include internal maintenance only when it affects package consumers or the user requests another emphasis.
 
 Treat an outcome as material when it changes what consumers can do, how they configure or migrate, what output they should expect, or what compatibility they can rely on. Keep implementation mechanisms, verification cases, cosmetic diagnostics, and internal refinements in the inventory unless they create a distinct consumer action or boundary. Completeness of investigation does not require completeness of narration.
@@ -44,8 +45,8 @@ A release unit is one independently released package or one set of packages that
 2. Resolve the target publishable packages and their release grouping from repository metadata when available, otherwise from supplied context. For ambiguous ownership or grouping, multiple packages, or an unspecified package target, follow [Release Units](references/release-units.md) before selecting boundaries or mapping evidence.
 3. Select evidence for each release unit using the first applicable case:
     - **Initial release:** When the user identifies the release unit as initial, stop inspecting its change history and source. Resolve only the package and structure needed to use the exact [initial release status item](references/release-structures.md#status-items).
-    - **Explicit scope:** Honor the user-provided change scope instead of selecting a default tag boundary. Consume a supplied or working tree diff directly, without inferring a target ref or substituting the current repository’s `HEAD`. For a ref-backed scope, resolve only the refs needed to materialize the requested changes. Treat an explicitly requested lone commit as its diff against its first parent. For a root commit, use its complete contents.
-    - **Default scope:** Without an explicit change scope, follow [Release Boundaries](references/release-boundaries.md).
+    - **Explicit scope:** Honor the user-provided evidence scope instead of selecting a default tag boundary. Consume a supplied or working tree diff directly, without inferring a target ref or substituting the current repository’s `HEAD`. For a ref-backed scope, resolve only the refs needed to materialize the requested changes. Treat an explicitly requested lone commit as its diff against its first parent. For a root commit, use its complete contents.
+    - **Default scope:** Without an explicit evidence scope, follow [Release Boundaries](references/release-boundaries.md).
 4. Detect the package manager and registry from repository configuration only when they are relevant to the evidence. Keep the note format independent of either.
 5. Map the changes from each resolved evidence scope to its publishable packages. If the affected package scope remains unclear, stop and ask for direction.
 
@@ -119,10 +120,10 @@ Read the [release structure reference](references/release-structures.md) for an 
 - Use `Fixed` only when a report, failing case, or before-and-after reproduction establishes a specific defect. Use `Improved` for broader stability or newly handled cases that were not established as a defect.
 - Use `compatibility` for cross-plugin or general host tool behavior. Use `support` for a named control or workflow. For a broad compatibility outcome, use the shortest familiar integration category and omit hook types, implementation variants, and verification cases unless a remaining boundary changes consumer use or configuration. Do not expand a familiar category into a host tool name plus a descriptive clause.
 - When an exact identifier is material, lead with it and its necessary qualifiers before broader package or integration context. Remove a generic phrase such as “handling of” when the sentence remains accurate without it.
-- Include the changed concept when it improves parallel wording. For example, write “Lowered `rule-name` severity to `warn`.”
+- Include the changed concept when it improves parallel wording. For example, write “Lowered `<rule-name>` severity to `warn`.”
 - State any affected scope that is narrower than the package default, such as “in test files.” Repeat the package, rule, or configuration identifier when a pronoun would make the scope ambiguous.
 - Omit package, publication, or other scope already established by the release surface or heading unless the bullet narrows or contrasts that scope.
-- Keep a concise, evidence-backed rationale when it identifies a replacement, temporary upstream limitation, or responsibility transfer that helps consumers interpret a disablement or removal. For a replacement, use the parenthetical form `Disabled X (in favor of Y).`
+- Keep a concise, evidence-backed rationale when it identifies a replacement, temporary upstream limitation, or responsibility transfer that helps consumers interpret a disablement or removal. For a replacement, use the parenthetical form `Disabled <old-item> (in favor of <replacement>).`
 - Verification does not make every identifier release-worthy. Name the capability rather than its module or API entry point when consumers do not need that identifier to act. Preserve the domain syntax of identifiers that remain, such as `<element>`, `--flag`, or `@scope/package`.
 - Use parallel wording for parallel changes without erasing intentional exceptions.
 - Outside headings, format package names as code unless a narrower surface convention adds a verified link. Wrap versions, options, rules, file patterns, errors, and other machine-readable tokens in backticks. Follow the canonical heading forms in the release structure reference without adding code formatting.
@@ -132,7 +133,7 @@ Read the [release structure reference](references/release-structures.md) for an 
 
 After the evidence and release-specific decisions are fixed, load `human-facing-writing` when it is available locally for drafting, editing, and the wording of review recommendations. Provide the selected consumer outcomes, required structure, exact tokens, qualifiers, intended voice, and approval boundaries, then let its entrypoint select the applicable writing routes.
 
-If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the prose, follow the [optional public peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior by applying the [release prose rules](#release-prose) directly. Prioritize factual accuracy, clear consumer action, exact technical tokens, and the supplied voice.
+If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the prose, follow the [optional public peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior by applying [Release Prose](#release-prose) directly. Prioritize factual accuracy, clear consumer action, exact technical tokens, and the supplied voice.
 
 ## Platform Metadata
 

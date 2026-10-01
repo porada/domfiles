@@ -1,6 +1,6 @@
 # Project Documentation
 
-This document records durable facts, rationale, constraints, and maintenance decisions that are not obvious from source and configuration. `AGENTS.md` remains authoritative for agent instructions.
+This document records constraints, durable facts, maintenance decisions, and rationale that are not obvious from source and configuration. `AGENTS.md` remains authoritative for agent instructions.
 
 ## Compatibility
 
@@ -22,11 +22,11 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ### Cargo Shared State
 
-The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to the entire default Cargo home directory rather than enumerating cache directories and metadata files. Under the [shared pnpm store’s mutual-trust model](#pnpm-shared-store), this intentionally includes Cargo configuration, credentials, and installed executables.
+The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to the entire default Cargo home directory rather than enumerating cache directories and metadata files. Under the [shared pnpm store’s mutual trust model](#pnpm-shared-store), this intentionally includes Cargo configuration, credentials, and installed executables.
 
 ### Dependency Installation Policy
 
-[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids installation-time script execution without disabling esbuild’s runtime build API. It gives up the script’s binary-version check, fallback download, and launcher optimization, so optional dependencies remain required by this installation model.
+[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids installation time script execution without disabling esbuild’s runtime build API. It gives up the script’s binary version check, fallback download, and launcher optimization, so optional dependencies remain required by this installation model.
 
 `trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` bounds how long that comparison can prevent installation: pnpm skips it when the target release’s age in whole minutes exceeds 43,200, or 30 days. This cutoff applies across the workspace, not only to Vercel packages. It is neither a calendar month nor a minimum release age.
 
@@ -44,21 +44,21 @@ The Zed settings workflow caps decoded permission patterns at 1,000 Unicode scal
 
 Local development processes, including agents and their subprocesses, are mutually trusted. The shared pnpm store therefore prioritizes cross-project reuse over per-project cache isolation.
 
-The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default-location hard-link probes.
+The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default location hard link probes.
 
-The [Zed settings](../home/.config/zed/settings.json) grant every sandboxed terminal command write access to pnpm’s entire home directory, covering both dependency storage and package-manager bootstrap state without tracking internal subdirectories. The separate cache grant remains necessary because that cache lives outside pnpm’s home. Under the mutual-trust model above, this boundary intentionally permits changes to pnpm-managed executables later run outside the sandbox. Zed requires literal absolute paths without home expansion or glob matching, so the grants include the repository owner’s approved macOS username.
+The [Zed settings](../home/.config/zed/settings.json) grant every sandboxed terminal command write access to pnpm’s entire home directory, covering both dependency storage and package manager bootstrap state without tracking internal subdirectories. The separate cache grant remains necessary because that cache lives outside pnpm’s home. Under the mutual trust model above, this boundary intentionally permits changes to pnpm-managed executables later run outside the sandbox. Zed requires literal absolute paths without home expansion or glob matching, so the grants include the repository owner’s approved macOS username.
 
 ### Zed Agent Permission Model
 
 The terminal intentionally has no configured command patterns because they classify normalized text rather than semantic capabilities. Equivalent effects can remain available through another executable, generated code, or a native tool.
 
-At Zed commit `1662f5f3`, terminal sandboxing requires the feature to be enabled, a local project, a Linux, macOS, or Windows integration, and persistent `agent.sandbox_permissions.allow_unsandboxed` to be false. A once-only or thread-wide unsandboxed grant removes the wrapper for selected commands without removing the sandboxed tool surface. Commands without the wrapper run with Zed’s ambient process permissions.
+At Zed commit `1662f5f3`, terminal sandboxing requires the feature to be enabled, a local project, a Linux, macOS, or Windows integration, and persistent `agent.sandbox_permissions.allow_unsandboxed` to be false. A once-only or thread-wide unsandboxed grant removes the sandbox wrapper for selected commands without removing the sandboxed tool surface. Commands without the sandbox wrapper run with Zed’s ambient process permissions.
 
 At that revision, native tools calling `ToolCallEventStream::authorize` use configured permission evaluation plus built-in checks. `diagnostics`, `find_path`, `grep`, `list_directory`, and `read_file` bypass `decide_permission_from_settings` and use their built-in checks. External Agents are outside Zed Agent’s operating system sandbox. Their `AcpThread::request_tool_call_authorization` path uses ACP-supplied options, not the native evaluator.
 
 ### Zed Fetch and Sandbox Host Scope
 
-Zed matches `network_hosts` grants case-insensitively across all ports. Whole-host trust is intentional where minimizing prompts outweighs path containment. The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-the-fetch-and-network-permission-policy) owns the approval boundaries.
+Zed matches `network_hosts` grants case-insensitively across all ports. Whole-host trust is intentional where minimizing prompts outweighs path containment. The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the approval boundaries.
 
 `*.actions.githubusercontent.com` supports recurring GitHub Actions build diagnosis. GitHub’s [published network requirements](https://docs.github.com/en/actions/reference/runners/self-hosted-runners#accessible-domains-by-function) specify a wildcard for Actions service hosts rather than an exhaustive hostname list. Exact enumeration from individual builds would leave newly encountered service hosts subject to repeated approval. This exception accepts every current and future strict subdomain under `actions.githubusercontent.com` within the shared all-port authorization boundary above. Azure Blob Storage destinations remain subject to task-scoped approval because their provider-wide suffix also covers unrelated customers.
 
@@ -70,11 +70,11 @@ Zed matches `network_hosts` grants case-insensitively across all ports. Whole-ho
 
 The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to `/private/tmp`, macOS’s canonical target for `/tmp`, rather than enumerating individual tools’ temporary directories. This avoids repeated permission requests for tools that use fixed `/tmp` paths instead of Zed’s per-thread `TMPDIR`.
 
-Under the [shared pnpm store’s mutual-trust model](#pnpm-shared-store), this deliberately allows sandboxed terminal commands to create, modify, or delete entries throughout the shared temporary directory, including unrelated applications’ temporary files owned by the same user. Normal macOS permissions and Zed’s Git metadata protection still apply.
+Under the [shared pnpm store’s mutual trust model](#pnpm-shared-store), this deliberately allows sandboxed terminal commands to create, modify, or delete entries throughout the shared temporary directory, including unrelated applications’ temporary files owned by the same user. Normal macOS permissions and Zed’s Git metadata protection still apply.
 
 ### Zed Worktree Permission Coupling
 
-While Zed Agent’s terminal sandbox is active, open worktrees are normal project write roots, independent of directory and branch names. Protected Git administrative metadata requires a separate grant, including for top-level worktree moves. These sandbox limits do not apply to commands run without the wrapper.
+While Zed Agent’s terminal sandbox is active, open worktrees are normal project write roots, independent of directory and branch names. Protected Git administrative metadata requires a separate grant, including for top-level worktree moves. These sandbox limits do not apply to commands run without the sandbox wrapper.
 
 ## Agent Integration
 
@@ -88,7 +88,7 @@ Git publication and contribution submission require explicit authorization rathe
 
 Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. Applicable project instructions override their fallback workflows.
 
-The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode. Agent documentation retains ownership of authority, contract meaning, machine-readable content, and routing. This source authoring composition creates no installed runtime dependency on `human-facing-writing`.
+The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode. Agent documentation retains ownership of authority, contract meaning, machine-readable content, and routing. This source authoring composition creates no installed runtime dependency on `human-facing-writing`.
 
 The explicit route also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description. Without `agent-documentation`, the writing skill’s own description determines discovery, including its exclusions for formatting-only work and work that neither evaluates nor changes wording or information architecture.
 
@@ -98,7 +98,7 @@ The explicit route also covers formatting-only and machine-readable metadata tas
 
 ### Browser Automation
 
-The [global browser automation policy](GLOBAL.md#browser-automation) owns browser eligibility and tool choice. [Retrieval Boundaries](GLOBAL.md#retrieval-boundaries) distinguishes browser-backed tools from purpose-built non-browser MCP tools and owns general failure handling. This keeps browser restrictions tied to browser capabilities rather than the MCP transport. Keeping browser-tool preferences in the shared instruction layer avoids modifying externally owned skills and preserves them across skill updates. Browser launch configuration remains client-owned, so the policy alone does not change how an existing MCP server starts.
+The [global browser automation policy](GLOBAL.md#browser-automation) owns browser eligibility and tool choice. [Retrieval Boundaries](GLOBAL.md#retrieval-boundaries) distinguishes browser-backed tools from purpose-built non-browser MCP tools and owns general failure handling. This keeps browser restrictions tied to browser capabilities rather than the MCP transport. Keeping browser tool preferences in the shared instruction layer avoids modifying externally owned skills and preserves them across skill updates. Browser launch configuration remains client-owned, so the policy alone does not change how an existing MCP server starts.
 
 ### Checkout Workflow
 
@@ -106,19 +106,11 @@ The user creates disposable worktrees through Zed’s UI and starts agents bound
 
 ### Claude Agent Integration
 
-The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) exposes the shared [global instructions](#claude-and-zed-global-instructions) as Claude’s user-level `~/.claude/CLAUDE.md`, links the complete globally exposed skill set under `~/.claude/skills`, and the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. Claude therefore uses its native instruction and skill discovery locations without duplicating canonical content.
+The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation), and Claude’s global instruction setup is described under [global instructions](#global-agent-instructions). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) links the complete globally exposed skill set under `~/.claude/skills`, while the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. These native discovery locations avoid duplicating canonical content.
 
 `domfiles sync` also links [`home/.claude/settings.json`](../home/.claude/settings.json) to `~/.claude/settings.json`. The tracked file defines the shared, non-secret preference set. Claude Code [uses this user settings path for configuration updates](https://code.claude.com/docs/en/settings), and the file is managed as mutable public configuration. Credentials and private machine or account values are excluded from this settings surface.
 
 The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude’s remaining runtime state under `~/.claude`, together with `~/.claude.json`, remains machine-local outside the repository.
-
-### Claude and Zed Global Instructions
-
-The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped.
-
-The ChatGPT app still uses `~/.codex`, where synchronization continues to link this source as `AGENTS.md`. The Codex CLI is no longer provisioned, and the [migration stage](../home/.local/bin/domfiles-sync-migrate) removes its Homebrew installation.
-
-Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, always refer to `.agents/GLOBAL.md`.
 
 ### Commit Workflow
 
@@ -136,15 +128,21 @@ Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b863
 
 Contribution research and preferences live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval. The existing commit overlay supplies managed message conventions without a separate contribution overlay.
 
-The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [external-skill edit gate](GLOBAL.md#documentation) remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied-checkout default, existing state, and consuming-project protections without imposing those personal gates.
+The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [external skill edit gate](GLOBAL.md#documentation) remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied checkout default, existing state, and consuming project protections without imposing those personal gates.
 
 The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) delegates authority to named, domfiles-managed workflows. Renaming the installed skill therefore requires alignment of the policy’s named delegate as well as the installation mapping and retired-name migration.
 
 ### Deferred Global Policy
 
-Conditional global policy may move into a globally exposed skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-the-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
+Conditional global policy may move into a globally exposed skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
 
-The `Collaboration` policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
+The **Collaboration** policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
+
+### Global Agent Instructions
+
+The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped.
+
+The ChatGPT app still uses `~/.codex`, where synchronization continues to link this source as `AGENTS.md`. The Codex CLI is no longer provisioned, and the [migration stage](../home/.local/bin/domfiles-sync-migrate) removes its Homebrew installation.
 
 ### Global System-Available Tooling
 
@@ -168,9 +166,22 @@ The public `skills/human-facing-writing` source does not receive Zed’s agent-s
 
 The [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions.
 
+### Public Skill Fallback Families
+
+Each skill’s peer declarations own its declared fallback relationships, including the [contribution workflow’s peer table](../skills/sensible-contribution-flow/SKILL.md#compose-with-peers). The index below records selected cross-file families beyond those skill-level declarations. It is non-exhaustive and supplements the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks). An absent row does not establish that no related guidance exists.
+
+| Canonical Contract | Standalone Guidance |
+| --- | --- |
+| [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [`agent-task-relay/references/dependency-choice.md`](../skills/agent-task-relay/references/dependency-choice.md), [`sensible-contribution-flow/references/dependency-choice.md`](../skills/sensible-contribution-flow/references/dependency-choice.md) |
+| Requirements for governing instruction sources in [Authorization](GLOBAL.md#authorization), under **Instruction provenance** and **Approval provenance** | [`agent-task-relay/references/continuing-approval.md`](../skills/agent-task-relay/references/continuing-approval.md#workflow-approval-modes), [`sensible-commit-flow/references/alternative-approval-modes.md`](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [`sensible-contribution-flow/references/review-findings.md`](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) |
+| [`sensible-commit-flow/references/preserve-human-review-markers.md`](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [`sensible-contribution-flow/references/preserve-human-review-markers.md`](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) |
+| [`sensible-commit-flow/references/update-commit-history.md`](../skills/sensible-commit-flow/references/update-commit-history.md) | [`sensible-contribution-flow/references/update-commit-history.md`](../skills/sensible-contribution-flow/references/update-commit-history.md) |
+
+Alignment is semantic rather than whole-file equality. Fallbacks and mirrors adapt contribution-specific scope and submission terminology, links into their own lifecycle, and each consuming workflow’s approval, delivery, and execution boundaries. The approval family shares requirements for governing instruction sources, not one grant scope or lifetime. These are source maintenance relationships, not installation dependencies.
+
 ### Shell Skill Composition
 
-The [POSIX terminal-presentation compatibility paragraph](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) is canonical. [Fish’s copy](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) supplies required standalone context for independent installation. They form one documentation family under the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-the-complete-scope-checks).
+The [POSIX terminal presentation compatibility paragraph](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) is canonical. [Fish’s copy](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) supplies required standalone context for independent installation. They form one documentation family under the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks).
 
 ### Skill Catalogs
 
@@ -190,7 +201,7 @@ Edits to an exposed global skill affect its installation through the symlink and
 
 ### Skill-Owned Script Scope
 
-`domfiles sync` symlinks global skills into this checkout rather than copying them. Their host toolchain, dependencies, and root validation remain reachable from unrelated projects, satisfying the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md)’s reachable-host prerequisite.
+`domfiles sync` symlinks global skills into this checkout rather than copying them. Their host toolchain, dependencies, and root validation remain reachable from unrelated projects, satisfying the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md)’s reachable host prerequisite.
 
 ### Verify Findings Skill
 
@@ -204,7 +215,7 @@ The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::Send
 
 ### Synchronization Checkout State
 
-`__domfiles_is_clean` intentionally compares the tracked working tree with the index and the index with `HEAD`. This keeps index stat metadata alone from making the checkout appear dirty. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs synchronization warnings and dependency reconciliation. Repository-update safety handles assume-unchanged entries separately.
+`__domfiles_is_clean` intentionally compares the tracked working tree with the index and the index with `HEAD`. This keeps index stat metadata alone from making the checkout appear dirty. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs dependency reconciliation, synchronization warnings, and whether synchronization preserves tracked changes in a stash for later restoration. Repository update safety handles assume-unchanged entries separately.
 
 Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. While those entries are present, synchronization avoids rebases and hard resets because Git may overwrite their working tree contents.
 
@@ -237,7 +248,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 ### Dependency Status Labels
 
-`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell script policy](skills/domfiles-shell-integration/SKILL.md#check-supported-environment-compatibility) owns the row-inclusion rule.
+`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell script policy](skills/domfiles-shell-integration/SKILL.md#check-supported-environment-compatibility) owns the row inclusion rule.
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
@@ -247,15 +258,15 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands. File-oriented wrappers share discovery, filtering, headings, and callback dispatch through `domlib`. ShellCheck and Tombi use native batch invocations. Fish and JSON retain per-file execution because Fish treats later operands as script arguments and the JSON check requires exactly one value per file. The [Rust wrapper](../home/.local/bin/domfiles-dev-lint-rs) invokes Clippy once for the Cargo workspace. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
 
-File-oriented wrappers’ default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git can C-quote control characters and, when `core.quotePath` is enabled, non-ASCII bytes. A quoted pathname is skipped because it does not resolve to the original file, so pass that path explicitly when linting it.
+File-oriented wrappers’ default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git C-quotes backslashes, control characters, and double quotes, as well as non-ASCII bytes when `core.quotePath` is enabled. A quoted pathname is skipped because it does not resolve to the original file, so pass that path explicitly when linting it.
 
-### Domlib Helper Documentation
+### `domlib` Helper Documentation
 
 In helper comments, domfiles is an unformatted plural noun parallel to “dotfiles” when it denotes the repository or managed configuration, while `domfiles` is code-formatted only when it denotes the CLI command. The phrase “domfiles have …” is therefore intentional. The postpositive modifier in “heading, dimmed” preserves the shared base description across related helpers.
 
 `__is_brew_installed` intentionally owns both the no-argument Homebrew installation check and the optional package check. Repeating “returns success” makes the result of each branch explicit. `__git_skipped_files` intentionally describes semantic skipped files while preserving tagged `git ls-files -v` entries because `git-skipped` owns display path extraction and its other callers only test whether output exists. `__git_diff_list_changed_excluded_paths` lets `--commit` and `--worktree` stand for their complete modes, with the commit reference implied by the `--commit` context.
 
-The `__symlink` comment states the normal replacement contract and omits source-containment rejection because that rejection is a safety precondition rather than an alternate supported outcome.
+The `__symlink` comment states the normal replacement contract and omits source containment rejection because that rejection is a safety precondition rather than an alternate supported outcome.
 
 ### FFmpeg Media Preset Compatibility
 
@@ -281,7 +292,7 @@ For the supported one-argument form, follow-up target derivation intentionally c
 
 `home/.config/fish/local.fish` is active machine-local Fish configuration when present. Fish sources it through `home/.config/fish/config.fish` during startup without redirecting standard output or standard error.
 
-A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command and emit its output. The [global tooling guidance](GLOBAL.md#system-available-tooling) defaults agent invocations to `fish --no-config` unless Fish startup configuration or configured runtime behavior is in scope.
+A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command and emit its output. The [global tooling guidance](GLOBAL.md#system-available-tooling) owns invocation isolation.
 
 ### Git Diff Presentation
 
@@ -299,7 +310,7 @@ With `--amend`, `git f` compares its inferred or positional fixup target with th
 
 ### Git Short Status Command
 
-`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias for or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
+`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
 
 ### Metal Toolchain
 
@@ -327,7 +338,7 @@ Prettier pragma comments—including `@format`, `@prettier`, `@noformat`, and `@
 
 Interior cursor mapping is intentionally omitted. The wrappers expose a single whole-file AST node because the native formatters provide neither token locations nor source maps. End-of-input cursor positions remain supported, but interior cursors may not remain attached to the same token after formatting. The wrappers do not implement heuristic source-to-output mapping.
 
-Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports. The assertion’s forward-compatibility value remains despite the current `Plugin` properties being optional.
+Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports.
 
 ### Repository-Scoped Commands
 
@@ -339,11 +350,11 @@ pnpm 12 persists an exact `packageManager` pin at major 12 or newer in a leading
 
 The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
-Agent validation is separate from wrapper reconciliation. The [shell](skills/domfiles-shell-integration/references/validate-shell-changes.md) and [Zed settings](skills/domfiles-zed-settings/SKILL.md#validate-a-change) validation recipes use command-local `PNPM_CONFIG_*` overrides. They preserve package-manager version enforcement while refusing environment lockfile changes and automatic project dependency installation. The environment form also takes precedence over the `--config.verify-deps-before-run` flag and pnpm’s inherited dependency-check recursion guard. Native pnpm 12 dotted CLI configuration keys use kebab-case, and pnpm silently ignores camelCase spellings such as `--config.verifyDepsBeforeRun`.
+The [repository validation policy](../AGENTS.md#validation) separates agent checks from wrapper reconciliation through command-local `PNPM_CONFIG_*` overrides. They preserve package manager version enforcement while refusing automatic project dependency installation and environment lockfile changes. The environment form also takes precedence over the `--config.verify-deps-before-run` flag and pnpm’s inherited dependency check recursion guard. Native pnpm 12 dotted CLI configuration keys use kebab-case, and pnpm silently ignores camelCase spellings such as `--config.verifyDepsBeforeRun`.
 
 ### Ripgrep Configuration Isolation
 
-`rg` reads `RIPGREP_CONFIG_PATH` before parsing arguments, and a configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
+`rg` parses command line arguments before deciding whether to read the file selected by `RIPGREP_CONFIG_PATH`. Unless `--no-config` suppresses that read, it combines the configuration arguments with the command line arguments and parses them again. A configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
 
 ### String Helper Reuse
 
@@ -355,7 +366,7 @@ The `__string_*` helpers are optional conveniences rather than a mandatory abstr
 
 `__is_ci` and `__domfiles_is_ci` override suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
 
-A Fish counterpart remains unwanted. Fish does not export `set -g`, which every `DOMFILES_*` entry in Fish configuration uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
+A Fish counterpart to the `DOMFILES_SUPPRESSED` initialization remains unwanted. Fish does not export `set -g`, which every `DOMFILES_*` entry in Fish configuration uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
 
 An exported value reaches every child script, so `DOMFILES_SUPPRESSED=true domfiles sync` covers an entire synchronization run. `__suppress` applies the same suppression to one command by exporting the variable inside a subshell, which is how `domfiles-sync-setup` keeps the agent skill linking loop from echoing without affecting later synchronization steps.
 
@@ -369,4 +380,4 @@ No standardized environment variable covers command echo suppression. `NO_COLOR`
 
 ### Zed CLI Open Behavior
 
-`cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [Zed settings policy](skills/domfiles-zed-settings/SKILL.md#apply-the-general-policy) owns the redundancy criterion.
+`cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [Zed settings policy](skills/domfiles-zed-settings/SKILL.md#apply-general-policy) owns the redundancy criterion.

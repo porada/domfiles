@@ -1,6 +1,6 @@
 # Package Links
 
-Use this table as the complete allowlist and destination map for package hyperlinks in release note prose outside headings.
+Use this table as the complete allowlist and destination map for package hyperlinks.
 
 | Package | Destination |
 | --- | --- |
@@ -17,7 +17,7 @@ Use this table as the complete allowlist and destination map for package hyperli
 
 Apply these release scope exclusions before using a mapping:
 
-- Keep the package currently being documented and every package in the current synchronized release set backticked and unlinked.
+- Keep the package currently being documented and every package in the current synchronized package set backticked and unlinked.
 - When the resolved release scope contains an `@standard-config/*` package, keep every `@standard-config/*` package name backticked and unlinked.
 
 For every other listed package, wrap its complete code-formatted reference in a link to the exact mapped destination.

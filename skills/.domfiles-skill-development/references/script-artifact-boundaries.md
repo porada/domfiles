@@ -14,9 +14,9 @@ For ephemeral artifacts, have the caller establish storage through `agent-task-d
 
 Before writing:
 
-- Apply the global “Concurrent work” preservation rule to repository destinations.
+- Apply the global **Concurrent work** preservation rule to repository destinations.
 - Confirm that the resolved destination remains within the authorized location. Reject traversal or symlink redirection outside it.
-- Do not write files unrelated to the declared artifact contract. Keep host and target repository Git metadata read-only. Limit Git metadata writes to [declared disposable fixture setup](skill-owned-scripts.md#test-the-contracts).
+- Do not write files unrelated to the declared artifact contract. Keep host and target repository Git metadata read-only. Limit Git metadata writes to [declared disposable fixture setup](skill-owned-scripts.md#test-contracts).
 - Leave byte-identical output unchanged.
 - Replace an existing path only when it is a declared generated artifact or the current request explicitly authorizes overwriting it.
 

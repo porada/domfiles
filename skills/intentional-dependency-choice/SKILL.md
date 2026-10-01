@@ -1,7 +1,7 @@
 ---
 name: intentional-dependency-choice
 description: |-
-    Use when choosing, proposing, reviewing, or declaring a new dependency or development tool, including temporary package-runner acquisitions. Also use when changing a dependency’s or tool’s prescribed features, source, or version.
+    Use when choosing, proposing, reviewing, or declaring a new dependency or development tool, including temporary package runner acquisitions. Also use when changing a dependency’s or tool’s prescribed features, source, or version.
 
     Do not use merely to reuse an existing project dependency, install or restore already prescribed dependencies, incorporate existing dependency declarations through authorized history integration, or conduct a general dependency inventory or security audit without a selection decision.
 ---
@@ -59,7 +59,7 @@ Ask once for the uncovered choice and its material effects. Preserve approval al
 
 Return the choice, rationale, declaration convention, and approval status to the owning workflow, carrying exact user authorization when needed. Follow the project’s declaration convention or, when none exists, the ecosystem’s convention for compatible updates. Explain intentional pins and other deviations.
 
-That workflow owns separately authorized declarations, lockfile updates, acquisition, and validation. A recommendation is not approval, and choice approval does not authorize unrelated effects or waive installation, lifecycle-script, security, or publication requirements. If implementation needs features, a source, or a version outside the approval, return to the decision rather than silently substituting them. Preserve unrelated work and approval covering unchanged effects.
+That workflow owns separately authorized declarations, lockfile updates, acquisition, and validation. A recommendation is not approval, and choice approval does not authorize unrelated effects or waive installation, lifecycle script, publication, or security requirements. If implementation needs features, a source, or a version outside the approval, return to the decision rather than silently substituting them. Preserve unrelated work and approval covering unchanged effects.
 
 ## General Policies
 

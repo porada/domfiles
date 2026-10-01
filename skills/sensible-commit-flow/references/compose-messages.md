@@ -6,7 +6,7 @@ Apply the entrypoint’s [message safeguards](../SKILL.md#preserve-message-const
 2. Choose the narrowest durable repository concept that captures that intent. Name a concrete artifact or surface when sufficient. Move up to a capability, maintenance class, or subsystem only when the narrower objects are supporting details. Reuse established compact vocabulary such as `config` and `README` when it fits.
 3. Choose a semantic verb. Added lines do not necessarily mean `Add`, and deleted lines do not necessarily mean `Remove`. Use the role guide below as a vocabulary aid, not an exhaustive list or a rigid taxonomy.
 4. Add a qualifier only when it distinguishes a material condition, mechanism, purpose, or scope. Describe the delta rather than inventorying the resulting state. A conjunction may join objects under one action, but should not combine unrelated changes.
-5. Apply the [message form](#message-form), then use the entrypoint’s [writing composition](../SKILL.md#writing-composition) with the established intent and constraints. Check that the subject covers its assigned hunks and the complete message claims no unverified motivation or outcome.
+5. Apply the [message form](#message-form), then use the entrypoint’s [writing composition](../SKILL.md#compose-prose) with the established intent and constraints. Check that the subject covers its assigned hunks and the complete message claims no unverified motivation or outcome.
 
 The role guide is alphabetized by editorial role:
 

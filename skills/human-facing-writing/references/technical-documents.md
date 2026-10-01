@@ -24,7 +24,7 @@ Do not propose a standalone FAQ with only one question. If another grouping woul
 
 ## Document Types
 
-Before drafting or revising an issue or pull request body for a specific repository, check the supplied context or accessible repository for an applicable template. Use the template when available and the post type defaults below when none applies. An unknown template status does not prevent drafting from the available context, but do not claim template compliance. Ask only when a known required template is unavailable or a material ambiguity prevents a useful draft.
+Before drafting or revising an issue or pull request body for a specific repository, check the supplied context or accessible repository for an applicable template. Use the template when available and the document type defaults below when none applies. An unknown template status does not prevent drafting from the available context, but do not claim template compliance. Ask only when a known required template is unavailable or a material ambiguity prevents a useful draft.
 
 For any security report, whether standalone or submitted through an issue or pull request form, also follow the [security report workflow](security-reports.md).
 
@@ -37,7 +37,7 @@ For any security report, whether standalone or submitted through an issue or pul
 
 ## Content
 
-- In GitHub collaboration prose, prefer bare `#<number>` references for same-repository discussions, issues, and pull requests. State the relationship directly in the surrounding prose rather than wrapping descriptive text in a Markdown link. Use qualified `<owner>/<repository>#<number>` references across repositories where supported. Use explicit links for destinations or surfaces that do not support reference shorthand.
+- In GitHub collaboration prose, prefer bare `#<number>` references for same-repository issues, pull requests, and Discussions. State the relationship directly in the surrounding prose rather than wrapping descriptive text in a Markdown link. Use qualified `<owner>/<repository>#<number>` references across repositories where supported. Use explicit links for destinations or surfaces that do not support reference shorthand.
 
     Use a comment or review permalink only when the reader needs that exact location, not merely because it supplied evidence during research. Keep precise research citations in the supporting evidence without automatically carrying them into the final copy.
 

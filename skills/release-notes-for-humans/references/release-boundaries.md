@@ -4,4 +4,4 @@ Require a target ref and derive one shared relevant tag for a synchronized packa
 
 When the `Unreleased` boundary tag equals the target, record that the release unit has no unreleased changes. Keep the range empty rather than falling back to an earlier tag.
 
-Never select a tag newer than the target or outside its history. For a release version, never select the target’s own tag as the preceding boundary. If no relevant default boundary can be located for a release unit, stop and ask for a release boundary or confirmation that it is an initial release. Do not infer an initial release from a missing tag.
+If no relevant default boundary can be located for a release unit, stop and ask for a release boundary or confirmation that it is an initial release. Do not infer an initial release from a missing tag.

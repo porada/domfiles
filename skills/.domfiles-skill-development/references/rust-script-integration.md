@@ -5,7 +5,7 @@ For standard-library-only Rust scripts:
 - Compile the script directly with stable `rustc` and compile its adjacent test with `rustc --test`.
 - Include both compile commands in root static validation. Do not register Cargo targets merely because the repository otherwise uses Cargo.
 - Pass the repository’s supported Rust edition explicitly. Pass an explicit valid crate name when the repository’s filename pattern contains characters that Rust crate names do not accept.
-- Resolve compiled binaries and other transient output through the [ephemeral-artifact rule](script-artifact-boundaries.md#bound-artifact-locations).
+- Resolve compiled binaries and other transient output through the [ephemeral artifact rule](script-artifact-boundaries.md#bound-artifact-locations).
 
 When a Rust script requires a non-standard-library dependency:
 

@@ -8,21 +8,25 @@ description: |-
 
 # Agent Task Directories
 
-Temporary agent files should have a predictable location in your project, be ignored by Git, and be cleaned up when no longer needed.
+Temporary agent files should have a predictable location in your project and be cleaned up when no longer needed. Git-ignored task directories are the default, with an exception for a single short-lived file.
 
 This skill defines task-specific directories for experiments, helper scripts, and notes, with clear rules for ownership, reuse, and cleanup. Agents can retain what they need and remove what they don’t without disturbing another task’s work.
 
-## Resolve the Scope
+## Resolve Scope
 
 An agent task directory holds agent-managed scratch artifacts for one task. The consuming workflow owns what those artifacts contain, how they are validated, and where durable results belong. Directory management does not expand the authorized task. This skill’s cleanup, ignore, and placement conventions are defaults governed by [Instruction Authority](#instruction-authority).
 
-When the request is limited to discovering, inspecting, or reviewing existing task directories, remain read-only, including directory creation and ignore-file repair. Treat other tasks’ directories as opaque unless their contents are explicitly in scope.
+When the request is limited to discovering, inspecting, or reviewing existing task directories, remain read-only. Do not create directories or repair ignore files. Treat other tasks’ directories as opaque unless their contents are explicitly in scope.
 
 Use supported file operations and established project tools. Preserve applicable approval and security boundaries. If required access is unavailable, request the narrowest supported grant or stop rather than disabling a control. Directory management does not require background services, dependencies, locks, or a registry.
 
-Before cleaning up, moving, promoting to a durable location, renaming, retaining, or reusing task artifacts, follow [Directory Lifecycle](references/directory-lifecycle.md). Apply it as review criteria when assessing those operations without mutation.
+Before cleaning up, moving, promoting to a durable location, renaming, retaining, or reusing task artifacts or their containing directory, follow [Directory Lifecycle](references/directory-lifecycle.md). Apply only the relevant artifact or directory rules, using them as review criteria when assessing those operations without mutation.
 
 ## Establish Task Storage
+
+When an authorized workflow needs only one short-lived temporary file, use a fresh `.agent-<name>` file directly under the relevant project root instead of a task directory. Use a project-required namespace instead when applicable. No ignore-file setup is required for this case. Choose an unused path, and remove the file immediately after use.
+
+For other task storage:
 
 1. Create a directory only when the task needs filesystem artifacts. Use one root for the task and subdirectories for its phases rather than creating additional roots or nesting agent task directories.
 2. Place it directly under the relevant project root as `.agent-<name>`, unless applicable project instructions require another approved namespace. Choose a filesystem-safe name that identifies the task, adding a short suffix when needed to avoid collisions.
@@ -33,7 +37,7 @@ The local ignore file removes the need for a repository-wide namespace exclusion
 
 ## Coordinate Ownership
 
-Preserve pre-existing and unrelated work. Before writing or removing contents, inspect the relevant state and confirm that the destination remains inside the assigned directory. Do not let path traversal or symlink redirection expand the mutation scope.
+Preserve pre-existing and unrelated work. Before writing or removing contents, inspect the relevant state and confirm that each destination stays within the assigned file or directory scope. Do not let path traversal or symlink redirection expand the mutation scope.
 
 A coordinator may assign separate subpaths to agents sharing one task. Each agent stays within its assigned write scope, and the coordinator owns cleanup of the shared root. Do not modify, read, or remove another task’s artifacts merely because they are ignored or appear inactive.
 

@@ -2,13 +2,13 @@
 
 Use this reference for a script owned by a portable skill—a skill installed for use across target projects rather than scoped to one repository. Apply the [general skill-owned script policy](skill-owned-scripts.md) in addition to this reference.
 
-A portable skill script exposes an agent-neutral [observable interface](skill-owned-scripts.md#define-the-observable-interface). Any supported agent can invoke that documented interface against an explicitly selected target without installing the script’s build configuration, dependencies, source, or toolchain in that target. Portability spans agents and targets rather than requiring standalone distribution.
+A portable skill script exposes an agent-neutral [observable interface](skill-owned-scripts.md#define-observable-interface). Any supported agent can invoke that documented interface against an explicitly selected target without installing the script’s build configuration, dependencies, source, or toolchain in that target. Portability spans agents and targets rather than requiring standalone distribution.
 
 The script therefore runs from the repository that canonically owns it. Confirm that the supported installation keeps that repository reachable, because an installation that copies the skill rather than linking it leaves the script without a host. A skill whose supported installation cannot reach its host stays documentation-only.
 
 Updating a target-owned consumer for a breaking interface change requires separate authorization for that target.
 
-## Separate the Host and Target
+## Separate Host and Target
 
 - Treat the repository that canonically owns the script as the host. The host owns source, tests, dependencies, lockfiles, compilation, and root validation.
 - Treat a project, repository, or path inspected or changed by an operation as its target. Do not infer a target from the host working directory.
@@ -22,7 +22,7 @@ Updating a target-owned consumer for a breaking interface change requires separa
 
 A host maintenance operation that consumes no separate target may omit a target selector. Name and document that scope explicitly so it cannot be mistaken for a project-targeted operation.
 
-## Apply the Common Command Contract
+## Apply Common Command Contract
 
 - Keep the interface noninteractive and independent of editor actions, MCP servers, agent-specific APIs, conversational state, and calling-agent implementation.
 - Support an exit-only `--help` operation that writes help to standard output, performs no other work, and returns status `0`. Reject `--help` combined with operational arguments.
@@ -34,10 +34,10 @@ A query that successfully returns zero records is status `0`. Status `1` represe
 
 ## Bound Target Effects
 
+- Exclude generated, managed, third-party, and vendored material unless the resolved scope includes it under applicable target policy. Apply every absolute exclusion for machine-local secret material, and never treat explicit scope inclusion as authority to override one.
 - Keep host maintenance and target mutation as separate operations. Authorization to update the hosted script does not authorize changing a target, and authorization to change a target does not authorize updating the host.
-- Never modify target dependencies, toolchain configuration, Git metadata, or agent instructions as an incidental effect.
-- Exclude managed, vendored, generated, and third-party material unless the resolved scope includes it under applicable target policy. Apply every absolute exclusion for machine-local secret material, and never treat explicit scope inclusion as authority to override one.
 - Make network access explicit in the operation contract. Obtain credentials only through an established machine-local source or external credential store, and never accept literal secrets through command arguments.
+- Never modify target dependencies, toolchain configuration, Git metadata, or agent instructions as an incidental effect.
 
 ## Preserve Agent and Target Boundaries
 
@@ -56,4 +56,4 @@ A query that successfully returns zero records is status `0`. Status `1` represe
 
 ## Avoid Speculative Interfaces
 
-Do not require a universal subcommand hierarchy, JSON output, `--dry-run`, a `PATH`-installed wrapper, standalone distribution, or a machine-readable `--contract` operation without a concrete consumer. Add structured output only when an identified consumer needs it, then give every persistent machine-readable schema an integer version and reject unsupported versions rather than interpreting them heuristically. Add a shared interface only when it makes supported agent invocation or composition materially more deterministic than the owning skill’s documented command contract.
+Do not require `--dry-run`, a machine-readable `--contract` operation, a `PATH`-installed wrapper, standalone distribution, or a universal subcommand hierarchy without a concrete consumer. When adding structured output, give every persistent machine-readable schema an integer version and reject unsupported versions rather than interpreting them heuristically. Add a shared interface only when it makes supported agent invocation or composition materially more deterministic than the owning skill’s documented command contract.

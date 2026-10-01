@@ -1,6 +1,6 @@
 # Skill Descriptions
 
-Apply this contract when authoring or assessing a skill’s description or invocation mode. Resolve identity and installation through [Skill Installation](skill-installation.md).
+Resolve identity and installation through [Skill Installation](skill-installation.md).
 
 ## Invocation Mode
 
