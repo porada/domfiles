@@ -77,4 +77,4 @@ Preserve higher-priority instructions, platform limitations, credential protecti
 
 ### Stale Guidance
 
-Follow the affected workflow’s failure procedure when one is defined. Otherwise, when guidance is unavailable or conflicts with verified behavior, or retrieval fails, load [`references/guidance-recovery.md`](references/guidance-recovery.md) before attempting recovery. Never invent missing guidance or bypass access controls. If that reference is unavailable, report the limitation and continue only independent authorized work.
+Follow the affected workflow’s failure procedure when one is defined. Otherwise, when guidance is unavailable or conflicts with verified behavior, or retrieval fails, load the [guidance recovery procedure](references/guidance-recovery.md) before attempting recovery. Never invent missing guidance or bypass access controls. If that reference is unavailable, report the limitation and continue only independent authorized work.
