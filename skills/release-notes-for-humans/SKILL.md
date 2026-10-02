@@ -76,7 +76,7 @@ If any complete evidence scope or relevant artifact cannot be inspected, or if r
 - Never fetch or inspect a dependency’s changelog, release notes, repository history, or announcements to justify an item merely because its version changed.
 - Always omit development-only dependency updates and all transitive dependency updates, including those represented only in a lockfile.
 - Include one routine `Updated` bullet for each direct runtime dependency update not already subsumed by a material consumer-facing outcome. Omit versions and upstream change summaries.
-- Alphabetize routine dependency bullets by package name and place them at the end of the applicable package section.
+- Alphabetize routine dependency bullets by package name and place them after other packaging items at the end of the applicable package section.
 - Apply the [peer dependency wording reference](references/peer-dependency-wording.md) instead when a release changes peer dependency ranges or classifications.
 
 ## Epistemic Precision
@@ -142,7 +142,7 @@ Unless the user explicitly requests it, omit:
 - The release version heading or tag link already rendered by the hosting platform.
 - Package and repository URLs presented only as metadata.
 - Publication timestamps, tag names, and registry timestamps.
-- Generated `What’s Changed`, contributor, or full-changelog boilerplate.
+- Generated change list headings, contributor lists, or full changelog boilerplate.
 - Empty headings and redundant summaries of the same change.
 - Stale text copied from another version.
 

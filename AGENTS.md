@@ -49,7 +49,7 @@ For changed JSON or TOML files, run `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_C
 - **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-audit-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
-- **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because it’s a symlink. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
+- **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because its target is outside the repository. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
 - **Secret-bearing local files:** Do not read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
 ## Reporting

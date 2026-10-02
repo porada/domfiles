@@ -160,11 +160,9 @@ The [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-hu
 
 ### Protected Skill Mutation
 
-At Zed commit `dd04a229`, native mutation tools force confirmation when a directly named or canonical path contains consecutive `.agents` and `skills` components. Repository root `AGENTS.md`, `.agents/PROJECT.md`, the root `skills` directory, and other `.agents` paths outside `skills` do not receive that agent-specific classification. Zed also requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
+Zed’s classification, described by the [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md), was checked at commit `dd04a229`. Zed requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
 
-The public `skills/human-facing-writing` source does not receive Zed’s agent-specific classification. Its staging boundary applies to every agent because changes to its writing contract can affect every project-authored agent documentation writing surface composed through it.
-
-The [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md) owns the exact workflow. Its `.agents/skills` branch is limited to Zed Agent’s native permission model. Non-Zed writes to `.agents/skills` remain outside this policy, so the policy does not guarantee that they hide intermediate states from concurrent Zed sessions.
+Non-Zed writes to `.agents/skills` remain outside this policy, so it does not guarantee that they hide intermediate states from concurrent Zed sessions.
 
 ### Public Skill Fallback Families
 
@@ -189,7 +187,7 @@ The [POSIX terminal presentation compatibility paragraph](../skills/posix-shell-
 
 ### Skill Description Limit
 
-The 1,024-byte figure in the [skill description policy](../skills/.domfiles-skill-development/references/skill-descriptions.md#encoding-and-size) is Zed’s limit rather than an intrinsic property of skill descriptions. Each client that receives the global skill set applies its own limit, so the figure requires revalidation whenever a supported client changes one.
+The conservative byte cap in the [skill description policy](../skills/.domfiles-skill-development/references/skill-descriptions.md#encoding-and-size) is an authoring constraint, not Zed’s unit of measurement. The [Agent Skills specification](https://agentskills.io/specification#description-field) allows 1–1,024 characters. At Zed v1.22.0 (`76659a55`), the [limit uses Unicode scalar values](https://github.com/zed-industries/zed/blob/76659a55a8c10ed355a070f8764a0b1733e3c115/crates/agent_skills/agent_skills.rs#L420-L423), [loading warns](https://github.com/zed-industries/zed/blob/76659a55a8c10ed355a070f8764a0b1733e3c115/crates/agent_skills/agent_skills.rs#L325-L341), and [strict validation rejects](https://github.com/zed-industries/zed/blob/76659a55a8c10ed355a070f8764a0b1733e3c115/crates/agent_skills/agent_skills.rs#L526-L537) overlong descriptions. The authoring cap requires revalidation whenever a supported client changes its limit.
 
 ### Skill Distribution
 
@@ -258,7 +256,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands. File-oriented wrappers share discovery, filtering, headings, and callback dispatch through `domlib`. ShellCheck and Tombi use native batch invocations. Fish and JSON retain per-file execution because Fish treats later operands as script arguments and the JSON check requires exactly one value per file. The [Rust wrapper](../home/.local/bin/domfiles-dev-lint-rs) invokes Clippy once for the Cargo workspace. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
 
-File-oriented wrappers’ default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git C-quotes backslashes, control characters, and double quotes, as well as non-ASCII bytes when `core.quotePath` is enabled. A quoted pathname is skipped because it does not resolve to the original file, so pass that path explicitly when linting it.
+File-oriented wrappers’ default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git C-quotes backslashes, control characters, and double quotes, as well as non-ASCII bytes when `core.quotePath` is enabled. A quoted pathname is skipped because it does not resolve to the original file.
 
 ### `domlib` Helper Documentation
 
@@ -284,7 +282,7 @@ The managed Fish configuration intentionally erases every existing abbreviation 
 
 ### Fish `clone` Argument Contract
 
-The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Use `git clone` directly for option-bearing invocations. An unsupported invocation can reach Git without a reliable follow-up directory change, which is an accepted consequence of keeping the wrapper simple.
+The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Option-bearing invocations belong to `git clone` itself. An unsupported invocation can reach Git without a reliable follow-up directory change, which is an accepted consequence of keeping the wrapper simple.
 
 For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
 
@@ -302,7 +300,7 @@ The lockfile-aware presentation in `git-d` and `git-view` is consolidated becaus
 
 ### Git Fixup Amend Behavior
 
-With `--amend`, `git f` compares its inferred or positional fixup target with the commit currently at `HEAD`. When both resolve to the same commit, it preserves an existing `amend!`, `fixup!`, or `squash!` message with `--no-edit`. For any other subject, it moves the target to the first parent when one exists. If no first parent exists, it leaves the target at `HEAD` so Git can amend a root commit.
+The `git f --amend` fallback to `HEAD` when no first parent exists preserves support for amending a root commit.
 
 ### Git Log Search Coloring
 

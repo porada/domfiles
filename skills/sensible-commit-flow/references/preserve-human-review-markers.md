@@ -6,7 +6,7 @@ Treat a pending addition as a temporary human review marker only when applicable
 
 Do not infer this role from agent origin, filenames, or warning-like wording. Being required for a check does not make generated files, permanent review or compliance records, regression tests, or release notes temporary markers. Do not exclude a marker that applicable instructions require in committed history or the submitted result. Ask only when its role or the governing requirements are unclear or conflicting.
 
-## Select Contribution Changes
+## Select Substantive Changes
 
 Record the exact marker addition, the evidence for its role, and the pending human action in the shared [proposal](commit-execution.md#confirm-commits). Exclude only that addition from the proposed commits, preserving substantive changes in the same file or diff hunk. If it cannot be separated safely, stop for the user’s decision.
 

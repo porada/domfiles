@@ -19,7 +19,7 @@ For every invocation, load `release-notes-for-humans` and follow its complete wo
 Apply these command-specific choices and constraints within the base workflow:
 
 1. Use the current repository and local `HEAD` as the target, including commits that have not been pushed to a remote. Exclude uncommitted changes unless explicitly requested.
-2. If required evidence cannot be inspected or a required check is omitted, state the limitation and stop before drafting unless the user explicitly authorizes a draft from the available evidence. Do not imply exhaustive verification.
+2. If required evidence cannot be inspected or a required check is omitted, state the limitation and stop before drafting unless the user explicitly authorizes a draft from the available evidence.
 3. Apply the [presentation conventions](#presentation-conventions).
 4. By default, output only the ready-to-paste changelog Markdown, with any required disclosures or material evidence limitations reported separately. Drafting alone does not authorize file changes or submission.
 

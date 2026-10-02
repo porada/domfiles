@@ -10,7 +10,7 @@ Alongside the technical copy workflow’s [evidence requirements](technical-copy
 
 ## Comment Content
 
-Write every JSDoc comment as a multiline block with `/**` and `*/` on separate lines, including one-sentence comments. Across languages, begin each documentation comment or docstring with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than an implementation description. Prefer one concise sentence.
+When project policy and established language conventions leave formatting unspecified, write JSDoc comments as multiline blocks with `/**` and `*/` on separate lines, including one-sentence comments. Across languages, begin each documentation comment or docstring with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than an implementation description. Prefer one concise sentence.
 
 For promises and analogous asynchronous results, describe settlement or completion behavior when it states the purpose more directly. State distinct outcomes in separate sentences.
 

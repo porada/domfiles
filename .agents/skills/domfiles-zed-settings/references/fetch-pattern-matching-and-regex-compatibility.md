@@ -12,7 +12,7 @@ Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the C
 
 Treat the source and configuration as the authority for implemented behavior, the exact `--help` output as the CLI projection, and adjacent `pattern_match.test.rs` tests as corroborating contract evidence. Before using either non-help route, require the focused contract test to pass. Stop and report contract drift when it fails.
 
-Require exactly one route. Reject combinations from different routes, missing values, positional arguments, repeated singleton options, and unknown options. Keep each help option list alphabetized.
+Require exactly one route. Reject combinations from different routes, missing values, positional arguments, repeated singleton options, and unknown options.
 
 The matcher reads only caller-selected regular UTF-8 files. It does not execute case inputs, load environment-selected configuration, make network requests, search for settings, or write files.
 
