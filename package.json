@@ -12,7 +12,7 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@12.8.1",
+	"packageManager": "pnpm@12.9.1",
 	"dependencies": {
 		"skills": "^1.7.0",
 		"vercel": "^62.2.0"
