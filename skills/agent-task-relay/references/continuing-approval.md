@@ -1,12 +1,16 @@
 # Continuing Approval
 
-Continuing approval remains active across later fixes through either default [Standing Confirmation](#standing-confirmation) or expressly authorized [Workflow Approval Modes](#workflow-approval-modes). Apply the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority) to the default standing confirmation and expiry rules.
+Resolve approval for later findings through [Active Task Authority](#active-task-authority), explicit [Standing Confirmation](#standing-confirmation), or expressly authorized [Workflow Approval Modes](#workflow-approval-modes). Apply the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority) to these defaults.
+
+## Active Task Authority
+
+An active implementation request covers validated corrections needed to finish that same bounded task, unless the user limits its scope. Do not require a new fix grant merely because findings arrive later or through another workflow. This authority ends at the agreed task handoff or cancellation and does not cover unrelated findings, later tasks, or separately gated effects. Reassess before materially changing the target, scope, or agreed design. A separate gate pauses its affected operation, not independent authorized work.
 
 ## Standing Confirmation
 
 Standing confirmation exists only when an explicit user instruction states that authorization continues within one named target and bounded scope across later or separately submitted findings once they are validated. A request to fix one finding, all findings in the current report, or another currently supplied set does not establish standing confirmation. Do not infer it from prior confirmations or continued submission of findings.
 
-Standing confirmation ends when a fix changes the target or scope, requires a material design choice, or reaches a dependency change, commit, remote mutation, secret access, or another separate approval gate. It also ends if implementation reveals a materially different scope, behavior, or approval requirement. Once ended, it does not cover later fixes unless the user explicitly renews it.
+Standing confirmation ends on cancellation, completion of its bounded assignment, or a material change to its target, scope, or agreed design. Reaching a separate approval gate does not itself end it. Pause the affected operation and ask for the specific decision without treating standing confirmation as permission for that effect. Continue independent authorized work where possible. Once ended, standing confirmation covers no later fixes unless the user explicitly renews it.
 
 ## Workflow Approval Modes
 

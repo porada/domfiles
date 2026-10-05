@@ -20,6 +20,8 @@ Resolve the finding scope before inspecting evidence. When the user selects no s
 
 Gather shared evidence once when it supports several findings, while reaching a separate conclusion for each claim. State shared evidence once in the report and map each affected finding to it.
 
+When supplied conclusions conflict, compare their target revisions, governing requirements, settled decisions, and material assumptions. The agent validating the findings owns their disposition. Weigh evidence, not reviewer counts, and use the smallest decisive inspection or check within the selected scope, authority, and existing limits. Do not add reviewers merely to obtain agreement or classify preference-only alternatives as required fixes. Retain uncertainty when evidence is insufficient, and report the gap rather than forcing a verdict. Ask the user only for a material choice that the evidence and current authority cannot settle, or a separately required approval. State the decisive reason with the finding’s classification. This adds no review stage or unanimity requirement.
+
 On follow-up, reuse evidence and dispositions already validated in the current conversation while their relevant evidence, instructions, and task decisions remain current and applicable. Inspect changed or uncertain evidence and affected integration boundaries rather than restarting the whole review. An unchanged commit or artifact identifier alone does not establish current runtime or external behavior. Validate new claims independently. When freshness cannot be established, inspect again or report the verification gap rather than carrying the earlier conclusion forward as current.
 
 For every in-scope finding that requires a change, identify the current root cause and the smallest complete fix. Treat the source’s suggested fix only as a candidate. Adapt or reject it when current evidence, project policy, or decisions in the current conversation support a different result.
@@ -36,12 +38,12 @@ Lead with the validation results. Preserve source identifiers only when they hel
 
 If validation establishes that no in-scope change is needed, report that result. Resume any still-applicable user-requested action under [Workflow Continuation](#workflow-continuation), and stop only when no such action remains.
 
-Apply the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority). Before relying on continuing approval, including approval across later or separately submitted findings, or applying different confirmation or expiry rules, follow [Continuing Approval](continuing-approval.md).
+Apply the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority). Resolve existing task authority, continuing approval across later or separately submitted findings, and applicable expiry rules through [Continuing Approval](continuing-approval.md).
 
-When every proposed fix is straightforward and the user’s direct instruction or active continuing approval covers it, report the validated change set and continue without duplicate approval. Otherwise, present one bounded change set that names the affected files or surfaces, the intended behavior change, and any material exclusions. Ask for brief, explicit confirmation before applying effects not already authorized.
+For straightforward fixes covered by the user’s direct instruction or active continuing approval, report the validated change set and continue without duplicate approval. For uncovered effects, present one bounded change set that names the affected files or surfaces, the intended behavior change, and any material exclusions. Ask only for the approval or material decision still needed, preserving independent authorized work.
 
 A fix is straightforward only when its root cause is established, its scope is bounded, its expected behavior is clear, no material design choice remains, and no unapproved dependency choice or unsatisfied separate approval gate remains.
 
 Working tree confirmation authorizes only the listed changes or validated fixes covered by active continuing approval. It does not itself authorize a commit, dependency change, remote mutation, scope expansion, secret access, or bypass of another applicable gate. Ask one focused question when a material decision or separate approval is needed instead of placing it under generic confirmation.
 
-Once authorized, apply only covered fixes, then run applicable validation. If implementation reveals a materially different scope, behavior, or approval requirement, stop and present the revised change set for confirmation. Resolve expiry under [Continuing Approval](continuing-approval.md).
+Once authorized, apply only covered fixes, then run applicable validation. If implementation reveals a materially different scope, behavior, or approval requirement, pause the affected operation and present only the new decision and changed context. Resolve expiry under [Continuing Approval](continuing-approval.md).

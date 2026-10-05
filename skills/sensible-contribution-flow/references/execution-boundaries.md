@@ -16,6 +16,16 @@ Use the supplied checkout. Before editing, inspect scoped status and diffs, pres
 
 Before an operation can change an open-ended set of paths, establish the expected target set through a dry run or equivalent inspection. Proceed only when it fits the authorized scope, then compare the changed-path inventory with that expectation. Stop on expansion. Do not discard unrelated state to restore a clean checkout. Do not presume ignored, machine-local, or untracked state is disposable merely because Git does not track it.
 
+## Use Verification Recipes
+
+Prefer existing repository commands and documented procedures that establish the contribution’s required behavior. When a non-obvious procedure would otherwise need repeated investigation or leave verification unreliable, record or update it in the repository’s designated documentation within the authorized contribution scope and documentation mutation authority. Capture its claim, prerequisites, procedure, expected evidence, and material side effects or cleanup without imposing a template. Reference canonical commands rather than duplicating their implementation. Distinguish a reusable procedure from evidence that it ran, and claim only what its checks establish. Recheck applicability before use, and [reuse applicable results](#reuse-validation-evidence). Do not require a new document or recipe for every contribution. Recipe authoring and execution retain their respective approval and security boundaries.
+
+## Reuse Validation Evidence
+
+A workflow transition does not invalidate earlier validation. Reuse a result only when its checked content and scope, relevant inputs, procedure, and execution conditions still establish the required claim. Retain compact evidence of those premises, the result, and limitations in the conversation or existing task artifacts, and pass it between workflows when needed. No new log, cache, or environment inventory is required.
+
+Inspect changed or uncertain premises and rerun affected checks when applicability cannot be established. Preserve complete invariant scope and required hooks. An unchanged commit or artifact identifier alone does not prove unchanged external behavior. Reuse cannot turn a failed, partial, or unavailable check into a pass.
+
 ## Use Existing Tools Safely
 
 Classify actual effects rather than labels such as discovery, inspection, or validation. Any mechanism that can download or execute code is execution, including filters, hooks, package runners, and task-controlled startup files. Inspect the selected repository checks and their effects before running them. A script or test that creates commits needs the commit workflow’s explicit authorization and checkpoints.

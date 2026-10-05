@@ -68,7 +68,7 @@ For an ineligible skill, omit both templates and their routing. Keep evidence li
 
 ## Validate Public Portability
 
-Apply `agent-documentation`’s shared validation lifecycle. For propagation-only changes, use **Mirror alignment** below to select the required checks. Otherwise, apply the checks below across the complete skill or affected documentation family.
+Apply `agent-documentation`’s shared validation lifecycle and **Select Validation Scope**. Select the checks below by the affected public contract, preserving each selected invariant’s complete scope. Wording-only changes do not require unrelated behavioral checks. A whole-skill audit, creation, or promotion requires the complete applicable set. For propagation-only changes, use **Mirror alignment** below.
 
 ### Whole-Skill Checks
 
@@ -81,9 +81,9 @@ Apply `agent-documentation`’s shared validation lifecycle. For propagation-onl
 ### Conditional and Installation Checks
 
 - **Creation and promotion:** Apply the [public promotion validation](public-skill-promotion.md#validate-public-promotion) for creation or promotion, including reviews and audits of those operations. Do not require a promotion profile for other public maintenance.
-- **Optional peers:** Run the [optional public peer validation](optional-public-peers.md#validate-optional-public-peers) for every existing or proposed optional peer in each in-scope public skill, even when the declarations are unchanged. When the optional peer template changes, this includes every derived reference.
+- **Optional peers:** Run the [optional public peer validation](optional-public-peers.md#validate-optional-public-peers) when the scope includes creation, promotion, an audit of peer behavior, or a change affecting peer declarations, routing, retrieval, or fallback behavior. Cover every relationship within that affected contract, including unchanged declarations. When the optional peer template changes, this includes every derived reference.
 - **Mirror alignment:** When a global instruction or this public contract, including its conditional references, changes, search public skills for affected standalone mirrors and close semantic variants, then align each mirror’s meaning and boundaries in the same change. When a shared public-policy template changes, align every verbatim template-derived copy under that template’s copy contract in the same change, including conditional references.
 
     Propagation-only changes carry an established source update into its consumers without unrelated skill changes. Review the canonical wording once, then verify the complete affected consumer set for exact template correspondence or preserved mirror meaning, link resolution, and local integration. Select behavioral checks for the contract changed by the source, not merely the mechanics of copying it. Apply whole-skill and optional peer checks only where that contract affects them, preserving the complete scope of every affected invariant. Reopen settled wording only when a consumer requires adaptation or exposes a concrete conflict, and review that delta and its integration boundaries rather than restarting unrelated whole-skill reviews.
 
-    For changes beyond propagation, reevaluate the public skill’s shared contract and domain-specific mirrors against their canonical policies. Preserve complete conditions and boundaries for the rules included, add newly required standalone behavior on its narrowest applicable surface, and remove wording that no longer adds standalone value. Do not grow the shared contract to mirror unrelated global instructions.
+    For changes beyond propagation, reevaluate the affected shared contracts and domain-specific mirrors against their canonical policies under the selected validation scope. Preserve complete conditions and boundaries for the rules included, add newly required standalone behavior on its narrowest applicable surface, and remove wording that no longer adds standalone value. Do not grow the shared contract to mirror unrelated global instructions.

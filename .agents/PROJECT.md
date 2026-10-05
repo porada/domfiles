@@ -80,7 +80,7 @@ While Zed Agent’s terminal sandbox is active, open worktrees are normal projec
 
 ### Agent Authorization Model
 
-Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching decisions by coherent execution phase preserves the context needed for assessment without returning to command-level prompts.
+Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching related decisions where their approval gates permit it preserves the context needed for assessment without returning to command-level prompts.
 
 Git publication and contribution submission require explicit authorization rather than remaining categorically user-only. History replacement retains an expected-head lease because authorization to publish does not establish that unseen remote work may be discarded. The global [authorization policy](GLOBAL.md#authorization) owns these boundaries.
 

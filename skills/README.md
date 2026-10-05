@@ -56,7 +56,7 @@ Keep commit history clear and GitHub work focused.
 
 ## Internal Skills
 
-`.dom-*` skills add my personal conventions on top of published skills, while `.domfiles-*` skills depend on this repository’s [configuration](../home). These skills aren’t suitable for standalone installation.
+`.dom-*` skills add my personal conventions on top of published skills, while `.domfiles-*` skills depend on this repository’s [configuration](../home) or need more development. None of those are suitable for standalone installation.
 
 ## License
 

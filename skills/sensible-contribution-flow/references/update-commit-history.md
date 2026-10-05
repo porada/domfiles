@@ -66,7 +66,7 @@ Assess every resulting commit’s independent coherence rather than treating a p
 
 Return to [Report Results](prepare-commits.md#report-results) with the old-to-new commit mapping and any branch advancement that created no commits. Report final commits, not temporary fixups. If execution stopped, identify the remaining operation state rather than claiming completion.
 
-The PR workflow then repeats its applicable [synchronization checkpoints](prepare-pull-requests.md#synchronize-with-upstream) and [readiness check](prepare-pull-requests.md#check-submission-readiness), including affected integration validation and delta review. Amendments and rebases invalidate earlier readiness. Published replacement also requires the final destination check below.
+The PR workflow then reassesses the resulting state through its applicable [synchronization checkpoints](prepare-pull-requests.md#synchronize-with-upstream) and [readiness check](prepare-pull-requests.md#check-submission-readiness), reusing applicable evidence under those checkpoints and completing affected integration validation and delta review. Published replacement also requires the final destination check below.
 
 ## Hand Back Published Updates
 

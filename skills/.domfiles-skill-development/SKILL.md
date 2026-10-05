@@ -39,6 +39,6 @@ Never document auxiliary information anywhere in a project-authored skill direct
 
 ## Validate Selected Contracts
 
-For every change, review, or audit, run the installation contract’s identity and link checks and every applicable check from the selected references. Validate complete declared scopes, including affected mirror families and the full description set when required. Conditional loading does not reduce an invariant to changed lines or omit validation of an unchanged declaration that the active contract covers.
+For documentation work, use `agent-documentation`’s **Select Validation Scope** to determine applicable checks. For every change, review, or audit, run the installation contract’s identity and link checks and the applicable checks from selected references. Validate complete declared scopes, including affected mirror families and the full description set when required. Conditional loading does not reduce an invariant to changed lines or omit validation of an unchanged declaration that the active contract covers.
 
 For documentation work, return the skill-specific results to `agent-documentation`’s shared validation and reporting lifecycle. For script-only work, complete the script contract’s validation and report concrete contract findings or the resulting change and any limitations under the applicable communication policy. Do not turn a contract review into an implementation audit.

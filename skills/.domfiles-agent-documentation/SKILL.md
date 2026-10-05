@@ -57,12 +57,14 @@ Before editing, follow [Compose Documentation](references/compose-documentation.
 
 ## Validate Documentation
 
+Use [Select Validation Scope](references/validate-documentation-changes.md#select-validation-scope) before loading detailed checks. Keep the complete declared scope of each affected invariant.
+
 ### Run Complete-Scope Checks
 
 For every change, review, or audit:
 
 1. Reread every applicable `AGENTS.md` file and each in-scope documentation file that the current task has not already loaded unchanged. Use Git status and diff to identify what changed since it was loaded.
-2. Search the complete applicable documentation family for each proposition being changed or evaluated, its distinctive wording, and close semantic variants. Apply the [Documentation Boundary Checks](references/documentation-boundary-checks.md) to routed or layered surfaces. When a global instruction changes or is evaluated, identify every affected public skill mirror, including rephrased variants, and apply `skill-development` to each for public mirror alignment. Confirm that one normative definition remains and that every secondary occurrence has a distinct required role or links to the canonical owner.
+2. For each affected proposition or shared wording contract, search the complete applicable documentation family for its distinctive wording and close semantic variants. Apply the [Documentation Boundary Checks](references/documentation-boundary-checks.md) to routed or layered surfaces. When a global instruction changes or is evaluated, identify every affected public skill mirror, including rephrased variants, and apply `skill-development` to each for public mirror alignment. Confirm that one normative definition remains and that every secondary occurrence has a distinct required role or links to the canonical owner.
 3. For every in-scope change to a direct-path surface, compare its before-and-after context footprint. In a review or audit, report unjustified growth without editing.
 4. When an in-scope change moved guidance from a `SKILL.md` into references, map every removed proposition to its destination and confirm that every task that previously received it still deterministically loads that destination. Treat a missing behavioral distinction, condition, exception, or route as a contract regression.
 
