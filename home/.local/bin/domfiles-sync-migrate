@@ -31,6 +31,27 @@ for skill in \
   done
 done
 
+# Rename Standard Config projects
+renamed_projects=false
+
+for project in "$DOMFILES_PROJECTS_DIR"/sc-*; do
+  [ -d "$project" ] || continue
+
+  name="${project##*/}"
+  destination="$DOMFILES_PROJECTS_DIR/standard-config-${name#sc-}"
+
+  if [ -e "$destination" ] || [ -L "$destination" ]; then
+    continue
+  fi
+
+  if [ "$renamed_projects" = false ]; then
+    __print_heading_dimmed 'Renaming Standard Config projects'
+    renamed_projects=true
+  fi
+
+  __ mv "$project" "$destination"
+done
+
 # Uninstall `codex`
 if __is_brew_installed codex; then
   __print_heading_dimmed 'Uninstalling `codex`'
@@ -39,6 +60,6 @@ fi
 
 # Uninstall `taplo`
 if __is_brew_installed taplo; then
-  __print_heading_dimmed 'Uninstalling `taplo` in favor of `tombi`'
+  __print_heading_dimmed 'Uninstalling `taplo`'
   __ brew uninstall taplo
 fi

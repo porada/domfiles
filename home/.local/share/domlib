@@ -257,11 +257,10 @@ __domfiles_pnpm_exec() (
   shift
 
   pnpm --dir "$DOMFILES" exec sh -c '
-    target="$(command -v "$2")" || exit
     cd "$1" || exit
-    shift 2
-    exec "$target" "$@"
-  ' sh "$PWD" "$command" "$@"
+    shift
+    exec "$@"
+  ' sh "$PWD" "$DOMFILES/node_modules/.bin/$command" "$@"
 )
 
 # Prints the current domfiles revision
@@ -341,7 +340,7 @@ __git_diff_list_changed_excluded_paths() (
         status="$?"
         [ "$status" -eq 1 ] || return "$status"
       fi
-    elif git diff-files --quiet -- "$file"; then
+    elif git diff --quiet -- "$file"; then
       continue
     else
       status="$?"
@@ -582,18 +581,27 @@ __normalize_boolean() {
 }
 
 # Pages standard input for terminal output or passes it through unchanged.
-# Optionally uses Git pager configuration for command `$1`
+# Uses Git pager configuration for command `$1`
 __page_input() (
-  if [ $# -gt 1 ]; then
-    __print_error_and_exit '`__page_input` accepts at most one Git command'
+  if [ $# -ne 1 ]; then
+    __print_error_and_exit '`__page_input` requires one Git command'
   fi
 
   __is_stdout_tty || {
     cat
-    return 0
+    return
   }
 
   pager="$(__resolve_pager "$@")" || return
+
+  # Apply Git’s pager environment defaults to unset variables
+  if [ -z "${LESS+x}" ]; then
+    export LESS=FRX
+  fi
+
+  if [ -z "${LV+x}" ]; then
+    export LV=-c
+  fi
 
   case "$pager" in
     cat | less)
@@ -753,43 +761,31 @@ __read_boolean_from_env() (
   fi
 )
 
-# Prints the pager command. Optionally uses Git configuration for command `$1`
+# Prints the pager command Git would use for command `$1`
 __resolve_pager() (
-  if [ $# -gt 1 ]; then
-    __print_error_and_exit '`__resolve_pager` accepts at most one Git command'
+  if [ $# -ne 1 ]; then
+    __print_error_and_exit '`__resolve_pager` requires one Git command'
   fi
 
-  if [ $# -eq 1 ]; then
-    pager=''
+  pager=''
 
-    if pager="$(git config --get "pager.$1")"; then
-      case "$(git config --file /dev/null --type=bool --default "$pager" \
-        --get domfiles.pager 2> /dev/null || true)" in
-        false)
-          printf '%s\n' cat
-          return
-          ;;
-        true)
-          pager=''
-          ;;
-      esac
-    fi
-
-    if [ -z "${GIT_PAGER+x}" ] && [ -n "$pager" ]; then
-      printf '%s\n' "$pager"
-    else
-      git var GIT_PAGER
-    fi
-
-    return
+  if pager="$(git config --get "pager.$1")"; then
+    case "$(git config --file /dev/null --type=bool --default "$pager" \
+      --get domfiles.pager 2> /dev/null || true)" in
+      false)
+        printf '%s\n' cat
+        return
+        ;;
+      true)
+        pager=''
+        ;;
+    esac
   fi
 
-  if [ -n "${PAGER-}" ]; then
-    printf '%s\n' "$PAGER"
-  elif __is_callable less; then
-    printf '%s\n' less
+  if [ -z "${GIT_PAGER+x}" ] && [ -n "$pager" ]; then
+    printf '%s\n' "$pager"
   else
-    printf '%s\n' cat
+    git var GIT_PAGER
   fi
 )
 

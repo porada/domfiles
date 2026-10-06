@@ -29,26 +29,16 @@ install() (
     fi
   done
 
-  is_keg_only=false
-  is_linked=false
-  is_requested=true
-
   info="$(brew info "$1" --json=v2)" || return 2
-
-  case "$info" in
-    *'"keg_only": true'*) is_keg_only=true ;;
-  esac
-
-  case "$info" in
-    *'"linked_keg": ""'*) ;;
-    *'"linked_keg": "'*) is_linked=true ;;
-  esac
+  is_keg_only="$(printf '%s\n' "$info" | jq '.formulae[0].keg_only == true')" || return
+  is_linked="$(printf '%s\n' "$info" | jq '(.formulae[0].linked_keg // "") != ""')" || return
 
   # Treat only an explicit `false` receipt flag as needing protection
   # from `brew autoremove`
-  case "$info" in
-    *'"installed_on_request": false'*) is_requested=false ;;
-  esac
+  is_requested="$(
+    printf '%s\n' "$info" \
+      | jq 'all(.formulae[0].installed[]?; .installed_on_request != false)'
+  )" || return
 
   if [ "$is_requested" = false ] && ! __is_ci; then
     __ brew tab --formula --installed-on-request "$1" > /dev/null
@@ -67,7 +57,8 @@ done
 
 # Install apps
 if ! __is_ci; then
-  for formula in chatgpt firefox google-chrome imageoptim sketch transmit zed; do
+  # shellcheck disable=SC2043
+  for formula in zed; do
     install "$formula" --adopt --cask
   done
 fi
@@ -90,15 +81,15 @@ if ! __is_ci; then
 fi
 
 # Configure `pnpm`
-__print_heading_dimmed 'Configuring `pnpm`'
-__ pnpm config set --global store-dir "$HOME/Library/pnpm/store"
-__ pnpm config set --global macosBackup --json '{
+if __is_callable node && __is_callable pnpm; then
+  __print_heading_dimmed 'Configuring `pnpm`'
+  __ pnpm config set --global store-dir "$HOME/Library/pnpm/store"
+  __ pnpm config set --global macosBackup --json '{
   "excludeModulesDir": true,
   "excludeStoreDir": true
 }'
 
-# Install project dependencies
-if __is_callable node && __is_callable pnpm; then
+  # Install project dependencies
   __print_heading_dimmed 'Installing `pnpm` dependencies'
   __mkdir "$HOME/Library/pnpm/bin"
 
@@ -151,7 +142,11 @@ fi
 
 # Set `fish` as the default shell
 fish="$(brew --prefix)/bin/fish"
-__is_shell "$fish" && exit 0
+
+# Read the account record because `$SHELL` keeps its value until the next login
+account_entry="$(id -P)"
+login_shell="${account_entry##*:}"
+[ "$login_shell" = "$fish" ] && exit 0
 
 if __is_ci; then
   exit 0
