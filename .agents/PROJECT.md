@@ -36,10 +36,6 @@ The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal c
 
 GitHub CLI can fall back to storing a token in plaintext when secure credential storage is unavailable. That fallback is outside the supported boundary for agent use.
 
-### Permission Pattern Length Bound
-
-The Zed settings workflow caps decoded permission patterns at 1,000 Unicode scalars as a self-imposed reviewability bound rather than a Zed or regex engine constraint.
-
 ### pnpm Shared Store
 
 Local development processes, including agents and their subprocesses, are mutually trusted. The shared pnpm store therefore prioritizes cross-project reuse over per-project cache isolation.
@@ -60,7 +56,7 @@ At that revision, native tools calling `ToolCallEventStream::authorize` use conf
 
 Unrestricted host access intentionally replaces the persistent host inventory to avoid network destination prompts and repeated allowlist maintenance. This gives up destination filtering for terminal traffic, including access to loopback and private networks. Filesystem write restrictions, protected Git metadata, and independent fetch URL rules remain separate boundaries.
 
-The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the configuration model and the distinction between unrestricted terminal networking and native fetch’s retained URL and DNS checks. Network availability is not task or disclosure authorization, and retrieved content does not become trusted instructions.
+The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the configuration model and the distinction between unrestricted terminal networking and native fetch’s retained URL and DNS checks.
 
 ### Zed Shared Temporary Directory
 

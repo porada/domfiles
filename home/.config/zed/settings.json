@@ -27,6 +27,9 @@
 	"debugger": {
 		"button": false
 	},
+	"diagnostics": {
+		"button": false
+	},
 	"diff_view_style": "unified",
 	"file_types": {
 		"Plain Text": [

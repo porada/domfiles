@@ -7,13 +7,6 @@ edition = "2024"
 
 [dependencies]
 regex = "=1.12.3"
-serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
-toml = { version = "1.1.4", default-features = false, features = [
-    "parse",
-    "serde",
-    "std",
-] }
 
 [[bin]]
 name = "domfiles-zed-settings-pattern-match"
@@ -21,16 +14,6 @@ path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.rs"
 bench = false
 test = false
 
-[[bin]]
-name = "domfiles-zed-settings-regex-dependency-audit"
-path = ".agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.rs"
-bench = false
-test = false
-
 [[test]]
 name = "domfiles-zed-settings-pattern-match-test"
 path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.test.rs"
-
-[[test]]
-name = "domfiles-zed-settings-regex-dependency-audit-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.test.rs"

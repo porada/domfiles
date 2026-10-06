@@ -1,185 +1,48 @@
 # Fetch Pattern Matching and Regex Compatibility
 
-This reference owns the observable contracts for the retained fetch pattern matcher and regex compatibility audit. It does not own fetch policy, runtime network behavior, host grant approval, or settings mutation.
+The pattern matcher checks whether a supplied Rust regex matches a supplied string.
+
+This reference owns the matcher’s interface and manual version-check guidance. Fetch policy and effective authorization belong to the [agent permission workflow](agent-permissions.md).
 
 ## Apply Matcher Contract
 
-Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as the read-only implementation. It supports exactly these routes:
+Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as a read-only pattern matcher with exactly these invocations:
 
-- `--baseline-settings <baseline-settings-path> --candidate-settings <candidate-settings-path> --comparison-file <comparison-manifest-path>`
-- `--help`
-- `--layer-file <layer-manifest-path> --settings <settings-path>`
+```text
+domfiles-zed-settings-pattern-match <case-sensitive> <pattern> <input>
+domfiles-zed-settings-pattern-match --help
+```
 
-Treat the source and configuration as the authority for implemented behavior, the exact `--help` output as the CLI projection, and adjacent `pattern_match.test.rs` tests as corroborating contract evidence. Before using either non-help route, require the focused contract test to pass. Stop and report contract drift when it fails.
+Require all three positional arguments. `<case-sensitive>` must be exactly `true` or `false`, with no default. Treat the pattern and input positions literally, including empty strings and values beginning with `--`. Recognize `--help` only as the sole argument.
 
-Require exactly one route. Reject combinations from different routes, missing values, positional arguments, repeated singleton options, and unknown options.
+Compile the supplied pattern with the repository’s pinned Rust `regex` dependency, using the explicit case-sensitivity value as the builder’s initial setting. Preserve inline flag overrides and ordinary `is_match` behavior. Do not anchor, trim, normalize, or parse the input. Empty patterns retain the regex engine’s behavior rather than Zed’s special treatment of empty permission patterns. Rust regex does not support look-around.
 
-The matcher reads only caller-selected regular UTF-8 files. It does not execute case inputs, load environment-selected configuration, make network requests, search for settings, or write files.
+For a successful evaluation, print `true` or `false` followed by a newline to standard output, leave standard error empty, and exit with status `0`. A nonmatch is a successful evaluation. Invalid arguments or regexes produce a diagnostic on standard error, leave standard output empty, and exit with status `1`. Standalone help describes the invocation and result semantics on standard output and exits with status `0`. Diagnostic wording is not a compatibility guarantee.
 
-The matcher does not construct Zed’s complete effective configuration or resolve displayed prompts, other settings layers, redirect behavior, runtime network access, or host grants. Follow the agent permission workflow to [resolve effective permission behavior](agent-permissions.md#resolve-effective-permission-behavior).
+The pattern matcher accepts inert strings only. It does not read settings, evaluate permission precedence or defaults, compare configurations, create files, or make network requests. A match is not a configured permission decision or evidence of runtime network access.
 
-Both manifests are strict JSON objects. Reject duplicate keys, invalid enum values, non-string inputs, and unknown fields. Reject inputs containing `U+000A`, `U+000B`, `U+000C`, `U+000D`, `U+001C`, `U+001D`, `U+001E`, `U+0085`, `U+2028`, or `U+2029` as line breaks. Treat every case input as inert text.
+## Check a Pattern
 
-The `--help` route exits with status `0`, writes only the exact help text to standard output, and leaves standard error empty. A successful layer or comparison route writes one bounded summary to standard output. For exit status `1`, count every status-`1` finding or disagreement while retaining only the first 100 reportable details, write the exact total and retained findings to standard error, then write the omitted count. Apply one retention budget across the complete invocation, including baseline and candidate settings in the comparison route. Count later findings without materializing their bodies. For exit status `2`, write one bounded diagnostic to standard error when that stream accepts output. If any required standard output or standard error write fails, return status `2` even when the computed route result was status `0` or `1`.
-
-For every failure, identify files by role, manifest cases by array and zero-based index, and settings patterns by bucket and zero-based index. For a duplicate key, identify the containing object through a safe structural location formed only from schema-owned field names, an array or bucket name, and a zero-based index when applicable. Do not emit the duplicated key or any value. Do not emit caller-selected paths, case inputs, manifest contents, pattern text, settings contents, or upstream diagnostic excerpts that could reproduce those values. Limit each rendered finding or diagnostic to `512` UTF-8 bytes and complete standard error to `64` KiB, truncating only at a Unicode scalar boundary. Keep total and omitted counts within that bound. Select status-`1` findings in the deterministic route-specific order defined below.
-
-Select the single status-`2` diagnostic by this phase order: argument validation, file type and readability in each route’s displayed option order, UTF-8 decoding in that option order, JSON parsing and duplicate key detection in that option order, manifest structural validation, settings projection in settings file order, cross-file reference or coverage validation, and required output writing. Stop at the first failing phase and the first error in its defined order.
-
-Use these exit statuses:
-
-- `0` when every pattern compiles and every declared expectation passes.
-- `1` for a well-formed invocation with configured pattern findings, pattern case disagreements, decision case disagreements, or comparison case disagreements.
-- `2` for contract-invalid input, invalid arguments, malformed input, operational output failure, or unreadable files.
-
-An exit status is not a recovery classification. A configured pattern finding identifies a settings defect. A pattern case, decision case, or comparison case disagreement establishes only that a well-formed declaration and observed behavior differ. The caller must determine whether the declaration is wrong or the selected settings must change. Status `2` identifies invalid input or an operational failure rather than a settings defect.
-
-## Parse Settings Inputs
-
-Parse every settings file as strict UTF-8 JSON, not JSONC, and require its root to be an object. Reject duplicate keys in every object. The `agent`, `tool_permissions`, `tools`, and `fetch` objects along the selected `agent.tool_permissions.tools.fetch` path must exist and have object values. Allow and ignore unrelated fields outside the selected fetch object.
-
-The fetch object permits exactly these fields:
-
-- `always_allow`, `always_confirm`, and `always_deny` are optional arrays. An absent array is empty.
-- `default` is required and must be `allow`, `confirm`, or `deny`.
-
-Every pattern array entry must be an object containing exactly a Boolean `case_sensitive` field and a string `pattern` field. Reject missing required fields, null values, unknown fields within the fetch or pattern objects, and wrong types as contract-invalid input with exit status `2`.
-
-Apply the repository [permission pattern length bound](../../../PROJECT.md#permission-pattern-length-bound) before compilation. Count each decoded `pattern` value in Unicode scalars. An empty pattern or a pattern exceeding that bound is a configured pattern finding with exit status `1` and must not be compiled. Compile every remaining pattern exactly once with its configured case setting. An invalid regex is a configured pattern finding with exit status `1`.
-
-Within each settings file, process buckets in `always_allow`, `always_confirm`, then `always_deny` order and each bucket by ascending array index. If any pattern is empty or fails the length or compilation check, report all such configured pattern findings and skip manifest expectation evaluation for that route.
-
-## Validate Configured Fetch Layers
-
-Run:
+Run from the repository root, with the pattern before the input:
 
 ```sh
 cargo run --locked --quiet \
     --bin domfiles-zed-settings-pattern-match -- \
-    --layer-file '<layer-manifest-path>' \
-    --settings '<settings-path>'
+    '<case-sensitive>' '<pattern>' '<input>'
 ```
 
-The layer manifest has this schema:
+Read the pattern and `case_sensitive` value from the settings being checked rather than copying a documented regex. Compare the printed Boolean with the expected match, not merely the exit status. Separately [resolve the configured decision and native checks](agent-permissions.md#resolve-effective-permission-behavior).
 
-```json
-{
-    "decision_cases": [
-        {
-            "expected": {
-                "always_allow": true,
-                "always_confirm": false,
-                "always_deny": false,
-                "decision": "allow"
-            },
-            "input": "https://example.com/"
-        }
-    ],
-    "pattern_cases": [
-        {
-            "bucket": "always_allow",
-            "expected_match": true,
-            "index": 0,
-            "input": "https://example.com/"
-        }
-    ]
-}
-```
+## Check Zed Regex Compatibility
 
-Require both arrays and at least one `decision_cases` entry. Permit an empty `pattern_cases` array only when the selected settings contain no configured patterns. An empty array with any configured pattern is missing coverage and contract-invalid input with exit status `2`. A pattern case identifies one configured fetch pattern by `bucket` and zero-based `index`, then declares whether that pattern must match the input. Every configured pattern requires at least one matching and one nonmatching single-line case. A manifest missing either polarity is contract-invalid input with exit status `2`. A valid pattern case declaration that disagrees with the observed match is a pattern case disagreement with exit status `1`. The matcher does not attempt to prove that a missing witness cannot exist. A configuration whose pattern cannot supply both polarities is unsupported by this workflow and must change before approval.
+When changing the repository’s `regex` pin or investigating a regex discrepancy with Zed, manually compare the root `Cargo.toml` pin and its resolved direct dependency in `Cargo.lock` with the resolved version in the relevant Zed revision’s `Cargo.lock`. Use that release or revision rather than automatically following `main`. Retrieve only the needed official source, and report a verification limitation if it is unavailable.
 
-A decision case declares the complete matched bucket state and final configured decision for one input. Accept `allow`, `confirm`, or `deny` as the decision. Use the patterns compiled with their configured case settings to resolve `always_deny`, `always_confirm`, `always_allow`, and the configured fetch default in that precedence order. Reject an expected state whose declared decision does not follow that precedence as contract-invalid input with exit status `2`.
-
-Decision source coverage depends on the complete expected state rather than the final decision value alone:
-
-- `always_allow` requires `always_allow: true`, `always_confirm: false`, `always_deny: false`, and `decision: "allow"`.
-- `always_confirm` requires `always_confirm: true`, `always_deny: false`, and `decision: "confirm"`. `always_allow` may be either value.
-- `always_deny` requires `always_deny: true` and `decision: "deny"`. The other bucket flags may be either value.
-- The configured default requires all three bucket flags to be `false` and `decision` to equal that default.
-
-Require at least one declared decision case for the configured default and for every nonempty bucket. Missing declared source coverage is contract-invalid input with exit status `2`. A valid decision case declaration that disagrees with observed matches or the observed decision is a decision case disagreement with exit status `1`.
-
-Use the parent [permission change planning workflow](agent-permissions.md#plan-permission-changes) to establish deciding-source witnesses. The matcher evaluates only declared cases and does not attempt a formal reachability proof.
-
-Apply the [settings input contract](#parse-settings-inputs) to the selected settings file. Reject an out-of-range pattern index or unknown bucket in the manifest as contract-invalid input with exit status `2`.
-
-Order status-`1` findings from source validity to local expectations to final decisions: configured pattern findings in the settings input order, pattern case disagreements in manifest order, then decision case disagreements in manifest order. On success, report counts of configured patterns, decision cases, and pattern cases. This route establishes configured fetch pattern matches and decisions for the selected settings file only.
-
-## Compare Fetch Permission States
-
-Run:
-
-```sh
-cargo run --locked --quiet \
-    --bin domfiles-zed-settings-pattern-match -- \
-    --baseline-settings '<baseline-settings-path>' \
-    --candidate-settings '<candidate-settings-path>' \
-    --comparison-file '<comparison-manifest-path>'
-```
-
-The comparison manifest has this schema:
-
-```json
-{
-    "cases": [
-        {
-            "baseline": {
-                "always_allow": false,
-                "always_confirm": false,
-                "always_deny": false,
-                "decision": "confirm"
-            },
-            "candidate": {
-                "always_allow": true,
-                "always_confirm": false,
-                "always_deny": false,
-                "decision": "allow"
-            },
-            "input": "https://example.com/"
-        }
-    ]
-}
-```
-
-Require a nonempty `cases` array. Each `baseline` and `candidate` state is complete and must declare a decision consistent with deny, confirm, allow, then the corresponding settings file’s default. An inconsistent state is contract-invalid input with exit status `2`.
-
-Apply the [settings input contract](#parse-settings-inputs) to the baseline settings and then the candidate settings. If either settings file has configured pattern findings, report baseline findings before candidate findings and skip comparison case evaluation. Otherwise, evaluate cases in manifest order. For each input, evaluate the complete matched bucket state and final decision against both files, then require exact agreement with the declared `baseline` and `candidate` states. A valid comparison case that disagrees with either observed state is a comparison case disagreement with exit status `1`.
-
-This route does not validate a repair from baseline configured pattern findings. Follow the parent [candidate workflow](agent-permissions.md#apply-fetch-pattern-or-default-changes) for baseline validation before mutation. A baseline expectation disagreement does not by itself establish invalid baseline settings.
-
-Include every intentional bucket or final decision transition, each changed boundary, and representative unchanged near misses. On success, report counts of baseline patterns, candidate patterns, and comparison cases. A successful comparison establishes only the declared corpus. It is not formal regex language equivalence.
-
-## Audit Zed Regex Compatibility
-
-During a documentation audit that includes Zed permission regex compatibility, obtain Zed’s current `main` `Cargo.lock` and short commit reference through one bounded official-source retrieval. Do not search Zed’s dependency changelog, release notes, or repository history. If the source cannot be retrieved, report the verification limitation instead of inferring compatibility.
-
-Use `.agents/skills/domfiles-zed-settings/scripts/regex_dependency_audit.rs` only to compare the exact root `Cargo.toml` pin, the version resolved for the local root package through its adjacent `Cargo.lock`, and the direct `regex` version in the retrieved upstream lockfile:
-
-```sh
-cargo run --locked --quiet \
-    --bin domfiles-zed-settings-regex-dependency-audit -- \
-    --local-manifest Cargo.toml \
-    --upstream-lock '<upstream-lockfile-path>' \
-    --upstream-revision '<short-zed-revision>'
-```
-
-The audit supports `--help` by itself or one comparison invocation with exactly one each of `--local-manifest <path>`, `--upstream-lock <path>`, and `--upstream-revision <commit>`. The revision is a 7- to 40-character lowercase hexadecimal label. Reject combinations with `--help`, missing required options, missing values, positional arguments, repeated options, and unknown options.
-
-For a comparison, read the selected UTF-8 root manifest, its sibling `Cargo.lock`, and the selected UTF-8 upstream lockfile. The local manifest must contain an exact `[dependencies].regex` pin, the adjacent lockfile must resolve that direct dependency for the local root package to the same version, and the upstream lockfile must expose one unambiguous `regex` package version. The revision labels output and selects no file.
-
-The audit makes no network request and writes no file. Help and matching results use `stdout`. A version mismatch is the sole status-`1` finding and uses `stderr`. Invalid arguments, invalid or inconsistent data, output failures, and read failures use status `2` and report through `stderr` when possible. Status `0` means help was displayed or the versions matched.
-
-The focused `regex_dependency_audit.test.rs` test covers documented argument refusal families and revision validation, exact local pin and adjacent lock resolution, help and comparison routes, help-to-parser option and route agreement, intentional exclusion of transitive dependency differences, malformed or ambiguous inputs, matching and mismatching versions, output streams and failures, and status behavior.
-
-The audit compares direct `regex` versions only. Transitive versions, sources, checksums, and dependency edges may update independently. Treat a direct version mismatch against current Zed `main` as compatibility drift from that comparison target, reported with status `1`. Treat evidence that the retrieved lockfile does not belong to the reported upstream revision as a separate source provenance finding. An ambiguous, locally inconsistent, missing, or unresolved direct version is invalid input reported with status `2`, including disagreement between the local pin and lockfile. None of these outcomes authorizes a dependency or documentation change.
-
-The compatibility audit owns no repair route. Do not mutate `Cargo.toml` or `Cargo.lock` through this workflow. Treat a requested repair as a separate dependency change governed by the global **Dependencies** policy, including approval for the complete manifest and lockfile transition before mutation. After that separately authorized change, rerun the focused contract test, the audit against the same upstream lockfile, and root Rust validation.
+Matching direct dependency versions does not establish identical fetch behavior or matching transitive dependencies. A mismatch is evidence to investigate, not authorization to change dependencies.
 
 ## Run Focused Contract Tests
 
 ```sh
 cargo test --locked --test domfiles-zed-settings-pattern-match-test
-cargo test --locked --test domfiles-zed-settings-regex-dependency-audit-test
 ```
 
-Use the pattern matcher test as contract evidence for help-to-parser agreement, bounded finding retention and output, schemas, and status behavior. Select remaining root checks through the [skill-owned script validation policy](../../../../skills/.domfiles-skill-development/references/skill-owned-scripts.md#test-contracts).
+Keep the adjacent `pattern_match.test.rs` focused on argument handling, help agreement, case-sensitivity wiring and inline overrides, literal and empty inputs, and result and error behavior. These tests validate the wrapper contract, not the checked-in fetch policy or live Zed behavior. Run them when changing the matcher, then select root checks through the [skill-owned script validation policy](../../../../skills/.domfiles-skill-development/references/skill-owned-scripts.md#test-contracts).
