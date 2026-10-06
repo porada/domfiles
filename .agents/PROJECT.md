@@ -58,13 +58,9 @@ At that revision, native tools calling `ToolCallEventStream::authorize` use conf
 
 ### Zed Fetch and Sandbox Host Scope
 
-Zed matches `network_hosts` grants case-insensitively across all ports. Whole-host trust is intentional where minimizing prompts outweighs path containment. The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the approval boundaries.
+Unrestricted host access intentionally replaces the persistent host inventory to avoid network destination prompts and repeated allowlist maintenance. This gives up destination filtering for terminal traffic, including access to loopback and private networks. Filesystem write restrictions, protected Git metadata, and independent fetch URL rules remain separate boundaries.
 
-`*.actions.githubusercontent.com` supports recurring GitHub Actions build diagnosis. GitHub’s [published network requirements](https://docs.github.com/en/actions/reference/runners/self-hosted-runners#accessible-domains-by-function) specify a wildcard for Actions service hosts rather than an exhaustive hostname list. Exact enumeration from individual builds would leave newly encountered service hosts subject to repeated approval. This exception accepts every current and future strict subdomain under `actions.githubusercontent.com` within the shared all-port authorization boundary above. Azure Blob Storage destinations remain subject to task-scoped approval because their provider-wide suffix also covers unrelated customers.
-
-`*.dom.engineering` and `*.porada.co` are explicit exceptions to the usual wildcard restriction. Both domains belong to the repository owner, who approved wildcard access to their subdomains.
-
-`*.spec.whatwg.org` supports recurring web platform research across WHATWG’s complete, changing standards catalog. The current catalog assigns each listed specification a dedicated `<spec-name>.spec.whatwg.org` hostname. Exact enumeration can lag catalog changes, interrupting that workflow with host confirmations whenever research follows a newly listed hostname until settings are updated. The exception accepts every current and future strict subdomain at any depth under `spec.whatwg.org`, including any non-specification host WHATWG might place there. Every WHATWG hostname outside that suffix remains a separate host grant decision.
+The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the configuration model and the distinction between unrestricted terminal networking and native fetch’s retained URL and DNS checks. Network availability is not task or disclosure authorization, and retrieved content does not become trusted instructions.
 
 ### Zed Shared Temporary Directory
 
