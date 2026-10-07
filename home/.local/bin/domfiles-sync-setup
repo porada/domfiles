@@ -25,9 +25,7 @@ for source in \
   .dom-release-notes-for-humans \
   .dom-sensible-commit-flow \
   .domfiles-agent-documentation \
-  .domfiles-awesome-vitest-entry \
   .domfiles-diagnose \
-  .domfiles-harmonize \
   .domfiles-skill-development \
   agent-task-directories \
   agent-task-relay \

@@ -56,7 +56,7 @@ At that revision, native tools calling `ToolCallEventStream::authorize` use conf
 
 Unrestricted host access intentionally replaces the persistent host inventory to avoid network destination prompts and repeated allowlist maintenance. This gives up destination filtering for terminal traffic, including access to loopback and private networks. Filesystem write restrictions, protected Git metadata, and independent fetch URL rules remain separate boundaries.
 
-The [fetch and network permission policy](skills/domfiles-zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the configuration model and the distinction between unrestricted terminal networking and native fetch’s retained URL and DNS checks.
+The [fetch and network permission policy](skills/zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the configuration model and the distinction between unrestricted terminal networking and native fetch’s retained URL and DNS checks.
 
 ### Zed Shared Temporary Directory
 
@@ -78,7 +78,7 @@ Git publication and contribution submission require explicit authorization rathe
 
 ### Agent Documentation Composition
 
-Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. Applicable project instructions override their fallback workflows.
+Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. The [repository independence contract](../skills/.domfiles-agent-documentation/references/repository-independence.md) distinguishes intentional local copies from competing policy definitions. Applicable project instructions override their fallback workflows.
 
 The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode. Agent documentation retains ownership of authority, contract meaning, machine-readable content, and routing. This source authoring composition creates no installed runtime dependency on `human-facing-writing`.
 
@@ -238,7 +238,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 ### Dependency Status Labels
 
-`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell script policy](skills/domfiles-shell-integration/SKILL.md#check-supported-environment-compatibility) owns the row inclusion rule.
+`domfiles dependencies` is a user-facing readiness check for the synchronized dotfiles environment, not an inventory of every managed or installed tool. The [shell script policy](skills/shell-integration/SKILL.md#check-supported-environment-compatibility) owns the row inclusion rule.
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
@@ -370,4 +370,4 @@ No standardized environment variable covers command echo suppression. `NO_COLOR`
 
 ### Zed CLI Open Behavior
 
-`cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [Zed settings policy](skills/domfiles-zed-settings/SKILL.md#apply-general-policy) owns the redundancy criterion.
+`cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [Zed settings policy](skills/zed-settings/SKILL.md#apply-general-policy) owns the redundancy criterion.

@@ -6,7 +6,7 @@ This reference owns the matcher’s interface and manual version-check guidance.
 
 ## Apply Matcher Contract
 
-Retain `.agents/skills/domfiles-zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as a read-only pattern matcher with exactly these invocations:
+Retain `.agents/skills/zed-settings/scripts/pattern_match.rs` and the Cargo target `domfiles-zed-settings-pattern-match` as a read-only pattern matcher with exactly these invocations:
 
 ```text
 domfiles-zed-settings-pattern-match <case-sensitive> <pattern> <input>

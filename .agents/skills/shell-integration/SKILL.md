@@ -1,5 +1,5 @@
 ---
-name: domfiles-shell-integration
+name: shell-integration
 description: |-
     Use this skill whenever the resolved task scope includes shell code—including `domlib`, Fish configuration, `home/.local/bin` scripts, and `.hooks`—or adds or reconsiders a command entrypoint in this repository, including whether a Git helper should be a plain alias or a `home/.local/bin/git-*` script.
 
@@ -68,4 +68,4 @@ After editing, apply the [repository validation policy](../../../AGENTS.md#valid
 
 ## Validate Shell Audits, Diagnoses, and Reviews
 
-Apply the [repository validation policy](../../../AGENTS.md#validation) before running the applicable language skill’s read-only validation. When invoked through `domfiles-repository-audit`, preserve its [ban on linters and formatters](../domfiles-repository-audit/SKILL.md#keep-audits-read-only) and use only the remaining permitted checks. Verify every in-scope domfiles cross-file invariant in this skill and its routed references.
+Apply the [repository validation policy](../../../AGENTS.md#validation) before running the applicable language skill’s read-only validation. When invoked through `audit`, preserve its [ban on linters and formatters](../audit/SKILL.md#keep-audits-read-only) and use only the remaining permitted checks. Verify every in-scope domfiles cross-file invariant in this skill and its routed references.

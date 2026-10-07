@@ -1,5 +1,5 @@
 ---
-name: domfiles-zed-settings
+name: zed-settings
 description: |-
     Use this skill whenever the resolved scope includes `home/.config/zed/settings.json`, `.zed/settings.json`, or project-authored policy or skill scripts for those settings, including tasks about agent or sandbox permissions, fetch or network allowances, formatter settings, language settings, MCP settings, scan settings, terminal behavior, tool permissions, unexpected permission outcomes, or worktree permissions, even when the user did not name either settings file.
 

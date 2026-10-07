@@ -1,5 +1,5 @@
 ---
-name: domfiles-repository-audit
+name: audit
 description: |-
     Audit this repository.
 
@@ -21,8 +21,8 @@ metadata:
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.
-3. Exclude these paths in publication audit mode and in every default repository scope, including `/domfiles-repository-audit` without an explicit scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the security exclusions above:
-    - `.agents/skills/domfiles-zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
+3. Exclude these paths in publication audit mode and in every default repository scope, including `/audit` without an explicit scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the security exclusions above:
+    - `.agents/skills/zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
     - `home/.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Security exclusions still apply, and supporting evidence does not become reportable.
 
@@ -35,8 +35,8 @@ An explicit user direction may select another route, but it does not establish t
 ## Partition Large Audits
 
 - Divide a large scope into complete, nonoverlapping passes and treat them as one continuous audit.
-- Resolve each pass’s scope before execution so supported clients can discover every applicable project-local `domfiles-*` skill from its description. When delegating a pass, identify those skills for the delegate without loading their bodies into the coordinating context.
-- Apply the global **Prompt contract** policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/domfiles-repository-audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
+- Resolve each pass’s scope before execution so supported clients can discover every applicable project-local skill from its description. When delegating a pass, identify those skills for the delegate without loading their bodies into the coordinating context.
+- Apply the global **Prompt contract** policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
 
 ## Audit Contents
 

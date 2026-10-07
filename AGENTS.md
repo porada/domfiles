@@ -46,7 +46,7 @@ For changed JSON or TOML files, run `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_C
 
 ## Scope
 
-- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/domfiles-repository-audit/SKILL.md#resolve-audit-scope) excludes it.
+- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/audit/SKILL.md#resolve-audit-scope) excludes it.
     - Do not report `.gitignore` including `local.fish`.
     - Do not suggest adding additional documentation for `local.fish`.
 - **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because its target is outside the repository. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
@@ -67,10 +67,12 @@ Classify every project-authored skill by canonical source and supported installa
 
 | Category | Canonical Source | `name` | `metadata.internal` | Supported Installation |
 | --- | --- | --- | --- | --- |
-| Internal | `.agents/skills/domfiles-<skill-name>` | `domfiles-<skill-name>` | `true` | Project-local to `domfiles`. |
+| Internal | `.agents/skills/<skill-name>` | `<skill-name>` | `true` | Project-local to `domfiles`. |
 | Global | `skills/.domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
 | Global overlay | `skills/.dom-<base-name>` | `dom-<base-name>` | `true` | Same installation surface as the global category. |
 | Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
+
+Follow the [internal skill naming policy](skills/.domfiles-skill-development/references/skill-installation.md#internal-skill-names) when selecting internal names.
 
 Global overlays inherit global requirements. Their `<base-name>` must exactly match the base skill’s frontmatter `name`, without shortening, rewording, or dropping qualifiers.
 

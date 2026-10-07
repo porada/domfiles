@@ -10,10 +10,10 @@ regex = "=1.12.3"
 
 [[bin]]
 name = "domfiles-zed-settings-pattern-match"
-path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.rs"
+path = ".agents/skills/zed-settings/scripts/pattern_match.rs"
 bench = false
 test = false
 
 [[test]]
 name = "domfiles-zed-settings-pattern-match-test"
-path = ".agents/skills/domfiles-zed-settings/scripts/pattern_match.test.rs"
+path = ".agents/skills/zed-settings/scripts/pattern_match.test.rs"

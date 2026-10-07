@@ -7,11 +7,13 @@
 outdated_agent_instructions=false
 
 for skill in \
+  awesome-vitest-entry \
   commit \
   commit-flow \
   contribution-flow \
   git-worktrees \
   github-cli \
+  harmonize \
   package-release-notes \
   prompt-relays \
   prose \
