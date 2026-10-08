@@ -12,10 +12,10 @@
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@12.9.1",
+	"packageManager": "pnpm@12.10.1",
 	"dependencies": {
-		"skills": "^1.7.0",
-		"vercel": "^62.4.0"
+		"skills": "^1.7.1",
+		"vercel": "^62.7.0"
 	},
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.10.0",
