@@ -46,7 +46,7 @@ Group the inline policies under a final `## General Policies` section in this or
 
 ### Typography
 
-Include typography only when creating, editing, or reviewing prose is part of the skill’s advertised capability, including human-facing text embedded in code. Incidental operational reporting and scratch notes do not establish eligibility, nor does merely storing or transporting prose.
+Include typography only when creating, editing, or reviewing prose for human readers is a core advertised capability or the skill defines standards for human-facing text in authored code. Producing or transporting instructions addressed to another agent, or prose as a supporting step in another workflow, does not, by itself, establish eligibility. Otherwise, inherit applicable user and project writing instructions. Standalone completeness alone does not justify typography defaults.
 
 For an eligible skill, bundle a verbatim copy of the [typography template](../assets/typography.txt) at `references/typography.md`. Route to the bundled reference deterministically from `SKILL.md` before the skill creates, delivers, edits, or reviews prose. Apply a narrower user, project, surface, language, or syntax rule when the template permits it, but keep the shared template rules unchanged. For an ineligible skill, omit both the reference and its route.
 

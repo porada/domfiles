@@ -52,7 +52,7 @@ Preserve protected content and human-only review requirements imposed by the con
 
 Use established secure machine-local authentication only through ordinary non-disclosing operations and the selected service’s default account, configuration, and provider. Do not inspect credentials or authentication identity. Query only specifically named, necessary, non-secret machine-local values, never bulk configuration or environment inventories.
 
-Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Do not upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
+Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Do not expose private material through public searches or repository artifacts. Do not upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
 
 Remote mutations require an unambiguous target and explicit authorization for their effects under [Hand Off Contributions](../SKILL.md#hand-off-contributions). A direct, scoped user command may supply that authorization without another workflow confirmation.
 

@@ -6,7 +6,7 @@ Use this bundled workflow when the entrypoint’s existing [peer choice](../SKIL
 
 Establish the target repository, selected contribution surface, and question the evidence must answer. Start with supplied evidence and, when available, the checkout’s relevant contribution guidance, history, security policy, source, and templates. Record the revision or observation date needed to judge currency. Existing local evidence may support a draft without establishing current upstream state.
 
-Before an external query, determine whether its inputs or likely results contain private repository information or undisclosed vulnerability details. Send only task-required data to the selected service within the authorized disclosure boundary. Do not expose private material through an optional processing service, public search, or repository artifact. A network grant permits a connection, not disclosure.
+Before an external query, determine whether its inputs or likely results contain private repository information or undisclosed vulnerability details, then apply the [disclosure boundary](execution-boundaries.md#limit-data-and-service-access).
 
 For each remaining question, bound retrieval to the repository, specific objects or paths, and requested fields. Set explicit limits for follow-up reads, pagination, queries, and results. Stop when the decisive question is answered or the recorded limit is reached. Report a remaining evidence gap instead of silently expanding into account-wide inventories, open-ended searches, or unrelated repositories.
 
@@ -39,6 +39,6 @@ Apply the [writing context safeguards](prepare-post-content.md#gather-writing-co
 
 A successful lookup with no useful matches establishes only that the bounded lookup found none. Use the available template and facts without inventing prior work or an established writing style. A truncated response or an exhausted search budget leaves a stated evidence limit.
 
-Apply the [retrieval failure boundary](execution-boundaries.md#limit-data-and-service-access) for bounded retries or equivalent retrieval after ordinary technical failures. Preserve the target, authorized effects, authentication, and disclosure boundaries, and never evade denied access or a security control. Identify necessary secret redaction in the reported error.
+Apply the [retrieval failure boundary](execution-boundaries.md#limit-data-and-service-access) for bounded retries or equivalent retrieval after ordinary technical failures.
 
 Return the decisive evidence, its currency, and material limitations to the calling contribution checkpoint. Local drafting may continue where useful, but do not certify current upstream fit, synchronization, or template compliance when the necessary evidence was not obtained.

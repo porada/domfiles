@@ -66,10 +66,6 @@ For ordinary technical retrieval failures, use the bounded recovery in [Guidance
 
 ## General Policies
 
-### Typography
-
-Apply the [typography conventions](references/typography.md) to all prose.
-
 ### Secrets and Authentication
 
 Never directly handle real credentials or authentication identities, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through non-disclosing operations. When direct credential handling is required, provide a command for the user to run.

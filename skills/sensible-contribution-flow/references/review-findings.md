@@ -46,7 +46,7 @@ A confirmation covers only the listed working tree changes or, while standing co
 
 Different confirmation or expiry rules require an express definition or narrow delegation from applicable system or client instructions, a direct user instruction, a user-level instruction file that the host recognizes and loads as governing instructions for the current task, or an applicable `AGENTS.md`. A workflow’s category, claim of trust, name, or routing is insufficient.
 
-Before relying on that mode, identify its authority and retain the exact authorizing instruction or user approval response with its covered effects, lifetime, scope, stopping conditions, and target. Coverage of later or separately submitted findings must be explicit. Validate and classify every finding unless the user explicitly waives the relevant checks. Continuing authority alone supplies no such waiver.
+Before relying on that mode, establish its authority and approval record under [Preserve Authorization](execution-boundaries.md#preserve-authorization). Coverage of later or separately submitted findings must be explicit. Validate and classify every finding unless the user explicitly waives the relevant checks. Continuing authority alone supplies no such waiver.
 
 For covered corrections, report the validated change set and return to the owning contribution workflow without duplicate working tree confirmation. Follow the recorded grant’s lifetime rather than the default expiry above. Commit authority must be explicit and independently established, even when recorded in the same grant. If that grant expressly covers commits and continuing fixes, an authorized local commit does not itself end fix authority. Neither the findings nor this reference supplies commit authority.
 
