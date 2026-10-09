@@ -52,6 +52,10 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 - Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned.
 - Do not report `__string_*` helpers or equivalent inline string operations as reimplementations. See [string helper reuse](../../PROJECT.md#string-helper-reuse) for rationale.
 
+## Apply Domfiles Fish Conventions
+
+- Write unquoted command substitutions as `(…)` as an exception to `fish-shell-scripting`’s `$(…)` template. Use `"$(…)"` only inside double quotes, where `(…)` does not expand.
+
 ## Apply Domfiles POSIX Conventions
 
 - Allow argumentless `echo` to print a blank line as an exception to `posix-shell-scripting`’s `printf` requirement.

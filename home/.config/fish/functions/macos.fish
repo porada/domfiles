@@ -1,5 +1,5 @@
 function macos --description 'Configure macOS properties'
-    argparse --min-args=1 --max-args=2 --name=macos -- $argv
+    argparse --min-args=1 --max-args=2 -- $argv
     or return
 
     if not contains -- "$argv[1]" hidden shadow
@@ -23,7 +23,6 @@ function macos --description 'Configure macOS properties'
             if not set --query value[1]
                 __domfiles_print_and_run \
                     defaults delete com.apple.finder AppleShowAllFiles
-                or true
             else
                 __domfiles_print_and_run \
                     defaults write com.apple.finder AppleShowAllFiles -bool "$value"
@@ -37,7 +36,6 @@ function macos --description 'Configure macOS properties'
             if not set --query value[1]
                 __domfiles_print_and_run \
                     defaults delete com.apple.screencapture disable-shadow
-                or true
             else
                 if test "$value" = true
                     set value false

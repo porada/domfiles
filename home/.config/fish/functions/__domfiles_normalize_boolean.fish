@@ -5,6 +5,7 @@ function __domfiles_normalize_boolean
         return 1
     end
 
+    # Compare exact values, since command substitution would trim trailing newlines
     for accepted in 1 on true yes
         if string match --quiet --ignore-case -- "$accepted" "$argv[1]"
             echo true

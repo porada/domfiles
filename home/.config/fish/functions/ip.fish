@@ -2,14 +2,8 @@ function ip --description 'Show local and public IP addresses'
     set --local interfaces (command ifconfig -a inet)
     or return
 
-    set --local addresses (
-        printf '%s\n' $interfaces | command awk '/inet/ {print $2}'
-    )
-    or return
-
-    if set --query addresses[1]
-        string match --invert -- '127.0.0.1' $addresses
-    end
+    string match --regex --groups-only -- '^\s*inet\s+(\S+)' $interfaces |
+        string match --invert -- '127.0.0.1'
 
     set --local public_ip (command dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null)
     or begin

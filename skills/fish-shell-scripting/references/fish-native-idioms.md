@@ -21,7 +21,7 @@ Choose the narrowest check that establishes the required property, from definiti
 | Exact element count         | `test $(count $<name>) -eq <count>` |
 | Joined content is nonempty  | `test -n "$<name>"`                 |
 
-An undefined variable, a defined empty list, and a list containing one empty string are different states. Do not pass an unquoted, potentially empty list as the only input to `string length --quiet`. If the list expands to zero arguments, the command reads piped or redirected standard input instead. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
+An undefined variable, a defined empty list, and a list containing one empty string are different states. Do not pass an unquoted, potentially empty list as the only input to a `string` or `path` command whose own standard input is piped or redirected. If the list expands to zero arguments, the command reads that input instead. A function or block that receives piped input does not hand it to such a command, so a call without its own redirection needs no guard. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
 
 Treat special read-only variables such as `$status` as immutable. Do not assign or erase them with `set` or target them with a single-command override.
 
@@ -98,7 +98,7 @@ or return
 
 Assignment-mode `set` preserves the status of its final command substitution. Copy that status immediately when logging, cleanup, or another command must run before returning it.
 
-Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code.
+Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code. A failing command does not stop a Fish function, so add `or true` only where that status would otherwise become the function’s result or reach a later status check.
 
 Inspect `$pipestatus` only when individual pipeline stages matter. Do not reinterpret every nonzero upstream status as whole-pipeline failure.
 

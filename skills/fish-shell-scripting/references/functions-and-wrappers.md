@@ -56,6 +56,8 @@ Define a maintained wrapper with an observable contract as an explicit function.
 
 When wrapping an external program, invoke it through `command` and forward `$argv` unless the wrapper intentionally changes that interface. Use the [command resolution operation](builtin-selection.md#input-and-command-state) that matches whether functions, builtins, or only external programs may satisfy the dependency.
 
+When an alias’s name matches the first word of its body, Fish prefixes that word with `command`, or with `builtin` for a builtin. The alias then replaces a function Fish ships under that name, such as `ls`, instead of extending it. Use an abbreviation when the shipped function must still run.
+
 Before rewriting a delegated command’s arguments, establish which input forms the wrapper supports. Validate `--` handling, abbreviated and full option names, and attached and separate option values against that declared interface. Keep supported arguments as separate list elements, and reject unsupported forms before rewriting rather than partially parsing them and forwarding an altered command.
 
 When a wrapper takes over a command’s terminal presentation, preserve the configuration and environment variable precedence required by its declared interface. Check empty and unset values separately because they may select different behavior. Prefer the underlying command’s supported resolver when it supplies that behavior rather than duplicating its resolution logic.

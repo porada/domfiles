@@ -5,7 +5,7 @@ function fish_prompt
 
     set_color $fish_color_normal
     set_color $fish_color_user
-    __domfiles_fish_prompt_newline
+    printf '\n'
     __domfiles_fish_prompt_host
 
     set_color $fish_color_normal
@@ -15,18 +15,13 @@ function fish_prompt
     set_color $fish_color_normal
     set_color $fish_color_operator
     __domfiles_fish_prompt_git
-    __domfiles_fish_prompt_newline
+    printf '\n'
 
     set_color $fish_color_normal
     set_color $fish_color_comment
     __domfiles_fish_prompt_caret $exit_status
 
     set_color $fish_color_normal
-end
-
-# Prints a prompt newline
-function __domfiles_fish_prompt_newline
-    printf '\n'
 end
 
 # Prints remote host context for SSH sessions

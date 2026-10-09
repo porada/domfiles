@@ -4,16 +4,10 @@ function ffmpeg-wav-png --description 'Convert paired WAV and PNG files in the c
         return 1
     end
 
-    # Keep the `--preset=<preset>` form and ignore all other arguments
-    set --local preset_params
+    # Ignore all arguments other than `--preset`
+    argparse --strict-longopts --ignore-unknown 'preset=' -- $argv
+    or return
 
-    for param in $argv
-        if string match --quiet -- '--preset=*' "$param"
-            set --append preset_params "$param"
-        end
-    end
-
-    argparse 'preset=' -- $preset_params
     set --local preset "$_flag_preset"
 
     if test -z "$preset"
@@ -28,7 +22,7 @@ function ffmpeg-wav-png --description 'Convert paired WAV and PNG files in the c
                     continue
                 end
 
-                set --local base $(path change-extension '' -- "$audio")
+                set --local base (path change-extension '' -- "$audio")
                 set --local image "$base.png"
                 set --local video "$base.mov"
 
@@ -55,7 +49,7 @@ function ffmpeg-wav-png --description 'Convert paired WAV and PNG files in the c
                     continue
                 end
 
-                set --local base $(path change-extension '' -- "$audio")
+                set --local base (path change-extension '' -- "$audio")
                 set --local image "$base.png"
                 set --local video "$base.mkv"
 
@@ -77,7 +71,7 @@ function ffmpeg-wav-png --description 'Convert paired WAV and PNG files in the c
             end
 
         case '*'
-            __domfiles_print_error "Unsupported preset: `$preset`"
+            __domfiles_print_error "Unsupported preset. Use `instagram` or `youtube`"
             return 1
     end
 end

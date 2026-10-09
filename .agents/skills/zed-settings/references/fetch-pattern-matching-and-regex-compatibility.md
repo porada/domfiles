@@ -29,9 +29,7 @@ Invoke the installed command from any working directory, with the pattern before
 zed-match '<case-sensitive>' '<pattern>' '<input>'
 ```
 
-The `home/.local/bin/zed-match` wrapper builds the Cargo target from the domfiles root, then runs the compiled matcher in the caller’s directory. Cargo’s build preparation is separate from the read-only matching operation.
-
-Build failures preserve Cargo’s exit status, such as `101`. Failure to read Cargo’s output or find its reported executable exits with status `1` and a launcher diagnostic on standard error. Executable launch failures may return other statuses. Determine the failure stage from the diagnostic rather than interpreting status `1` alone as invalid input or an invalid regex.
+Before invoking the installed wrapper, read the [domfiles wrapper contract](../../../../skills/.domfiles-skill-development/references/domfiles-script-policy.md#run-command-wrappers) for build prerequisites, effects, and failure statuses.
 
 Read the pattern and `case_sensitive` value from the settings being checked rather than copying a documented regex. Compare the printed Boolean with the expected match, not merely the exit status. Separately [resolve the configured decision and native checks](agent-permissions.md#resolve-effective-permission-behavior).
 
@@ -49,4 +47,4 @@ Run from the domfiles root:
 cargo test --locked --test zed-match-test
 ```
 
-Keep the adjacent `zed_match.test.rs` focused on argument handling, help agreement, case sensitivity wiring and inline overrides, literal and empty inputs, and result and error behavior. Also cover the wrapper’s build location, Cargo-reported executable selection, caller working directory, output streams, and exit status propagation. These tests validate the command contract, not the checked-in fetch policy or live Zed behavior. Run them when changing the matcher or wrapper, then select root checks through the [skill-owned script validation policy](../../../../skills/.domfiles-skill-development/references/skill-owned-scripts.md#test-contracts).
+Keep the adjacent `zed_match.test.rs` focused on argument handling, help agreement, case sensitivity wiring and inline overrides, literal and empty inputs, and result and error behavior. For launcher coverage, follow the [domfiles wrapper test requirements](../../../../skills/.domfiles-skill-development/references/domfiles-script-policy.md#validate-command-wrappers). These tests validate the command contract, not the checked-in fetch policy or live Zed behavior. Run them when changing the matcher or wrapper, then select root checks through the [skill-owned script validation policy](../../../../skills/.domfiles-skill-development/references/skill-owned-scripts.md#test-contracts).

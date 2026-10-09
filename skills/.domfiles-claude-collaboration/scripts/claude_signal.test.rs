@@ -163,7 +163,7 @@ fn execute(
         command.current_dir(directory);
     }
 
-    let output = command.output().expect("The checker must start");
+    let output = command.output().expect("The command must start");
 
     (
         output.status.code(),
@@ -474,6 +474,36 @@ fn anchors_the_turn_on_the_latest_prompt() {
     assert_eq!(
         fixture.observe(3, &[]),
         json!({ "state": "working", "nextSince": 5, "progressAt": at(5) })
+    );
+}
+
+#[test]
+fn anchors_only_on_prompts_with_a_human_origin() {
+    let background = json!({ "command": "pnpm test", "run_in_background": true });
+    let fixture = Fixture::new(&[
+        prompt(1),
+        call("a", &background, 2),
+        result("a", false, 3),
+        compaction(4),
+        json!({
+            "type": "user",
+            "isCompactSummary": true,
+            "message": { "role": "user", "content": "Summary of the earlier conversation" },
+            "timestamp": at(5),
+        }),
+        json!({
+            "type": "user",
+            "message": { "role": "user", "content": "<local-command-stdout></local-command-stdout>" },
+            "timestamp": at(6),
+        }),
+        reply("b", "Started the tests", "end_turn", 7),
+        turn_end(8),
+    ]);
+
+    fixture.listing(&session("done", Some("idle"), None));
+    assert_eq!(
+        fixture.observe(0, &[]),
+        json!({ "state": "working", "nextSince": 8, "progressAt": at(7) })
     );
 }
 
@@ -846,6 +876,22 @@ fn waits_until_ready_or_the_deadline() {
 }
 
 #[test]
+fn keeps_the_lookup_interval_while_background_work_runs() {
+    let background = json!({ "command": "pnpm test", "run_in_background": true });
+    let fixture = Fixture::new(&[
+        prompt(1),
+        call("a", &background, 2),
+        result("a", false, 3),
+        reply("b", "Started the tests", "end_turn", 4),
+        turn_end(5),
+    ]);
+
+    fixture.listing(&session("done", Some("idle"), None));
+    assert_eq!(fixture.observe(0, &["--wait", "2"])["state"], "working");
+    assert_eq!(fixture.calls(), 1);
+}
+
+#[test]
 fn resolves_relative_transcript_paths_from_the_working_directory() {
     let fixture = Fixture::new(&[prompt(1)]);
     let name = format!("{UUID}.jsonl");
@@ -952,50 +998,4 @@ fn launches_from_the_domfiles_root_and_runs_in_the_caller_directory() {
         launch(&["--transcript", &name, "--since", "1"]),
         (Some(101), String::new(), "cargo: building\n".to_owned())
     );
-}
-
-#[test]
-fn anchors_only_on_prompts_with_a_human_origin() {
-    let background = json!({ "command": "pnpm test", "run_in_background": true });
-    let fixture = Fixture::new(&[
-        prompt(1),
-        call("a", &background, 2),
-        result("a", false, 3),
-        compaction(4),
-        json!({
-            "type": "user",
-            "isCompactSummary": true,
-            "message": { "role": "user", "content": "Summary of the earlier conversation" },
-            "timestamp": at(5),
-        }),
-        json!({
-            "type": "user",
-            "message": { "role": "user", "content": "<local-command-stdout></local-command-stdout>" },
-            "timestamp": at(6),
-        }),
-        reply("b", "Started the tests", "end_turn", 7),
-        turn_end(8),
-    ]);
-
-    fixture.listing(&session("done", Some("idle"), None));
-    assert_eq!(
-        fixture.observe(0, &[]),
-        json!({ "state": "working", "nextSince": 8, "progressAt": at(7) })
-    );
-}
-
-#[test]
-fn keeps_the_lookup_interval_while_background_work_runs() {
-    let background = json!({ "command": "pnpm test", "run_in_background": true });
-    let fixture = Fixture::new(&[
-        prompt(1),
-        call("a", &background, 2),
-        result("a", false, 3),
-        reply("b", "Started the tests", "end_turn", 4),
-        turn_end(5),
-    ]);
-
-    fixture.listing(&session("done", Some("idle"), None));
-    assert_eq!(fixture.observe(0, &["--wait", "2"])["state"], "working");
-    assert_eq!(fixture.calls(), 1);
 }

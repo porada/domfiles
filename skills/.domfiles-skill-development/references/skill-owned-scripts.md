@@ -92,6 +92,8 @@ For scripts or tests with filesystem writes, including fixture setup and tempora
 - Run focused tests during implementation and after each behaviorally relevant correction. Run the repository’s root static validation once after the consolidated change batch, then rerun it only when a later correction changes an input or configuration that it covers. Direct execution and focused tests do not replace root typechecking or compilation.
 - Test applicable read and write modes, destination resolution, overwrite refusal, unchanged output, cleanup, and failure behavior.
 
+When contract tests in the same language duplicate a mechanism across scripts, keep equivalent fixture code, helper names and signatures, comments, test names, and the relative source order of corresponding assertions and tests identical. Vary only the command-specific inputs, outputs, and required setup within those equivalent portions. Update them together when the mechanism changes. This does not require duplicating cases assigned to a shared path or aligning unrelated tests.
+
 Tests may initialize declared disposable fixture repositories and populate their indexes only when the current task authorizes that setup and the caller has established isolated storage under the [ephemeral artifact rule](script-artifact-boundaries.md#bound-artifact-locations). Keep these writes inside the fixture repositories. Obtain any required sandbox grants separately. Tests that create commits, including fixture commits, still require explicit user authorization under the global **Commit gate**.
 
 Document focused script and test commands in the owning skill or its repair reference.

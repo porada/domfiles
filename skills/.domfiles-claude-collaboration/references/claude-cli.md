@@ -78,7 +78,7 @@ When compaction or uncertain retention requires a refreshed handoff, retain its 
 
 Use the domfiles-managed `claude-signal` command through `PATH` instead of reconstructing transcript readers or polling `claude agents` separately. Apply the global **Output economy** policy. Locate only the recorded UUID’s `<uuid>.jsonl` transcript beneath `~/.claude/projects/` once per session and retain its exact path.
 
-The launcher requires the reachable domfiles checkout and its prescribed build tools. It builds in the domfiles root, then runs the executable Cargo reports from the caller’s directory. Build preparation may write host build outputs and caches, including before help or argument validation. The observation itself is read-only: it reads the selected transcript, related subagent transcripts, and the matching session’s native CLI state. It does not dispatch prompts or stop workers.
+Before invoking the command, read **Run Command Wrappers** in `skill-development`’s `references/domfiles-script-policy.md` for launcher prerequisites, build effects, and failure statuses. The compiled observation is read-only: it reads the selected transcript, related subagent transcripts, and the matching session’s native CLI state. It does not dispatch prompts or stop workers.
 
 ### Read Turn Signals
 
@@ -143,7 +143,7 @@ Require Claude to include errors, recovered errors, gate requests, and material 
 
 Surface observed CLI, monitoring, permission, and command errors to the user promptly, with the relevant error and known impact, without exposing secrets. Recover ordinary errors through evidence-backed corrections within existing authority and retry limits. Do not hide an error because recovery succeeds.
 
-`claude-signal` exits `0` after a successful observation, including `attention`, or help. Exit `2` reports an invalid invocation or an observation/output failure, including unreadable or malformed transcripts, a boundary beyond the complete transcript, or a failed or non-unique session lookup. Diagnostics go to standard error, and malformed records are identified by path and line number without their contents. Other nonzero statuses indicate a build or launch failure rather than a turn state. Use the diagnostic to establish the failure stage, and treat any unsuccessful check as a monitoring limitation. Do not advance the boundary, reset the clock, or infer inactivity from an error.
+The compiled `claude-signal` exits `0` after a successful observation, including `attention`, or help. Exit `2` reports an invalid invocation or an observation/output failure, including unreadable or malformed transcripts, a boundary beyond the complete transcript, or a failed or non-unique session lookup. Diagnostics go to standard error, and malformed records are identified by path and line number without their contents. For failures before the monitor runs, use the shared wrapper contract routed from [Observe the Current Turn](#observe-the-current-turn). Treat any unsuccessful check as a monitoring limitation. Do not advance the boundary, reset the clock, or infer inactivity from an error.
 
 For `noReply`, inspect the API error and other detail rather than treating the partial text as a completed review. Authentication and quota failures follow the stopping rules below. The compact monitor does not stream every command result or recovered error, so Claude’s required final error report remains necessary.
 
@@ -163,4 +163,4 @@ For a monitor change or a reproduced compatibility problem, run its focused cont
 cargo test --locked --test claude-signal-test
 ```
 
-The tests use temporary fixtures and stub the Claude session listing. They exercise parsing, turn states, progress, waits, and launcher behavior without starting a live Claude exchange.
+The tests use temporary fixtures and stub the Claude session listing. They exercise parsing, turn states, progress, waits, and launcher behavior without starting a live Claude exchange. For launcher coverage, follow **Validate Command Wrappers** in `skill-development`’s `references/domfiles-script-policy.md`.
