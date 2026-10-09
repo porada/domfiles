@@ -20,7 +20,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 - Apply the global **Explicit user direction** policy to configuration conventions and workflow requirements. An override does not change Zed’s implemented behavior, waive native sensitive-settings confirmation, or authorize bypassing a security control.
 - Keep `.zed/settings.json` and `home/.config/zed/settings.json` free of redundant entries. Treat configuration as redundant only when omitting it preserves the supported workflow. Matching a default or inherited value is not sufficient. Include tool-managed state and subsequent invocations in that comparison. The [CLI persistence rationale](../../PROJECT.md#zed-cli-open-behavior) illustrates this distinction.
 - Sort Zed settings object arrays by the value of their identifying field.
-- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../AGENTS.md#skills) and `skill-development` for skill script contracts.
+- When skill scripts, adjacent tests, or script-owned artifacts are in scope, follow the repository [skill script language and filename policy](../../../skills/.domfiles-skill-development/references/domfiles-script-policy.md) and `skill-development` for skill script contracts.
 
 ## Choose Workflows
 

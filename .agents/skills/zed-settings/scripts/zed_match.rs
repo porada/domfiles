@@ -8,8 +8,8 @@ use std::{
 
 const HELP: &str = concat!(
     "Usage:\n",
-    "  domfiles-zed-settings-pattern-match <case-sensitive> <pattern> <input>\n",
-    "  domfiles-zed-settings-pattern-match --help\n",
+    "  zed-match <case-sensitive> <pattern> <input>\n",
+    "  zed-match --help\n",
     "\n",
     "Report whether one Rust regex matches one input string\n",
     "\n",
@@ -26,7 +26,7 @@ const HELP: &str = concat!(
     "  0  The regex was evaluated, or help was displayed\n",
     "  1  Invalid arguments or an invalid regex\n",
 );
-const NAME: &str = "domfiles-zed-settings-pattern-match";
+const NAME: &str = "zed-match";
 
 enum Route {
     Help,

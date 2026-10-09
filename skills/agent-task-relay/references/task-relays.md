@@ -24,9 +24,9 @@ If a material choice remains unresolved, ask the user explicitly, and emit neith
 
 ### Present Relay Flow
 
-When confirmation is still needed, present the final flow in its own response. Keep it succinct, but include the receiving action, material target environment, worktree decision when repository work is involved, scope and exclusions, mutation and approval boundaries, required execution steps, validation, and handoff mode.
+When confirmation is still needed, present the final flow and ask the user to confirm or correct it. Keep it succinct, but include the receiving action, material target environment, worktree decision when repository work is involved, scope and exclusions, mutation and approval boundaries, required execution steps, validation, and handoff mode. Do not include the task relay in the confirmation response.
 
-When flow confirmation is still needed, ask the user to confirm or correct it, and do not include the task relay in that response. Once the flow is authorized, emit the complete relay without recapping the flow.
+Once the flow is authorized, emit the complete relay without recapping the flow.
 
 ### Keep Confirmation Narrow
 

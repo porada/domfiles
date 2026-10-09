@@ -25,6 +25,7 @@ for source in \
   .dom-release-notes-for-humans \
   .dom-sensible-commit-flow \
   .domfiles-agent-documentation \
+  .domfiles-claude-collaboration \
   .domfiles-diagnose \
   .domfiles-skill-development \
   agent-task-directories \

@@ -109,6 +109,38 @@ __domfiles_bin() (
   "$DOMFILES_BIN_DIR/$command" "$@"
 )
 
+# Executes Cargo target `$1` from the caller’s directory after building it in
+# the domfiles workspace
+__domfiles_cargo_target_exec() (
+  if [ $# -eq 0 ]; then
+    __print_error_and_exit '`__domfiles_cargo_target_exec` requires a target'
+  fi
+
+  target="$1"
+  shift
+
+  # Build from the root so Cargo ignores the caller’s directory configuration,
+  # then run the executable wherever Cargo reports placing it
+  messages="$(
+    __domfiles_cd_root
+    cargo build --bin "$target" --locked \
+      --message-format=json-render-diagnostics --quiet
+  )"
+
+  command="$(
+    printf '%s\n' "$messages" \
+      | jq --arg target "$target" --raw-output \
+        'select(.reason == "compiler-artifact" and .target.name == $target)
+          | .executable // empty'
+  )" || __print_error_and_exit 'Failed to read Cargo’s build messages'
+
+  if [ -z "$command" ]; then
+    __print_error_and_exit "Cargo did not report an executable for \`$target\`"
+  fi
+
+  exec "$command" "$@"
+)
+
 # Changes the current directory to `bin`
 __domfiles_cd_bin() {
   cd "$DOMFILES_BIN_DIR" \

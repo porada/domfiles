@@ -7,13 +7,24 @@ edition = "2024"
 
 [dependencies]
 regex = "=1.12.3"
+serde_json = "1.0.151"
 
 [[bin]]
-name = "domfiles-zed-settings-pattern-match"
-path = ".agents/skills/zed-settings/scripts/pattern_match.rs"
+name = "claude-signal"
+path = "skills/.domfiles-claude-collaboration/scripts/claude_signal.rs"
+bench = false
+test = false
+
+[[bin]]
+name = "zed-match"
+path = ".agents/skills/zed-settings/scripts/zed_match.rs"
 bench = false
 test = false
 
 [[test]]
-name = "domfiles-zed-settings-pattern-match-test"
-path = ".agents/skills/zed-settings/scripts/pattern_match.test.rs"
+name = "claude-signal-test"
+path = "skills/.domfiles-claude-collaboration/scripts/claude_signal.test.rs"
+
+[[test]]
+name = "zed-match-test"
+path = ".agents/skills/zed-settings/scripts/zed_match.test.rs"

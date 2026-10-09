@@ -2,7 +2,7 @@
 
 A skill-owned script is a small program that gathers recurring repository evidence, produces declared artifacts, or does both for one project-authored skill. Use one when it makes the workflow more deterministic, efficient, or repeatable than a sequence of manual operations. Do not turn a narrow skill need into a general repository utility.
 
-When a script belongs to a portable skill—one installed for use across target projects rather than scoped to one repository—apply the additional [portable skill script contract](portable-skill-scripts.md) before resolving its interface.
+Apply the additional [portable skill script contract](portable-skill-scripts.md) before resolving an interface when the owning skill supports use across target projects or project policy designates the script as a portable command. A command’s portability does not change its owning skill’s installation category.
 
 ## Choose Contract Pass
 
@@ -53,12 +53,12 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 
 ## Keep Ownership Clear
 
-- Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`. Follow the [filename contract](#resolve-filenames) for every pair.
+- Store each script’s implementation and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`. Follow the [filename contract](#resolve-filenames) for every pair. Place thin launchers at the repository’s prescribed command surface without relocating or duplicating the implementation.
 - Let the skill own the source, tests, purpose, invocation, operation routes, artifact contract, and repair workflow.
 - Let the repository root own toolchain configuration, dependencies and host language type packages, static validation, optional Cargo integration, and repository build output policy.
 - Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
 
-Root ownership assumes the script runs inside its canonical repository.
+Build compiled scripts in their canonical repository’s build context. The runtime working directory follows the documented command contract and may differ from the build directory.
 
 ## Change Protected Scripts
 
@@ -104,7 +104,7 @@ Apply `intentional-dependency-choice` before choosing a bespoke implementation o
 
 When a script reveals that root validation omits a source category, extend the root contract for that complete category rather than hardcoding one skill path. For example, add `.agents/**` to a TypeScript repository’s root include patterns when they do not cover skill-owned sources. Ensure the root check covers both the script and its test. Do not broaden configuration prospectively before a real script establishes the need.
 
-For Rust scripts, follow [Rust Script Integration](rust-script-integration.md) for the standard-library-only and Cargo build routes.
+For Rust scripts, follow [Rust Script Integration](rust-script-integration.md) to select the build route under the repository’s policy.
 
 ## Resolve Filenames
 

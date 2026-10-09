@@ -71,18 +71,4 @@ Classify every project-authored skill by canonical source and supported installa
 | Global overlay | `skills/.dom-<base-name>` | `dom-<base-name>` | `true` | Same installation surface as the global category. |
 | Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
 
-Follow the [internal skill naming policy](skills/.domfiles-skill-development/references/skill-installation.md#internal-skill-names) when naming Internal category skills.
-
-Global overlays inherit global requirements. Their `<base-name>` must exactly match the base skill’s frontmatter `name`, without shortening, rewording, or dropping qualifiers.
-
-Global skills may rely on domfiles-managed global instructions and the complete globally exposed skill set. Public skills must deliver their advertised behavior when independently installed.
-
-When changing a public skill contract or its standalone fallback, consult the [fallback family index](.agents/PROJECT.md#public-skill-fallback-families) to identify related guidance.
-
-- **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
-- **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.
-- **Implementation default:** Write project-authored skill scripts in Rust with `snake_case` source stems, retaining the established `.test.rs` suffix for adjacent contract tests.
-- **Language exception:** Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes it materially more correct, maintainable, or proportionate than Rust.
-    - Record the exception and its durable reason in the owning skill before implementation.
-    - Avoiding migration, existing language use, familiarity, or shorter syntax alone does not justify an exception.
-- **Cargo names:** Keep established Cargo target and CLI names unchanged when only source filenames change.
+Follow the [domfiles skill policy](skills/.domfiles-skill-development/references/domfiles-skill-policy.md) for project-authored skill work, including scripts, command wrappers, and build or test integration.
