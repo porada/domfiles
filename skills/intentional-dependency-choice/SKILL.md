@@ -1,9 +1,9 @@
 ---
 name: intentional-dependency-choice
 description: |-
-    Use when choosing, proposing, reviewing, or declaring a new dependency or development tool, including temporary package runner acquisitions. Also use when changing a dependency’s or tool’s prescribed features, source, or version.
+    Use when choosing, proposing, reviewing, or declaring a new dependency or development tool, including temporary package runner acquisitions. Also use when declaring an existing dependency for an additional workspace consumer or changing a dependency’s or tool’s prescribed features, source, or version.
 
-    Do not use merely to reuse an existing project dependency, install or restore already prescribed dependencies, incorporate existing dependency declarations through authorized history integration, or conduct a general dependency inventory or security audit without a selection decision.
+    Do not use merely to reuse an existing project dependency without adding or changing a declaration, install or restore already prescribed dependencies, incorporate existing dependency declarations through authorized history integration, or conduct a general dependency inventory or security audit without a selection decision.
 ---
 
 # Intentional Dependency Choice
@@ -26,7 +26,7 @@ When the task concerns already approved choices, prescribed acquisition, or exis
 
 ## Establish Necessity
 
-Check whether the standard library, an existing dependency, or an established project workflow already supplies the required capability. Prefer an existing solution when it fully satisfies the task, and enable only the features needed. If no new choice is necessary, explain that result briefly and return to the task.
+Check whether the standard library, an existing dependency, or an established project workflow already supplies the required capability. Prefer an existing solution when it fully satisfies the task, and enable only the features needed. If no new choice is necessary, explain that result briefly and return to the task, carrying the [declaration convention](#return-to-implementation) when a new consumer declaration is still needed.
 
 Consider a custom implementation only when its correctness and maintenance burden are proportionate to the need. Do not replace a mature capability with bespoke code merely to avoid a dependency approval request. Name the specific gap that an addition would fill rather than inventing future consumers or requirements.
 
@@ -42,7 +42,7 @@ Use task-required public evidence or established non-disclosing access. Do not u
 
 ## Explain Your Choice
 
-Keep the decision brief proportional to the choice. Present its identity, intended use, justification, and consequences in that order:
+Resolve the [declaration convention](#return-to-implementation) before presenting the choice, including any changes to existing consumers. Keep the decision brief proportional to the choice. Present its identity, intended use, justification, and consequences in that order:
 
 - **Choice:** The exact dependency or tool, required features, source, and version.
 - **Use:** Its consumers and purpose, declaration location, and installation location when relevant.
@@ -57,7 +57,11 @@ Ask once for the uncovered choice and its material effects. Preserve approval al
 
 ## Return to Implementation
 
-Return the choice, rationale, declaration convention, and approval status to the owning workflow, carrying exact user authorization when needed. Follow the project’s declaration convention or, when none exists, the ecosystem’s convention for compatible updates. Explain intentional pins and other deviations.
+Return the choice, rationale, declaration convention, and approval status to the owning workflow, carrying exact user authorization when needed. Follow the project’s dependency declaration policies and conventions or, when none exist, the ecosystem’s convention for compatible updates. Explain intentional pins and other deviations.
+
+When the current toolchain supports shared dependency specifications and using them is consistent with those policies and conventions, centralize a specification that would otherwise be repeated across workspace consumers. Reuse an existing shared entry, or promote the matching inline specification and update the affected consumers to reference it.
+
+Preserve the selected dependency requirements and consumer-specific settings. Do not introduce or extend a sharing mechanism when project policy prohibits it, requires another declaration form, or limits its use to other consumers or dependency categories. When no applicable sharing mechanism is supported or permitted, retain the project’s declaration form. This rule does not change dependency selection or approval requirements.
 
 That workflow owns separately authorized declarations, lockfile updates, acquisition, and validation. A recommendation is not approval, and choice approval does not authorize unrelated effects or waive installation, lifecycle script, publication, or security requirements. If implementation needs features, a source, or a version outside the approval, return to the decision rather than silently substituting them. Preserve unrelated work and approval covering unchanged effects.
 

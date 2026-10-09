@@ -22,7 +22,7 @@ For every access case, retain the access assessment with the task context and re
 
 ## Probe Index Access
 
-Run this probe only when the user has requested commit creation or a history update, or separately authorized the probe. It may precede the normal commit proposal and confirmation, but does not authorize staging task changes or creating commits beyond the user’s request.
+Run this probe only when the user has requested commit creation or a history update, or separately authorized the probe. When the command-bound grant case selects this probe, run it now rather than waiting for a commit proposal or confirmation. It does not authorize staging task changes or creating commits beyond the user’s request.
 
 1. Select one fresh, nonignored file path directly under the supplied worktree root, using `.agent-<name>` unless applicable project instructions require another approved namespace. The path must be absent from `HEAD` when present, the index, and the working tree. Record existing staging for comparison. Do not reuse a file, change ignore rules, or force-add an ignored artifact.
 2. Create an empty file and stage only that path with `git add -- <probe-path>`. Explain the temporary staging and immediate cleanup when requesting the supported sandbox grant. If the client declares Git metadata protected, request that grant with the operation rather than first attempting a write known to be forbidden.

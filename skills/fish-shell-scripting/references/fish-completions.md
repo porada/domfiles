@@ -4,7 +4,7 @@ Fish loads completion definitions on demand when it discovers candidates. Match 
 
 ## File Placement
 
-Name each autoloaded completion file `<command>.fish` and place it in a directory from `$fish_complete_path`. For software installation, use Fish’s vendor completion directory rather than a user configuration directory. Resolve that directory through the installation environment instead of hardcoding a platform path. Keep completion loading free of observable side effects because Fish may source the file while discovering candidates.
+Name each autoloaded completion file `<command>.fish` and place it in a directory from `$fish_complete_path`. For software installation, use Fish’s vendor completion directory rather than a user configuration directory. Resolve that directory through the installation environment instead of hardcoding a platform path.
 
 ## Registration Contract
 

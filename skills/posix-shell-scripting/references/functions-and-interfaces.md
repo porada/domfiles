@@ -33,7 +33,7 @@ run_make_in_directory() (
 
 When a function intentionally changes caller state, make that behavior part of its interface and namespace every shared variable. Avoid generic library variables such as `result`, `status`, `file`, or `tmp`.
 
-Declare a function as `name() { …; }`, not with another shell’s `function` syntax. Do not prefix a POSIX shell function or special built-in invocation with a variable assignment. When a function needs temporary variable state, assign it explicitly inside a subshell. Assignment prefixes remain available for regular built-ins and external commands when their normal temporary environment is intended.
+Declare a function with the template `<name>() { …; }`, not with another shell’s `function` syntax. Do not prefix a POSIX shell function or special built-in invocation with a variable assignment. When a function needs temporary variable state, assign it explicitly inside a subshell. Assignment prefixes remain available for regular built-ins and external commands when their normal temporary environment is intended.
 
 ## Sourced Interfaces
 
@@ -55,7 +55,7 @@ Treat standard output, standard error, and exit status as separate interfaces un
 | Standard error  | Diagnostics        |
 | Exit status     | Success or failure |
 
-A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow such as `if command` or `command || fallback`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from every function, including a subshell-bodied function, and `exit` from an executed script. Leave `$?` unquoted when passing it directly to `exit`.
+A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow using templates such as `if <command>` or `<command> || <fallback>`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from every function, including a subshell-bodied function, and `exit` from an executed script. Leave `$?` unquoted when passing it directly to `exit`.
 
 When a function’s contract requires a failed prerequisite to stop later work, handle that failure explicitly rather than relying on `set -e`. Validate a direct call first, then repeat in conditional contexts: an `if` condition, negation with `!`, and non-final positions in `&&` or `||` lists. Inject the failure before a later side effect, and verify both the absence of that effect and the required status after accounting for any caller-side inversion.
 
@@ -83,7 +83,7 @@ An assignment containing command substitution receives the substitution’s stat
 repository_root=$(git rev-parse --show-toplevel) || exit
 ```
 
-Use this form only when trailing-newline removal and a scalar representation preserve the command’s output contract.
+Use this form only when trailing newline removal and a scalar representation preserve the command’s output contract.
 
 ## Portable Output
 

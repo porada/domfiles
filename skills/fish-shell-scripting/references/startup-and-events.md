@@ -1,6 +1,6 @@
 # Startup and Events
 
-Apply [runtime state](fish-native-idioms.md#runtime-state) when the task involves Fish internals, functions, or shared variables.
+Apply the [runtime state rules](fish-native-idioms.md#runtime-state) when the task involves Fish internals, functions, or shared variables.
 
 ## Configuration Lifecycle
 

@@ -14,7 +14,7 @@ npx skills add porada/domfiles --global
 gh skill install porada/domfiles --scope user
 ```
 
-Global installation is recommended for the best experience. Both [`skills`](https://www.skills.sh/docs/cli) and [`gh skill`](https://cli.github.com/manual/gh_skill) install only the skills you choose. Neither sets up any other tooling or configuration from this repository.
+Global installation is recommended. Both [`skills`](https://www.skills.sh/docs/cli) and [`gh skill`](https://cli.github.com/manual/gh_skill) install only the skills you choose. Neither sets up any other tooling or configuration from this repository.
 
 ## Available Skills
 

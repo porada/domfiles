@@ -29,7 +29,7 @@
 - Begin standard output contracts with `Prints …`, predicates with `Returns success …`, and side effect contracts with a direct action verb.
 - Let command-shaped wrappers rely on ordinary command semantics implied by their names rather than restating them.
 - Name `$1`, `$@`, and other positional parameters only when their positions clarify the contract.
-- Wrap comment prose at 80 columns while preserving ordinary sentence flow across continuation lines. Use internal punctuation between sentences and omit terminal punctuation. Follow [`domlib` Helper Documentation](../../../PROJECT.md#domlib-helper-documentation) for project terminology and intentional exceptions.
+- Wrap comment prose at 80 columns while preserving ordinary sentence flow across continuation lines. Use internal punctuation between sentences. Follow [`domlib` Helper Documentation](../../../PROJECT.md#domlib-helper-documentation) for project terminology and intentional exceptions.
 
 ## Review Difficult Contracts
 

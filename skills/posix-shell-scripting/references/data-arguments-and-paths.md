@@ -81,10 +81,10 @@ The operator controls both the trigger and the result. Adding `:` expands the tr
 
 | Triggered Effect | Unset Only | Unset or Empty |
 | --- | --- | --- |
-| Expand and substitute the provided text | `${parameter-provided text}` | `${parameter:-provided text}` |
-| Expand the provided text, write it to standard error, and exit a noninteractive shell | `${parameter?provided text}` | `${parameter:?provided text}` |
+| Expand and substitute the provided text | `${<parameter>-<provided-text>}` | `${<parameter>:-<provided-text>}` |
+| Expand the provided text, write it to standard error, and exit a noninteractive shell | `${<parameter>?<provided-text>}` | `${<parameter>:?<provided-text>}` |
 
-`parameter` stands for the parameter name. `provided text` stands for the shell text after the operator, and the space in the placeholder is deliberate. The text may contain more than one whitespace-delimited token. When the trigger does not apply, each form expands to the parameter’s current value.
+In these templates, `<parameter>` stands for the parameter name, and `<provided-text>` stands for the shell text after the operator. That text may contain whitespace, including more than one whitespace-delimited token. When the trigger does not apply, each form expands to the parameter’s current value.
 
 Use `${optional-}` when absence is valid under `set -u`. In contexts that permit field splitting or pathname expansion, quote parameter expansions and command substitutions unless that parsing is intentional and bounded. Use double quotes where expansion may occur and single quotes for literals that would otherwise require escaping. Treat unquoted expansions in those contexts as explicit parsing operations. Assignment values and the word tested by `case` do not undergo field splitting or pathname expansion.
 

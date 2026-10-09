@@ -1,6 +1,6 @@
 # Fish Prompts
 
-Fish invokes prompt functions throughout interactive use. Preserve the previous command’s state before doing any other prompt work, then keep each render fast and free of unrelated output.
+Fish invokes prompt functions throughout interactive use. Keep each render fast and free of unrelated output.
 
 ## Prompt Functions
 
@@ -14,7 +14,7 @@ Give every prompt function and helper the source docstring required by the [func
 
 ## Rendering Contract
 
-Before any status-producing prompt work, capture `$status` and, when the prompt reports the entire previous pipeline, `$pipestatus`. Prompt rendering must not erase the state it intends to display. Keep rendering deterministic for the same inputs, relevant state, and rendering mode.
+Capture `$status` according to the [runtime state rules](fish-native-idioms.md#runtime-state), together with `$pipestatus` when the prompt reports the entire previous pipeline. Prompt rendering must not erase the state it intends to display. Keep rendering deterministic for the same inputs, relevant state, and rendering mode.
 
 Write only prompt content to standard output. Keep diagnostics, startup banners, and unrelated messages out of prompt functions. Keep version control and environment probes bounded. Prefer variables, builtins, and documented Fish helpers such as `prompt_pwd` and `prompt_hostname` when their behavior matches the design.
 

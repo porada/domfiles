@@ -4,16 +4,16 @@ Evaluate syntax, utilities, and process boundaries as separate contracts.
 
 ## POSIX Syntax Boundaries
 
-Use this table to distinguish portable forms from target-gated extensions. The routed guidance for each need owns the behavior behind its POSIX form. Rows are alphabetized by need.
+Use this table to distinguish portable forms from target-gated extensions. The routed guidance for each need owns the behavior behind its POSIX form. Command forms with angle-bracketed names are templates requiring substitution. Rows are alphabetized by need.
 
 | Need | POSIX Form | Reject Unless the Target Contract Permits It |
 | --- | --- | --- |
 | Alias and function bypass | `command <name>` with direct status handling | Treating `command -v` as a matching preflight |
 | Any invocable command | `command -v <name>`, then ordinary invocation | `which` or invoking through `command` after that check |
 | Arithmetic | `$((…))` | `((…))` or `let` |
-| Combined redirection | `>file 2>&1` | `&>` |
+| Combined redirection | `><file> 2>&1` | `&>` |
 | Conditions | `[ … ]`, `test`, or `case` | `[[ … ]]` |
-| Function declaration | `name() { …; }` | `function name` |
+| Function declaration | `<name>() { …; }` | `function <name>` |
 | Function state isolation | A subshell-bodied function | `local` |
 | Generated input | A pipe or redirection | Here-strings or process substitution |
 | Load shell code | `.` | `source` |
@@ -34,8 +34,6 @@ Do not reset `PATH` indiscriminately. Doing so can hide intentionally installed 
 Before a programmatic `cd`, reject an empty operand. Preserve absolute paths and explicit relative paths beginning with `./` or `../`. Prefix every other relative path with `./` so option-like names and `-` remain directory operands. Invoke `CDPATH='' cd "$directory"` to disable directory search and emitted path output. Add `-P` only when the interface requires physical path behavior.
 
 Scope `LC_ALL=C` to commands that deliberately need bytewise sorting, matching, or character classes. Do not change user-facing behavior globally.
-
-Portable syntax does not make a GNU-only option portable.
 
 ## Pipeline Contracts
 

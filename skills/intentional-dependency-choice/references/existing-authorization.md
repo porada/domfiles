@@ -14,6 +14,6 @@ When those conditions are satisfied and no new choice is needed, return to the o
 
 ## History Integration
 
-An authorized Git history operation may incorporate dependency declarations and lockfile changes already present in its selected upstream history without separate dependency-change approval. New dependency choices, including conflict resolutions that introduce them, still require approval. History integration alone does not authorize installation or execution, but a separately authorized workflow can cover prescribed acquisition. Sandbox and security requirements remain in force.
+An authorized Git history operation may incorporate dependency declarations and lockfile changes already present in its selected upstream history without separate dependency change approval. New dependency choices, including conflict resolutions that introduce them, still require approval. History integration alone does not authorize installation or execution, but a separately authorized workflow can cover prescribed acquisition. Sandbox and security requirements remain in force.
 
 Return inherited declarations to the history workflow. Bring a newly introduced choice back through the skill’s selection and approval steps without expanding the history operation’s authority.

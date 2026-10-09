@@ -1,6 +1,6 @@
 # Text and Record Boundaries
 
-Choose whether command output represents lines, one opaque document, or delimited records before capturing it. Use `$(command)` for command substitution, including inside double quotes. Use `string split` or `string split0` when another delimiter defines records. Use `string collect` when output must be collected without newline splitting.
+Choose whether command output represents lines, one opaque document, or delimited records before capturing it. Use the template `$(<command>)` for command substitution, including inside double quotes. Use `string split` or `string split0` when another delimiter defines records. Use `string collect` when output must be collected without newline splitting.
 
 ```fish
 set --local lines $(command tool)
@@ -29,7 +29,7 @@ set --local files $(
 )
 ```
 
-Keep `string split0` as the final pipeline stage when collecting a NUL stream into a Fish list so its element boundaries survive command substitution. Use `path`’s `--null-in` and `--null-out` options while NUL-delimited data remains a stream. Do not send NUL output directly to a terminal or command substitution. Pipe it to a final `string split0` when collecting it.
+Keep `string split0` as the final pipeline stage when collecting a NUL stream into a Fish list so its element boundaries survive command substitution. Use `path`’s `--null-in` and `--null-out` options while NUL-delimited data remains a stream. Do not send NUL output directly to a terminal or command substitution.
 
 Direct `path` output captured by command substitution preserves item boundaries, including embedded newlines. An intervening command can serialize those boundaries away. Ordinary `path` standard input remains newline-delimited unless NUL input is selected or detected.
 

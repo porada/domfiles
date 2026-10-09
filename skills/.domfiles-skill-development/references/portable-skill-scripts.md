@@ -1,6 +1,6 @@
 # Portable Skill Scripts
 
-Use this reference for a script owned by a portable skill—a skill installed for use across target projects rather than scoped to one repository. Apply the [general skill-owned script policy](skill-owned-scripts.md) in addition to this reference.
+Apply the [general skill-owned script policy](skill-owned-scripts.md), which defines portable skills, in addition to this reference.
 
 A portable skill script exposes an agent-neutral [observable interface](skill-owned-scripts.md#define-observable-interface). Any supported agent can invoke that documented interface against an explicitly selected target without installing the script’s build configuration, dependencies, source, or toolchain in that target. Portability spans agents and targets rather than requiring standalone distribution.
 

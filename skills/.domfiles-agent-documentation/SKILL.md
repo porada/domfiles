@@ -1,7 +1,7 @@
 ---
 name: agent-documentation
 description: |-
-    Use for editing, reviewing, auditing, or maintaining project-authored agent documentation, including `AGENTS.md`, `.agents/PROJECT.md`, skill documentation, reusable handoff prompts and templates, canonical public-surface assets, and public skill READMEs. Also use for documentation authority, ownership, composition, routing, redundancy, and token efficiency.
+    Use for creating, editing, reviewing, auditing, or maintaining project-authored agent documentation, including `AGENTS.md`, `.agents/PROJECT.md`, skill documentation, reusable handoff prompts and templates, canonical public-surface assets, and public skill READMEs. Also use for project agent documentation setup, repository independence, cross-repository alignment, documentation authority, ownership, composition, routing, redundancy, and token efficiency.
 
     Defer to a more specific project agent documentation workflow when one exists.
 
@@ -22,7 +22,7 @@ metadata:
 - Give each proposition one canonical definition and classify every secondary occurrence as routing, surface-specific application, rationale, example, or required standalone context. Remove a secondary occurrence when it merely paraphrases the definition. Keep it only when its distinct role requires wording at that surface, using the smallest wording that preserves that role. When a secondary occurrence contains a more complete rule than its expected owner, promote the complete rule to the canonical owner before removing or reducing the secondary copy.
 - Optimize the complete context path loaded for a task rather than an individual file’s size. Treat applicable `AGENTS.md` files, skill descriptions, and `SKILL.md` entrypoints as direct-path context. Keep wording there only when most invocations need it, and move coherent conditional detail into a conditional reference in an existing skill that owns the relevant domain when the saved direct-path context exceeds the navigation cost.
 - Weigh a deferral against its own overhead. A model-invocable skill’s description adds recurring context when the client exposes it, so deferring content that does not clearly exceed that overhead costs more than it saves. Move smaller conditional detail into a reference of an existing skill instead.
-- Write instructions that require no conversational context. Define non-obvious terms, and keep consuming project documentation independent of this skill, its canonical repository, and its installation path.
+- Write instructions that require no conversational context. Define non-obvious terms. Do not make consuming project documentation require `agent-documentation`, `skill-development`, their canonical repository, or their installation paths merely because those tools were used to author it.
 
 ## Resolve Local Documentation Model
 
@@ -58,7 +58,7 @@ Before editing, follow [Compose Documentation](references/compose-documentation.
 
 ## Validate Documentation
 
-Use [Select Validation Scope](references/validate-documentation-changes.md#select-validation-scope) before loading detailed checks. Keep the complete declared scope of each affected invariant.
+Use [Select Validation Scope](references/validate-documentation-changes.md#select-validation-scope) before loading detailed checks. Apply the global **Invariant scope** policy.
 
 ### Run Complete-Scope Checks
 

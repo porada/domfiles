@@ -18,7 +18,7 @@ Use only the material parts of this sequence. Combine overlapping items, and omi
 2. Task context, final result, and acceptance status.
 3. Representative evidence and validation.
 4. Material decisions using `Before`, `After`, `Why`, and `Decision basis` when those fields clarify the result.
-5. Known limitations, unavailable evidence, and context-specific or unresolved items.
+5. Known limitations, unavailable evidence, context-specific items, and open questions.
 
 ## Decision Basis
 
@@ -37,7 +37,6 @@ When a material decision or fact needs its basis made explicit, use one or more 
 | **Project policy** | An applicable repository or project instruction, rationale, or established workflow. |
 | **Repository evidence** | Current source, configuration, tests, history, or other inspected repository state. |
 | **Settled user evidence** | A user-supplied fact or classification declared authoritative for the task. |
-| **Unresolved** | A material decision or fact the available evidence did not resolve. |
 | **User selection** | The user chose one proposed alternative without necessarily accepting adjacent details. |
 
 ## Skill Improvement
@@ -50,8 +49,10 @@ When an entire response is a decision relay, evidence handoff, status return, co
 
 ## Domain Profiles
 
-A domain profile is a standalone maintainer asset measured against this skill rather than a runtime extension of it. It must restate every rule it needs because an ordinary invocation of the profile may not load this skill. A decision capture prompt asks the current agent to turn available conversation context into a decision relay without continuing the underlying task.
+A domain profile is a standalone maintainer asset measured against this skill rather than a runtime extension of it. A decision capture prompt asks the current agent to turn available conversation context into a decision relay without continuing the underlying task. The profile requirements below also govern standalone decision capture prompts.
 
-A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations. Carry the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority), [Relay Contract](../SKILL.md#relay-contract), and [Revisions](../SKILL.md#revisions), together with the [Available Evidence](#available-evidence) defaults, [Delivery](#delivery), and the distinction between evidence and user-authorized assignments.
+Each asset must restate every rule it needs because its invocation may not load this skill. Carry the entrypoint’s [Instruction Authority](../SKILL.md#instruction-authority), [Relay Contract](../SKILL.md#relay-contract), and [Revisions](../SKILL.md#revisions), together with the [Available Evidence](#available-evidence) defaults, [Delivery](#delivery), and the distinction between evidence and user-authorized assignments.
 
-A standalone decision capture prompt must implement the applicable delivery and full-revision defaults in its own output contract. Keep its output evidence-only and nonmutating by default, within the [Available Evidence](#available-evidence) boundary, with explicit user changes governed by **Instruction Authority**. It cannot depend on the receiving agent loading this skill.
+A profile may specialize context fields, representative evidence, validation levels, workflow observations, and candidate-guidance destinations.
+
+A standalone decision capture prompt must implement the applicable delivery and full-revision defaults in its own output contract. Keep its output evidence-only and nonmutating by default, within the [Available Evidence](#available-evidence) boundary, with explicit user changes governed by **Instruction Authority**.

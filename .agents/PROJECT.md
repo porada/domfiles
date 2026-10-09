@@ -10,7 +10,7 @@ The root `engines.node` range intentionally declares the minimum supported Node.
 
 ### Supported Environment
 
-`domfiles` actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
+Domfiles actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
 
 [`home/README.md`](../home/README.md) documents the repository owner’s configuration workflow rather than a supported onboarding path for other users. It intentionally does not restate the complete supported environment or bootstrap prerequisites. Others may install the repository, but the project makes no compatibility or support commitment for that use. `domfiles sync` reports a missing Homebrew installation before synchronization. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
 
@@ -80,7 +80,7 @@ Git publication and contribution submission require explicit authorization rathe
 
 Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. The [repository independence contract](../skills/.domfiles-agent-documentation/references/repository-independence.md) distinguishes intentional local copies from competing policy definitions. Applicable project instructions override their fallback workflows.
 
-The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode. Agent documentation retains ownership of authority, contract meaning, machine-readable content, and routing. This source authoring composition creates no installed runtime dependency on `human-facing-writing`.
+The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode.
 
 The explicit route also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description. Without `agent-documentation`, the writing skill’s own description determines discovery, including its exclusions for formatting-only work and work that neither evaluates nor changes wording or information architecture.
 
@@ -96,9 +96,11 @@ The [global browser automation policy](GLOBAL.md#browser-automation) owns browse
 
 The user creates disposable worktrees through Zed’s UI and starts agents bound to those checkouts. This makes worktree lifecycle management a user responsibility rather than an agent workflow. The global [checkout boundary](GLOBAL.md#collaboration) applies independently of contribution preparation, whose branch selection and upstream setup remain owned by [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md).
 
+The `worktree_directory` setting in [Zed’s configuration](../home/.config/zed/settings.json) places these worktrees under `~/Projects/.zed` for repositories directly under `~/Projects`. This shared directory is a worktree container rather than an independent project.
+
 ### Claude Agent Integration
 
-The tracked [`CLAUDE.md`](../CLAUDE.md) bridge is described in the [agent documentation table](../AGENTS.md#agent-documentation), and Claude’s global instruction setup is described under [global instructions](#global-agent-instructions). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) links the complete globally exposed skill set under `~/.claude/skills`, while the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. These native discovery locations avoid duplicating canonical content.
+Claude Code and Zed’s Claude Agent load the project’s [`AGENTS.md`](../AGENTS.md) directly in the default project instruction mode, without a repository `CLAUDE.md` bridge. Claude’s global instruction setup is described under [global instructions](#global-agent-instructions). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) links the complete globally exposed skill set under `~/.claude/skills`, while the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. These native discovery locations avoid duplicating canonical content.
 
 `domfiles sync` also links [`home/.claude/settings.json`](../home/.claude/settings.json) to `~/.claude/settings.json`. The tracked file defines the shared, non-secret preference set. Claude Code [uses this user settings path for configuration updates](https://code.claude.com/docs/en/settings), and the file is managed as mutable public configuration. Credentials and private machine or account values are excluded from this settings surface.
 
@@ -108,9 +110,9 @@ The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers C
 
 The public [`sensible-commit-flow` skill](../skills/sensible-commit-flow/SKILL.md) owns commit mechanics and their standalone safety boundaries. Promotion separates the reusable workflow from personal message presentation, allowing independent installation without domfiles-managed policy or sibling skills. It remains documentation-only because native Git operations can execute approved batches without a separate staging implementation.
 
-The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-flow/SKILL.md) co-applies and routes global callers through the public workflow. Its editorial model comes from the repository owner’s 2026 diff-to-message history, with bodyless authored messages selected explicitly. Inherited and Git-generated messages retain operation context under the public [message constraints](../skills/sensible-commit-flow/SKILL.md#preserve-message-constraints), rather than being normalized to that personal model. The global [commit gate](GLOBAL.md#conduct) and [index preservation policy](GLOBAL.md#collaboration) remain applicable in managed installations.
+The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-flow/SKILL.md) co-applies and routes global callers through the public workflow. Its editorial model comes from the repository owner’s 2026 diff-to-message history, with bodyless authored messages selected explicitly. Inherited and Git-generated messages retain operation context under the public [message constraints](../skills/sensible-commit-flow/SKILL.md#preserve-message-constraints), rather than being normalized to that personal model. The global [**Commit gate**](GLOBAL.md#conduct) and [**Index preservation**](GLOBAL.md#collaboration) policies remain applicable in managed installations.
 
-Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [outcome reporting policy](GLOBAL.md#communication) has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
+Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [**Outcomes**](GLOBAL.md#communication) policy has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
 
 The [early Git access checkpoint](../skills/sensible-commit-flow/references/early-git-access.md) surfaces capability requirements before implementation so a requested commit does not introduce a late permission interruption.
 
@@ -120,7 +122,7 @@ Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b863
 
 Contribution research and preferences live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval. The existing commit overlay supplies managed message conventions without a separate contribution overlay.
 
-The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [external skill edit gate](GLOBAL.md#documentation) remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied checkout default, existing state, and consuming project protections without imposing those personal gates.
+The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [**External skills**](GLOBAL.md#documentation) policy remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied checkout default, existing state, and consuming project protections without imposing those personal gates.
 
 The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) delegates authority to named, domfiles-managed workflows. Renaming the installed skill therefore requires alignment of the policy’s named delegate as well as the installation mapping and retired-name migration.
 
@@ -128,7 +130,7 @@ The global [contribution authorization policy](GLOBAL.md#contribution-preparatio
 
 Conditional global policy may move into a globally exposed skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
 
-The **Collaboration** policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point, an agent that never loads them cannot notice that evidence has outgrown the main thread, and missing them drops the boundaries a subagent inherits.
+The **Collaboration** policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point. An agent that never loads them cannot notice that evidence has outgrown the main thread. Missing them also drops the boundaries a subagent inherits.
 
 ### Global Agent Instructions
 
@@ -162,10 +164,10 @@ Each skill’s peer declarations own its declared fallback relationships, includ
 
 | Canonical Contract | Standalone Guidance |
 | --- | --- |
-| [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [`agent-task-relay/references/dependency-choice.md`](../skills/agent-task-relay/references/dependency-choice.md), [`sensible-contribution-flow/references/dependency-choice.md`](../skills/sensible-contribution-flow/references/dependency-choice.md) |
-| Requirements for governing instruction sources in [Authorization](GLOBAL.md#authorization), under **Instruction provenance** and **Approval provenance** | [`agent-task-relay/references/continuing-approval.md`](../skills/agent-task-relay/references/continuing-approval.md#workflow-approval-modes), [`sensible-commit-flow/references/alternative-approval-modes.md`](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [`sensible-contribution-flow/references/review-findings.md`](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) |
-| [`sensible-commit-flow/references/preserve-human-review-markers.md`](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [`sensible-contribution-flow/references/preserve-human-review-markers.md`](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) |
-| [`sensible-commit-flow/references/update-commit-history.md`](../skills/sensible-commit-flow/references/update-commit-history.md) | [`sensible-contribution-flow/references/update-commit-history.md`](../skills/sensible-contribution-flow/references/update-commit-history.md) |
+| [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [`skills/agent-task-relay/references/dependency-approval.md`](../skills/agent-task-relay/references/dependency-approval.md#selection-and-approval-routing), [`skills/sensible-contribution-flow/references/execution-boundaries.md`](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) |
+| Requirements for governing instruction sources in [Authorization](GLOBAL.md#authorization), under **Instruction provenance** and **Approval provenance** | [`skills/agent-task-relay/references/continuing-approval.md`](../skills/agent-task-relay/references/continuing-approval.md#workflow-approval-modes), [`skills/sensible-commit-flow/references/alternative-approval-modes.md`](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [`skills/sensible-contribution-flow/references/review-findings.md`](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) |
+| [`skills/sensible-commit-flow/references/preserve-human-review-markers.md`](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [`skills/sensible-contribution-flow/references/preserve-human-review-markers.md`](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) |
+| [`skills/sensible-commit-flow/references/update-commit-history.md`](../skills/sensible-commit-flow/references/update-commit-history.md) | [`skills/sensible-contribution-flow/references/update-commit-history.md`](../skills/sensible-contribution-flow/references/update-commit-history.md) |
 
 Alignment is semantic rather than whole-file equality. Fallbacks and mirrors adapt contribution-specific scope and submission terminology, links into their own lifecycle, and each consuming workflow’s approval, delivery, and execution boundaries. The approval family shares requirements for governing instruction sources, not one grant scope or lifetime. These are source maintenance relationships, not installation dependencies.
 
@@ -175,7 +177,7 @@ The [POSIX terminal presentation compatibility paragraph](../skills/posix-shell-
 
 ### Skill Catalogs
 
-[`skills/README.md`](../skills/README.md) targets visitors installing public skills without synchronizing the repository. Its examples select user-wide installation to enact its recommendation. Root [`README.md`](../README.md) examples intentionally preserve the skills.sh form `npx skills add … --skill …`, including omission of `--global`.
+[`skills/README.md`](../skills/README.md) targets visitors installing public skills without synchronizing the repository. Its examples select user-wide installation to enact its recommendation. The root [`README.md`](../README.md) and individual skill READMEs intentionally use minimum viable `gh skill install` and `npx skills add` commands, omitting scope flags to keep the focus on the skills.
 
 ### Skill Description Limit
 
@@ -191,7 +193,7 @@ Edits to an exposed global skill affect its installation through the symlink and
 
 ### Skill-Owned Script Scope
 
-`domfiles sync` symlinks global skills into this checkout rather than copying them. Their host toolchain, dependencies, and root validation remain reachable from unrelated projects, satisfying the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md)’s reachable host prerequisite.
+`domfiles sync` creates installed global skill symlinks that point to their source directories in this checkout rather than copying them. Their host toolchain, dependencies, and root validation remain reachable from unrelated projects, satisfying the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md)’s reachable host prerequisite.
 
 ### Verify Findings Skill
 
@@ -215,7 +217,7 @@ Repository updates are skipped when the checkout contains entries marked by `git
 
 Synchronization links the repository’s `home/.local/bin` directory to `~/.local/bin`. It does not link `home/.local/share/domlib` into the user’s home because each command resolves its real path before sourcing `../share/domlib` from the repository.
 
-`domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. An individual failure is recoverable only when the main workflow or a sync stage handles it explicitly, surfaces the result, and can continue later work independently of the failed operation. Source control flow defines the exact recoverable cases.
+`domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. An individual failure is recoverable only when the main workflow or a sync stage handles it explicitly, surfaces the result, and can continue later work independently of the failed operation. The source’s control flow defines the exact recoverable cases.
 
 The workflow can complete with visible, explicitly handled failures. An unhandled error or a nonzero exit from a sync stage stops the broader workflow.
 
@@ -328,7 +330,7 @@ Prettier pragma comments—including `@format`, `@prettier`, `@noformat`, and `@
 
 Interior cursor mapping is intentionally omitted. The wrappers expose a single whole-file AST node because the native formatters provide neither token locations nor source maps. End-of-input cursor positions remain supported, but interior cursors may not remain attached to the same token after formatting. The wrappers do not implement heuristic source-to-output mapping.
 
-Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward-compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports.
+Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports.
 
 ### Repository-Scoped Commands
 
@@ -342,7 +344,7 @@ The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to
 
 The [repository validation policy](../AGENTS.md#validation) separates agent checks from wrapper reconciliation through command-local `PNPM_CONFIG_*` overrides. They preserve package manager version enforcement while refusing automatic project dependency installation and environment lockfile changes. The environment form also takes precedence over the `--config.verify-deps-before-run` flag and pnpm’s inherited dependency check recursion guard. Native pnpm 12 dotted CLI configuration keys use kebab-case, and pnpm silently ignores camelCase spellings such as `--config.verifyDepsBeforeRun`.
 
-### Ripgrep Configuration Isolation
+### ripgrep Configuration Isolation
 
 `rg` parses command line arguments before deciding whether to read the file selected by `RIPGREP_CONFIG_PATH`. Unless `--no-config` suppresses that read, it combines the configuration arguments with the command line arguments and parses them again. A configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
 

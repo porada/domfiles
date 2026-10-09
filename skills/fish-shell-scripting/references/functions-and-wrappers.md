@@ -25,7 +25,7 @@ argparse \
     --max-args=1 \
     --name=start-app \
     o/open \
-    'p/port=' \
+    p/port= \
     -- $argv
 or return
 ```
@@ -68,7 +68,7 @@ When a wrapper takes over a command’s terminal presentation, preserve the conf
 
 ## Performance Profiling
 
-With explicit authorization to create profile artifacts, use `fish --profile=<path>` to measure commands executed after startup and `fish --profile-startup=<path>` to measure startup and configuration loading. Cache only measured repeated work with a defined validity and invalidation contract. Do not add mutable cache state merely because a path is performance-sensitive. Remove temporary breakpoints, profiles, or tracing introduced under explicit authorization when the authorized work is complete unless the task explicitly adds a durable debugging mode.
+With explicit authorization to create profile artifacts, use `fish --profile=<path>` to measure commands executed after startup and `fish --profile-startup=<path>` to measure startup and configuration loading. Cache only measured repeated work with a defined validity and invalidation contract. Do not add mutable cache state merely because a path is performance-sensitive.
 
 ## Official Sources
 

@@ -4,7 +4,7 @@ Use this workflow for project-authored runtime failure messages and warnings, in
 
 ## Ownership and Audience
 
-Treat project-authored context, destination-supplied values, and original error text owned by an upstream dependency as separate layers. Edit only the layer owned by the task.
+The destination is the module whose message is being written or adapted. Treat project-authored context, destination-supplied values, and original error text owned by an upstream dependency as separate layers. Edit only the layer owned by the task.
 
 Determine which surrounding context identifies the message’s source and which dynamic values would help the intended reader act. Before exposing any value, apply the entrypoint’s [Secrets and Authentication](../SKILL.md#secrets-and-authentication) policy and the exposure criteria under [Actionable Detail](#actionable-detail) and [Upstream Errors](#upstream-errors).
 
@@ -16,7 +16,7 @@ For an operation failure, use `Failed to …`. Avoid `cannot` and `can’t`. Sta
 
 Include a project-authored explanation only when it is accurate, succinct, useful, and established by the project’s own evidence. Keep it on the same line as the headline, separated by a period.
 
-Do not hedge a known condition, list speculative causes, repeat the headline, or invent an explanation for an upstream failure. Keep independently surfaced failures separate and self-contained. Unless project policy requires it, omit trailing punctuation from the final sentence.
+Do not hedge a known condition, list speculative causes, repeat the headline, or invent an explanation for an upstream failure. Keep independently surfaced failures separate and self-contained. Unless project policy requires it, omit terminal punctuation from the final sentence.
 
 ## Actionable Detail
 

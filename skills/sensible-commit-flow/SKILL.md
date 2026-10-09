@@ -10,13 +10,13 @@ description: |-
 
 Every commit should have a clear purpose, and the history should show how the changes fit together.
 
-This skill helps agents group changes by intent, order commits by dependency, and write messages that explain their purpose. It establishes your approval before creating commits or revising history, then verifies the recorded result while preserving unrelated work.
+This skill helps agents group changes by intent, order commits by dependency, and write messages that explain their purpose. It establishes the user’s approval before creating commits or revising history, then verifies the recorded result while preserving unrelated work.
 
 ## Select Workflow
 
 Load only the selected route and its applicable references.
 
-When the requested task includes eventual commit creation or history updates, complete [Early Git Access](references/early-git-access.md) before implementation or substantial commit preparation. Advice, message drafting without a history update, and speculative planning do not trigger this checkpoint.
+When the requested task includes eventual commit creation or history updates, complete [Early Git Access](references/early-git-access.md) immediately after the minimum read-only inspection needed to identify the target and requested Git effects and preserve existing state. Complete this checkpoint before implementation, inspecting changes for commit grouping, composing messages, or preparing or presenting a commit proposal. Advice, message drafting without a history update, and speculative planning do not trigger this checkpoint.
 
 - **Prospective planning:** Before changes exist, follow [Plan Before Implementation](#plan-before-implementation) and return to the calling workflow without entering confirmation or execution.
 - **Read-only preparation:** For requests limited to grouping existing changes or drafting or revising message text, use [Inspect Changes](#inspect-changes) and [Group Hunks](#group-hunks) when the result depends on actual changes, and [Compose Messages](references/compose-messages.md) when wording is requested. Return the requested result without entering confirmation or execution. Changing a recorded commit’s message is a history update, not prose-only work.

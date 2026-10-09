@@ -2,7 +2,7 @@
 
 ## Overview
 
-- **Repository:** Contains all actively used dotfiles and is also called `domfiles`.
+- **Repository:** Contains all actively used dotfiles and is also called domfiles.
 - **Disclosure:** The repository is public and open source.
 
 ## Public Repository Boundary
@@ -23,7 +23,6 @@
 | --- | --- |
 | `.agents/GLOBAL.md` | Defines global user defaults. |
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
-| `CLAUDE.md` | Bridges Claude to the canonical project instructions in `AGENTS.md`. It defines no independent policy. |
 | Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. Distribution follows the [skill classification](#skills). |
 | `.agents/PROJECT.md` | Records constraints, durable facts, maintenance decisions, and rationale. It does not override agent instructions. |
 | Source and configuration | Define exact current values and implemented behavior. |
@@ -42,19 +41,19 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 
 Prefix every agent-selected pnpm-backed validation command with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error`, including checks selected through domain skills. Keep validation separate from dependency reconciliation. If a check needs reconciliation, apply the global **Dependencies** policy, perform any authorized acquisition separately, then rerun the guarded check. Report a limitation when acquisition is outside the task’s authorization or cannot proceed within applicable boundaries. See the [repository command rationale](.agents/PROJECT.md#repository-scoped-commands) for the overrides’ effects.
 
-For changed JSON or TOML files, run `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm run lint:<format> <changed-format-files>`. The JSON wrapper requires exactly one parsed JSON value, and the TOML wrapper runs `tombi lint --offline`. Pass paths explicitly unless repository-wide validation is intended.
+For changed JSON or TOML files, run `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm run lint:<format> <changed-format-files>`. Pass paths explicitly unless repository-wide validation is intended.
 
 ## Scope
 
 - **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/audit/SKILL.md#resolve-audit-scope) excludes it.
-    - Do not report `.gitignore` including `local.fish`.
-    - Do not suggest adding additional documentation for `local.fish`.
+    - Do not report that `.gitignore` lists `local.fish`.
+    - Do not suggest further documentation for `local.fish`.
 - **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because its target is outside the repository. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
 - **Secret-bearing local files:** Do not read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
 ## Reporting
 
-- **Empty configuration:** Do not report empty config files.
+- **Empty configuration:** Do not report empty configuration files.
 - **Fixed locations:** Report cases that would tie this repository to a fixed filesystem location, except:
     - `$HOME/*` paths, system paths, or vendor paths.
     - Symlinks created through `domfiles sync`.
@@ -67,18 +66,18 @@ Classify every project-authored skill by canonical source and supported installa
 
 | Category | Canonical Source | `name` | `metadata.internal` | Supported Installation |
 | --- | --- | --- | --- | --- |
-| Internal | `.agents/skills/<skill-name>` | `<skill-name>` | `true` | Project-local to `domfiles`. |
+| Internal | `.agents/skills/<skill-name>` | `<skill-name>` | `true` | Project-local to domfiles. |
 | Global | `skills/.domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
 | Global overlay | `skills/.dom-<base-name>` | `dom-<base-name>` | `true` | Same installation surface as the global category. |
 | Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
 
-Follow the [internal skill naming policy](skills/.domfiles-skill-development/references/skill-installation.md#internal-skill-names) when selecting internal names.
+Follow the [internal skill naming policy](skills/.domfiles-skill-development/references/skill-installation.md#internal-skill-names) when naming Internal category skills.
 
 Global overlays inherit global requirements. Their `<base-name>` must exactly match the base skill’s frontmatter `name`, without shortening, rewording, or dropping qualifiers.
 
 Global skills may rely on domfiles-managed global instructions and the complete globally exposed skill set. Public skills must deliver their advertised behavior when independently installed.
 
-When changing a public skill contract or its standalone fallback, consult the [fallback family map](.agents/PROJECT.md#public-skill-fallback-families) to identify related guidance.
+When changing a public skill contract or its standalone fallback, consult the [fallback family index](.agents/PROJECT.md#public-skill-fallback-families) to identify related guidance.
 
 - **Public peers:** Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
 - **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.

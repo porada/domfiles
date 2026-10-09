@@ -38,17 +38,17 @@ Assign each selected finding one outcome based on the evidence:
 | --- | --- |
 | Intentional | Applicable instructions or a settled user decision establish that no change is needed. |
 | Not supported | Current evidence contradicts the reported issue. |
+| Requires change | Current evidence establishes an issue that still requires a change. |
 | Resolved | Current evidence establishes that the reported issue has been addressed. |
-| Unresolved | Current evidence establishes an issue that still requires a change. |
 | Unverified | Required evidence is unavailable or insufficient to determine whether a change is needed. |
 
 A proposed fix or changed file alone does not establish resolution. Do not classify uncertainty as either confirmation or dismissal.
 
 ## Report Results
 
-Report unresolved findings and unverified items, retaining their identifiers. For each unresolved finding, give the current evidence, its consequence, and the needed correction. For each unverified item, state the verification limit and the smallest action needed to establish the result. For a retrieval failure, identify the resource, attempted methods, and exact error without exposing sensitive values.
+Report findings classified as **Requires change** or **Unverified**, retaining their identifiers. For each finding requiring a change, give the current evidence, its consequence, and the needed correction. For each unverified item, state the verification limit and the smallest action needed to establish the result. For a retrieval failure, identify the resource, attempted methods, and exact error without exposing sensitive values.
 
-Do not repeat findings classified as **Intentional**, **Not supported**, or **Resolved**. When no unresolved or unverified items remain, state the resulting status directly. Preserve mandatory reporting requirements from applicable instructions, including any pending human-only review step. Stop after reporting unless the user has separately authorized continuation through another workflow.
+Do not repeat findings classified as **Intentional**, **Not supported**, or **Resolved**. When no findings require a change or remain unverified, state the resulting status directly. Preserve mandatory reporting requirements from applicable instructions, including any pending human-only review step. Stop after reporting unless the user has separately authorized continuation through another workflow.
 
 ## General Policies
 

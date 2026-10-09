@@ -93,7 +93,7 @@ Look for bullets that verified source evidence or user-provided context shows ar
 
 Treat exact rule identifiers as material outcomes. Keep distinct rules in separate, sortable bullets rather than replacing them with a category summary. Multiple changes to the same rule may share one bullet when they form one coherent change and splitting them would obscure the relationship.
 
-When approval is required, use the [gated-consolidation proposal](references/approval-gates.md#consolidation-proposal).
+When approval is required, use the [gated consolidation proposal](references/approval-gates.md#consolidation-proposal).
 
 Keep separate bullets when consolidation would hide a distinct consumer decision, downgrade a breaking change, combine unrelated package scopes, or make the resulting sentence harder to scan. When context is insufficient, improve scanability by reordering the separate bullets rather than merging them.
 
@@ -114,8 +114,8 @@ Read the [release structure reference](references/release-structures.md) for an 
 ## Release Prose
 
 - Use one consistent unordered list marker unless preserving a supplied draft or applying a narrower surface convention.
-- Write complete past tense sentences with final punctuation. Treat the status items in the [release structure reference](references/release-structures.md#status-items) as deliberate exceptions.
-- Start bullets with precise action verbs such as `Added`, `Bumped`, `Disabled`, `Dropped`, `Enabled`, `Expanded`, `Fixed`, `Improved`, `Lowered`, `Marked`, `Moved`, `Preserved`, `Re-enabled`, `Removed`, or `Updated`.
+- Write complete sentences with final punctuation, using past tense for completed changes and appropriate tense and modality for warnings, package status, and required consumer actions. Treat the status items in the [release structure reference](references/release-structures.md#status-items) as deliberate exceptions.
+- Start bullets describing completed changes with precise action verbs such as `Added`, `Bumped`, `Disabled`, `Dropped`, `Enabled`, `Expanded`, `Fixed`, `Improved`, `Lowered`, `Marked`, `Moved`, `Preserved`, `Re-enabled`, `Removed`, or `Updated`.
 - Prefer the most informative verb. For example, write “Lowered the `engines` baseline” when a runtime minimum decreases rather than the vaguer “Updated the `engines` baseline.”
 - Use `Fixed` only when a report, failing case, or before-and-after reproduction establishes a specific defect. Use `Improved` for broader stability or newly handled cases that were not established as a defect.
 - Use `compatibility` for cross-plugin or general host tool behavior. Use `support` for a named control or workflow. For a broad compatibility outcome, use the shortest familiar integration category and omit hook types, implementation variants, and verification cases unless a remaining boundary changes consumer use or configuration. Do not expand a familiar category into a host tool name plus a descriptive clause.

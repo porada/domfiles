@@ -1,7 +1,5 @@
 # Skill Descriptions
 
-Resolve identity and installation through [Skill Installation](skill-installation.md).
-
 ## Invocation Mode
 
 Treat a project-authored skill as **command-only** when it sets `disable-model-invocation: true`, and as **model-invocable** otherwise.
@@ -14,9 +12,7 @@ When a description advertises review or audit, define an explicit read-only bran
 
 ## Description and Body
 
-For internal and global skills, keep necessary implementation details, operational guidance, rationale, and workflows in the body. In model-invocable descriptions, also move capability exposition, behavior, and outputs to the body, and remove body text that only repeats why the skill loaded.
-
-Apply that description content limit in both directions. Keep behavioral defaults, validation, optional composition, and internal workflow in the body, and do not let the body merely paraphrase the description’s trigger or exclusion.
+For internal and global skills, keep necessary implementation details, operational guidance, rationale, and workflows in the body, including behavioral defaults, validation, optional composition, and internal workflow. Do not let the body merely paraphrase the description’s trigger or exclusion. For model-invocable skills in these categories, also move capability exposition, behavior, and outputs from the description to the body, and remove body text that only repeats why the skill loaded.
 
 For public skills in either invocation mode, also apply the [public description additions](public-skill-portability.md#keep-public-descriptions-portable).
 

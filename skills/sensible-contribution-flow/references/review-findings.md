@@ -54,8 +54,4 @@ Preserve every separate approval and security gate. Pause an effect lacking appr
 
 ## Resume Contribution Work
 
-If validated findings undermine the contribution’s premise, return to [contribution assessment](../SKILL.md#assess-contribution-fit). Separate corrections necessary for the current contribution from adjacent improvements. Agreement to defer adjacent work does not establish the current contribution’s correctness.
-
-Consolidate required corrections into one authorized fix batch. After implementation and applicable validation, inspect the scoped result and review only its delta and integration boundaries. Do not restart a whole-contribution review or reopen settled classifications for optional preferences. If a second fix round exposes another issue in the same construct, stop extending it. Narrow, replace, or remove it within valid authority, or ask the user to choose among materially different options.
-
-Return the validated findings and applicable fix confirmation to the calling local-edit, preparation, or [revision checkpoint](revise-existing-pull-requests.md), without restarting setup or findings validation. Preserve that path’s required reviews, upstream synchronization, and readiness checks. Route any commit or history update through [commit preparation](prepare-pull-requests.md#prepare-commits) under current separate authority. Do not turn requested revisions into ongoing monitoring.
+Return the validated findings and applicable fix confirmation to [Incorporate Feedback and Findings](incorporate-feedback-and-findings.md) for contribution reassessment and continuation. Apply the [fix batch and review convergence rules](prepare-pull-requests.md#review-contributions) to every authorized fix path.

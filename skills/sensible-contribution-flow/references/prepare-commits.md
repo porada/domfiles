@@ -2,15 +2,15 @@
 
 Use the fallback selected by the entrypoint’s [peer composition](../SKILL.md#compose-with-peers). Do not resolve peers again or switch here to bypass a resolved peer’s authority or evidence stop.
 
-For prospective planning, follow [Plan Before Implementation](#plan-before-implementation) and return to the PR workflow. For new contribution commits, inspect the actual changes, group their hunks, and prepare their complete messages below. Enter [Update Commit History](update-commit-history.md) only when the user or applicable calling workflow explicitly requests a history-replacing contribution update, including folding corrections into their original commits. Every execution route returns to [Confirm Commits](#confirm-commits), [Create Approved Commits](#create-approved-commits), and [Report Results](#report-results), in that order.
+For prospective planning, follow [Plan Before Implementation](#plan-before-implementation) and return to the pull request workflow. For new contribution commits, inspect the actual changes, group their hunks, and prepare their complete messages below. Enter [Update Commit History](update-commit-history.md) only when the user or applicable calling workflow explicitly requests a history-replacing contribution update, including folding corrections into their original commits. Every execution route returns to [Confirm Commits](#confirm-commits), [Create Approved Commits](#create-approved-commits), and [Report Results](#report-results), in that order.
 
-For upstream merges, record the destination branch, starting `HEAD`, upstream target, intended result, and expected parent relationships. Select native merge options against those relationships and effective configuration. Preserve Git’s generated message under [Preserve Message Constraints](#preserve-message-constraints), and use the native merge and continuation flow rather than authored hunk grouping or the history-rewrite route. Carry these inputs through the same confirmation, execution, and verification checkpoints. An authorized merge does not authorize rewriting published commits.
+For upstream merges, record the destination branch, starting `HEAD`, upstream target, intended result, and expected parent relationships. Select native merge options against those relationships and effective configuration. Preserve Git’s generated message under [Preserve Message Constraints](#preserve-message-constraints), and use the native merge and continuation flow rather than authored hunk grouping or the history rewrite route. Carry these inputs through the same confirmation, execution, and verification checkpoints. An authorized merge does not authorize rewriting published commits.
 
 ## Plan Before Implementation
 
-Apply [Group Hunks](#group-hunks) prospectively to the intended contribution and available repository evidence. Use the [PR packaging constraints](prepare-pull-requests.md#plan-and-implement-commits) supplied by the caller. Identify coherent change units, their dependency order, and assumptions that could change the breakdown. Do not invent changes or force an incoherent split to reach a requested count. Use [Compose Authored Messages](#compose-authored-messages) for any provisional wording.
+Apply [Group Hunks](#group-hunks) prospectively to the intended contribution and available repository evidence. Use the [pull request packaging constraints](prepare-pull-requests.md#plan-and-implement-commits) supplied by the caller. Identify coherent change units, their dependency order, and assumptions that could change the breakdown. Do not invent changes or force an incoherent split to reach a requested count. Use [Compose Authored Messages](#compose-authored-messages) for any provisional wording.
 
-Keep this pass read-only. Boundaries, counts, and messages are provisional, not a staging plan or permission to create commits. Return the breakdown to the PR workflow. Once changes exist, inspect the actual diff rather than treating the earlier plan as a concrete execution proposal.
+Keep this pass read-only. Boundaries, counts, and messages are provisional, not a staging plan or permission to create commits. Return the breakdown to the pull request workflow. Once changes exist, inspect the actual diff rather than treating the earlier plan as a concrete execution proposal.
 
 ## Inspect Changes
 
@@ -26,7 +26,7 @@ Keep proposal preparation read-only until [execution authorization](#confirm-com
 
 ## Group Hunks
 
-Use the packaging supplied by the PR workflow, with each commit expressing one independently understandable change rather than one file type.
+Use the packaging supplied by the pull request workflow, with each commit expressing one independently understandable change rather than one file type.
 
 - **Cohesion:** Keep implementation, necessary integration, and regression tests together when they establish one behavior. Include documentation and generated changes when the commit needs them for correctness.
 - **Feasibility:** Ensure groups can be selected from the existing changes without duplicating or dropping hunks. Keep inseparable changes together. Do not add temporary behavior, fabricate changes, or rewrite source to manufacture a split.
@@ -38,14 +38,14 @@ Use the packaging supplied by the PR workflow, with each commit expressing one i
 Apply these safeguards to all messages, including inherited wording and temporary Git messages:
 
 - **Authorship:** Preserve established human authorship and supplied human co-author attribution. Do not add AI attribution or message signatures by default. An explicit attribution request may change message text, not execution identity or credential handling, and must not fabricate authorship.
-- **Constraints:** Apply repository message requirements and exact supplied wording under [Instruction Authority](../SKILL.md#instruction-authority). When applicable, the PR workflow’s single-commit title constraint governs the complete message, not only its subject. Resolve any remaining material conflict with the user rather than silently appending text, dropping attribution, or bypassing a security requirement.
+- **Constraints:** Apply repository message requirements and exact supplied wording under [Instruction Authority](../SKILL.md#instruction-authority). When applicable, the pull request workflow’s single-commit title constraint governs the complete message, not only its subject. Resolve any remaining material conflict with the user rather than silently appending text, dropping attribution, or bypassing a security requirement.
 - **Preservation:** Do not rewrite Git-generated, inherited, or supplied messages unless that change is requested. Preserve an existing hosted `(#<number>)` subject suffix when it belongs to the selected message, but never invent one. Do not choose or change a release version while composing messages.
 
 ## Compose Authored Messages
 
 Use these defaults only for new messages or explicitly authorized wording changes. Do not normalize inherited messages. Within the [message constraints](#preserve-message-constraints), apply explicit user or calling workflow preferences before conventions found in relevant history.
 
-1. Identify the dominant intended change from verified task context, not patch mechanics alone. Name the narrowest durable repository concept that captures it, and use a semantic verb. Added lines do not necessarily mean “Add,” and removed lines do not necessarily mean “Remove.”
+1. Identify the dominant intended change from verified task context, not patch mechanics alone. Name the narrowest durable repository concept that captures it, and use a semantic verb. Added lines do not necessarily mean `Add`, and removed lines do not necessarily mean `Remove`.
 2. Add only qualifiers that distinguish material conditions, mechanisms, purposes, or scope. A conjunction may join objects under one action, but must not conceal unrelated changes. Claim no unverified capability, motivation, or outcome.
 3. Without a narrower convention, write one compact, sentence case imperative clause without terminal punctuation. Preserve precision rather than imposing a fixed length. Conventional Commit prefixes and scopes are permitted when the selected convention calls for them, not required here.
 4. Put exact searchable tokens in backticks, including commands, configuration keys, domains, file labels, package selectors, paths, and rule IDs. Leave conceptual categories and product names in prose.
@@ -94,6 +94,6 @@ On conflicts, errors, failed checks, or an unexpected result, pause the affected
 
 Return final commit references and subjects in execution order, applicable validation evidence and its limitations, and material remaining work. If execution stopped partway, distinguish recorded commits from the remaining proposal. If a human review marker remains, follow its conditional [handoff requirements](preserve-human-review-markers.md#keep-checkpoints-visible), even when no commit was made.
 
-Return to the PR workflow’s [final editorial work](prepare-pull-requests.md#finalize-pull-requests), or its interrupted synchronization checkpoint when this was a setup update. A completed commit operation does not finish contribution preparation or itself expire a continuing grant.
+Return to the pull request workflow’s [final editorial work](prepare-pull-requests.md#finalize-pull-requests), or its interrupted synchronization checkpoint when this was a setup update. A completed commit operation does not finish contribution preparation or itself expire a continuing grant.
 
 Local commit or history update authorization alone does not authorize publication. Apply the entrypoint’s [publication and submission authorization](../SKILL.md#hand-off-contributions), requesting no duplicate confirmation for directly authorized effects. When a published branch needs replacement, complete its [publication safeguards](update-commit-history.md#hand-back-published-updates) before execution or final delivery of the user-run command.

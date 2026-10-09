@@ -5,7 +5,9 @@ description: |-
 
     Use when a global instruction changes or is evaluated and supplies a public skill mirror, or when a project-authored asset canonically supplies a public skill surface, regardless of that asset’s source category.
 
-    Do not use for ordinary project source or agent documentation that does not affect a skill contract. Defer to a more specific project skill development workflow when one exists.
+    Do not use for ordinary project source or agent documentation that does not affect a skill contract.
+
+    Defer to a more specific project skill development workflow when one exists.
 
 metadata:
     internal: true

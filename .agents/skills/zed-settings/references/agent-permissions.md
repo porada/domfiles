@@ -2,14 +2,14 @@
 
 Agent permissions are configured through `home/.config/zed/settings.json`, not project `.zed/settings.json`. Follow the parent [Zed settings workflow](../SKILL.md) for general validation, investigation, and mutation boundaries.
 
-Do not read every permission reference by default. Select only the branches required by the resolved scope, and within each branch read the sections the task needs rather than the complete file.
+Select only the branches required by the resolved scope, and within each branch read the sections the task needs rather than the complete file.
 
 ## Apply Shared Permission Policy
 
 - Keep `fetch` as the only tool with repository-configured overrides unless the user expressly requests another configuration under the parent [general policy](../SKILL.md#apply-general-policy). Use the parent change workflow for that departure rather than treating the absence of a specialized validation tool as a categorical prohibition.
 - Preserve `agent.tool_permissions.default` as `allow` by default.
 - Treat the always-loaded global agent policy as the canonical owner of authentication handling, command intent, security boundary restrictions, and task authorization. Do not encode those policies as terminal command patterns.
-- Treat configured tool permissions, the operating system sandbox for terminal processes, and native fetch network checks as distinct layers. The operating system sandbox applies to `terminal`, not native `fetch` or native path tools. A tool permission `allow` does not grant a `terminal` effect outside that sandbox or let `fetch` bypass Zed’s separate network checks. Native path tools use their own built-in checks.
+- Treat configured tool permissions, the operating system sandbox for terminal processes, and native fetch network checks as distinct layers. The operating system sandbox applies to `terminal`, not `fetch` or native path tools. A tool permission `allow` does not grant a `terminal` effect outside that sandbox or let `fetch` bypass Zed’s separate network checks. Native path tools use their own built-in checks.
 
 ## Select Permission Branches
 
@@ -19,7 +19,7 @@ Do not read every permission reference by default. Select only the branches requ
 
 ## Extend Parent Workflow
 
-Apply the shared policy and every selected branch throughout the workflow chosen in the parent skill. For an unexpected native path or terminal permission outcome, first establish whether any repository-configured override participates rather than assuming the default configuration remains unchanged. Then follow [Resolve Effective Permission Behavior](#resolve-effective-permission-behavior) for the tool’s distinct authorization layers.
+Apply the shared policy and every selected branch throughout the workflow chosen in the parent skill.
 
 For every read-only workflow, treat configured regexes and proposed cases as inert strings.
 
@@ -38,7 +38,7 @@ Account for every participating settings layer. The pattern matcher evaluates on
 ## Apply Fetch Pattern or Default Changes
 
 1. Inspect the actual fetch settings and participating layers. Identify expected configured decisions for the relevant [URL cases](fetch-and-network-permissions.md#build-fetch-rule-corpus), including intended changes and representative unchanged cases.
-2. Check proposed patterns through the [pattern matcher](fetch-pattern-matching-and-regex-compatibility.md#check-a-pattern), using each pattern’s explicit case-sensitivity value. Resolve configured decisions separately through [Resolve Effective Permission Behavior](#resolve-effective-permission-behavior).
+2. Check proposed patterns through the [pattern matcher](fetch-pattern-matching-and-regex-compatibility.md#check-patterns), using each pattern’s explicit case sensitivity value. Resolve configured decisions separately through [Resolve Effective Permission Behavior](#resolve-effective-permission-behavior).
 3. Apply only authorized field-level edits with a native file editing tool under the parent mutation rules, then validate the final settings below.
 
 ## Validate Permission Changes

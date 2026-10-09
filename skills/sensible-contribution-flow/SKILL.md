@@ -16,11 +16,11 @@ This skill helps agents prepare discussions, issues, pull requests, and security
 
 ## Select Workflow
 
-Treat a request to investigate and prepare a change if warranted as pull request preparation, including documentation-only changes, unless the user explicitly requests assessment alone or edits without pull request preparation. Explicitly deferring the decision to contribute selects assessment-only, even when a future PR is contemplated. Uncertainty about whether the problem exists or postponing fork creation alone does not make an otherwise authorized preparation request assessment-only.
+Treat a request to investigate and prepare a change if warranted as pull request preparation, including documentation-only changes, unless the user explicitly requests assessment alone or edits without pull request preparation. Explicitly deferring the decision to contribute selects assessment-only, even when a future pull request is contemplated. Uncertainty about whether the problem exists or postponing fork creation alone does not make an otherwise authorized preparation request assessment-only.
 
 Keep assessment-only requests and standalone reviews read-only. Follow [contribution assessment](#assess-contribution-fit), report the conclusions and material evidence limitations, then stop. A supplied checkout, linked pull request, or findings report does not authorize preparation, fixes, or Git mutations.
 
-For explicit local edits without pull request preparation, resolve [scope and authority](#resolve-scope-and-authority), follow [Implement and Review](references/prepare-pull-requests.md#implement-and-review) for the scoped changes and applicable checks, then return directly to the [working tree handoff](references/hand-off-contributions.md#complete-deliverables). Honor existing user authorization without duplicate confirmation. This route implies no automatic preparation grant, branch setup, commits, PR draft, or remote mutation.
+For explicit local edits without pull request preparation, resolve [scope and authority](#resolve-scope-and-authority), follow [Implement and Review](references/prepare-pull-requests.md#implement-and-review) for the scoped changes and applicable checks, then return directly to the [working tree handoff](references/hand-off-contributions.md#complete-deliverables). Honor existing user authorization without duplicate confirmation. This route implies no automatic preparation grant, branch setup, commits, pull request draft, or remote mutation.
 
 Load references only when the selected route or current phase requires them, reusing established context and peer choices. For user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/revise-existing-pull-requests.md) rather than restarting initial preparation.
 
@@ -28,9 +28,9 @@ For initial pull request preparation, use these default stages in execution orde
 
 1. [Fetch upstream, then set up and synchronize the contribution branch](references/prepare-pull-requests.md#enter-supplied-checkout).
 2. [Assess upstream fit and contribution scope](#assess-contribution-fit).
-3. [Resolve execution authority, then prepare the early PR draft and design review](references/propose-pull-requests.md).
+3. [Resolve execution authority, then prepare the early pull request draft and design review](references/propose-pull-requests.md).
 4. [Implement, validate, and review](references/prepare-pull-requests.md#implement-and-review).
-5. [Prepare commits](references/prepare-pull-requests.md#prepare-commits), [finalize the PR](references/prepare-pull-requests.md#finalize-pull-requests), and [hand off the contribution](#hand-off-contributions).
+5. [Prepare commits](references/prepare-pull-requests.md#prepare-commits), [finalize the pull request](references/prepare-pull-requests.md#finalize-pull-requests), and [hand off the contribution](#hand-off-contributions).
 
 For other contribution outcomes, follow [contribution assessment](#assess-contribution-fit) and its selected preparation path.
 
@@ -46,13 +46,13 @@ Resolve each relevant local peer once, when the current phase first needs its re
 | --- | --- | --- |
 | `agent-task-relay` | Findings validation and applicable fix confirmation | Fallback: [Review Findings](references/review-findings.md) |
 | `human-facing-writing` | Writing accuracy, editorial guidance, and security report prose | Shared constraints and standalone writing: [Prepare Post Content](references/prepare-post-content.md). Fallback for private reports: [Prepare Security Reports](references/prepare-security-reports.md). |
-| `intentional-dependency-choice` | Dependency selection, informed approval, and declaration conventions | Fallback: [Dependency Choice](references/dependency-choice.md) |
-| `sensible-commit-flow` | Commit planning, authorized execution, history updates, and verification | [Standalone Commit Fallback](references/prepare-commits.md) |
+| `intentional-dependency-choice` | Dependency selection, informed approval, and declaration conventions | Fallback: [dependency guidance](references/execution-boundaries.md#handle-dependencies-and-protected-content) |
+| `sensible-commit-flow` | Commit planning, authorized execution, history updates, and verification | Fallback: [standalone commit workflow](references/prepare-commits.md) |
 | `simple-github-cli` | Bounded GitHub evidence gathering and authorized remote changes | Fallback for reads: [Gather GitHub Evidence](references/gather-github-evidence.md). Shared constraints and standalone remote handling: [Hand Off Contributions](#hand-off-contributions). |
 
 If `intentional-dependency-choice` is unavailable locally and available evidence shows that remote use would materially improve the decision, follow its [optional public peer workflow](references/optional-peer-intentional-dependency-choice.md). Do not install peers or remotely retrieve the other peers.
 
-References call these the commit, dependency, evidence, findings, and writing workflows. Use fallback implementations only when their peers remain unavailable, not to bypass a resolved peer’s authority or evidence stop. Local procedures remain sufficient without network access, repository-managed policy, sibling skills, or the source checkout. Report missing capabilities and material evidence gaps. A procedural waiver does not establish missing evidence or supply access.
+References call these the commit, dependency, evidence, findings, remote-change, and writing workflows. The evidence and remote-change workflows use the same resolved `simple-github-cli` peer. Use fallback implementations only when their peers remain unavailable, not to bypass a resolved peer’s authority or evidence stop. Bundled guidance remains sufficient without network access, sibling skills, or the skill’s distribution checkout and managed policy. Contribution operations retain their target repository evidence, policy, and access requirements. Report missing capabilities and material evidence gaps. A procedural waiver does not establish missing evidence or supply access.
 
 Shared contribution constraints apply with or without peers, including post preparation and handoff on their applicable routes. Independently applicable overlays still govern compatible peer work. Composition neither creates execution authority nor revokes valid approval. Preserve the host’s instruction hierarchy rather than inferring precedence from load order or a narrower skill name. Resolve a material conflict with the user.
 

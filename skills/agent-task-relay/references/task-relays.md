@@ -58,4 +58,4 @@ Record only the confirmed isolation requirement. The receiving environment’s r
 
 ## Delivery
 
-Once the handoff is authorized, apply [Assignment Delivery](assignment-prompts.md#delivery). Unless delivery returns to a calling workflow, precede each fenced prompt with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready to relay.
+Once the handoff is authorized, apply [Delivery](assignment-prompts.md#delivery). Unless delivery returns to a calling workflow, precede each fenced prompt with `# Relay Prompt` or a descriptive numbered `# Relay Prompt …` heading. Follow it with the next relay heading or a short statement that the prompt is ready to relay.

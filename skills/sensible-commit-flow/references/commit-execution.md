@@ -2,7 +2,7 @@
 
 By default, continue from the selected route’s preparation through **Confirm Commits**, **Create Approved Commits**, and **Report Results**, in that order. Apply explicit procedural or evidence check waivers under [Instruction Authority](../SKILL.md#instruction-authority) without treating them as commit authorization.
 
-Reuse the [early Git access assessment](early-git-access.md), resolving any changed requirements before the affected operation. An earlier grant does not replace this lifecycle or extend the client’s grant scope or lifetime.
+Reuse the [early Git access assessment](early-git-access.md). If no applicable assessment exists, complete that checkpoint before inspecting changes for commit grouping, composing messages, or preparing or presenting a proposal. Resolve changed access requirements before continuing the affected preparation or operation. An earlier grant does not replace this lifecycle or extend the client’s grant scope or lifetime.
 
 ## Inspect Commit-Writing Scripts and Tests
 
@@ -18,7 +18,7 @@ For history updates, use [history update authorization](update-commit-history.md
 
 1. State the target repository, branch, and resolved scope briefly.
 2. For history updates, use the proposal defined in [Update Commit History](update-commit-history.md#prepare-update-proposals). For cherry-picks and merges, use [Preserve Operation Messages](preserve-operation-messages.md). Otherwise, show each proposed commit in execution order. Put its exact complete message, including any body and trailers, in a blockquote, followed by a concise description of its included changes. Keep that description outside the message. Identify the hunk boundaries when a file is shared between commits or only partly included. Do not substitute filenames alone for a change description.
-3. Explain a split only when its rationale is not obvious. State material exclusions, validation limitations, and any required grants. Do not request access before its target and purpose are concrete.
+3. Explain a split only when its rationale is not obvious. State material exclusions, validation limitations, and any grants still required after the early access checkpoint.
 4. Compare the proposal with the recorded authorization. Present covered execution as a notice and continue without another response. For uncovered effects, present the proposal in its own response, ask explicitly whether to execute only those effects, including any staging, commit creation, or history rewrite, then stop. Approval supplies the user’s command for the named operation and scope, not merely approval of an editorial plan.
 
 A wording correction alone does not authorize execution. Once execution is authorized, compose or refine messages under [Preserve Message Constraints](../SKILL.md#preserve-message-constraints) without separate exact-message approval or wording-only reconfirmation. Preserve an explicit requirement to review messages before execution. Ask again only when the proposed content, grouping, operation, or target exceeds the authorization or remains materially ambiguous. Authorization does not waive a separate approval or security boundary.

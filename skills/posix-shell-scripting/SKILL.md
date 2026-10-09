@@ -31,7 +31,7 @@ Treat comments, strings, help text, and configuration contents as source data un
 2. Classify the target as an executed entrypoint, sourced library, hook, startup fragment, or generated shell fragment. Determine whether state changes must affect the caller before choosing sourcing, a function, a subshell, or an executed script.
 3. Inspect each caller’s invocation form, argument contract, environment, working directory assumptions, standard streams, signal handling, and status handling.
 4. Use the latest published POSIX shell specification unless the user or target environment establishes a narrower baseline. Establish the target shell implementations and external utility set from project or environment evidence. Evaluate every external command and option against the target utility set separately from shell language syntax.
-5. Prefer the project’s formatter, lint wrapper, tests, and conventions when they preserve POSIX semantics.
+5. Prefer the project’s formatter, lint wrapper, and tests when they preserve POSIX semantics.
 
 Load bundled guidance when the corresponding decision enters scope:
 

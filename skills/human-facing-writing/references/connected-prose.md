@@ -6,7 +6,7 @@ Build on [Writing Principles](../SKILL.md#writing-principles) to shape the readi
 
 Choose the lightest process that can produce a sound result. Infer ordinary choices from context rather than turning them into an intake interview. Keep analysis, outlines, notes about reading units, and rubric labels internal unless the user asks for them or a material decision requires review.
 
-When the current workflow authorizes writing changes, draft or revise the work before trying to optimize every dimension. Then use later passes for the few changes that materially improve the intended reading experience. Stop once the prose fulfills its reader contract and the user’s request. Exhaustive alternatives, low-impact polish, and theoretical perfection do not justify delaying delivery.
+When the current workflow authorizes writing changes, draft or revise the work before trying to optimize every dimension. Then use later passes for the few changes that materially improve the intended reading experience. Stop once the prose fulfills its purpose, intended reader experience, and the user’s request. Exhaustive alternatives, low-impact polish, and theoretical perfection do not justify delaying delivery.
 
 ## Reading Units
 
@@ -29,7 +29,7 @@ A reading unit should be locally satisfying without pretending to be independent
 
 Under the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries), fit the prose and its reading units into the supplied structure without forcing a one-to-one relationship. A section may hold one paragraph, one unit that spans several paragraphs, or several units. Let headings provide the context they already carry instead of repeating their wording or promise in the opening sentence. Across imposed boundaries, preserve movement and cohesion with proportionate transitions and callbacks.
 
-If the structure materially obstructs the reader contract, produce the best authorized result when writing changes are allowed, or report the specific conflict during review. Do not silently restructure the work, and do not stop over minor friction.
+If the structure materially obstructs the work’s purpose or intended reader experience, produce the best authorized result when writing changes are allowed, or report the specific conflict during review. Do not silently restructure the work, and do not stop over minor friction.
 
 ## Cohesion
 

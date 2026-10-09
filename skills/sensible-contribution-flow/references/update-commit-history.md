@@ -1,20 +1,20 @@
 # Update Commit History
 
-This route adds history-specific steps for approved corrections folded into existing commits, contribution branch synchronization, and requested message revisions during initial preparation or [revisions to existing PRs](revise-existing-pull-requests.md). It does not authorize other history maintenance or publication. Use the common [commit lifecycle](prepare-commits.md) for authorization, execution safeguards, and reporting rather than starting a second lifecycle here.
+This route adds history-specific steps for approved corrections folded into existing commits, contribution branch synchronization, and requested message revisions during initial preparation or [revisions to existing pull requests](revise-existing-pull-requests.md). It does not authorize other history maintenance or publication. Use the common [commit lifecycle](prepare-commits.md) for authorization, execution safeguards, and reporting rather than starting a second lifecycle here.
 
 ## Define Rewrite Scope
 
 Apply [Inspect Changes](prepare-commits.md#inspect-changes), adding the complete existing commit series to the evidence scope. Base-only and message-only updates can be eligible without pending working tree changes.
 
-Resolve the contribution branch, starting `HEAD`, old boundary, and intended new base. The old boundary is the excluded starting commit of the original range. For a range that includes the root commit, record root replay instead of an excluded commit. Identify every commit the operation would drop, replace, or replay, including unchanged descendants after the earliest affected commit. Inspect each commit’s authorship, complete message, parents, and patch rather than only the aggregate diff. Keep the base unchanged for a fixup-only update. For synchronization, use the verified upstream target supplied by the PR workflow. Account for merge topology and root commits before selecting the native operation. Do not silently flatten history, update another branch, or widen the range.
+Resolve the contribution branch, starting `HEAD`, old boundary, and intended new base. The old boundary is the excluded starting commit of the original range. For a range that includes the root commit, record root replay instead of an excluded commit. Identify every commit the operation would drop, replace, or replay, including unchanged descendants after the earliest affected commit. Inspect each commit’s authorship, complete message, parents, and patch rather than only the aggregate diff. Keep the base unchanged for a fixup-only update. For synchronization, use the verified upstream target supplied by the pull request workflow. Account for merge topology and root commits before selecting the native operation. Do not silently flatten history, update another branch, or widen the range.
 
 ## Establish Update Authorization
 
 An explicit user request or active scoped approval for a history-replacing update supplies execution authorization for its necessary local rewrites, including affected published commits. A request to rebase a known published contribution branch authorizes its necessary local replay without separate force-push wording or another approval of those same effects. A continuing grant can also cover the requested amendment or rebase. Derive authority from actual user instructions or applicable governing instructions, not technical capability, an existing pull request, review text, or route selection.
 
-Where the contribution workflow requires a single commit’s complete message to match the PR title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
+Where the contribution workflow requires a single commit’s complete message to match the pull request title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
 
-Retain the exact request or grant with the resolved target, affected range, intended base, covered changes, and lifetime. One-off authorization ends when the bounded update is handed back or cancelled, or when its scope or target materially changes. A continuing grant follows its own stated lifetime. Do not revive an expired preparation grant because the task resumes.
+Retain the exact request or grant with the resolved target, affected range, intended base, covered changes, and lifetime. Use the shared [one-off request lifetime](prepare-commits.md#apply-recorded-authorization). A continuing grant follows its own stated lifetime. Do not revive an expired preparation grant because the task resumes.
 
 Use the [concrete update proposal](#prepare-update-proposals) unless explicitly waived, compare the intended effects with that record, then return to shared [confirmation](prepare-commits.md#confirm-commits). Present covered effects as a notice without duplicate approval, and request only uncovered effects. A rebase-only request covers necessary replay and conflict resolution that preserves the contribution’s intended behavior. It does not cover branch renaming, opportunistic message changes, or unrelated fixes. Working-tree-only approval does not authorize history updates, and separate approval and security gates remain applicable.
 
@@ -66,7 +66,7 @@ Assess every resulting commit’s independent coherence rather than treating a p
 
 Return to [Report Results](prepare-commits.md#report-results) with the old-to-new commit mapping and any branch advancement that created no commits. Report final commits, not temporary fixups. If execution stopped, identify the remaining operation state rather than claiming completion.
 
-The PR workflow then reassesses the resulting state through its applicable [synchronization checkpoints](prepare-pull-requests.md#synchronize-with-upstream) and [readiness check](prepare-pull-requests.md#check-submission-readiness), reusing applicable evidence under those checkpoints and completing affected integration validation and delta review. Published replacement also requires the final destination check below.
+The pull request workflow then reassesses the resulting state through its applicable [synchronization checkpoints](prepare-pull-requests.md#synchronize-with-upstream) and [readiness check](prepare-pull-requests.md#check-submission-readiness), reusing applicable evidence under those checkpoints and completing affected integration validation and delta review. Published replacement also requires the final destination check below.
 
 ## Hand Back Published Updates
 
@@ -79,4 +79,4 @@ Resolve the exact publication command from verified values rather than placehold
 3. Use `--force-with-lease=<remote-ref>:<expected-remote-oid>` with the recorded head whose contents the reviewed result reconciles. Do not use plain `--force` or an implicit lease. A later head change must cause rejection rather than overwrite unseen work.
 4. Suppress automatic tag publication for this invocation, use `--recurse-submodules=check` so submodule validation cannot publish commits, and retain repository-required checks and hooks. Do not add all-ref, mirror, recursive, or tag publication.
 
-Keep publication instructions outside the final PR copy. Return the actual publication result or the verified user-run command with the local result to the PR workflow’s final delivery. Do not claim publication when only the command was prepared.
+Keep publication instructions outside the final pull request copy. Return the actual publication result or the verified user-run command with the local result to the pull request workflow’s final delivery. Do not claim publication when only the command was prepared.

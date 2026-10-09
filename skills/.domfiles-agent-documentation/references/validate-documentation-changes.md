@@ -10,7 +10,7 @@ For changes, reviews, and audits, select checks by the contract being changed or
 | Headings, links, or routing | Also verify affected anchors, inbound and directional references, discovery paths, and availability of required guidance from each affected entry point. When routing changes how a workflow is entered or which guidance loads, also apply **Check Workflow Compatibility**. |
 | Behavior or authorization | Also trace affected execution paths, scope, permissions, exceptions, recovery, and standalone fallbacks through **Check Workflow Compatibility** below. |
 
-An explicitly broader audit retains its requested scope. When impact is uncertain, inspect enough context to classify it rather than assuming a wording-only change. Keep applicable formatting, identity, link, and mirror checks, and validate the complete scope of every affected invariant, including unchanged members. A shared wording or template change still reaches every governed copy. Reuse established evidence under the global **Validation evidence** policy rather than restarting an unchanged review or check at each phase.
+An explicitly broader audit retains its requested scope. When impact is uncertain, inspect enough context to classify it rather than assuming a wording-only change. Keep applicable formatting, identity, link, and mirror checks. A shared wording or template change still reaches every governed copy. Reuse established evidence under the global **Validation evidence** policy rather than restarting an unchanged review or check at each phase.
 
 ## Complete Change Checks
 
@@ -23,23 +23,25 @@ After capturing all task-authorized documentation updates intended for the curre
 
 ## Check Workflow Compatibility
 
-Before finalizing new or materially changed operational guidance, identify the failure it is meant to prevent and the supported work it must still permit. Derive expected outcomes from governing instructions, explicit user decisions, and verified behavior, not from the proposed wording alone.
+When creating, materially changing, reviewing, or auditing operational guidance, identify the failure it is meant to prevent and the supported work it must still permit. Derive expected outcomes from governing instructions, explicit user decisions, and verified behavior, not from the wording alone.
 
-Within the existing bounded alignment pass, trace concrete cases through the applicable inherited rules and routed workflows. When a change alters how a workflow is entered, revisit the assumptions that depended on the previous entry point. Verify the default path and how each remaining branch is selected. Cover the permitted path, the relevant stop or approval boundary, and any affected exception, recovery, or continuation. Check that prerequisites are available at the phase that requires them and that valid authorization remains effective through composition. Trace mode-specific effects and cleanup through completion or stopping.
+Within the current bounded change, review, or audit pass, trace concrete cases through the applicable inherited rules and routed workflows. Keep reviews and audits read-only. When a change alters how a workflow is entered, revisit the assumptions that depended on the previous entry point. Verify the default path and how each remaining branch is selected. Cover the permitted path, the relevant stop or approval boundary, and any affected exception, recovery, or continuation. Check that prerequisites are available at the phase that requires them and that valid authorization remains effective through composition. Trace mode-specific effects and cleanup through completion or stopping.
 
 Validate a documented command procedure as a complete sequence for each materially different input class it claims to support. Verify effective configuration and implicit effects in the supported invocation context, not merely accepted syntax. A successful individual command does not validate later stages. Bound claims such as “every wrapper” or “all scripts” by verified shared behavior. When execution is unauthorized or unavailable, distinguish inspection from execution and report the remaining verification gap.
 
-Reuse established evidence and choose only cases needed for the changed behavior and its direct integration boundaries. Preserve existing complete-scope checks and approval requirements. Report uncertainty or conflicts rather than inventing a workaround.
+Reuse established evidence and choose only cases needed for the changed or evaluated behavior and its direct integration boundaries. Preserve existing complete-scope checks and approval requirements. Report uncertainty or conflicts rather than inventing a workaround.
 
 ### Evaluate Workflow Behavior
 
 When a change aims to reduce repetition or interruption, define the expected actions for a small set of representative cases before evaluating the result. Pair a case that should continue or reuse evidence with one that must rerun a check, pause, or ask for a decision. For validation reuse, vary a relevant input. For proportional checking, contrast a wording edit with a routing or authority change. For recovery, contrast an evidence-backed in-scope correction with a new approval requirement or an exhausted retry limit.
 
+When evaluating an early capability check, account for the work performed before access is established and when the user encounters any required approval. Before removing, delaying, or replacing the check, verify that the alternative establishes the required capability without postponing that approval. Prefer a bounded, authorized representative operation over prolonged inference when it provides more decisive evidence.
+
 Use available, authorized task evidence or safe fixtures. Assess redundant checks, unnecessary approvals, continued progress, and preserved correctness and permission boundaries. Fewer tool calls or prompts alone do not establish improvement. Keep instruction walkthroughs distinct from observed execution, and report when live behavior has not been exercised. Do not introduce mandatory per-task metrics, new infrastructure, optional remote processing, or simulated approvals to perform this evaluation.
 
 ## Check Repository Independence
 
-Evaluate the complete affected requirement family and its instruction paths under the [repository independence contract](repository-independence.md), not just the edited files. Trace representative tasks using the destination’s supported client entrypoints, local documentation, and declared peers, without the maintainer’s global instructions or domfiles installation. Also trace the maintainer’s environment so local rules and personal defaults do not create contradictory outcomes.
+Evaluate the complete affected requirement family and its instruction paths under the [repository independence contract](repository-independence.md), not just the edited files. Trace representative tasks using the destination’s supported client entrypoints, local documentation, and declared peers, without the maintainer’s global instructions or domfiles setup. Also trace the maintainer’s environment so local rules and personal defaults do not create contradictory outcomes.
 
 Check ordinary tasks outside skills as well as relevant skill routes, including shortcuts and wording-only work. Vary personal defaults where they could change an accepted artifact requirement. When an optional peer supplies assistance, verify that required local behavior remains reachable under its supported availability and fallback cases. Installed guidance alone is not proof of invocation or precedence.
 

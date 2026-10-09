@@ -1,8 +1,10 @@
 # Fish-Native Idioms
 
+Command forms with angle-bracketed names are templates requiring substitution.
+
 ## Variable Scope and State
 
-Fish treats scope and exportedness as separate properties. Use `set` to create, update, export, scope, query, and erase variables. Do not write bare assignments except for the supported single-command `NAME=value command` override when that exact lifetime is intended.
+Fish treats scope and exportedness as separate properties. Use `set` to create, update, export, scope, query, and erase variables. Do not write bare assignments except for the supported single-command `<name>=<value> <command>` override when that exact lifetime is intended.
 
 - Explicitly scope the assignment that introduces important state. After that declaration, an unscoped `set` may intentionally update the narrowest existing variable.
 - Use `set --local` for a value confined to the current block and `set --function` for one needed across blocks in the current function.
@@ -12,12 +14,12 @@ Fish treats scope and exportedness as separate properties. Use `set` to create, 
 
 Choose the narrowest check that establishes the required property, from definition through content:
 
-| Required Property           | Check                              |
-| --------------------------- | ---------------------------------- |
-| Variable is defined         | `set --query <name>`               |
-| At least one element exists | `set --query <name>[1]`            |
-| Exact element count         | `test $(count $value) -eq <count>` |
-| Joined content is nonempty  | `test -n "$value"`                 |
+| Required Property           | Check                               |
+| --------------------------- | ----------------------------------- |
+| Variable is defined         | `set --query <name>`                |
+| At least one element exists | `set --query <name>[1]`             |
+| Exact element count         | `test $(count $<name>) -eq <count>` |
+| Joined content is nonempty  | `test -n "$<name>"`                 |
 
 An undefined variable, a defined empty list, and a list containing one empty string are different states. Do not pass an unquoted, potentially empty list as the only input to `string length --quiet`. If the list expands to zero arguments, the command reads piped or redirected standard input instead. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
 
@@ -27,7 +29,7 @@ When Fish code owns the representation of stored boolean state and neither an ap
 
 By default, a called Fish function cannot read its caller’s unexported local variables. Exported locals remain visible, and `--no-scope-shadowing` lets a function access variables in its calling scope.
 
-When caller scope inheritance is not part of the function’s contract, use a single-command override such as `NAME=value function_name` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
+When caller scope inheritance is not part of the function’s contract, use a single-command override such as `<name>=<value> <function-name>` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
 
 ## Runtime State
 
@@ -60,7 +62,7 @@ Use quotes for Fish semantics rather than visual consistency. Leave literal toke
 
 Quote an expansion when the receiving command must get exactly one argument. A double-quoted empty or undefined variable becomes one empty argument. A quoted multi-element list joins with spaces, while a quoted path variable joins with colons.
 
-Adjacent list expansions form a cartesian product. Attached text combines with every element, while an empty unquoted list can remove the entire token. For pairwise operations, require equal list lengths and index both lists explicitly because adjacent expansions do not zip lists.
+Adjacent list expansions form a Cartesian product. Attached text combines with every element, while an empty unquoted list can remove the entire token. For pairwise operations, require equal list lengths and index both lists explicitly because adjacent expansions do not zip lists.
 
 Before attaching text to a sensitive value, establish the required element count and content. For example, require one nonempty root before constructing a path:
 
@@ -79,7 +81,7 @@ Put a command directly after `if` or `while`, and invert its status with `not`. 
 
 Use `switch` for pattern-based branches. Fish executes the first matching `case` and has no fallthrough.
 
-Recognize `&&`, `||`, `!`, and `$()` as valid Fish syntax during review. For an equivalent two-command status dependency in new or materially rewritten code, write `command; and next` or `command; or fallback` instead of `&&` or `||`, and use `not` instead of `!`. Preserve semantics and precedence rather than replacing symbolic forms mechanically.
+Recognize `&&`, `||`, `!`, and `$()` as valid Fish syntax during review. For an equivalent two-command status dependency in new or materially rewritten code, write `<command>; and <next-command>` or `<command>; or <fallback>` instead of `&&` or `||`, and use `not` instead of `!`. Preserve semantics and precedence rather than replacing symbolic forms mechanically.
 
 ## Output and Failure Contracts
 
@@ -96,7 +98,7 @@ or return
 
 Assignment-mode `set` preserves the status of its final command substitution. Copy that status immediately when logging, cleanup, or another command must run before returning it.
 
-Put a required command directly in `if` or `while`, or use `command; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code.
+Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code.
 
 Inspect `$pipestatus` only when individual pipeline stages matter. Do not reinterpret every nonzero upstream status as whole-pipeline failure.
 
@@ -122,7 +124,7 @@ Use `2>` for standard error. Use `&>` or explicit descriptor redirections only w
 
 ## Processes
 
-Prefer a pipe when a consumer accepts standard input. Use `$(producer | psub)` only when the consumer requires a filename. Use `begin … end` to group commands for redirection or scope, knowing that it does not create a subprocess. Use an explicit `fish --command '<code>'` only when process isolation is required. Replace heredocs with a pipe, `printf`, or a quoted multiline string according to the receiving command’s interface.
+Prefer a pipe when a consumer accepts standard input. Use `$(<producer> | psub)` only when the consumer requires a filename. Use `begin … end` to group commands for redirection or scope, knowing that it does not create a subprocess. Use an explicit `fish --command '<code>'` only when process isolation is required. Replace heredocs with a pipe, `printf`, or a quoted multiline string according to the receiving command’s interface.
 
 ## Official Sources
 

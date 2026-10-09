@@ -20,7 +20,7 @@ Zed applies the fetch rules only to the initial URL, then separately checks the 
 
 For a network-only change, do not invoke the pattern matcher. Verify that the fetch settings and filesystem permissions remain unchanged unless separately in scope.
 
-For a fetch pattern or default change, check the final stored patterns and their `case_sensitive` values with the [pattern matcher](fetch-pattern-matching-and-regex-compatibility.md#check-a-pattern). Include the applicable [URL cases](#build-fetch-rule-corpus), then separately [resolve configured decisions](agent-permissions.md#resolve-effective-permission-behavior) from the actual rules and default. Verify both intended decision changes and representative unchanged cases.
+For a fetch pattern or default change, check the final stored patterns and their `case_sensitive` values with the [pattern matcher](fetch-pattern-matching-and-regex-compatibility.md#check-patterns). Include the applicable [URL cases](#build-fetch-rule-corpus), then separately [resolve configured decisions](agent-permissions.md#resolve-effective-permission-behavior) from the actual rules and default. Verify both intended decision changes and representative unchanged cases.
 
 After a network or fetch permission change, verify the participating settings layers, effective network mode, applicable complete-array ordering, and distinct fetch and terminal boundaries. Check the final configuration against the default model above or the user’s explicitly requested departure. Pattern matching does not validate runtime network access or prompt behavior.
 

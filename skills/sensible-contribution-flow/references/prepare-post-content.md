@@ -34,7 +34,7 @@ Preserve the template’s checklist statements, field and section order, heading
 
 Normalize the template’s ordinary prose under the applicable [typography conventions](typography.md). Preserve code, exact required wording, machine-readable markers, and other literal syntax wherever their spelling is part of the contract.
 
-Write for a maintainer scanning with limited attention. Keep the body as short as it can be while satisfying the template and making the purpose, relevant context, and material limitations clear. Keep validation evidence accessible in the agent thread, including tool results, with task artifacts for supplementary detail or long logs. Do not reproduce that execution record in the PR. Remove repetition and unnecessary explanation, not required reproduction details or decisive evidence.
+Write for a maintainer scanning with limited attention. Keep the body as short as it can be while satisfying the template and making the purpose, relevant context, and material limitations clear. Keep validation evidence accessible in the agent thread, including tool results, with task artifacts for supplementary detail or long logs. Do not reproduce that execution record in the pull request. Remove repetition and unnecessary explanation, not required reproduction details or decisive evidence.
 
 For a pull request body, explain the intended outcome and strongest verified reason to pursue it. When the limitation of an existing alternative is decisive, make that limitation clear. By default, focus on purpose rather than narrating changes or paraphrasing the diff. Follow an explicit user request or repository template that calls for a change inventory without requiring another wording confirmation.
 

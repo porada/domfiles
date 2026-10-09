@@ -10,7 +10,7 @@ Every assignment inherits the source task’s scope, mutation authority, approva
 
 An assignment may authorize an operation that writes a commit in any repository, directly or indirectly, only when it identifies the user’s explicit command for that operation. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working tree changes only.
 
-Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without approval, stop before dependency-premised implementation, mutation, installation, or mutating delegation. Before selecting a dependency or tool, requesting or carrying dependency approval, or interpreting authorization to acquire or integrate dependencies, follow [Dependency Approval](dependency-approval.md).
+Before selecting a dependency or tool, requesting or carrying dependency approval, or interpreting authorization to acquire or integrate dependencies, follow [Dependency Approval](dependency-approval.md).
 
 Use the guard only when the prompt assigns future work. Omit it from evidence-only decision relays and other transfers of established data. A receiving action alone does not turn an evidence handoff into an assignment.
 

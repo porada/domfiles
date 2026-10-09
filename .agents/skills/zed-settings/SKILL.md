@@ -13,7 +13,7 @@ metadata:
 
 Use this skill as the entrypoint and canonical owner of settings-wide Zed policy and workflow. Do not copy the current domain, permission pattern, or settings inventories into agent documentation.
 
-When agent tool or sandbox permissions, fetch or network allowances, native path or terminal permission behavior, or unexpected permission outcomes are in scope, follow the conditional [agent permission branch](references/agent-permissions.md) before investigation or planning. Read only the branch references it selects.
+When agent tool or sandbox permissions, fetch or network allowances, native path or terminal permission behavior, or unexpected permission outcomes are in scope, load the conditional [agent permission branch](references/agent-permissions.md) before investigation or planning. Read only the branch references it selects.
 
 ## Apply General Policy
 
@@ -24,7 +24,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 ## Choose Workflows
 
-- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. For an expressly requested departure from the default permission model, establish the supported settings semantics and use this general route when no specialized route applies. The pattern matcher checks string matches, not tool permission decisions.
+- For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. For an expressly requested departure from the default permission model, establish the supported settings semantics and use this general route when no specialized route applies.
 - For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, follow the [read-only validation workflow](#validate-zed-settings-audits-diagnoses-and-reviews), and report all findings together. Skip change planning, change validation, formatting, and implementation.
 - For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest nonmutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 - For a standalone review, keep the task read-only and follow the [read-only validation workflow](#validate-zed-settings-audits-diagnoses-and-reviews). Skip change planning, change validation, formatting, and implementation.
@@ -44,11 +44,11 @@ Do not mutate settings during this shared investigation. Mutation begins only th
 
 ## Validate Changes
 
-After editing, apply the [repository validation policy](../../../AGENTS.md#validation):
+After editing, apply the [repository validation policy](../../../AGENTS.md#validation), then complete these steps:
 
 1. Run every applicable conditional branch change validation workflow.
 2. Parse each changed settings JSON file with `jq -e 'type == "object"' <path>`.
-3. Check formatting with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm exec prettier --check <changed-files>`, following the [repository command rationale](../../PROJECT.md#repository-scoped-commands).
+3. Check formatting with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm exec prettier --check <changed-files>`. See the [repository command rationale](../../PROJECT.md#repository-scoped-commands) for the overrides’ effects.
 4. Verify every applicable general and selected-branch Zed settings policy invariant and repository-wide `AGENTS.md` instruction against the final values.
 5. Run `git --no-pager diff --check`.
 

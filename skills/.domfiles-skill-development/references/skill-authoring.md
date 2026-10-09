@@ -1,10 +1,8 @@
 # Skill Authoring
 
-Apply these skill-specific requirements within the shared documentation workflow owned by `agent-documentation`. Its composition with `human-facing-writing` also governs skill metadata, references, assets, and public READMEs.
-
 ## Entrypoints and References
 
-Keep each `SKILL.md` as an entrypoint. Keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves. Apply [Skill Descriptions](skill-descriptions.md) when authoring or assessing the description or invocation mode.
+Keep each `SKILL.md` as an entrypoint. Keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves.
 
 During `agent-documentation`’s **Check Workflow Compatibility** pass, trace each affected skill route from its actual invocation and supported installation state. Use only instructions and prerequisites guaranteed on that route, not context acquired while maintaining other routes. Include relevant optional peer availability cases.
 
@@ -12,17 +10,13 @@ When maintaining `posix-shell-scripting`, keep code block examples out of its `S
 
 ## Base Skills and Overlays
 
-Classify whether the overlay co-applies across the base skill’s complete trigger family or narrows that family, and whether every supported installation guarantees the base. Follow [Skill Descriptions](skill-descriptions.md) when composing the description.
+Both an overlay and its base must be [model-invocable](skill-descriptions.md#invocation-mode). Determine whether every supported installation guarantees the base.
 
-For a model-invocable co-applying overlay with a guaranteed base, state in the description that the overlay applies whenever the base applies, name the base by its stable frontmatter `name`, and add any overlay-only triggers or exclusions. Do not repeat the base description’s capability, trigger family, or exclusions. Applicability follows the resolved task whether the base is selected directly or through another workflow. Do not infer automatic client loading from that declaration.
+Match the base’s complete trigger family and exclusions without adding or narrowing applicability. When the base is guaranteed, state in the description that the overlay applies whenever the base applies, naming the base by its stable frontmatter `name` without repeating the base description’s capability, trigger family, or exclusions. Applicability follows the resolved task whether the base is selected directly or through another workflow. Do not infer automatic client loading from that declaration.
 
-For a model-invocable scope-narrowing overlay, preserve its narrower triggers and exclusions in the description, and do not claim broader co-application.
+Define the overlay’s customizations in its body and route from its entrypoint to the base. Keep the base unaware of the overlay and routing one-way from overlay to base. Do not make a base discover or activate overlays. Reuse already loaded guidance without skipping required workflow checkpoints for later operations.
 
-Preserve [command-only invocation](skill-descriptions.md#invocation-mode): selecting the base does not invoke a command-only overlay.
-
-In every invocation mode, define the overlay’s added or narrower behavior in its body, and route from its entrypoint to the base wherever their scopes overlap. Keep the base unaware of the overlay and routing one-way from overlay to base. Do not make a base discover or activate overlays. Reuse already loaded guidance without skipping required workflow checkpoints for later operations.
-
-When a supported installation does not guarantee the base, keep the overlay independently complete. For a public overlay, follow the [public skill portability contract](public-skill-portability.md), preserve standalone behavior, and make any base composition optional.
+When a supported installation does not guarantee the base, state the overlay’s complete applicability locally and keep it independently complete. For a public overlay, follow the [public skill portability contract](public-skill-portability.md), preserve standalone behavior, and make any base composition optional.
 
 Keep each customization within the defaults the base permits or choices governing instructions expressly delegate, including an explicit user override under the global **Explicit user direction** policy. Overlay applicability supplies neither precedence nor execution authority. Preserve the base’s workflow unless such an override covers the departure, and retain every separate approval and security boundary. Pass separately established authorization through the base’s applicable authorization route rather than deriving it from customization.
 

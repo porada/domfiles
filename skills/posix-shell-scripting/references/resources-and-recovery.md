@@ -26,7 +26,7 @@ Capture the original failure status before recovery. If recovery succeeds, retur
 
 Write a completion marker only after establishing the exact condition it represents, including any recovery that condition requires.
 
-Repeat any remaining destructive-safety preflight after earlier recovery steps because they may have changed the inspected state. When atomic state protection is required, perform the decisive mutable-state check under the lock or as part of the conditional mutation, not as a separate preflight.
+Repeat any remaining destructive-safety preflight after earlier recovery steps because they may have changed the inspected state. When atomic state protection is required, perform the decisive mutable state check under the lock or as part of the conditional mutation, not as a separate preflight.
 
 ## Cleanup Ownership
 

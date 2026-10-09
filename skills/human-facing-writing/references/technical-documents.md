@@ -31,13 +31,13 @@ For any security report, whether standalone or submitted through an issue or pul
 | Document Type | Default |
 | --- | --- |
 | Comment, reply, or code review | Lead with the answer, finding, or required action. Include only the thread context needed to support it, and distinguish required changes from optional suggestions. |
-| Issue, pull request, or Discussion title and body | Follow any applicable repository template. Make the problem, outcome, or scope recognizable immediately, then provide relevant evidence, impact, proposed or implemented changes, validation, and the next action. |
+| Issue, pull request, or discussion title and body | Follow any applicable repository template. Make the problem, outcome, or scope recognizable immediately, then provide relevant evidence, impact, proposed or implemented changes, validation, and the next action. |
 | Other technical document | Follow the established document hierarchy. Lead with the document’s purpose, decision, or required action, and include only the context needed to understand it. |
 | README | Open with a compact project or package identity and practical value. Move through the first useful demonstration, installation, setup, and core usage before optional configuration or questions, as applicable. Keep related projects, provenance, and license information near the end when established. Preserve intentional hero artwork, badges, and layout. |
 
 ## Content
 
-- In GitHub collaboration prose, prefer bare `#<number>` references for same-repository issues, pull requests, and Discussions. State the relationship directly in the surrounding prose rather than wrapping descriptive text in a Markdown link. Use qualified `<owner>/<repository>#<number>` references across repositories where supported. Use explicit links for destinations or surfaces that do not support reference shorthand.
+- In GitHub collaboration prose, prefer bare `#<number>` references for same-repository issues, pull requests, and discussions. State the relationship directly in the surrounding prose rather than wrapping descriptive text in a Markdown link. Use qualified `<owner>/<repository>#<number>` references across repositories where supported. Use explicit links for destinations or surfaces that do not support reference shorthand.
 
     Use a comment or review permalink only when the reader needs that exact location, not merely because it supplied evidence during research. Keep precise research citations in the supporting evidence without automatically carrying them into the final copy.
 

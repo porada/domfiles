@@ -24,7 +24,7 @@ Before cleaning up, moving, promoting to a durable location, renaming, retaining
 
 ## Establish Task Storage
 
-When an authorized workflow needs only one short-lived temporary file, use a fresh `.agent-<name>` file directly under the relevant project root instead of a task directory. Use a project-required namespace instead when applicable. No ignore-file setup is required for this case. Choose an unused path, and remove the file immediately after use.
+When an authorized workflow needs only one short-lived temporary file, use a fresh `.agent-<name>` file directly under the relevant project root instead of a task directory. Use a project-required namespace instead when applicable. No ignore file setup is required for this case. Choose an unused path, and remove the file immediately after use.
 
 For other task storage:
 

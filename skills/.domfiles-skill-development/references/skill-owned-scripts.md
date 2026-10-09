@@ -53,12 +53,12 @@ Generating a declared artifact is not a repair. When evidence indicates that aut
 
 ## Keep Ownership Clear
 
-- Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`. Follow the [filename contract](#resolve-file-names) for every pair.
+- Store each executable script and its adjacent contract test directly under `<skill>/scripts`. Store shared implementation helpers and their adjacent tests under `<skill>/scripts/helpers`. Do not create a per-script directory for a single script-and-test pair or put executable entrypoints in `helpers`. Follow the [filename contract](#resolve-filenames) for every pair.
 - Let the skill own the source, tests, purpose, invocation, operation routes, artifact contract, and repair workflow.
 - Let the repository root own toolchain configuration, dependencies and host language type packages, static validation, optional Cargo integration, and repository build output policy.
 - Do not give the scripts directory or its `helpers` directory a separate package, crate, manifest, TypeScript configuration, lockfile, or workspace membership.
 
-Root ownership assumes the script runs inside its canonical repository. A skill installed for use outside that repository keeps that ownership by running from its host rather than from the installed path.
+Root ownership assumes the script runs inside its canonical repository.
 
 ## Change Protected Scripts
 
@@ -106,9 +106,9 @@ When a script reveals that root validation omits a source category, extend the r
 
 For Rust scripts, follow [Rust Script Integration](rust-script-integration.md) for the standard-library-only and Cargo build routes.
 
-## Resolve File Names
+## Resolve Filenames
 
-Give every script and adjacent test the same filename stem, adding only the resolved test suffix, and rename the pair together so their stems never diverge. Resolve the stem and suffix independently before considering language-native naming:
+Give every script and adjacent test the same filename stem, adding only the resolved test suffix, and rename the pair together so their stems never diverge. Resolve the stem and suffix independently before considering language-native naming. For each component, use the first applicable rule in the following precedence order:
 
 1. Preserve an explicit user-selected path or applicable project instruction for the current pair. Treat it as a broader convention only when the user or project policy says so.
 2. Follow an existing script-and-test pair in the same skill unless it is documented as exceptional.
