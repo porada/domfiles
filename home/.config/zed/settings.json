@@ -92,7 +92,8 @@
 	},
 	"project_panel": {
 		"dock": "left",
-		"hide_root": true
+		"hide_root": true,
+		"show_diagnostics": "off"
 	},
 	"read_only_files": [
 		"**/*.snap",
@@ -185,17 +186,44 @@
 		"dock": "right",
 		"enable_feedback": false,
 		"expand_terminal_card": false,
+		"favorite_models": [
+			{
+				"effort": "xhigh",
+				"enable_thinking": true,
+				"model": "gpt-6.1-sol",
+				"provider": "openai-subscribed"
+			},
+			{
+				"effort": "xhigh",
+				"enable_thinking": true,
+				"model": "gpt-6-astra",
+				"provider": "openai-subscribed"
+			},
+			{
+				"effort": "xhigh",
+				"enable_thinking": true,
+				"model": "gpt-daybreak-blue-latest",
+				"provider": "openai-subscribed"
+			}
+		],
 		"flexible": false,
 		"limit_content_width": false,
 		"sandbox_permissions": {
 			"allow_all_hosts": true,
 			"write_paths": [
 				"/private/tmp",
+				"/Users/dom/.agents",
 				"/Users/dom/.cache",
 				"/Users/dom/.cargo",
+				"/Users/dom/.claude",
+				"/Users/dom/.claude.json",
+				"/Users/dom/.codex",
+				"/Users/dom/Library/Caches/Codex",
 				"/Users/dom/Library/Caches/Homebrew",
 				"/Users/dom/Library/Caches/pnpm",
+				"/Users/dom/Library/Caches/typescript",
 				"/Users/dom/Library/Caches/Yarn",
+				"/Users/dom/Library/Caches/Zed",
 				"/Users/dom/Library/pnpm",
 				"/Users/dom/Projects"
 			]
