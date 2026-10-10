@@ -1,9 +1,6 @@
 packages:
   - packages/*
 
-allowBuilds:
-  esbuild: false
-
 autoDedupe: true
 
 autoInstallPeers: false
@@ -32,6 +29,10 @@ overrides:
   vite-plus>oxlint: latest
   vite-plus>oxlint-tsgolint: latest
   vite: npm:@voidzero-dev/vite-plus-core@1.1.0
+
+permissions:
+  esbuild:
+    build: false
 
 peerDependencyRules:
   allowAny:
