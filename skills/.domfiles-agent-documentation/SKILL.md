@@ -1,7 +1,7 @@
 ---
 name: agent-documentation
 description: |-
-    Use for creating, editing, reviewing, auditing, or maintaining project-authored agent documentation, including `AGENTS.md`, `.agents/PROJECT.md`, skill documentation, reusable handoff prompts and templates, canonical public-surface assets, and public skill READMEs. Also use for project agent documentation setup, repository independence, cross-repository alignment, documentation authority, ownership, composition, routing, redundancy, and token efficiency.
+    Use for creating, editing, reviewing, auditing, or maintaining project-authored agent documentation, including `AGENTS.md`, `.agents/PROJECT.md`, skill documentation, reusable handoff and decision capture prompts, templates, canonical public-surface assets, and public skill READMEs. Also use for project agent documentation setup, repository independence, cross-repository alignment, documentation authority, ownership, composition, routing, redundancy, and token efficiency.
 
     Defer to a more specific project agent documentation workflow when one exists.
 
@@ -34,7 +34,7 @@ metadata:
 ## Choose Workflow
 
 - When the task affects a project-authored skill’s documentation, metadata, assets, category, or supported installation, apply `skill-development` for the skill-specific contracts before the affected work. Also apply it when a global instruction changes or is evaluated and supplies a public skill mirror, even when the request names only the global source. Compose once, then continue the shared workflow here rather than restarting either skill.
-- When a task creates, revises, reviews, audits, or maintains a relay or decision capture prompt, load `agent-task-relay` before resolving its canonical owner or composing it.
+- For reusable relay or decision capture prompt assets, follow [Maintain Prompt Assets](references/compose-documentation.md#maintain-prompt-assets). Use `agent-task-relay` for their operational content contract, not their authoring lifecycle.
 - When establishing or assessing repository independence, setting up project agent documentation, selecting or relocating project requirements, or aligning documentation across repositories, follow [Repository Independence](references/repository-independence.md) before resolving ownership or composing changes.
 - For a documentation-only review or audit, inspect implementation and adjacent tests only as bounded evidence for a specific observable contract, then stop once the claim is established. Do not assess algorithms, internal structure, language idioms, performance, dead code, duplication, or general test quality unless the user explicitly includes implementation. Evaluation criteria such as security, maintainability, or project values apply within the resolved scope and do not expand it.
 - When the resolved scope explicitly includes implementation, follow applicable project, domain, and language implementation and validation workflows for internal concerns. Keep the agent documentation pass focused on contract consequences, and update agent documentation only when the contract, routing, or documented invocation changes.

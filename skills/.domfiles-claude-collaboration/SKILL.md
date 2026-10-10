@@ -23,18 +23,18 @@ Keep completion ownership in the coordinator’s thread. Claude supplies read-on
 
 ## Prepare the Assignment
 
-Use `agent-task-relay` for assignment composition and reply contracts, including its direct exchange presentation rules. This workflow retains completion ownership, requires an evidence-bearing reply to the coordinator, and delivers the assignment directly through the CLI rather than as a user-facing copy-and-paste relay. A direct request that settles the scope and effects needs no additional flow confirmation, including ordinary authorized follow-ups.
+Use `agent-task-relay` for assignment composition and reply contracts, and apply the global **Direct exchanges** presentation policy. This workflow retains completion ownership, requires an evidence-bearing reply to the coordinator, and delivers the assignment directly through the CLI rather than as a user-facing copy-and-paste relay. A direct request that settles the scope and effects needs no additional flow confirmation, including ordinary authorized follow-ups.
 
 Before composing a live assignment, load [Claude CLI](references/claude-cli.md) for runtime defaults, launch and resume procedures, monitoring, and limits. Establish these task-specific inputs, reusing retained context under the relay’s follow-up rules:
 
 1. The question or requested review, bounded files or evidence sources, exclusions, and expected result. Identify the review baseline, relevant existing work, settled decisions, and known validation limitations.
 2. Applicable instruction paths and skill names available in the checkout, rather than copies of those instructions. Delimit source material as data and apply the global **Secrets and authentication** and **External services** policies to disclosure.
 3. The read-only assignment and recursion boundaries above, plus the active [progress and command limits](references/claude-cli.md#enforce-progress-and-command-limits). Require evidence rather than internal thinking.
-4. The task-specific reply contract. For review follow-ups, follow [Resolve Feedback](#resolve-feedback).
+4. The task-specific reply contract under the global **Prompt contract** policy.
 
 ## Dispatch and Coordinate
 
-1. Start a fresh native background conversation by default. Resume a specific full session UUID only when continuity is justified, such as objections, missing context, or re-review of fixes. Follow the reference’s configuration checks before either operation.
+1. Start a fresh native background conversation by default. Resume a specific full session UUID only when continuity is justified, such as objections, missing context, or re-review of fixes. Follow the reference’s launch and resumption procedures.
 2. Continue independent authorized work that neither depends on Claude’s answer nor invalidates its review baseline. Check the existing job opportunistically. Do not replace useful concurrent work with a blocking polling script.
 3. When Claude becomes the last outstanding dependency, await that same job under the [inactivity policy](references/claude-cli.md#inactivity). This is a change in the coordinator’s scheduling, not a foreground relaunch.
 4. Retrieve the complete response for the latest requested turn and account for pending work before treating it as finished.
@@ -49,15 +49,9 @@ Use the **Findings** policy’s presentation-only exception to surface all Claud
 
 Resurface incidentally discovered adjacent improvement opportunities separately from findings within the authorized scope. Do not fix them, investigate them further, or fold them into the current task without user direction.
 
-After Claude’s review, validate the findings locally, apply the complete batch of verified and authorized fixes, and run relevant checks before returning to Claude. Do not insert a separate discussion round merely to settle objections before implementing the accepted fixes.
+Use the reference’s [resumption procedure](references/claude-cli.md#resume-the-same-exchange) and the relay’s follow-up rules for the re-review required by **Review convergence**.
 
-Ask Claude a pre-fix question only when local evidence cannot settle something necessary to implement an affected fix safely. Continue independent, validated fixes rather than delaying them.
-
-Resume the same conversation under the relay’s follow-up and evidence rules. Carry only dispositions and objections that affect the requested re-review. Leave settled findings closed unless the delta or new evidence changes their basis. Ask Claude to review the fixes and affected integration boundaries, not repeat the original broad review.
-
-Use additional Claude turns only when they can materially affect implementation, validation, or closure. Prefer local inspection and existing evidence. Do not request reassurance, agreement with an already supported decision, acknowledgment, or a closure-only response.
-
-Prefer convergence over an additional fixed review round cap.
+Outside review resolution work, prefer local inspection and existing evidence, and use additional Claude turns only when they can materially affect implementation, validation, or closure. In those exchanges, do not request reassurance, agreement with an already supported decision, acknowledgment, or a closure-only response.
 
 Notify the user when validated feedback materially changes the course of action, scope, or expected outcome. Seek approval only for a material decision or effect that existing authority does not cover.
 

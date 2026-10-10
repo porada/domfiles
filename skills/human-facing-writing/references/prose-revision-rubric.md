@@ -83,4 +83,4 @@ Watch for interchangeable units, repeated introductions or conclusions, lost con
 
 ## Review Result
 
-Prioritize structural and meaning problems before line-level polish. Report the few findings that would most improve the work, distinguish required repairs from optional alternatives, and preserve intentional choices. For each required repair, identify the smallest revision that restores the reading path. If the work already succeeds at the requested level, say so directly and stop.
+Prioritize structural and meaning problems before line-level polish. Report concrete findings, distinguish required repairs from optional alternatives, and preserve intentional choices. For each required repair, identify the smallest revision that restores the reading path. If the work already succeeds at the requested level, say so directly and stop.

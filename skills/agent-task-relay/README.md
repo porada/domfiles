@@ -4,7 +4,7 @@
 
 Moving work between agent threads shouldn’t mean losing context or inadvertently changing the agent’s authority.
 
-This skill checks incoming findings, separates assignments from evidence-only handoffs, and confirms external assignments with the user before drafting their prompts. It preserves each handoff’s limits on access, approvals, changes, and scope.
+This skill prepares outgoing prompts and validates incoming findings. It preserves the task’s context, evidence, authorization, and limits while leaving execution with the owning workflow.
 
 ## Install
 

@@ -15,3 +15,11 @@ Update the selected canonical owner before adjusting secondary documents.
 - Preserve exact user terminology only when the terminology itself is required or established.
 - When naming a labeled policy in Markdown agent documentation, use its exact label in bold.
 - When a set’s order encodes information a reader must recover, such as precedence, priority, complexity, or containment, state its ordering principle beside the set or in the rule that governs it, so every new entry has a determinable position. This applies to table rows, category sequences, and section sequences alike. Agent documentation authority tables use one canonical principle instead, listing instruction surfaces before reference surfaces, each from the most general to the most specific, with a client bridge following the surface it imports.
+
+## Maintain Prompt Assets
+
+Treat a reusable prompt or template as the authoring target, not as a live assignment. Apply `agent-task-relay` to its operational contract without selecting a receiving environment, confirming a live handoff, or executing the embedded task. Skill-owned assets also follow the entrypoint’s `skill-development` route.
+
+A standalone asset must include every instruction its invocation needs when the authoring skills will not be loaded. Preserve the selected route’s authority, scope, evidence, delivery, revision, and stopping requirements. Distinguish assignments from evidence-only transfers. Decision capture prompts collect available conversation context without continuing the underlying task or gathering new evidence unless the user separately authorizes that work.
+
+Specialize context fields, representative evidence, and destinations only where the asset’s task needs them. Keep reusable operational guidance in the asset and authoring history or review records outside it. When delivering revised prompt text, return the complete affected prompt or coordinated prompt set unless the user requests another form.

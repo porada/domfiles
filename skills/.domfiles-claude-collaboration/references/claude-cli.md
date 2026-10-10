@@ -1,18 +1,14 @@
 # Claude CLI
 
-## Check Runtime Configuration
+## Apply Runtime Configuration
 
 Use the installed `claude` command through `PATH` and the existing subscription login. Authentication uses ordinary non-disclosing CLI operations, not credential inspection or alternate authentication sources. Resolve availability, login, and configuration failures through [Handle Errors and Stop](#handle-errors-and-stop).
 
 Global instruction alignment belongs to domfiles provisioning. Normal Claude startup loads the canonical global instructions through its managed installation. Do not audit that setup on each exchange, use `--bare`, replace the system prompt, or paste the global instructions into assignments. Repairing provisioning is a separate task.
 
-Before launch or resumption, read only the saved ACP mode:
+Use `--permission-mode auto` for every fresh launch. Do not read Zed settings or run configuration or version discovery commands before launch or resumption. Never use `bypassPermissions`. The selected mode does not transfer interactive approvals into an unattended CLI process or authorize otherwise prohibited effects.
 
-```sh
-jq -er '.agent_servers["claude-acp"].default_config_options.mode | strings | select(length > 0)' ~/.config/zed/settings.json
-```
-
-The command returns a nonempty string and exits nonzero for a missing, empty, or non-string value, malformed JSON, or an unreadable file. Pass the returned value as the fresh launch’s `--permission-mode`. This field is the shared selection, not a value to duplicate into Claude settings. Refuse `bypassPermissions`. If the lookup fails, the value is unsupported, or using it would bypass another governing security boundary, stop for configuration resolution. Matching the saved mode does not transfer ACP interactive approvals into an unattended CLI process or authorize otherwise prohibited effects.
+Omit `allow_hosts` on Claude CLI terminal calls and use existing session network permissions. If access is insufficient, pause for a supported user grant rather than substituting unrestricted access or unsandboxed execution.
 
 Unless the user explicitly selects otherwise, use `--model opus` for the latest available Opus and `--effort xhigh`. Do not add a monetary budget or automatic fallback model. Native background summaries may use auxiliary Haiku-class requests, so the primary assignment’s model selection does not imply that every CLI request uses Opus.
 
@@ -22,10 +18,10 @@ The procedures below use the native background interface, not an async print mod
 
 Run from the supplied checkout, using the host’s working directory parameter. The command shapes below assume POSIX `sh`, not the default interactive shell. They are schematic, not raw substitution templates. Pass each placeholder as one literal argument, using a host interface that accepts an argument array when available. For POSIX `sh` command strings, surround each value with single quotes and replace every embedded `'` with `'\''`. Do not apply that encoding in another shell or use shell interpolation or command substitution to insert the assignment. With an argument array, supply closed, empty stdin through the host’s stdin setting rather than passing `< /dev/null` as an argument. If neither invocation form can preserve the arguments and provide empty stdin, stop and report the capability limitation.
 
-Use the verified mode and complete assignment in this launch shape:
+Launch with the complete assignment:
 
 ```sh
-claude --bg --effort xhigh --model opus --no-chrome --permission-mode '<saved-acp-mode>' --strict-mcp-config '<assignment>' < /dev/null
+claude --bg --effort xhigh --model opus --no-chrome --permission-mode auto --strict-mcp-config '<assignment>' < /dev/null
 ```
 
 Use a positional prompt, not `--print`. Preserve the launch’s MCP and browser restrictions. Redirect stdin from `/dev/null` so an unattended launch does not answer a human-only prompt. This does not turn an approval requirement into permission.
@@ -54,7 +50,7 @@ claude stop '<job-id>'
 
 Confirm exit from the stop response and task row, using a host process status check of the recorded PID when needed. If exit cannot be established, report the limitation and do not resume. Reuse applicable termination evidence rather than stopping an already confirmed exited worker again.
 
-Recheck the saved ACP mode and the session’s recorded configuration against current requirements. When they still match, resume with only the background, resume, and prompt arguments:
+Compare the session’s recorded configuration with current requirements, including `auto` permission mode. When they still match, resume with only the background, resume, and prompt arguments:
 
 ```sh
 claude --bg --resume '<full-uuid>' '<assignment>' < /dev/null
