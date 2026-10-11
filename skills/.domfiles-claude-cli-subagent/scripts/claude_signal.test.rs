@@ -5,6 +5,7 @@ use std::{
     path::{Path, PathBuf},
     process::{self, Command},
     sync::atomic::{AtomicUsize, Ordering},
+    thread,
     time::{Duration, Instant},
 };
 
@@ -113,6 +114,9 @@ impl Fixture {
         let mut arguments = vec!["--transcript", self.path(), "--since", &since];
 
         arguments.extend_from_slice(extra);
+        if !extra.contains(&"--wait") {
+            arguments.extend_from_slice(&["--wait", "0"]);
+        }
 
         let (status, stdout, stderr) = run(&self.bin, None, &arguments);
 
@@ -384,7 +388,6 @@ fn rejects_invalid_invocations() {
         vec!["--transcript", &transcript, "--since"],
         vec!["--transcript", &transcript, "--since", "0", "--since", "0"],
         vec!["--transcript", &transcript, "--since", "0", "--verbose"],
-        vec!["--transcript", &transcript, "--since", "0", "--wait", "61"],
         vec!["--transcript", &transcript, "--since", "0", "--wait", "x"],
     ];
 
@@ -399,6 +402,42 @@ fn rejects_invalid_invocations() {
     }
 
     assert_eq!(fixture.calls(), 0);
+}
+
+#[test]
+fn accepts_the_documented_maximum_wait_and_rejects_larger_values() {
+    let (_, help, _) = run(Path::new("/nonexistent"), None, &["--help"]);
+    let maximum: u64 = help_section(&help, "Options:")
+        .into_iter()
+        .find(|line| line.trim_start().starts_with("--wait "))
+        .and_then(|line| line.split_once("from `0` to `"))
+        .and_then(|(_, bound)| bound.split('`').next())
+        .expect("Help must document the wait bound")
+        .parse()
+        .expect("The wait bound must be an integer");
+    let accepted = maximum.to_string();
+    let rejected = (maximum + 1).to_string();
+    let fixture = Fixture::new(&completed_turn());
+
+    assert!(help.contains(&format!("Defaults to `{maximum}`")));
+
+    fixture.listing(&session("done", Some("idle"), None));
+
+    assert_eq!(fixture.observe(0, &["--wait", &accepted])["state"], "ready");
+
+    let stderr = fixture.refuse(&[
+        "--transcript",
+        fixture.path(),
+        "--since",
+        "0",
+        "--wait",
+        &rejected,
+    ]);
+
+    assert!(
+        stderr.contains(&format!("`--wait` must be at most {maximum}")),
+        "{stderr}"
+    );
 }
 
 #[test]
@@ -856,6 +895,36 @@ fn counts_progress_from_subagents_started_during_the_turn() {
 }
 
 #[test]
+fn waits_for_readiness_by_default() {
+    let fixture = Fixture::new(&[prompt(1)]);
+
+    fixture.listing(&session("done", Some("idle"), None));
+
+    let (status, stdout, stderr) = thread::scope(|scope| {
+        scope.spawn(|| {
+            let deadline = Instant::now() + Duration::from_secs(10);
+
+            while fixture.calls() == 0 {
+                assert!(Instant::now() < deadline, "The initial lookup must occur");
+                thread::sleep(Duration::from_millis(10));
+            }
+            fixture.write(&completed_turn());
+        });
+        run(
+            &fixture.bin,
+            None,
+            &["--transcript", fixture.path(), "--since", "0"],
+        )
+    });
+
+    assert_eq!((status, stderr.as_str()), (Some(0), ""));
+    assert_eq!(
+        serde_json::from_str::<Value>(&stdout).expect("The output must be JSON")["state"],
+        "ready"
+    );
+}
+
+#[test]
 fn waits_until_ready_or_the_deadline() {
     let fixture = Fixture::new(&completed_turn());
     let started = Instant::now();
@@ -902,7 +971,7 @@ fn resolves_relative_transcript_paths_from_the_working_directory() {
     let (status, stdout, stderr) = run(
         &fixture.bin,
         Some(directory),
-        &["--transcript", &name, "--since", "1"],
+        &["--transcript", &name, "--since", "1", "--wait", "0"],
     );
 
     assert_eq!((status, stderr.as_str()), (Some(0), ""));
@@ -939,7 +1008,7 @@ fn launches_from_the_domfiles_root_and_runs_in_the_caller_directory() {
     fixture.cargo(0, BINARY);
 
     assert_eq!(
-        launch(&["--transcript", &name, "--since", "1"]),
+        launch(&["--transcript", &name, "--since", "1", "--wait", "0"]),
         (
             Some(0),
             "{\"state\":\"working\",\"nextSince\":1,\"progressAt\":null}\n".to_owned(),

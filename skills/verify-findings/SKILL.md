@@ -20,7 +20,7 @@ Keep this workflow read-only unless the user expressly requests additional effec
 
 Reread applicable instructions and the previously reported files for the selected findings. Reuse content only when evidence establishes that it has not changed since the current task read it. Check each finding against the current target, governing requirements, and settled user decisions, not merely the original reviewer’s conclusion.
 
-When conclusions conflict, compare their target revisions, governing requirements, settled decisions, and material assumptions. The agent verifying the findings owns their disposition. Weigh evidence, not reviewer counts, and use the smallest decisive inspection or check within the selected scope, authority, and existing limits. Do not add reviewers merely to obtain agreement or classify preference-only alternatives as required fixes. Retain uncertainty when evidence is insufficient, and report the gap rather than forcing a verdict. Ask the user only for a material choice that the evidence and current authority cannot settle, or a separately required approval. Retain the decisive reason with the finding’s classification, and follow **Report Results** below when deciding which findings to include in the response. This adds no review stage or unanimity requirement.
+When conclusions conflict, compare their target revisions, governing requirements, settled decisions, and material assumptions. When a finding conflicts with an established decision, assess whether the decision still applies and whether materially new evidence challenges it. Intent alone is not a rebuttal, and a prior decision does not excuse a real defect. The agent verifying the findings owns their disposition. Weigh evidence, not reviewer counts, and use the smallest decisive inspection or check within the selected scope, authority, and existing limits. Do not add reviewers merely to obtain agreement or classify preference-only alternatives as required fixes. Retain uncertainty when evidence is insufficient, and report the gap rather than forcing a verdict. Ask the user only for a material choice that the evidence and current authority cannot settle, or a separately required approval. Retain the decisive reason with the finding’s classification, and follow **Report Results** below when deciding which findings to include in the response. This adds no review stage or unanimity requirement.
 
 Verify claims that depend on evidence outside the inspected files separately, including ignored files, runtime state, and upstream behavior. Unchanged files do not establish unchanged external behavior. Inspect only relevant evidence, excluding known secret-bearing sources. Do not reopen a finding previously classified as requiring no change unless relevant content changed or materially new evidence is available.
 
@@ -36,7 +36,7 @@ Assign each selected finding one outcome based on the evidence:
 
 | Outcome | Meaning |
 | --- | --- |
-| Intentional | Applicable instructions or a settled user decision establish that no change is needed. |
+| Intentional | Applicable instructions or a settled user decision establish that no change is needed, and current evidence identifies no defect requiring correction in the reported behavior. |
 | Not supported | Current evidence contradicts the reported issue. |
 | Requires change | Current evidence establishes an issue that still requires a change. |
 | Resolved | Current evidence establishes that the reported issue has been addressed. |

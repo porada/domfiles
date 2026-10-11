@@ -8,7 +8,7 @@ Do not infer this role from agent origin, filenames, or warning-like wording. Be
 
 ## Select Substantive Changes
 
-Record the exact marker addition, the evidence for its role, and the pending human action in the shared [proposal](commit-execution.md#confirm-commits). Exclude only that addition from the proposed commits, preserving substantive changes in the same file or diff hunk. If it cannot be separated safely, stop for the user’s decision.
+Record the exact marker addition, the evidence for its role, and the pending human action in the shared [execution baseline](commit-execution.md#confirm-commits). Exclude only that addition from the proposed commits, preserving substantive changes in the same file or diff hunk. If it cannot be separated safely, stop for the user’s decision.
 
 Retain the shared [index preservation safeguards](commit-execution.md#create-approved-commits), including for an already staged marker. Do not strip existing committed content under this pending addition rule.
 

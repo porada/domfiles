@@ -13,7 +13,7 @@ For a package section within a non-initial synchronized release, evaluate status
 
 For a file that covers one package, use `# <package> Release Notes` as the top-level heading. Put `## Unreleased` first when present. Follow it with linked `## [<version>](<release-url>)` sections in newest-first order, separating releases with `---`. Omit a version link only when no canonical release URL is available.
 
-For a new aggregate file shared by a synchronized package set, use a title established by the supplied context or repository metadata instead of selecting one package name. If neither source establishes a title, ask rather than inventing one.
+For a new aggregate file shared by a synchronized package set, use a title established by the supplied context or repository metadata instead of selecting one package name. When package identity and scope are settled but no title is established, use `# Release Notes`. Preserve supplied or approved titles, and ask only when uncertainty concerns material identity or scope.
 
 Apply the [approval gates](approval-gates.md) before normalizing the delimiters in a supplied or previously approved aggregate file.
 
@@ -34,9 +34,11 @@ Add a level-3 heading when a release has a clear theme, migration context, or su
 
 Keep detail lists flat under a neutral subject heading such as `Option Handling`. Do not use nested bullets merely to group details. When a top-level summary points to a later subsection, connect them with a compact cross-reference such as `(outlined below)`, and use the same wording throughout the note.
 
-For a ready-to-paste hosted release body, reserve levels 1 and 2 for the surrounding page and release title.
-
 Do not repeat migration prose in later patch releases unless the user explicitly requests the reminder. When migration guidance intentionally repeats across one major release line, name that major version rather than referring to “this release.”
+
+## Hosted Release Bodies
+
+For a ready-to-paste hosted release body, reserve levels 1 and 2 for the surrounding page and release title. Unless the user explicitly requests it, omit the release version heading or tag link already rendered by the hosting platform.
 
 ## Synchronized Multi-Package Releases
 

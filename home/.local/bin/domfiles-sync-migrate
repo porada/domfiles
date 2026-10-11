@@ -8,6 +8,7 @@ outdated_agent_instructions=false
 
 for skill in \
   awesome-vitest-entry \
+  claude-collaboration \
   commit \
   commit-flow \
   contribution-flow \

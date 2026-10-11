@@ -2,17 +2,21 @@
 
 ## Apply Runtime Configuration
 
-Use the installed `claude` command through `PATH` and the existing subscription login. Authentication uses ordinary non-disclosing CLI operations, not credential inspection or alternate authentication sources. Resolve availability, login, and configuration failures through [Handle Errors and Stop](#handle-errors-and-stop).
+Use the installed `claude` command through `PATH` and the existing subscription login. Resolve availability, login, and configuration failures through [Handle Errors and Stop](#handle-errors-and-stop).
 
 Global instruction alignment belongs to domfiles provisioning. Normal Claude startup loads the canonical global instructions through its managed installation. Do not audit that setup on each exchange, use `--bare`, replace the system prompt, or paste the global instructions into assignments. Repairing provisioning is a separate task.
 
 Use `--permission-mode auto` for every fresh launch. Do not read Zed settings or run configuration or version discovery commands before launch or resumption. Never use `bypassPermissions`. The selected mode does not transfer interactive approvals into an unattended CLI process or authorize otherwise prohibited effects.
 
-Omit `allow_hosts` on Claude CLI terminal calls and use existing session network permissions. If access is insufficient, pause for a supported user grant rather than substituting unrestricted access or unsandboxed execution.
-
 Unless the user explicitly selects otherwise, use `--model opus` for the latest available Opus and `--effort xhigh`. Do not add a monetary budget or automatic fallback model. Native background summaries may use auxiliary Haiku-class requests, so the primary assignment’s model selection does not imply that every CLI request uses Opus.
 
 The procedures below use the native background interface, not an async print mode runner. Treat unsupported options or changed CLI behavior as a concrete compatibility problem under [Handle Errors and Stop](#handle-errors-and-stop), not a reason to install, upgrade, or improvise a runner.
+
+## Prepare Implementation Assignments
+
+Native background sessions can require an isolated worktree before edits. Their worktree tool may default to a remote default-branch base rather than the coordinator’s current `HEAD`. For implementation, establish the intended base and any necessary uncommitted inputs, checkout and branch authority under the global **Concurrent work** and **Commit gate** policies, delivery into the coordinator’s checkout, and cleanup ownership before edits begin. Do not assume the tool’s default base contains the assigned changes.
+
+If the runtime’s checkout requirements are uncertain, have Claude establish them read-only before requesting any uncovered lifecycle effects. Verify the supported way to prepare the intended state rather than inventing tool parameters. If the required isolation or base cannot be established within current authority, return that limitation instead of editing in place around the requirement. This preparation does not authorize creating worktrees, branches, commits, or remote changes.
 
 ## Launch a Fresh Conversation
 
@@ -21,10 +25,10 @@ Run from the supplied checkout, using the host’s working directory parameter. 
 Launch with the complete assignment:
 
 ```sh
-claude --bg --effort xhigh --model opus --no-chrome --permission-mode auto --strict-mcp-config '<assignment>' < /dev/null
+claude --bg --effort xhigh --model opus --permission-mode auto '<assignment>' < /dev/null
 ```
 
-Use a positional prompt, not `--print`. Preserve the launch’s MCP and browser restrictions. Redirect stdin from `/dev/null` so an unattended launch does not answer a human-only prompt. This does not turn an approval requirement into permission.
+Use a positional prompt, not `--print`. Leave browser and MCP configuration to the existing Claude setup. Redirect stdin from `/dev/null` so an unattended launch does not answer a human-only prompt. This does not turn an approval requirement into permission.
 
 Do not supply `--session-id` with `--bg`, which assigns its own session identity. Capture the returned job ID, then obtain the full session UUID from the exact matching row:
 
@@ -34,7 +38,7 @@ claude agents --all --cwd '<checkout>' --json | jq -e --arg job '<job-id>' '[.[]
 
 The listing is an array. Require exactly one match and a full `sessionId`. Do not prefix-match optional UUID fields or emit unrelated rows or the potentially large `name` field. Inspect only the task row’s process metadata when needed.
 
-Retain the job ID, full UUID, checkout, effective configuration confirmations, transcript path, and the context and monitoring state defined below in the coordinator’s context. If task files become necessary, use `agent-task-directories` rather than creating an ad hoc log tree.
+Retain the job ID, full UUID, checkout, explicit launch values for `--effort`, `--model`, and `--permission-mode`, transcript path, and the context and monitoring state defined below in the coordinator’s context.
 
 Session bookkeeping, launch and monitoring diagnostics, and recovered invocation errors normally stay with the coordinator. Include them in an assignment only when they affect Claude’s task or are its subject.
 
@@ -50,15 +54,15 @@ claude stop '<job-id>'
 
 Confirm exit from the stop response and task row, using a host process status check of the recorded PID when needed. If exit cannot be established, report the limitation and do not resume. Reuse applicable termination evidence rather than stopping an already confirmed exited worker again.
 
-Compare the session’s recorded configuration with current requirements, including `auto` permission mode. When they still match, resume with only the background, resume, and prompt arguments:
+Compare the coordinator’s [retained launch values](#launch-a-fresh-conversation) with current requirements. When they still match, resume with only the background, resume, and prompt arguments:
 
 ```sh
 claude --bg --resume '<full-uuid>' '<assignment>' < /dev/null
 ```
 
-A worker with session `state: done` and `status: idle` can still be alive. Resuming it can create a copy even with the minimal command above. Adding configuration flags can also create a copy even when their values match. Let the CLI restore its saved options, check the restoration confirmation, and verify that the returned job resolves to the intended full UUID before the first monitoring check. If requirements have changed, start a fresh conversation with the required configuration and a self-contained handoff instead of silently reusing stale options. Tell the user when losing continuity materially changes the exchange.
+A worker with session `state: done` and `status: idle` can still be alive. Resuming it can create a copy even with the minimal command above. Adding configuration flags can also create a copy even when their values match. Let the CLI restore its saved options, check the restoration confirmation, and verify that the returned job resolves to the intended full UUID before the first monitoring check. If requirements have changed, do not silently reuse stale options. For delegated reviews, `subagent-review` governs whether the original session may be replaced. For other exchanges, start a fresh conversation with the required configuration and a self-contained handoff, telling the user when losing continuity materially changes the exchange.
 
-If a launch unexpectedly creates a copy, report the deviation, stop only the task-owned copy, preserve its transcript, and correct the demonstrated cause within existing authority. Do not adopt the copy silently or use blind restart or `respawn` loops.
+If a launch unexpectedly creates a copy, stop only the task-owned copy, preserve its transcript, and correct the demonstrated cause within existing authority. Do not adopt the copy or use blind restart or `respawn` loops. Report any remaining limitation or material effect on continuity or pending work.
 
 Interrupted-turn recovery is not established by completed-turn resumption. After interruption, first inspect the task’s last complete output and pending work. Do not replay an uncertain turn or assume child work ended merely because the worker stopped. Preserve partial findings and return any recovery decision that the evidence cannot settle.
 
@@ -78,22 +82,24 @@ Before invoking the command, read **Run Command Wrappers** in `skill-development
 
 ### Read Turn Signals
 
-Run from any directory, resolving relative transcript paths from that directory:
+Run from any directory, resolving relative transcript paths from that directory.
+
+For a nonwaiting check during independent work:
 
 ```sh
-claude-signal --since '<line>' --transcript '<transcript-path>'
+claude-signal --since '<line>' --transcript '<transcript-path>' --wait 0
 ```
 
-Both options are required. `--since` is a nonnegative complete-line count recorded before the latest dispatch: use `0` for a fresh launch or the previous completed turn’s `nextSince` for a follow-up. Keep it fixed for every check of that dispatch. Never advance it to a polling result’s `nextSince` mid-turn, which would exclude the requested prompt.
+`--since` and `--transcript` are required. `--since` is a nonnegative complete-line count recorded before the latest dispatch: use `0` for a fresh launch or the previous completed turn’s `nextSince` for a follow-up. Keep it fixed for every check of that dispatch. Never advance it to a polling result’s `nextSince` mid-turn, which would exclude the requested prompt.
 
-The optional `--wait` accepts an integer from `0` to `60`, defaults to `0`, and waits up to two seconds between checks until the wait expires or the turn becomes `ready` or needs `attention`. Use the nonwaiting form during independent work and the [bounded waiting form](#inactivity) when Claude is the last outstanding dependency. The wait is not a hard process deadline: build preparation and a blocking CLI lookup can extend the invocation. Give the host invocation a finite timeout that allows for that overhead. `claude-signal --help` must be used alone.
+Omit `--wait` to use the command’s default bounded wait until it expires or the turn becomes `ready` or needs `attention`. Use that [waiting form](#inactivity) when Claude is the last outstanding dependency. The wait is not a hard process deadline: build preparation and a blocking CLI lookup can extend the invocation. Give the host invocation a finite timeout that allows for that overhead. `claude-signal --help` reports the default and override bounds and must be used alone.
 
 A successful observation prints one JSON line with `state` and `nextSince`. This `state` describes the requested turn, not the session’s `state` in `claude agents`. `nextSince` is the current complete-line count for the next dispatch, not a read cursor. The command anchors on the latest human prompt after `--since`. Before that prompt is recorded, it returns `working` with `progressAt: null` without calling `claude agents`.
 
 | Turn State | Additional Fields | Coordinator Action |
 | --- | --- | --- |
-| `attention` | `reason`, plus `detail` when available. | Report promptly and follow [Handle Errors and Stop](#handle-errors-and-stop), rather than waiting for the inactivity threshold. |
-| `ready` | `replies`, the final reply of each turn since the prompt, and `compactedAt`, the latest compaction record’s one-based line or `null`. | Read all replies, retain the result for context reuse and the next dispatch, then stop the task-owned worker. |
+| `attention` | `reason`, plus `detail` when available. | Follow [Handle Errors and Stop](#handle-errors-and-stop), rather than waiting for the inactivity threshold. |
+| `ready` | `replies`, the final reply of each turn since the prompt, and `compactedAt`, the latest compaction record’s one-based line or `null`. | Read all replies, retain the result for context reuse and the next dispatch, then follow [completion cleanup](#handle-errors-and-stop). |
 | `working` | `progressAt`, the latest qualifying event timestamp or `null`. | Continue coordination under the [inactivity policy](#inactivity). |
 
 `ready` requires a closed turn, answered tool calls, completed recorded background commands, no pending agents or workflows, a usable final reply, and a session that is neither busy nor waiting. Use that result rather than manually re-deriving completion from one session field. It does not prove success of the assigned task or terminate the worker.
@@ -117,10 +123,10 @@ Stop after 10 minutes without progress reported by `claude-signal`. There is no 
 
 `progressAt` tracks the latest timestamp among the prompt, Claude’s own nonempty reply text, and tool results not marked `is_error: true`, including subagents started during the turn. Results for identical repeated calls within the same observed transcript segment do not count. These event kinds replace manual progress judgments and identify the basis for resets. They are an observable-event proxy, not proof of useful reasoning or a command’s semantic success. Prohibit artificial keepalives, unnecessary commands, and heartbeat files, and do not request internal thinking or extra tool calls solely to make progress visible.
 
-During the final waiting phase, combine the wait and observation:
+During the final waiting phase, combine the wait and observation using the command’s default:
 
 ```sh
-claude-signal --since '<line>' --transcript '<transcript-path>' --wait 60
+claude-signal --since '<line>' --transcript '<transcript-path>'
 ```
 
 Do not add a separate sleep or status call. Stop at the first successful check that establishes the inactivity threshold. Opportunistic checks cannot guarantee immediate error detection or exact deadline enforcement between checks. After a monitoring gap, a successful check examines the intervening records using the same fixed boundary. If observation fails, report a monitoring limitation rather than proven inactivity. One long reasoning phase or blocking operation may provide no qualifying event.
@@ -135,15 +141,15 @@ If termination cannot be established, use a suitable read-only tool that does no
 
 ## Handle Errors and Stop
 
-Require Claude to include errors, recovered errors, gate requests, and material limitations in its final reply, even when already mentioned in interim prose. When coordinator action is needed or a stopping condition is reached, Claude must end the turn with partial results and the required decision or limitation rather than leave that report only in interim text. Do not rely on interim prose to deliver required reports.
+When coordinator action is needed or a stopping condition is reached, Claude must end the turn with partial results and the required decision or material limitation rather than leave that report only in interim text. Do not rely on interim prose to deliver required reports.
 
-Surface observed CLI, monitoring, permission, and command errors to the user promptly, with the relevant error and known impact, without exposing secrets. Recover ordinary errors through evidence-backed corrections within existing authority and retry limits. Do not hide an error because recovery succeeds.
+Apply the shared **Progress and recovery**, **Outcomes**, and **Validation reporting** policies to errors. Report material limitations and required user actions, not an inventory of successfully recovered errors.
 
 The compiled `claude-signal` exits `0` after a successful observation, including `attention`, or help. Exit `2` reports an invalid invocation or an observation/output failure, including unreadable or malformed transcripts, a boundary beyond the complete transcript, or a failed or non-unique session lookup. Diagnostics go to standard error, and malformed records are identified by path and line number without their contents. For failures before the monitor runs, use the shared wrapper contract routed from [Observe the Current Turn](#observe-the-current-turn). Treat any unsuccessful check as a monitoring limitation. Do not advance the boundary, reset the clock, or infer inactivity from an error.
 
-For `noReply`, inspect the API error and other detail rather than treating the partial text as a completed review. Authentication and quota failures follow the stopping rules below. The compact monitor does not stream every command result or recovered error, so Claude’s required final error report remains necessary.
+For `noReply`, inspect the API error and other detail rather than treating the partial text as a completed result. Authentication and quota failures follow the stopping rules below.
 
-Stop the collaboration and tell the user when the CLI is unavailable or subscription usage quota is exhausted. Do not repeatedly retry quota failures, change billing or authentication sources, select another model, or manufacture a budget to continue. Configuration requirements, human-only decisions, denied access, and unsatisfied approval gates also pause the affected work. Never weaken permissions or answer user-only approvals to recover.
+Stop the collaboration and tell the user when the CLI is unavailable or subscription usage quota is exhausted. Do not repeatedly retry quota failures, change billing or authentication sources, select another model, or manufacture a budget to continue. Configuration requirements, human-only decisions, denied access, and unsatisfied approval gates also pause the affected work.
 
 On demonstrated inactivity, user cancellation, or a stopping boundary, preserve available partial results and use `claude stop` on the identified task-owned worker. Verify its resulting state without assuming that background work stopped with it.
 

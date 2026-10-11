@@ -2,7 +2,9 @@
 
 ## ShellCheck Read Scope
 
-Resolve ShellCheck’s read scope before invoking it directly or through a project entrypoint. Include every sourced file ShellCheck may read in the resolved validation scope. If the read scope cannot be established or constrained, skip each affected check and report the validation limitation.
+1. Inspect the selected checks and diagnostics without running them. Identify every project wrapper, configuration file, `SHELLCHECK_OPTS` value, or command line option that may invoke ShellCheck or allow it to read sourced files not explicitly supplied as inputs.
+2. Resolve ShellCheck’s read scope, including every sourced file it may read in the validation scope. If the read scope cannot be established or constrained, skip each affected check and report the validation limitation.
+3. Run a selected check only after every ShellCheck path it can reach has passed the scope gate. A check that cannot invoke ShellCheck does not require that gate.
 
 When no project ShellCheck configuration is established, pass the complete resolved source set explicitly to `shellcheck --norc --shell=sh -- <path>…` only after the gate passes and only when ShellCheck is already available. In any invocation, allow ShellCheck to read sourced files not explicitly supplied as inputs only after limiting the source files it can read to that resolved set.
 

@@ -25,9 +25,10 @@ for source in \
   .dom-release-notes-for-humans \
   .dom-sensible-commit-flow \
   .domfiles-agent-documentation \
-  .domfiles-claude-collaboration \
+  .domfiles-claude-cli-subagent \
   .domfiles-diagnose \
   .domfiles-skill-development \
+  .domfiles-subagent-review \
   agent-task-directories \
   agent-task-relay \
   fish-shell-scripting \

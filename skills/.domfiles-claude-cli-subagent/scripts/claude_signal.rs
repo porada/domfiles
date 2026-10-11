@@ -12,30 +12,8 @@ use std::{
 };
 
 const DETAIL_LIMIT: usize = 500;
-const HELP: &str = concat!(
-    "Usage:\n",
-    "  claude-signal --since <line> --transcript <path> [--wait <seconds>]\n",
-    "  claude-signal --help\n",
-    "\n",
-    "Report whether the latest requested turn of one Claude background session is working, ready, or needs attention\n",
-    "\n",
-    "Options:\n",
-    "  --since <line>       Complete transcript lines recorded before the latest dispatch, or `0` for a fresh launch. Keep it fixed for every check of that turn\n",
-    "  --transcript <path>  The session’s `<uuid>.jsonl` transcript. Its UUID selects the session’s `claude agents --json --all` row\n",
-    "  --wait <seconds>     Wait up to this many seconds, from `0` to `60`, for `ready` or `attention`. Defaults to `0`\n",
-    "\n",
-    "Output:\n",
-    "  One JSON object on standard output with `state` and `nextSince`, the `--since` value for the next dispatch\n",
-    "  `working` adds `progressAt`, the time of the latest progress, or `null` before the turn’s prompt is recorded\n",
-    "  `ready` adds `replies`, each turn’s final reply since the prompt, and `compactedAt`, the latest compaction line or `null`\n",
-    "  `attention` adds `reason`, one of `blocked`, `failed`, `noReply`, or `stopped`, and `detail` for `blocked` and `noReply`\n",
-    "\n",
-    "Exit statuses:\n",
-    "  0  The turn was observed, or help was displayed\n",
-    "  2  Invalid arguments, an unreadable or malformed transcript, or a failed session lookup\n",
-);
 const LISTING_INTERVAL: Duration = Duration::from_secs(10);
-const MAX_WAIT_SECONDS: u64 = 60;
+const MAX_WAIT_SECONDS: u64 = 90;
 const NAME: &str = "claude-signal";
 const OPTIONS: [&str; 3] = ["--since", "--transcript", "--wait"];
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
@@ -98,6 +76,34 @@ struct Turn<'a> {
     unresolved: Vec<&'a Value>,
 }
 
+fn help() -> String {
+    format!(
+        concat!(
+            "Usage:\n",
+            "  claude-signal --since <line> --transcript <path> [--wait <seconds>]\n",
+            "  claude-signal --help\n",
+            "\n",
+            "Report whether the latest requested turn of one Claude background session is working, ready, or needs attention\n",
+            "\n",
+            "Options:\n",
+            "  --since <line>       Complete transcript lines recorded before the latest dispatch, or `0` for a fresh launch. Keep it fixed for every check of that turn\n",
+            "  --transcript <path>  The session’s `<uuid>.jsonl` transcript. Its UUID selects the session’s `claude agents --json --all` row\n",
+            "  --wait <seconds>     Wait up to this many seconds, from `0` to `{max_wait_seconds}`, for `ready` or `attention`. Defaults to `{max_wait_seconds}`\n",
+            "\n",
+            "Output:\n",
+            "  One JSON object on standard output with `state` and `nextSince`, the `--since` value for the next dispatch\n",
+            "  `working` adds `progressAt`, the time of the latest progress, or `null` before the turn’s prompt is recorded\n",
+            "  `ready` adds `replies`, each turn’s final reply since the prompt, and `compactedAt`, the latest compaction line or `null`\n",
+            "  `attention` adds `reason`, one of `blocked`, `failed`, `noReply`, or `stopped`, and `detail` for `blocked` and `noReply`\n",
+            "\n",
+            "Exit statuses:\n",
+            "  0  The turn was observed, or help was displayed\n",
+            "  2  Invalid arguments, an unreadable or malformed transcript, a `--since` beyond the transcript’s complete lines, a failed session lookup, or a failed write to standard output\n",
+        ),
+        max_wait_seconds = MAX_WAIT_SECONDS,
+    )
+}
+
 fn parse_arguments(arguments: &[OsString]) -> Result<Route, String> {
     if let [argument] = arguments
         && argument == "--help"
@@ -132,7 +138,7 @@ fn parse_arguments(arguments: &[OsString]) -> Result<Route, String> {
     let transcript = PathBuf::from(transcript.ok_or("`--transcript` is required")?);
     let wait = match wait {
         Some(value) => count(value, "--wait")?,
-        None => 0,
+        None => MAX_WAIT_SECONDS,
     };
 
     if wait > MAX_WAIT_SECONDS {
@@ -686,7 +692,7 @@ fn observe(options: &Options) -> Result<String, String> {
 
 fn run(arguments: &[OsString]) -> Result<String, String> {
     match parse_arguments(arguments)? {
-        Route::Help => Ok(HELP.to_owned()),
+        Route::Help => Ok(help()),
         Route::Observe(options) => observe(&options),
     }
 }

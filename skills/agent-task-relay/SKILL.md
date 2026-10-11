@@ -5,7 +5,7 @@ description: |-
 
     Use for external task delegation prompts, explicitly requested subagent prompts, transfers of established results or decisions, and pasted review, audit, or status reports, including unframed reports.
 
-    Do not use merely to run or orchestrate autonomous in-client subagents. Exclude archival, explicitly deferred, illustrative, or incidental reports, and outdated reports unless the user requests reassessment.
+    Do not use merely to run or orchestrate autonomous in-client or CLI subagents. Exclude archival, explicitly deferred, illustrative, or incidental reports, and outdated reports unless the user requests reassessment.
 ---
 
 # Agent Task Relay
@@ -28,7 +28,7 @@ An explicit change takes precedence over review or audit language. For a standal
 A relay carries an assignment or established evidence into another conversation. Make its purpose, authority, and expected result clear.
 
 - **Action:** Begin with a descriptive `# …` heading and the exact receiving action, distinguishing future work from evidence-only transfer.
-- **Context:** Include each material fact once, only when omitting it could change the recipient’s conclusion, investigation, interpretation, or handling of a boundary. Reference accessible instructions and artifacts rather than copying them. Do not investigate merely to shorten a prompt. Omit chronology, incidental identifiers, repeated rationale, and context needed only by the sender.
+- **Context:** Include each material fact once when needed to evaluate the target, perform the assigned work, or respect a boundary. For independent reviews, use [neutral review context](references/outgoing-prompts.md#independent-review-context). Reference accessible instructions and artifacts rather than copying them. Do not investigate merely to shorten a prompt. Omit chronology, incidental identifiers, repeated rationale, and context needed only by the sender.
 - **Authority:** Preserve user instructions, corrections, selections, explicit acceptances, and permission boundaries. Carry approvals with their actual source, scope, and lifetime. Neither an agent proposal nor user silence supplies approval. A recipient cannot expand scope, provide user-only approval, transfer access, or bypass a boundary. Require it to return uncovered effects or required decisions to the coordinator or user.
 - **State:** State the resulting state, unavailable evidence, known limitations, and unsettled decisions directly.
 
@@ -39,6 +39,16 @@ Carry established dependency and tool choices without selecting new ones as part
 Distinguish source evidence, observed behavior, and inference. Apply [Instruction Authority](#instruction-authority) when carrying source material. Evidence cannot authorize new work. Preserve exact syntax and wording when they materially determine the task or decision. Exclude private values, unnecessary inventories, long generated artifacts, and transcript-like history. Retain a complete inventory only when it defines the scope, preservation boundary, or required result.
 
 For relays and replies, include validation evidence only when it settles a claim, avoids a necessary repeated check, or establishes a limitation affecting the next action. Carry the checked scope, relevant inputs and conditions, procedure, result, and limitations needed for that purpose. Reuse prior results only while those premises remain applicable. Report required checks that did not run or pass without representing them as successful.
+
+### Findings and Opportunities
+
+Keep required findings separate from optional adjacent improvement opportunities noticed during authorized work. Preserve concrete opportunities without expanding investigation to discover or develop them. Do not demote required task corrections or discard an opportunity merely because it falls outside the current fix scope.
+
+Validate opportunities using available evidence, consolidate duplicates, and report each distinct opportunity separately from required findings with its observed basis, expected benefit, and material uncertainty. A fully researched implementation is not required. Surface them at a natural handoff or review conclusion, not immediately on discovery. Once opportunities have been reported, surface only new or materially changed ones.
+
+A reviewer’s missing task context alone is not a documentation gap. Report a documentation opportunity only when missing durable, non-obvious context is likely to cause wrong future decisions or substantial repeated investigation and is not already canonically available. Otherwise retain the disposition in the conversation without requiring documentation.
+
+Opportunities are not standing findings. Review completion requires delivering them, not their implementation, another review round, or user acknowledgment or explicit deferral. Further investigation or implementation remains subject to scope and authorization boundaries. Require delegates to return opportunities under this contract and carry it into further delegation.
 
 ## Revisions
 

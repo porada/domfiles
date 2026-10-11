@@ -8,7 +8,7 @@ Do not infer it from agent origin, filenames, or warning-like wording. Generated
 
 ## Select Contribution Changes
 
-Record the exact marker addition, the evidence for its role, and the pending human action in the shared [commit proposal](prepare-commits.md#confirm-commits). Exclude only that eligible addition, preserving substantive changes in the same file or hunk. If they cannot be separated safely, pause for the user’s decision.
+Record the exact marker addition, the evidence for its role, and the pending human action in the shared [execution baseline](prepare-commits.md#confirm-commits). Exclude only that eligible addition, preserving substantive changes in the same file or hunk. If they cannot be separated safely, pause for the user’s decision.
 
 Retain the shared [index preservation safeguards](prepare-commits.md#create-approved-commits), including for an already staged marker. The pending addition rule does not authorize stripping existing committed content.
 

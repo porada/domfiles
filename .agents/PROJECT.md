@@ -80,6 +80,8 @@ Git publication and contribution submission require explicit authorization rathe
 
 Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. The [repository independence contract](../skills/.domfiles-agent-documentation/references/repository-independence.md) distinguishes intentional local copies from competing policy definitions. Applicable project instructions override their fallback workflows.
 
+Equivalent cross-client behavior is a separate compatibility goal, not a guarantee of the [**Global redundancy baseline**](../AGENTS.md#general).
+
 The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode.
 
 The explicit route also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description. Without `agent-documentation`, the writing skill’s own description determines discovery, including its exclusions for formatting-only work and work that neither evaluates nor changes wording or information architecture.
@@ -134,7 +136,7 @@ The **Collaboration** policy is the standing example of what does not move. Its 
 
 ### Global Agent Instructions
 
-The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped.
+The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped. Its [**Global redundancy baseline**](../AGENTS.md#general) is defined in project instructions.
 
 The ChatGPT app still uses `~/.codex`, where synchronization continues to link this source as `AGENTS.md`. The Codex CLI is no longer provisioned, and the [migration stage](../home/.local/bin/domfiles-sync-migrate) removes its Homebrew installation.
 
@@ -142,7 +144,7 @@ The ChatGPT app still uses `~/.codex`, where synchronization continues to link t
 
 The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands available across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
 
-The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and the preferred package manager workflow, respectively.
+The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and pnpm-based project workflows, respectively.
 
 The list intentionally omits `claude`, `fisher`, `git`, `mole`, and `vim`. `claude` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system maintenance utility outside coding workflows. `vim` is an interactive editor.
 
@@ -160,12 +162,14 @@ Non-Zed writes to `.agents/skills` remain outside this policy, so it does not gu
 
 ### Public Skill Fallback Families
 
-Exhaustive reporting under [**Findings**](GLOBAL.md#documentation) and propagation of that reporting contract under [**Prompt contract**](GLOBAL.md#collaboration) are personal global policy. Public skills require reviewers to state whether any findings remain standing. This is an independent workflow requirement, not a standalone mirror of the personal reporting policies.
+Exhaustive reporting under [**Findings**](GLOBAL.md#documentation) and propagation of that reporting contract under [**Prompt contract**](GLOBAL.md#collaboration) are personal global policy. Public skills require reviewers to state whether any findings remain standing. This is an independent workflow requirement, not a standalone mirror of the personal reporting policies. The contribution flow’s review checkpoints, contribution criteria, and readiness requirements are locally owned rather than mirrors of the global `subagent-review` protocol.
 
 Each skill’s peer declarations own its declared fallback relationships, including the [contribution workflow’s peer table](../skills/sensible-contribution-flow/SKILL.md#compose-with-peers). The index below records selected cross-file families beyond those skill-level declarations. It is non-exhaustive and supplements the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks). An absent row does not establish that no related guidance exists.
 
 | Canonical Contract | Standalone Guidance |
 | --- | --- |
+| Adjacent opportunity handling under [**Findings**](GLOBAL.md#documentation) and [review completion](../skills/.domfiles-subagent-review/SKILL.md#complete-the-review) | [`skills/agent-task-relay/SKILL.md`](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) |
+| [Independent review context](../skills/.domfiles-subagent-review/SKILL.md#prepare-the-review) and [decision conflicts](../skills/.domfiles-subagent-review/SKILL.md#resolve-disagreements) in `subagent-review` | [`skills/agent-task-relay/references/outgoing-prompts.md`](../skills/agent-task-relay/references/outgoing-prompts.md#independent-review-context), [`skills/agent-task-relay/references/inbound-findings.md`](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts), [`skills/verify-findings/SKILL.md`](../skills/verify-findings/SKILL.md#verify-evidence) for decision conflicts |
 | [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [`skills/sensible-contribution-flow/references/execution-boundaries.md`](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) |
 | Requirements for governing instruction sources in [Authorization](GLOBAL.md#authorization), under **Instruction provenance** and **Approval provenance** | [`skills/agent-task-relay/references/inbound-findings.md`](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [`skills/sensible-commit-flow/references/alternative-approval-modes.md`](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [`skills/sensible-contribution-flow/references/review-findings.md`](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) |
 | [`skills/sensible-commit-flow/references/preserve-human-review-markers.md`](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [`skills/sensible-contribution-flow/references/preserve-human-review-markers.md`](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) |

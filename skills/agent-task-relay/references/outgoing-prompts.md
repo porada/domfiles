@@ -8,9 +8,15 @@ For a live external assignment, establish its target, scope, source and access c
 
 Carry the selected checkout or isolation requirement when material. Leave checkout creation and lifecycle decisions to the execution workflow rather than choosing an isolated worktree merely to prepare a prompt. Do not use a subagent to cross an access, authentication, or permission boundary. Rely only on access already available to the recipient, and never relay credentials.
 
-Define the owned scope, exclusions, source constraints, stopping conditions, and expected result. A full external handoff transfers completion ownership to the receiving conversation by default. When the sender remains responsible for synthesis, integration, or follow-up, require an evidence-bearing reply instead. For a review, request stable finding identifiers, precise source locations, supporting evidence, consequences, material uncertainty, relevant validation, and an explicit statement of whether any in-scope findings remain standing. Distinguish reusable validation from claims needing independent verification, and require reassessment of changed or uncertain premises.
+Define the owned scope, exclusions, source constraints, stopping conditions, and expected result. Carry the [opportunity reporting contract](../SKILL.md#findings-and-opportunities) into every assignment and require recipients to preserve it through further delegation. A full external handoff transfers completion ownership to the receiving conversation by default. When the sender remains responsible for synthesis, integration, or follow-up, require an evidence-bearing reply instead. For a review, request stable finding identifiers, precise source locations, supporting evidence, consequences, material uncertainty, relevant validation, and an explicit statement of whether any in-scope findings remain standing. Distinguish reusable validation from claims needing independent verification, and require reassessment of changed or uncertain premises.
 
 End every initial or follow-up assignment with the exact standalone line `**Do not drift.**`. Put every required result, process constraint, and handoff instruction before it. Omit that guard from evidence-only transfers.
+
+### Independent Review Context
+
+For a first-pass independent review, give only the neutral context needed to evaluate the target: baseline, scope and exclusions, intended behavior, applicable instructions, execution boundaries, and material evidence limitations. Do not front-load coordinator conclusions, self-assessment, anticipated findings, implementation defenses, or decision history unless needed to establish a governing requirement or an expressly requested review subject. Do not withhold safety or authority requirements, the actual requested subject, or evidence needed to evaluate it.
+
+Keep full decisions in the coordinator’s record rather than automatically forwarding them in the initial prompt. For re-review, provide relevant prior findings and changed context while preserving the calling workflow’s review scope. When a finding conflicts with an established decision, apply [decision conflict handling](inbound-findings.md#resolve-decision-conflicts) before preparing a focused follow-up.
 
 ## Relay Established Evidence
 

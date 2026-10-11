@@ -1,6 +1,8 @@
 # Compose Messages
 
-Apply the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints), then use this decision order for each group:
+Apply the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints). Only when authoring wording and the available instructions and task context leave repository conventions unclear, consult a bounded sample of recent relevant local commit messages for vocabulary and conventions. Do not derive editorial rules from Git-generated messages or let repeated maintenance and release commits dominate the sample. Do not fetch remote history for this purpose or sample style for exact supplied or inherited messages.
+
+Use this decision order for each group:
 
 1. Identify the dominant intended change, using verified task context rather than patch mechanics alone. Distinguish the actual change from capabilities that can merely be inferred from it.
 2. Choose the narrowest durable repository concept that captures that intent. Name a concrete artifact or surface when sufficient. Move up to a capability, maintenance class, or subsystem only when the narrower objects are supporting details. Reuse established compact vocabulary such as `config` and `README` when it fits.
@@ -25,4 +27,4 @@ The role guide is alphabetized by editorial role:
 - **Literal names:** Put exact searchable tokens in backticks, including commands, configuration keys, domains, file labels, package selectors, paths, and rule IDs. Leave conceptual categories and canonically styled product names in prose. For example, `typescript@7` is a literal selector, while TypeScript is a product name.
 - **Bodies:** Use the subject alone unless a short body adds verified motivation, constraints, or consequences that the subject cannot adequately convey. Do not restate the subject, narrate the patch, or add a routine testing checklist. Preserve bodies and trailers required by the selected message constraints, but do not invent issue references, attribution, or boilerplate.
 
-Return the messages to the calling route. Prospective messages remain part of its read-only plan. For message-only delivery, put each complete message in a blockquote and stop without an execution proposal. Concrete commit proposals proceed through the shared [authorization check](commit-execution.md#confirm-commits).
+Return the messages to the calling route. Prospective messages remain part of its read-only plan. For message-only delivery, put each complete message in a blockquote and stop without an execution proposal. Messages for commit execution return to the shared [authorization check](commit-execution.md#confirm-commits).

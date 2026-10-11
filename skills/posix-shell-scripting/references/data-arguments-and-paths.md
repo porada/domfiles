@@ -25,36 +25,21 @@ Treat `"$@"` as the shell’s argument vector container. It expands to one field
 Build a command and its arguments with `set --`, then execute `"$@"`. Do not store a command or argument list in a scalar, reconstruct one through unquoted expansion, or use `eval` to recover boundaries that the representation has already discarded.
 
 ```sh
-search_named_files() (
-  if [ $# -ne 3 ] || [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
-    printf 'Usage: %s <directory> <name-pattern> <search-pattern>\n' "${0##*/}" >&2
-    return 2
-  fi
+file='build output.log'
+line_numbers=true
+pattern='error message'
 
-  directory=$1
-  name_pattern=$2
-  search_pattern=$3
+set -- grep
 
-  case $directory in
-    /* | ./* | ../*)
-      ;;
-    *)
-      directory=./"$directory"
-      ;;
-  esac
+if [ "$line_numbers" = true ]; then
+  set -- "$@" -n
+fi
 
-  set -- find
-
-  if [ -L "$directory" ]; then
-    set -- "$@" -H
-  fi
-
-  set -- "$@" "$directory" -type f -name "$name_pattern" -exec grep -n -e "$search_pattern" {} +
-  "$@"
-)
+set -- "$@" -e "$pattern" "$file"
+"$@"
 ```
 
-`-exec … {} +` gives `grep` each matching pathname as a separate argument instead of serializing the matches.
+The optional `-n` is a separate argument, as are the pattern and the filename containing whitespace.
 
 Iterate over `"$@"` when inspection must leave the original vector intact. This rebase helper can discover `--autosquash` and the requested commit count while preserving every argument for a later command:
 
