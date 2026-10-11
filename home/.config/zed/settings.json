@@ -3,9 +3,9 @@
 	"agent_servers": {
 		"claude-acp": {
 			"default_config_options": {
+				"model": "opus",
 				"effort": "xhigh",
-				"mode": "auto",
-				"model": "opus"
+				"mode": "auto"
 			},
 			"type": "registry"
 		}
@@ -173,14 +173,11 @@
 		100
 	],
 	"agent": {
-		"auto_compact": {
-			"threshold": "85%"
-		},
 		"default_model": {
-			"effort": "xhigh",
-			"enable_thinking": true,
 			"model": "gpt-6-astra",
-			"provider": "openai-subscribed"
+			"provider": "openai-subscribed",
+			"effort": "xhigh",
+			"enable_thinking": true
 		},
 		"default_width": 600,
 		"dock": "right",
@@ -188,22 +185,28 @@
 		"expand_terminal_card": false,
 		"favorite_models": [
 			{
-				"effort": "xhigh",
-				"enable_thinking": true,
-				"model": "gpt-6.1-sol",
-				"provider": "openai-subscribed"
+				"model": "claude-opus-5-5",
+				"provider": "anthropic",
+				"effort": "high",
+				"enable_thinking": true
 			},
 			{
-				"effort": "xhigh",
-				"enable_thinking": true,
 				"model": "gpt-6-astra",
-				"provider": "openai-subscribed"
+				"provider": "openai-subscribed",
+				"effort": "xhigh",
+				"enable_thinking": true
 			},
 			{
+				"model": "gpt-6.1-sol",
+				"provider": "openai-subscribed",
 				"effort": "xhigh",
-				"enable_thinking": true,
+				"enable_thinking": true
+			},
+			{
 				"model": "gpt-daybreak-blue-latest",
-				"provider": "openai-subscribed"
+				"provider": "openai-subscribed",
+				"effort": "xhigh",
+				"enable_thinking": true
 			}
 		],
 		"flexible": false,

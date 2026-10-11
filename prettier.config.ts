@@ -10,6 +10,25 @@ export default defineConfig({
 		{
 			files: [
 				/* prettier-ignore */
+				'**/zed/settings.json',
+			],
+			options: {
+				jsonSortOrder: [
+					'$schema',
+					'default',
+					'command',
+					'args',
+					'model',
+					'provider',
+					'*',
+					'agent',
+					'case_sensitive',
+				],
+			},
+		},
+		{
+			files: [
+				/* prettier-ignore */
 				'skills/**/assets/*.txt',
 			],
 			options: {
