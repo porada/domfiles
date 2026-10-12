@@ -12,6 +12,14 @@ Unless the user explicitly selects otherwise, use `--model opus` for the latest 
 
 The procedures below use the native background interface, not an async print mode runner. Treat unsupported options or changed CLI behavior as a concrete compatibility problem under [Handle Errors and Stop](#handle-errors-and-stop), not a reason to install, upgrade, or improvise a runner.
 
+## Establish Readiness
+
+Use the intended session in the supplied checkout, not a parent directory or another worktree. Reuse a successful exchange when its checkout, required launch configuration, and access conditions remain applicable. Otherwise, use the normal launch or resumption procedure below. If the assignment is ready, dispatch it directly. If it depends on later work, send a readiness-only assignment: acknowledge readiness without inspecting task material, using tools, delegating, or making changes. This is a real Claude turn with normal startup, configured integrations, and model usage, not a side-effect-free local query.
+
+Await a usable reply through the normal monitor, then stop the completed worker and retain its session state for the actual assignment. A readiness-only reply establishes startup and response capability, not tool permissions or task completion. Resume that session when the work is ready rather than creating a second reviewer.
+
+If launch requires workspace trust, pause and ask the user to run `claude` interactively in the exact supplied checkout, without an initial prompt, review the trust request, and exit without submitting a task. Interactive startup can run configured hooks and integrations. After the user resolves the requirement, retry the intended background operation. Do not infer readiness from a parent directory’s trust or print mode success, which skips the workspace trust dialog.
+
 ## Prepare Implementation Assignments
 
 Native background sessions can require an isolated worktree before edits. Their worktree tool may default to a remote default-branch base rather than the coordinator’s current `HEAD`. For implementation, establish the intended base and any necessary uncommitted inputs, checkout and branch authority under the global **Concurrent work** and **Commit gate** policies, delivery into the coordinator’s checkout, and cleanup ownership before edits begin. Do not assume the tool’s default base contains the assigned changes.

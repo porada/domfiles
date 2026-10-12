@@ -23,11 +23,11 @@ Coordinate Claude as a subagent under the global **Collaboration** policies. The
 
 Compose assignments and follow-ups under the global **Prompt contract**, **Same-access delegation**, and **Direct exchanges** policies.
 
-Before composing a live assignment, load [Claude CLI](references/claude-cli.md) for runtime defaults, launch and resume procedures, monitoring, and limits. Include the recursion boundary and active [progress and command limits](references/claude-cli.md#enforce-progress-and-command-limits) in the assignment. For follow-ups, apply the reference’s [retained-context checks](references/claude-cli.md#check-retained-context).
+Apply the global **Claude readiness** checkpoint through [Establish Readiness](references/claude-cli.md#establish-readiness). Before composing a live assignment, load [Claude CLI](references/claude-cli.md) for runtime defaults, launch and resume procedures, monitoring, and limits. Include the recursion boundary and active [progress and command limits](references/claude-cli.md#enforce-progress-and-command-limits) in the assignment. For follow-ups, apply the reference’s [retained-context checks](references/claude-cli.md#check-retained-context).
 
 ## Dispatch and Coordinate
 
-1. Start a fresh native background conversation by default. Resume a specific full session UUID when continuing the assigned work. Follow the reference’s launch and resumption procedures.
+1. Start a fresh native background conversation by default. Resume a specific full session UUID when continuing the assigned work, including after its readiness-only exchange. Follow the reference’s launch and resumption procedures.
 2. Check the existing job opportunistically. Do not replace useful concurrent work with a blocking polling script.
 3. When Claude becomes the last outstanding dependency, await that same job under the [inactivity policy](references/claude-cli.md#inactivity). This is a change in the coordinator’s scheduling, not a foreground relaunch.
 4. Retrieve the complete response for the latest requested turn and account for pending work before treating it as finished.

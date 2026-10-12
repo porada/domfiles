@@ -108,6 +108,8 @@ Claude Code and Zed’s Claude Agent load the project’s [`AGENTS.md`](../AGENT
 
 The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude’s remaining runtime state under `~/.claude`, together with `~/.claude.json`, remains machine-local outside the repository.
 
+The global [**Claude readiness** checkpoint](GLOBAL.md#collaboration) starts the intended exchange before implementation so workspace trust requirements surface while the user can resolve them. The [CLI procedure](../skills/.domfiles-claude-cli-subagent/references/claude-cli.md#establish-readiness) uses a resumable session rather than print mode, whose skipped trust dialog cannot establish background launch readiness.
+
 ### Commit Workflow
 
 The public [`sensible-commit-flow` skill](../skills/sensible-commit-flow/SKILL.md) owns commit mechanics and their standalone safety boundaries. Promotion separates the reusable workflow from personal message presentation, allowing independent installation without domfiles-managed policy or sibling skills. It remains documentation-only because native Git operations can execute approved batches without a separate staging implementation.
@@ -116,13 +118,13 @@ The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-f
 
 Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [**Outcomes**](GLOBAL.md#communication) policy has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
 
-The [early Git access checkpoint](../skills/sensible-commit-flow/references/early-git-access.md) surfaces capability requirements before implementation so a requested commit does not introduce a late permission interruption.
+The [global Git access checkpoint](GLOBAL.md#git-write-access) surfaces capability requirements before implementation or commit workflow loading, so a requested commit does not introduce a late permission interruption.
 
 Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b8631c30f97ae1adb61bcdc) is the recorded behavioral baseline. The history update handoff uses an explicit expected-object-ID [push lease](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L230-L291) so background fetches cannot silently refresh its lease expectation.
 
 ### Contribution Flow
 
-Contribution research and preferences live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval. The existing commit overlay supplies managed message conventions without a separate contribution overlay.
+Contribution research and preparation live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval. The [`dom-sensible-contribution-flow` overlay](../skills/.dom-sensible-contribution-flow/SKILL.md) owns personal review selection and adjacent opportunity decisions. The commit overlay supplies managed message conventions.
 
 The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [**External skills**](GLOBAL.md#documentation) policy remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied checkout default, existing state, and consuming project protections without imposing those personal gates.
 
@@ -195,7 +197,7 @@ None of the `skills/` source namespaces is a project-local discovery surface. Cl
 
 Client-specific installation roots and differing canonical and installed basenames motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
 
-Edits to an exposed global skill affect its installation through the symlink and may change agent behavior across projects. Changes to the exposed set, logical names, or source-to-install mapping require synchronization changes. [`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) removes retired names rather than retaining compatibility aliases, so clients discover each logical skill once.
+Edits to an exposed global skill affect its installation through the symlink and may change agent behavior across projects. The [skill synchronization policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#synchronize-skill-links) owns live link reconciliation after discovery changes. [`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup for future synchronization rather than compatibility aliases, so clients discover each logical skill once.
 
 ### Skill-Owned Script Scope
 

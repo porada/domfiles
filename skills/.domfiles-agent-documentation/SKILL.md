@@ -3,15 +3,21 @@ name: agent-documentation
 description: |-
     Use for creating, editing, reviewing, auditing, or maintaining project-authored agent documentation, including `AGENTS.md`, `.agents/PROJECT.md`, skill documentation, reusable handoff and decision capture prompts, templates, canonical public-surface assets, and public skill READMEs. Also use for project agent documentation setup, repository independence, cross-repository alignment, documentation authority, ownership, composition, routing, redundancy, and token efficiency.
 
-    Defer to a more specific project agent documentation workflow when one exists.
+    Use for mechanical checks of any documentation, including manual checks and commit reviews, or delegation that may include them. Exclude formatter-only and generic patch hygiene checks from this trigger.
 
-    Do not use for ordinary project source, script-only work without documentation changes, other consumer documentation, public API documentation, release notes, or source comments alone.
+    Defer agent documentation maintenance to a more specific project workflow when one exists. Outside mechanical check collection, exclude ordinary source, script-only work without documentation changes, other consumer documentation, public API documentation, release notes, and source comments alone.
 
 metadata:
     internal: true
 ---
 
 # Project Agent Documentation
+
+## Select Route
+
+When performing or delegating mechanical documentation validation, follow [Collect Documentation Checks](references/collect-documentation-checks.md), including when another workflow owns the task. When collection is the only applicable route, follow that reference and return to the owning workflow without applying the maintenance requirements below or composing their peers.
+
+For project-authored agent documentation work, continue below. The maintenance workflow also uses the collection route for its mechanical checks.
 
 ## Apply Documentation Principles
 
@@ -39,8 +45,8 @@ metadata:
 - For a documentation-only review or audit, inspect implementation and adjacent tests only as bounded evidence for a specific observable contract, then stop once the claim is established. Do not assess algorithms, internal structure, language idioms, performance, dead code, duplication, or general test quality unless the user explicitly includes implementation. Evaluation criteria such as security, maintainability, or project values apply within the resolved scope and do not expand it.
 - When the resolved scope explicitly includes implementation, follow applicable project, domain, and language implementation and validation workflows for internal concerns. Keep the agent documentation pass focused on contract consequences, and update agent documentation only when the contract, routing, or documented invocation changes.
 - For an explicit change, including a request that also uses review or audit language, use the change workflow. Treat inspection as the evidence gathering phase, then resolve the canonical owner, compose the change, and validate the final contents.
-- For a standalone ordinary review, keep the task read-only. Resolve the canonical owner and validate the existing contents, but skip composition, formatting, and every mutation.
-- For a standalone audit, keep the task read-only. Follow an applicable model-invocable project audit workflow when one exists. Otherwise start from Git-tracked paths, add only explicitly named untracked documentation when local policy permits it, inspect the resolved documentation scope, report findings, and stop without formatting or mutation.
+- For a standalone ordinary review, keep the reviewed material read-only. Resolve the canonical owner and validate the existing contents without editing them.
+- For a standalone audit, keep the audited material read-only. Follow an applicable model-invocable project audit workflow when one exists. Otherwise start from Git-tracked paths, add only explicitly named untracked documentation when local policy permits it, inspect the resolved documentation scope, report findings, and stop without formatting or changing that material.
 - Treat naming and prose punctuation policies as file-scoped unless a narrower surface contract defines another scope.
 - Resolve each pass’s scope before applying project and domain skills. Let supported clients discover them from their descriptions, and do not preload skills for later passes.
 

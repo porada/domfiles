@@ -10,6 +10,7 @@ for source in \
   .config \
   .curlrc \
   .local/bin \
+  .local/state/domfiles \
   .vimrc; do
   __symlink "$DOMFILES_HOME_DIR/$source" "$HOME/$source"
 done
@@ -24,6 +25,7 @@ __print_heading_dimmed 'Linking agent skills'
 for source in \
   .dom-release-notes-for-humans \
   .dom-sensible-commit-flow \
+  .dom-sensible-contribution-flow \
   .domfiles-agent-documentation \
   .domfiles-claude-cli-subagent \
   .domfiles-diagnose \
