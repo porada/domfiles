@@ -88,14 +88,14 @@ Run task-local behavioral checks only when they cannot modify user state. Cover 
 ### Define Validation Scope
 
 - **Change:** Validate each changed POSIX shell file and every affected call site, execution context, and cross-file contract needed to establish the resulting behavior.
-- **Review, Audit, or Diagnosis:** Validate the complete resolved read-only scope. For an audit, use the bounded inventory established before inspection. For a review or diagnosis, include every affected file, caller, execution context, and cross-file contract. Keep every check nonmutating.
+- **Review, Audit, or Diagnosis:** Validate the complete resolved read-only scope. For an audit, use the bounded inventory established before inspection. For a review or diagnosis, include every affected file, caller, execution context, and cross-file contract. Keep every check non-mutating.
 
 ### Run Validation
 
 1. Select the project’s narrowest applicable checks and diagnostics, and determine whether they can invoke ShellCheck. Before any direct or wrapper-mediated ShellCheck invocation, follow [ShellCheck Read Scope](references/validation-tools.md#shellcheck-read-scope). Before selecting or acquiring a validator or changing its features, source, or version, follow [Validator Dependencies](references/validation-tools.md#validator-dependencies).
 2. Run the selected checks and diagnostics.
 3. Parse each changed or in-scope POSIX shell execution unit with each established target shell’s no-execute option. For shell files, use `sh -n -- <path>` when the target command is `sh`. For embedded or generated shell, parse the actual shell text in its intended execution or sourcing context. Do not execute an untrusted generator merely to obtain parse input. Report a validation limitation when that input cannot be obtained safely. Check host language callers and tests through their own language workflow, not a shell parser. A permitted project workflow that already parsed the same unit with that target shell’s no-execute option satisfies this check. Static analysis, including ShellCheck, does not replace this check.
-4. Check formatting with the project formatter’s nonmutating mode when one is established.
+4. Check formatting with the project formatter’s non-mutating mode when one is established.
 5. Exercise the applicable task-local behavioral checks in the target sourcing or execution context.
 6. Recheck every human-facing string in scope under the [human-facing text contract](#human-facing-text).
 

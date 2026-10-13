@@ -158,7 +158,7 @@ fn count(value: &OsString, option: &str) -> Result<u64, String> {
         .to_str()
         .filter(|text| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit()))
         .and_then(|text| text.parse().ok())
-        .ok_or_else(|| format!("`{option}` must be a nonnegative integer"))
+        .ok_or_else(|| format!("`{option}` must be a non-negative integer"))
 }
 
 fn session_uuid(transcript: &Path) -> Result<String, String> {

@@ -67,7 +67,7 @@ The operator controls both the trigger and the result. Adding `:` expands the tr
 | Triggered Effect | Unset Only | Unset or Empty |
 | --- | --- | --- |
 | Expand and substitute the provided text | `${<parameter>-<provided-text>}` | `${<parameter>:-<provided-text>}` |
-| Expand the provided text, write it to standard error, and exit a noninteractive shell | `${<parameter>?<provided-text>}` | `${<parameter>:?<provided-text>}` |
+| Expand the provided text, write it to standard error, and exit a non-interactive shell | `${<parameter>?<provided-text>}` | `${<parameter>:?<provided-text>}` |
 
 In these templates, `<parameter>` stands for the parameter name, and `<provided-text>` stands for the shell text after the operator. That text may contain whitespace, including more than one whitespace-delimited token. When the trigger does not apply, each form expands to the parameter’s current value.
 
@@ -113,7 +113,7 @@ Before rewriting a delegated command’s arguments, establish which input forms 
 
 ## Line-Oriented Input
 
-Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. Status `1` indicates EOF. A greater status indicates an error. Clear `line` before each call so an unsuccessful `read` cannot reuse the previous record. Accept a nonempty value returned with status `1` only when a final unterminated line is valid input.
+Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. Status `1` indicates EOF. A greater status indicates an error. Clear `line` before each call so an unsuccessful `read` cannot reuse the previous record. Accept a non-empty value returned with status `1` only when a final unterminated line is valid input.
 
 Keep the loop body short enough that the read boundary remains visible. Move longer processing into a named helper.
 

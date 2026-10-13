@@ -40,6 +40,6 @@ Apply the [general launcher checks](portable-skill-scripts.md#validate-portabili
 
 - Record the Cargo invocation and assert the domfiles root as its working directory and the exact arguments documented in [Run Command Wrappers](#run-command-wrappers), including their order. Invoke the wrapper from an unrelated directory with conflicting Cargo configuration.
 - Have Cargo report a stub executable that prints `pwd -P`, then assert that the wrapper prints the caller’s physical directory. This verifies both executable selection and runtime working directory without assuming Cargo’s output location.
-- Return a nonzero Cargo status, such as `101`, and assert that the wrapper preserves it.
+- Return a non-zero Cargo status, such as `101`, and assert that the wrapper preserves it.
 
 Apply the [shared refusal coverage rule](skill-owned-scripts.md#test-contracts) to `__domfiles_cargo_target_exec`: keep its refusal cases for unreadable Cargo messages and missing executables in `claude-signal-test`, with the shared wiring assertions above in every wrapper’s suite. Run that shared failure coverage alongside the affected wrapper tests when changing the launcher.

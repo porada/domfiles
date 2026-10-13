@@ -26,7 +26,7 @@ When agent tool or sandbox permissions, fetch or network allowances, native path
 
 - For an explicit change, including a request that also uses review or audit language, complete the shared investigation, then follow every selected conditional branch’s change workflow. When no branch defines a mutation route, make a minimal edit to the selected settings object and use the change validation workflow below. For an expressly requested departure from the default permission model, establish the supported settings semantics and use this general route when no specialized route applies.
 - For a standalone audit, keep the task read-only. Resolve the audit scope from the user’s request and applicable `AGENTS.md` instructions, inspect it completely, follow the [read-only validation workflow](#validate-zed-settings-audits-diagnoses-and-reviews), and report all findings together. Skip change planning, change validation, formatting, and implementation.
-- For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest nonmutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
+- For a standalone diagnosis, keep the task read-only. Reproduce the behavior with the narrowest non-mutating check, trace the relevant settings resolution, and use the read-only validation workflow below.
 - For a standalone review, keep the task read-only and follow the [read-only validation workflow](#validate-zed-settings-audits-diagnoses-and-reviews). Skip change planning, change validation, formatting, and implementation.
 
 ## Investigate and Plan

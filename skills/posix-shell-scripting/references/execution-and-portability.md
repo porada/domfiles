@@ -41,7 +41,7 @@ Treat a pipeline’s status as the final command’s status unless every target 
 
 Avoid feeding command output into a loop through a bare pipeline when upstream failure detection or post-loop state matters. A `printf` pipeline into `while` is acceptable when input generation cannot fail meaningfully and loop state does not need to persist.
 
-When an optional command in strict mode produces either a usable nonempty scalar or no usable output on failure, scope `|| true` inside the command substitution before testing the result:
+When an optional command in strict mode produces either a usable non-empty scalar or no usable output on failure, scope `|| true` inside the command substitution before testing the result:
 
 ```sh
 branch_name="$(git symbolic-ref --quiet --short HEAD || true)"

@@ -32,7 +32,7 @@ for param in "$@"; do
 
   if ! __is_uint "$param"; then
     __print_error_and_exit \
-      'Commit count must be a nonnegative integer within the shell’s integer range'
+      'Commit count must be a non-negative integer within the shell’s integer range'
   fi
 
   count_param="$param"

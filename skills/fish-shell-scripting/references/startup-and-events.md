@@ -8,15 +8,15 @@ Fish selects configuration snippets across the configured `conf.d` directories b
 
 Put independent startup snippets in `conf.d/*.fish` when their order and override behavior are deliberate. Put user-level overrides and coordination in `$__fish_config_dir/config.fish`. Fish resolves that directory from `$XDG_CONFIG_HOME` or its `$HOME/.config/fish` fallback.
 
-Keep setup required by noninteractive shells outside interactive-only guards. Guard prompts, abbreviations, bindings, and other interactive behavior with `status is-interactive` so remote commands and file transfer sessions do not receive unrelated output or state. Guard login-only behavior with `status is-login`.
+Keep setup required by non-interactive shells outside interactive-only guards. Guard prompts, abbreviations, bindings, and other interactive behavior with `status is-interactive` so remote commands and file transfer sessions do not receive unrelated output or state. Guard login-only behavior with `status is-login`.
 
 ## Declarative Startup
 
-Make startup mutations idempotent. Re-sourcing a configuration file should produce the same state unless accumulation is its documented purpose. Use duplicate-safe operations, rebuild owned lists, or guard one-time work instead of repeatedly appending values that may already exist.
+Make startup mutations idempotent. Sourcing a configuration file again should produce the same state unless accumulation is its documented purpose. Use duplicate-safe operations, rebuild owned lists, or guard one-time work instead of repeatedly appending values that may already exist.
 
 Keep startup code quiet, deterministic, and fast without suppressing errors broadly merely to keep startup silent. Derive configuration-relative paths using the [path rules](fish-native-idioms.md#paths).
 
-Choose whether version-controlled startup files should recreate state for each session or Fish should preserve a mutable preference across sessions. Use global variables when version-controlled startup files should determine each session’s state. `fish_add_path --global` ignores nonexistent directories, normalizes accepted paths, avoids duplicates, and leaves an existing entry in place unless directed to move it.
+Choose whether version-controlled startup files should recreate state for each session or Fish should preserve a mutable preference across sessions. Use global variables when version-controlled startup files should determine each session’s state. `fish_add_path --global` ignores non-existent directories, normalizes accepted paths, avoids duplicates, and leaves an existing entry in place unless directed to move it.
 
 Use universal variables for intentionally mutable, cross-session preferences managed independently of version-controlled startup files. Do not append to them on every startup. Manage them through `set --universal`, and never edit `fish_variables` directly.
 

@@ -853,7 +853,7 @@ __string_replace() {
   fi
 
   if [ -z "$2" ]; then
-    __print_error_and_exit '`__string_replace` requires a nonempty pattern'
+    __print_error_and_exit '`__string_replace` requires a non-empty pattern'
   fi
 
   if ! __string_contains "$1" "$2"; then

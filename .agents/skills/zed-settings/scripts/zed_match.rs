@@ -19,7 +19,7 @@ const HELP: &str = concat!(
     "  <input>           The string to search, taken literally without anchoring, trimming, or normalization\n",
     "\n",
     "Output:\n",
-    "  A match prints `true` and a nonmatch prints `false` to standard output, followed by a newline\n",
+    "  A match prints `true` and a non-match prints `false` to standard output, followed by a newline\n",
     "  Invalid arguments or an invalid regex print a diagnostic to standard error and nothing to standard output\n",
     "\n",
     "Exit statuses:\n",

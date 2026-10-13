@@ -4,7 +4,7 @@
 
 Interpret the request literally. A content-only request does not authorize structural changes, and a structure-only request does not authorize rewriting otherwise sound copy. Heading wording counts as copy. During structure-only work, headings may move or change level, but they may not be renamed or newly written.
 
-Preserve every existing heading’s exact identifier spelling, significant characters, entities, and intentional markup. Leave an unchanged heading out of a structural outline rather than normalizing it. Do not introduce nonbreaking characters, entities, or presentational markup unless project policy or the user requires them.
+Preserve every existing heading’s exact identifier spelling, significant characters, entities, and intentional markup. Leave an unchanged heading out of a structural outline rather than normalizing it. Do not introduce non-breaking characters, entities, or presentational markup unless project policy or the user requires them.
 
 Apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries) to selected or restored headings, section order, taglines, links, examples, wording, and structure.
 

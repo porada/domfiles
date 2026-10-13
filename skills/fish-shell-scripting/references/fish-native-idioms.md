@@ -19,7 +19,7 @@ Choose the narrowest check that establishes the required property, from definiti
 | Variable is defined         | `set --query <name>`                |
 | At least one element exists | `set --query <name>[1]`             |
 | Exact element count         | `test $(count $<name>) -eq <count>` |
-| Joined content is nonempty  | `test -n "$<name>"`                 |
+| Joined content is non-empty | `test -n "$<name>"`                 |
 
 An undefined variable, a defined empty list, and a list containing one empty string are different states. Do not pass an unquoted, potentially empty list as the only input to a `string` or `path` command whose own standard input is piped or redirected. If the list expands to zero arguments, the command reads that input instead. A function or block that receives piped input does not hand it to such a command, so a call without its own redirection needs no guard. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
 
@@ -64,7 +64,7 @@ Quote an expansion when the receiving command must get exactly one argument. A d
 
 Adjacent list expansions form a Cartesian product. Attached text combines with every element, while an empty unquoted list can remove the entire token. For pairwise operations, require equal list lengths and index both lists explicitly because adjacent expansions do not zip lists.
 
-Before attaching text to a sensitive value, establish the required element count and content. For example, require one nonempty root before constructing a path:
+Before attaching text to a sensitive value, establish the required element count and content. For example, require one non-empty root before constructing a path:
 
 ```fish
 test $(count $root) -eq 1
@@ -100,7 +100,7 @@ Assignment-mode `set` preserves the status of its final command substitution. Co
 
 Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code. A failing command does not stop a Fish function, so add `or true` only where that status would otherwise become the function’s result or reach a later status check.
 
-Inspect `$pipestatus` only when individual pipeline stages matter. Do not reinterpret every nonzero upstream status as whole-pipeline failure.
+Inspect `$pipestatus` only when individual pipeline stages matter. Do not reinterpret every non-zero upstream status as whole-pipeline failure.
 
 After a pipeline, `$status` is the pipeline result. It normally comes from the final foreground process and then reflects any `not` or `!` negation. `$pipestatus` contains one unnegated status per pipeline process. Inspect or copy these values immediately.
 
@@ -114,9 +114,9 @@ Treat variables whose names end in `PATH` as lists internally and as colon-delim
 
 Use `*` for one path segment and `**` when recursive descent is intended. Do not introduce `?` globs because current Fish treats `?` as an ordinary character by default.
 
-Expect an ordinary unmatched glob to stop the command with a nonzero status. An unmatched glob expands to zero arguments when it is an argument to `set`, `path`, `count`, or `for`, or when it appears in the value of a single-command variable override. The override does not exempt other globs in the same command.
+Expect an ordinary unmatched glob to stop the command with a non-zero status. An unmatched glob expands to zero arguments when it is an argument to `set`, `path`, `count`, or `for`, or when it appears in the value of a single-command variable override. The override does not exempt other globs in the same command.
 
-Quote a wildcard that the called program or remote system must interpret. Do not store a wildcard in a variable expecting Fish to expand it later because Fish does not re-glob expanded variables.
+Quote a wildcard that the called program or remote system must interpret. Do not store a wildcard in a variable expecting Fish to expand it later because Fish does not glob expanded variables again.
 
 ## Redirections
 
@@ -124,7 +124,7 @@ Use `2>` for standard error. Use `&>` or explicit descriptor redirections only w
 
 ## Processes
 
-Prefer a pipe when a consumer accepts standard input. Use `$(<producer> | psub)` only when the consumer requires a filename. Use `begin … end` to group commands for redirection or scope, knowing that it does not create a subprocess. Use an explicit `fish --command '<code>'` only when process isolation is required. Replace heredocs with a pipe, `printf`, or a quoted multiline string according to the receiving command’s interface.
+Prefer a pipe when a consumer accepts standard input. Use `$(<producer> | psub)` only when the consumer requires a filename. Use `begin … end` to group commands for redirection or scope, knowing that it does not create a subprocess. Use an explicit `fish --command '<code>'` only when process isolation is required. Replace heredocs with a pipe, `printf`, or a quoted multi-line string according to the receiving command’s interface.
 
 ## Official Sources
 

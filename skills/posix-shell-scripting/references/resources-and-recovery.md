@@ -16,7 +16,7 @@ When temporary storage is necessary and the target provides `mktemp`, keep creat
 
 ## Recovery and Compensation
 
-Follow the script’s declared partial-failure and recovery contract. A multi-step mutation does not by itself require recovery infrastructure or imply atomicity. When the contract requires recovery, capture the original state needed for exact restoration before the first mutation. Reject preexisting operation state that compensation could destroy, along with any condition that would make destructive compensation unsafe. Establish how the workflow will prove ownership and unchanged state for every shared resource it may compensate.
+Follow the script’s declared partial-failure and recovery contract. A multi-step mutation does not by itself require recovery infrastructure or imply atomicity. When the contract requires recovery, capture the original state needed for exact restoration before the first mutation. Reject pre-existing operation state that compensation could destroy, along with any condition that would make destructive compensation unsafe. Establish how the workflow will prove ownership and unchanged state for every shared resource it may compensate.
 
 Compensate only effects the workflow can identify as its own. An attempted command does not prove that its effect occurred. A before-and-after inventory does not establish ownership of a new shared entry. Rely on a creation-returned stable identifier alone only when the identified resource is immutable and the creation result proves ownership. If ownership or safe compensation without overwriting others’ changes cannot be established, leave the shared resource intact and stop.
 

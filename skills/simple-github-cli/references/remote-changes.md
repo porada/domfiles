@@ -6,4 +6,4 @@ Publish local Git commits, tags, or refs only under direct, scoped user authoriz
 
 Inspect existing state first when a read-only operation can establish what already exists or prevent a duplicate change.
 
-Use noninteractive flags. Pass substantial bodies through a task-local temporary file rather than a command literal.
+Use non-interactive flags. Pass substantial bodies through a task-local temporary file rather than a command literal.

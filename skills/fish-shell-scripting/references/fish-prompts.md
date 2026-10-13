@@ -28,9 +28,9 @@ Define and validate the behavior for both states of every distinction the design
 
 ## Validation
 
-- Check each supported state and layout, including local and remote sessions, root and non-root users, version control state present and absent, multiline prompts, right prompts, mode prompts, and transient rendering.
-- Check inherited prompt color defaults in an interactive Fish process. A noninteractive `fish --command` invocation does not establish the interactive default theme state.
-- Confirm that prompt output remains absent from noninteractive startup paths.
+- Check each supported state and layout, including local and remote sessions, root and non-root users, version control state present and absent, multi-line prompts, right prompts, mode prompts, and transient rendering.
+- Check inherited prompt color defaults in an interactive Fish process. A non-interactive `fish --command` invocation does not establish the interactive default theme state.
+- Confirm that prompt output remains absent from non-interactive startup paths.
 - Exercise successful and failed previous commands, including pipelines when the prompt renders `$pipestatus`. Confirm that no prompt operation replaces captured state before rendering it.
 - Inspect color and style boundaries and line endings in an interactive Fish session or an established prompt test harness.
 

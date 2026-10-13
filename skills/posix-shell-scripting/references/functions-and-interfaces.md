@@ -39,7 +39,7 @@ Declare a function with the template `<name>() { …; }`, not with another shell
 
 Use `.`, not `source`. A sourceable file should normally define functions and documented variables without parsing the caller’s positional parameters, installing global traps, changing directories, enabling shell options, or running its main operation. Allow those effects only when the sourced interface declares them and every caller is evaluated against them.
 
-Separate reusable library definitions from an executable entrypoint when combining them would require a nonportable test for whether the file was sourced or executed.
+Separate reusable library definitions from an executable entrypoint when combining them would require a non-portable test for whether the file was sourced or executed.
 
 Do not assume `$0` identifies the entrypoint file. When `sh` finds a slashless command file through `PATH`, POSIX still sets `$0` to the original command file operand. Establish the library location through an installation contract, a caller-provided interface, or an invocation contract that guarantees `$0` denotes the actual file. Define the contract’s symlink behavior as well.
 
@@ -59,7 +59,7 @@ A value-producing function writes only its value to standard output. When only s
 
 When a function’s contract requires a failed prerequisite to stop later work, handle that failure explicitly rather than relying on `set -e`. Validate a direct call first, then repeat in conditional contexts: an `if` condition, negation with `!`, and non-final positions in `&&` or `||` lists. Inject the failure before a later side effect, and verify both the absence of that effect and the required status after accounting for any caller-side inversion.
 
-Some commands use a nonzero status for a domain result rather than an operational error. Classify every documented status, and propagate unexpected values. Do not put the command behind `!` when the original status matters because `!` replaces it with the inverted result.
+Some commands use a non-zero status for a domain result rather than an operational error. Classify every documented status, and propagate unexpected values. Do not put the command behind `!` when the original status matters because `!` replaces it with the inverted result.
 
 For example, `git merge-base --is-ancestor` returns `0` when the upstream commit is an ancestor of `HEAD`, `1` when it is not, and another status when the comparison fails:
 

@@ -72,7 +72,7 @@ Treat each commit as one independently understandable change, not as a container
 
 Apply these safeguards to every route, including supplied and inherited messages:
 
-- **Authorship:** Preserve established human authorship and supplied human co-author attribution. Do not add AI attribution or message signatures by default. An explicit attribution request may change message text, not execution identity or credential handling, and must not fabricate authorship.
+- **Authorship:** Preserve established human authorship and supplied attribution to other human authors. Do not add AI attribution or message signatures by default. An explicit attribution request may change message text, not execution identity or credential handling, and must not fabricate authorship.
 - **Conflicts:** Apply user-supplied wording and repository message requirements subject to [Instruction Authority](#instruction-authority). Resolve any remaining material conflict with the user rather than silently rewriting supplied input, dropping attribution, or bypassing a security requirement.
 - **Preservation:** Do not rewrite supplied, inherited, or Git-generated messages unless a message change is requested. Preserve an existing hosted `(#<number>)` subject suffix when it belongs to the selected message, but never invent one. Do not choose or change a release version while composing a message.
 

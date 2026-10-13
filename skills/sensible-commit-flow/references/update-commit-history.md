@@ -51,7 +51,7 @@ During [Create Approved Commits](commit-execution.md#create-approved-commits), c
 - **Repairs requiring replay:** When earlier commits change or repairs accompany a base or series change, create target-linked fixups, then run an interactive autosquash rebase over the approved range onto the approved base. Use `git commit --fixup=amend:<commit-oid>` for content and message changes, `git commit --fixup=<commit-oid>` for content-only repairs, or `git commit --fixup=reword:<commit-oid>` for message-only changes. Supply the exact replacement message for amend and reword fixups. Reword fixups ignore staged content. Resolve the todo list against recorded target IDs before replay so matching subjects cannot attach a fixup to the wrong commit.
 - **Separate changes:** Create ordinary commits with their approved complete messages instead of converting them into fixups.
 
-For every rebase, use `--no-autostash` and `--no-update-refs` so preservation and branch updates remain explicit, and preserve the selected topology and root handling. Use literal-safe, noninteractive input for approved message and todo edits.
+For every rebase, use `--no-autostash` and `--no-update-refs` so preservation and branch updates remain explicit, and preserve the selected topology and root handling. Use literal-safe, non-interactive input for approved message and todo edits.
 
 For a paused operation, establish that its remaining todo list and conflict resolution still match the execution baseline before continuing through the shared lifecycle. Do not skip a commit merely to clear a conflict or accept an unexpected empty commit as an authorized deletion.
 

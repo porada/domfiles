@@ -114,7 +114,7 @@ The global [**Claude readiness** checkpoint](GLOBAL.md#collaboration) starts the
 
 The public [`sensible-commit-flow` skill](../skills/sensible-commit-flow/SKILL.md) owns commit mechanics and their standalone safety boundaries. Promotion separates the reusable workflow from personal message presentation, allowing independent installation without domfiles-managed policy or sibling skills. It remains documentation-only because native Git operations can execute approved batches without a separate staging implementation.
 
-The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-flow/SKILL.md) co-applies and routes global callers through the public workflow. Its editorial model comes from the repository owner’s 2026 diff-to-message history, with bodyless authored messages selected explicitly. Inherited and Git-generated messages retain operation context under the public [message constraints](../skills/sensible-commit-flow/SKILL.md#preserve-message-constraints), rather than being normalized to that personal model. The global [**Commit gate**](GLOBAL.md#conduct) and [**Index preservation**](GLOBAL.md#collaboration) policies remain applicable in managed installations.
+The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-flow/SKILL.md) applies alongside it and routes global callers through the public workflow. Its editorial model comes from the repository owner’s 2026 diff-to-message history, with bodyless authored messages selected explicitly. Inherited and Git-generated messages retain operation context under the public [message constraints](../skills/sensible-commit-flow/SKILL.md#preserve-message-constraints), rather than being normalized to that personal model. The global [**Commit gate**](GLOBAL.md#conduct) and [**Index preservation**](GLOBAL.md#collaboration) policies remain applicable in managed installations.
 
 Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [**Outcomes**](GLOBAL.md#communication) policy has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
 
@@ -227,7 +227,7 @@ Synchronization links the repository’s `home/.local/bin` directory to `~/.loca
 
 `domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. An individual failure is recoverable only when the main workflow or a sync stage handles it explicitly, surfaces the result, and can continue later work independently of the failed operation. The source’s control flow defines the exact recoverable cases.
 
-The workflow can complete with visible, explicitly handled failures. An unhandled error or a nonzero exit from a sync stage stops the broader workflow.
+The workflow can complete with visible, explicitly handled failures. An unhandled error or a non-zero exit from a sync stage stops the broader workflow.
 
 The final dependency status is advisory. Its result remains visible while synchronization continues to completion.
 
@@ -284,7 +284,7 @@ The managed Fish configuration intentionally erases every existing abbreviation 
 
 ### Fish `clone` Argument Contract
 
-The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Option-bearing invocations belong to `git clone` itself. An unsupported invocation can reach Git without a reliable follow-up directory change and can return a nonzero status even when Git succeeds. Both are accepted consequences of keeping the wrapper simple.
+The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Option-bearing invocations belong to `git clone` itself. An unsupported invocation can reach Git without a reliable follow-up directory change and can return a non-zero status even when Git succeeds. Both are accepted consequences of keeping the wrapper simple.
 
 For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
 

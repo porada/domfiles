@@ -36,7 +36,7 @@ The result should sound like the writer, not the workflow. Preserve the writerâ€
 
 The [Writing Principles](#writing-principles) standard applies to every human-facing writing task. Load only the references the task requires.
 
-- **Connected Prose:** Load the [connected prose workflow](references/connected-prose.md) when a reader must follow an idea across more than one atomic unit. This includes context, explanation, reasoning, causality, tradeoffs, consequences, narrative, and tone. Use it independently for nontechnical, creative, narrative, reflective, persuasive, personal, and other general writing.
+- **Connected Prose:** Load the [connected prose workflow](references/connected-prose.md) when a reader must follow an idea across more than one atomic unit. This includes context, explanation, reasoning, causality, tradeoffs, consequences, narrative, and tone. Use it independently for non-technical, creative, narrative, reflective, persuasive, personal, and other general writing.
 - **Technical Copy:** Load the [technical copy workflow](references/technical-copy.md) when correctness depends on implementation or contract evidence. This includes package and repository descriptions, README and technical document content or information architecture, CLI wording, JSDoc and docstrings, explanatory source comments, runtime messages, test titles, labels, and other technical or developer-facing strings.
 - **Revision Rubric:** For a substantive review, difficult revision, or work involving multiple [reading units](references/connected-prose.md#reading-units), load the relevant parts of the [prose revision rubric](references/prose-revision-rubric.md).
 - **GitHub Collaboration:** Apply [Writing Principles](#writing-principles) and the technical copy workflow to every GitHub issue, pull request, and discussion title, body, comment, or review. Add Connected Prose whenever the reader must follow more than a single fact or action, including most bodies, comments, and reviews.
@@ -67,7 +67,7 @@ Do not announce the skill or narrate the editorial process while applying it. Pr
 
 ### Typography
 
-Apply the [typography conventions](references/typography.md) to every writing task. Before delivery, check hyphenated modifiers in the final prose against those rules.
+Apply the [typography conventions](references/typography.md) to every writing task. Before delivery, check hyphenated modifiers and prefixed words in the final prose against those rules.
 
 ### Secrets and Authentication
 

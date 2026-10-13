@@ -92,13 +92,13 @@ Before invoking the command, read **Run Command Wrappers** in `skill-development
 
 Run from any directory, resolving relative transcript paths from that directory.
 
-For a nonwaiting check during independent work:
+For a non-waiting check during independent work:
 
 ```sh
 claude-signal --since '<line>' --transcript '<transcript-path>' --wait 0
 ```
 
-`--since` and `--transcript` are required. `--since` is a nonnegative complete-line count recorded before the latest dispatch: use `0` for a fresh launch or the previous completed turn’s `nextSince` for a follow-up. Keep it fixed for every check of that dispatch. Never advance it to a polling result’s `nextSince` mid-turn, which would exclude the requested prompt.
+`--since` and `--transcript` are required. `--since` is a non-negative complete-line count recorded before the latest dispatch: use `0` for a fresh launch or the previous completed turn’s `nextSince` for a follow-up. Keep it fixed for every check of that dispatch. Never advance it to a polling result’s `nextSince` while the turn is still running, which would exclude the requested prompt.
 
 Omit `--wait` to use the command’s default bounded wait until it expires or the turn becomes `ready` or needs `attention`. Use that [waiting form](#inactivity) when Claude is the last outstanding dependency. The wait is not a hard process deadline: build preparation and a blocking CLI lookup can extend the invocation. Give the host invocation a finite timeout that allows for that overhead. `claude-signal --help` reports the default and override bounds and must be used alone.
 
@@ -110,7 +110,7 @@ A successful observation prints one JSON line with `state` and `nextSince`. This
 | `ready` | `replies`, the final reply of each turn since the prompt, and `compactedAt`, the latest compaction record’s one-based line or `null`. | Read all replies, retain the result for context reuse and the next dispatch, then follow [completion cleanup](#handle-errors-and-stop). |
 | `working` | `progressAt`, the latest qualifying event timestamp or `null`. | Continue coordination under the [inactivity policy](#inactivity). |
 
-`ready` requires a closed turn, answered tool calls, completed recorded background commands, no pending agents or workflows, a usable final reply, and a session that is neither busy nor waiting. Use that result rather than manually re-deriving completion from one session field. It does not prove success of the assigned task or terminate the worker.
+`ready` requires a closed turn, answered tool calls, completed recorded background commands, no pending agents or workflows, a usable final reply, and a session that is neither busy nor waiting. Use that result rather than deriving completion again from one session field. It does not prove success of the assigned task or terminate the worker.
 
 | Attention Reason | Meaning and Detail |
 | --- | --- |
@@ -129,7 +129,7 @@ The command consumes newline-terminated JSON records and leaves an unfinished fi
 
 Stop after 10 minutes without progress reported by `claude-signal`. There is no total runtime cap. Initialize the clock when dispatch is accepted, retain the latest `progressAt`, and reset only when it advances, using the event timestamp rather than the time the check returned. A null value does not reset the clock. Entering the final waiting phase does not reset it either.
 
-`progressAt` tracks the latest timestamp among the prompt, Claude’s own nonempty reply text, and tool results not marked `is_error: true`, including subagents started during the turn. Results for identical repeated calls within the same observed transcript segment do not count. These event kinds replace manual progress judgments and identify the basis for resets. They are an observable-event proxy, not proof of useful reasoning or a command’s semantic success. Prohibit artificial keepalives, unnecessary commands, and heartbeat files, and do not request internal thinking or extra tool calls solely to make progress visible.
+`progressAt` tracks the latest timestamp among the prompt, Claude’s own non-empty reply text, and tool results not marked `is_error: true`, including subagents started during the turn. Results for identical repeated calls within the same observed transcript segment do not count. These event kinds replace manual progress judgments and identify the basis for resets. They are an observable-event proxy, not proof of useful reasoning or a command’s semantic success. Prohibit artificial keepalives, unnecessary commands, and heartbeat files, and do not request internal thinking or extra tool calls solely to make progress visible.
 
 During the final waiting phase, combine the wait and observation using the command’s default:
 

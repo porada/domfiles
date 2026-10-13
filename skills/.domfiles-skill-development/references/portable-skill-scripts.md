@@ -26,7 +26,7 @@ An operation that consumes only supplied values, or maintains its host without a
 
 Separate a documented launcher build step from the requested operation. Build preparation may create declared host build outputs before help or argument validation, subject to existing dependency, network, and filesystem permissions. It must not change host source or configuration, or target state. Send build diagnostics to standard error. The operation-level guarantees below exclude only this preparation.
 
-- Keep the interface noninteractive and independent of editor actions, MCP servers, agent-specific APIs, conversational state, and calling-agent implementation.
+- Keep the interface non-interactive and independent of editor actions, MCP servers, agent-specific APIs, conversational state, and calling-agent implementation.
 - Support an exit-only `--help` operation that writes help to standard output, performs no other work, and returns status `0`. Reject `--help` combined with operational arguments.
 - Reject unknown arguments, missing required arguments, inaccessible required inputs, and invalid input without performing writes.
 - Write requested data, reports, and completed findings to standard output. Reserve standard error for usage and operational diagnostics. Keep default output free of terminal control sequences and order it deterministically.
