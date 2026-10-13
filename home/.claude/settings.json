@@ -5,6 +5,21 @@
 	},
 	"autoDreamEnabled": false,
 	"autoMemoryEnabled": false,
+	"enableArtifact": false,
 	"includeGitInstructions": false,
-	"theme": "auto"
+	"model": "opus",
+	"modelSettings": {
+		"claude-opus-5-5": {
+			"effortLevel": "xhigh"
+		}
+	},
+	"outputStyle": "Concise",
+	"permissions": {
+		"defaultMode": "auto"
+	},
+	"preferredNotifChannel": "terminal_bell",
+	"spinnerTipsEnabled": false,
+	"terminalProgressBarEnabled": true,
+	"theme": "auto",
+	"workflowKeywordTriggerEnabled": false
 }

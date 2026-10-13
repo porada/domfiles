@@ -235,6 +235,7 @@
 			]
 		},
 		"show_merge_conflict_indicator": false,
+		"terminal_init_command": "claude",
 		"threads_sidebar": {
 			"auto_open": true,
 			"default_width": 200,

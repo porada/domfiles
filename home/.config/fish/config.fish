@@ -38,6 +38,7 @@ set --global --export ZIZMOR_CONFIG "$HOME/.config/zizmor/config.yaml"
 
 # Opt out of telemetry
 set --global --export DISABLE_TELEMETRY 1
+set --global --export DISABLE_ERROR_REPORTING 1
 set --global --export DO_NOT_TRACK 1
 set --global --export HOMEBREW_NO_ANALYTICS 1
 set --global --export VERCEL_TELEMETRY_DISABLED 1
