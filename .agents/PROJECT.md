@@ -8,6 +8,8 @@ This document records constraints, durable facts, maintenance decisions, and rat
 
 The root `engines.node` range intentionally declares the minimum supported Node.js major without mirroring narrower patch-level constraints from individual tools. pnpm and the invoked tools are expected to report when the installed Node.js release does not satisfy a tool’s more specific engine range.
 
+Project code assumes the latest Node.js 24 release or newer.
+
 ### Supported Environment
 
 Domfiles actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
@@ -82,7 +84,7 @@ The [Claude launch procedure](../skills/.domfiles-cli-subagent/references/claude
 
 ### CLI Subagent Monitor Portability
 
-[`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent_signal.rs) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. Both are accepted while `cli-subagent` serves only domfiles-managed installations. Any promotion of the skill to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor, because public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
+[`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent-signal.ts) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. Both are accepted while `cli-subagent` serves only domfiles-managed installations. Any promotion of the skill to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor, because public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
 
 ### Codex Subagent Approvals
 
@@ -124,7 +126,7 @@ The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instru
 
 The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands available across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
 
-The list also includes `cargo`, `fish`, `node`, `pnpm`, and `rustc` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. `cargo` and `rustc` support package-oriented and direct Rust workflows, while `fish`, `node`, and `pnpm` support Fish configuration checks, JavaScript and direct TypeScript execution, and pnpm-based project workflows, respectively.
+The list also includes `fish`, `node`, and `pnpm` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. They support Fish configuration checks, JavaScript and direct TypeScript execution, and pnpm-based project workflows, respectively.
 
 The list intentionally omits `claude`, `fisher`, `git`, `mole`, and `vim`. `claude` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system maintenance utility outside coding workflows. `vim` is an interactive editor.
 
@@ -230,7 +232,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 ### Development Lint Wrapper Architecture
 
-The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands. File-oriented wrappers share discovery, filtering, headings, and callback dispatch through `domlib`. ShellCheck and Tombi use native batch invocations. Fish and JSON retain per-file execution because Fish treats later operands as script arguments and the JSON check requires exactly one value per file. The [Rust wrapper](../home/.local/bin/domfiles-dev-lint-rs) invokes Clippy once for the Cargo workspace. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
+The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands. File-oriented wrappers share discovery, filtering, headings, and callback dispatch through `domlib`. ShellCheck uses a native batch invocation. Fish and JSON retain per-file execution because Fish treats later operands as script arguments and the JSON check requires exactly one value per file. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
 
 File-oriented wrappers’ default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git C-quotes backslashes, control characters, and double quotes, as well as non-ASCII bytes when `core.quotePath` is enabled. A quoted pathname is skipped because it does not resolve to the original file.
 
@@ -308,19 +310,17 @@ Every peer dependency in workspace packages intentionally uses the version `"*"`
 
 Formatting policy comes from domfiles, not target-side Prettier configuration, `.editorconfig`, or ignore files. Native formatter configuration discovery also stays rooted in domfiles.
 
-### Prettier Formatter Wrappers
+### Prettier Formatter Wrapper
 
-The Fish, Rust, and TOML Prettier plugins are thin whole-file wrappers. Their native formatters own formatting semantics, so output is preserved verbatim rather than reinterpreted through Prettier options.
+The Fish Prettier plugin is a thin whole-file wrapper. Its native formatter owns formatting semantics, so output is preserved verbatim rather than reinterpreted through Prettier options.
 
-The Rust wrapper requires an explicit edition because direct stdin formatting otherwise defaults to Rust 2015. Native defaults own the remaining policy, so there is no `rustfmt.toml`. TOML indentation matches Rust, and formatting and linting run offline to avoid remote schema fetching.
+Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. The native formatter has no range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged. Prettier’s standalone mode is also intentionally unsupported because the wrapper requires a Node.js process to execute its external formatter binary.
 
-Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. None of the native formatters has a range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged. Prettier’s standalone mode is also intentionally unsupported because these wrappers require a Node.js process to execute their external formatter binaries.
+Prettier pragma comments—including `@format`, `@prettier`, `@noformat`, and `@noprettier`—are intentionally unsupported. The wrapper omits `hasPragma`, `hasIgnorePragma`, and `insertPragma`, so `requirePragma` and `checkIgnorePragma` do not gate formatting and `insertPragma` does not add a pragma.
 
-Prettier pragma comments—including `@format`, `@prettier`, `@noformat`, and `@noprettier`—are intentionally unsupported. The wrappers omit `hasPragma`, `hasIgnorePragma`, and `insertPragma`, so `requirePragma` and `checkIgnorePragma` do not gate formatting and `insertPragma` does not add a pragma.
+Interior cursor mapping is intentionally omitted. The wrapper exposes a single whole-file AST node because the native formatter provides neither token locations nor source maps. End-of-input cursor positions remain supported, but interior cursors may not remain attached to the same token after formatting. The wrapper does not implement heuristic source-to-output mapping.
 
-Interior cursor mapping is intentionally omitted. The wrappers expose a single whole-file AST node because the native formatters provide neither token locations nor source maps. End-of-input cursor positions remain supported, but interior cursors may not remain attached to the same token after formatting. The wrappers do not implement heuristic source-to-output mapping.
-
-Each `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports.
+The `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports.
 
 ### Repository-Scoped Commands
 

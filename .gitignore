@@ -15,5 +15,4 @@ home/.config/npm/user.npmrc
 home/.config/zed/prompts
 home/.config/zed/themes
 node_modules
-target
 tsconfig.tsbuildinfo

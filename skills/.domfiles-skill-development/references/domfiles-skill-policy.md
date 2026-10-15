@@ -31,4 +31,4 @@ When changing a public skill contract or its standalone fallback, consult the **
 
 Write skill-owned scripts in TypeScript that Node.js runs directly, without a build step. Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes it materially more correct, maintainable, or proportionate.
 
-Treat every skill-owned script as a [portable command](skill-owned-scripts.md#support-portable-commands), regardless of its skill’s installation category, without a `home/.local/bin` wrapper. Run TypeScript scripts with `node`, and write their adjacent tests with `node:test` and `node:assert`.
+Treat every skill-owned script as a [portable command](skill-owned-scripts.md#support-portable-commands), regardless of its skill’s installation category, without a `home/.local/bin` wrapper. Run TypeScript scripts with `node`, and write their adjacent tests with `node:test` and `node:assert`, running independent tests concurrently through `describe(…, { concurrency: true })`.

@@ -23,26 +23,16 @@ jobs:
       - run: home/.local/bin/domfiles-sync
       - run: fish --command 'domfiles sync'
 
-  test-rs:
-    name: test / rs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
-      - run: cargo test --locked --workspace
-
-  test-ts:
-    name: test / ts
+  test:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - run: brew install fish rust tombi
+      - run: brew install fish
       - uses: pnpm/setup@v3.1.1
         with:
           cache: true
           runtime: node@24
-      - run: pnpm test:ts
+      - run: pnpm test
+      - run: pnpm test:skills

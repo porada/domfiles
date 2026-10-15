@@ -2,9 +2,8 @@ import { defineConfig } from '@standard-config/prettier';
 
 export default defineConfig({
 	plugins: [
+		/* prettier-ignore */
 		'prettier-plugin-fish',
-		'prettier-plugin-rust',
-		'prettier-plugin-toml',
 	],
 	overrides: [
 		{

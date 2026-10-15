@@ -21,7 +21,7 @@ A material expansion adds a dependency, durable artifact, input schema, mutation
 Treat these elements as the script’s observable interface:
 
 - Accepted arguments, defaults, documented environment inputs, required arguments, and target selection rules.
-- Authorization requirements, credential sources, network access, and read and write effects.
+- Authorization requirements, credential sources, external commands, network access, and read and write effects.
 - Compatibility guarantees, input manifests, machine-readable schemas, and produced artifacts.
 - Executable and operation names.
 - Exit status meanings and standard error and standard output behavior.
@@ -54,7 +54,7 @@ Every documented interface element is compatibility-sensitive. When a change rem
 
 ## Support Portable Commands
 
-A portable command is a self-contained script that any supported agent can run from any working directory through the installed skill. The script and its adjacent test use only their runtime’s standard library and files under the skill’s `scripts` directory. They need no installed dependencies, build step, or repository configuration, so an installation that copies the skill rather than linking it can still run them. Document the invocation as the runtime command followed by `<skill-directory>/scripts/<script-name>.<extension>`, where `<skill-directory>` is the resolved directory containing the owning `SKILL.md`. Add a `PATH` wrapper only when project policy requires one or a concrete consumer needs it.
+A portable command is a self-contained script that any supported agent can run from any working directory through the installed skill. The script and its adjacent test use only their runtime’s standard library and files under the skill’s `scripts` directory. They need no installed packages, build step, or repository configuration, so an installation that copies the skill rather than linking it can still run them. An external command that gives an operation access to the state it inspects or changes, such as `claude`, `git`, or `gh`, is an interface prerequisite rather than a dependency. Document the invocation as the runtime command followed by `<skill-directory>/scripts/<script-name>.<extension>`, where `<skill-directory>` is the resolved directory containing the owning `SKILL.md`. Add a `PATH` wrapper only when project policy requires one or a concrete consumer needs it.
 
 Apply these command defaults:
 
@@ -71,7 +71,7 @@ Make network access explicit in the contract. Obtain credentials only through an
 
 Before adding an operation that inspects or changes another project, define how the caller selects that project and its complete scope rather than inferring either from the working directory. Apply every absolute exclusion for machine-local secret material, and never modify that project’s dependencies, toolchain configuration, Git metadata, or agent instructions as an incidental effect. Changes to the script and changes to another project, including updates to its consumers after a breaking interface change, require separate authorization.
 
-Validate a portable command from its canonical repository. Run it from a working directory outside that repository, and confirm that it loads code and bundled files only from the skill’s `scripts` directory. Exercise help, invalid invocation, each defined status, and deterministic ordering. Verify that read operations leave their inputs unchanged and that write operations affect only declared destinations. Register the script and its test in that repository’s authoritative validation.
+Validate a portable command from its canonical repository. Run it from a working directory outside that repository, and confirm that it loads code and bundled files only from the skill’s `scripts` directory. Exercise help, invalid invocation, each defined status, and deterministic ordering. Verify that read operations leave their inputs unchanged and that write operations affect only declared destinations.
 
 Do not add `--dry-run`, a machine-readable `--contract` operation, standalone distribution, or a universal subcommand hierarchy without a concrete consumer. Give every persistent machine-readable schema an integer version, and reject unsupported versions rather than interpreting them heuristically.
 
@@ -80,16 +80,17 @@ Do not add `--dry-run`, a machine-readable `--contract` operation, standalone di
 - Cover every distinct externally observable refusal and every routine that authorizes a mutation on a correctness claim, such as an accounting, containment, or equivalence proof. For a refusal shared by multiple external routes, keep the detailed refusal cases on the shared path and add one lightweight wiring assertion for each route proving that it reaches that path. Add route-specific detailed cases only when the route changes behavior or a caller relies on that distinction. Assert the refusal a caller would rely on, not only that the operation failed.
 - Test each operation’s output and failure behavior, plus destination handling, overwrite policy, and cleanup for any writes.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Create runtime fixture outputs, disposable repositories, and scratch state in temporary storage outside the repository, and keep the repository’s own Git metadata read-only. Tests that create commits, including fixture commits, still require explicit user authorization under the global **Commit gate**.
+- Give each test its own fixtures and run independent tests concurrently, so the suite takes about as long as its slowest test. Launch processes asynchronously, because a blocking launch serializes concurrent tests.
 - Run focused tests during implementation and after each behaviorally relevant correction. Run the repository’s root static validation once after the consolidated change batch, then rerun it only when a later correction changes an input or configuration that it covers. Direct execution and focused tests do not replace root typechecking or compilation.
 
-Document focused script and test commands in the owning skill or its repair reference.
+Script tests are agent-owned. Document focused script and test commands in the owning skill or its repair reference, and keep test runs out of the repository’s default test command and commit hooks. CI may run them.
 
 ## Choose Dependencies Before Implementation
 
 Apply `intentional-dependency-choice` before choosing a bespoke implementation of a mature general-purpose capability. Such capabilities include cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior. Reuse established decisions and approvals. The global **Dependencies** policy still governs implementation and mutating delegation.
 
-A portable command cannot take a dependency. When its standard library lacks a capability of this kind, narrow the contract or keep the script out of portable use rather than reimplementing standards-heavy behavior.
+A portable command cannot take a package dependency or run an external command to supply such a capability. When its standard library lacks a capability of this kind, narrow the contract or keep the script out of portable use rather than reimplementing standards-heavy behavior.
 
 ## Integrate Root Validation
 
-When a script reveals that root validation omits a source category, extend the root contract for that complete category rather than hardcoding one skill path. For example, add `.agents/**` to a TypeScript repository’s root include patterns when they do not cover skill-owned sources. Ensure the root check covers both the script and its test. Do not broaden configuration prospectively before a real script establishes the need.
+When a script reveals that root validation omits a source category, extend the root contract for that complete category rather than hardcoding one skill path. For example, add `.agents/**` to a TypeScript repository’s root include patterns when they do not cover skill-owned sources. Ensure root static validation covers both the script and its test. Do not broaden configuration prospectively before a real script establishes the need.
