@@ -8,7 +8,19 @@ export default defineConfig({
 			'packages/**/vite.config.ts',
 		],
 	},
-	lint: defineOxlintConfig(),
+	lint: defineOxlintConfig({
+		overrides: [
+			{
+				files: [
+					/* prettier-ignore */
+					'skills/**/*.test.ts',
+				],
+				rules: {
+					'vitest/no-import-node-test': 'off',
+				},
+			},
+		],
+	}),
 	staged: {
 		'*': [
 			() => 'pnpm install --frozen-lockfile --ignore-scripts',
@@ -16,17 +28,11 @@ export default defineConfig({
 		],
 		'*.fish': 'pnpm lint:fish',
 		'*.json': 'pnpm lint:json',
-		'*.rs': [
-			/* prettier-ignore */
-			() => 'pnpm lint:rs:check',
-			() => 'pnpm test:rs',
-		],
 		'*.sh': 'pnpm lint:sh',
-		'*.toml': 'pnpm lint:toml',
 		'*.ts': [
 			/* prettier-ignore */
 			() => 'pnpm lint:ts:check',
-			() => 'pnpm test:ts',
+			() => 'pnpm test',
 		],
 		'.github/workflows/*.yaml': 'actionlint',
 		'home/.local/bin/!(git-diff-highlight)': [

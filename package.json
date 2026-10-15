@@ -22,11 +22,10 @@
 		"@standard-config/oxlint-stylistic": "^2.10.0",
 		"@standard-config/prettier": "^1.22.0",
 		"@standard-config/tsconfig": "catalog:",
+		"@types/node": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
 		"prettier": "catalog:",
 		"prettier-plugin-fish": "workspace:*",
-		"prettier-plugin-rust": "workspace:*",
-		"prettier-plugin-toml": "workspace:*",
 		"typescript": "catalog:",
 		"vite-plus": "catalog:"
 	},
@@ -36,16 +35,12 @@
 		"format:check": "prettier --check --ignore-unknown .",
 		"lint:fish": "home/.local/bin/domfiles-dev-lint-fish",
 		"lint:json": "home/.local/bin/domfiles-dev-lint-json",
-		"lint:rs": "home/.local/bin/domfiles-dev-lint-rs --fix",
-		"lint:rs:check": "home/.local/bin/domfiles-dev-lint-rs",
 		"lint:sh": "home/.local/bin/domfiles-dev-lint-sh",
-		"lint:toml": "home/.local/bin/domfiles-dev-lint-toml",
 		"lint:ts": "vp lint --fix",
 		"lint:ts:check": "vp lint --deny-warnings --type-check",
 		"prepare": "vp config --hooks-dir .hooks",
-		"test": "pnpm run '/^test:[^:]+$/'",
-		"test:rs": "RUSTFLAGS='-D warnings' cargo test --locked --workspace",
-		"test:ts": "vp test",
+		"test": "vp test",
+		"test:skills": "node --test 'skills/{*,.*}/**/*.test.ts'",
 		"typecheck": "tsc --noEmit"
 	}
 }

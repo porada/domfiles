@@ -64,8 +64,16 @@ for project in "$DOMFILES_PROJECTS_DIR"/sc-*; do
   __ mv "$project" "$destination"
 done
 
-# Uninstall `taplo`
-if __is_brew_installed taplo; then
-  __print_heading_dimmed 'Uninstalling `taplo`'
-  __ brew uninstall taplo
-fi
+# Uninstall Cargo-related tooling
+cargo_packages=false
+
+for package in cargo-edit taplo tombi; do
+  if __is_brew_installed "$package"; then
+    if [ "$cargo_packages" = false ]; then
+      __print_heading_dimmed 'Uninstalling Cargo-related tooling'
+      cargo_packages=true
+    fi
+
+    __ brew uninstall "$package"
+  fi
+done

@@ -97,7 +97,7 @@ These instructions delegate only **contribution preparation** mode to `sensible-
 
 ### System-Available Tooling
 
-- **Availability:** Assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `ast-grep`, `cargo`, `fd`, `fish`, `gh`, `jq`, `just`, `node`, `pandoc`, `pnpm`, `rg`, `rustc`, `shellcheck`, `skills`, `tombi`, `vercel`, `yarn`, `yq`, and `zizmor`.
+- **Availability:** Assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `ast-grep`, `cargo`, `fd`, `fish`, `gh`, `jq`, `just`, `node`, `pandoc`, `pnpm`, `rg`, `rustc`, `shellcheck`, `skills`, `vercel`, `yarn`, `yq`, and `zizmor`.
 - **Usage:** Default to `fish --no-config` when using Fish as a non-interactive interpreter unless Fish startup configuration or configured runtime behavior is in scope. Use `pandoc --sandbox` for document parsing and conversion when the reader and writer need access only to files supplied on the command line. Treat `--sandbox` as a reader and writer boundary only. It does not constrain filters or PDF engines. Always pass `--no-config` to `rg`.
 - **Direct invocation:** For `skills` and `vercel`, invoke project-local commands through the project’s package manager. When the project does not provide the command, invoke the system-available command directly, not through `npx` or `pnpm dlx`.
 - **Scope:** Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.

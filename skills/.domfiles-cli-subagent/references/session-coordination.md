@@ -46,9 +46,9 @@ When compaction or uncertain retention requires a refreshed handoff, retain its 
 
 ## Observe the Current Turn
 
-Use the domfiles-managed `subagent-signal` command through `PATH` instead of reconstructing transcript readers or polling session listings separately. Apply the global **Output economy** policy. The command finds each session’s transcript itself.
+Run this skill’s `subagent-signal` monitor with `node` instead of reconstructing transcript readers or polling session listings separately. Its path is `<skill-directory>/scripts/subagent-signal.ts`, where `<skill-directory>` is the directory containing this skill’s `SKILL.md`. Apply the global **Output economy** policy. The command finds each session’s transcript itself.
 
-Before invoking the command, read **Run Command Wrappers** in `skill-development`’s `references/domfiles-script-policy.md` for launcher prerequisites, build effects, and failure statuses. The compiled observation is read-only. It does not dispatch prompts or stop sessions.
+The observation is read-only. It does not dispatch prompts or stop sessions.
 
 ### Read Turn Signals
 
@@ -57,12 +57,12 @@ Run from any directory. Pass one argument per pending session, `--claude` for a 
 For a non-waiting check during independent work:
 
 ```sh
-subagent-signal --wait 0 --claude '<since>:<uuid>' --codex '<since>:<uuid>'
+node '<skill-directory>/scripts/subagent-signal.ts' --wait 0 --claude '<since>:<uuid>' --codex '<since>:<uuid>'
 ```
 
 `<since>` is a non-negative complete-line count recorded before the session’s latest dispatch: use `0` for a fresh launch or the previous completed turn’s `nextSince` for a follow-up. Keep it fixed for every check of that dispatch. Never advance it to a polling result’s `nextSince` while the turn is still running, which would exclude the requested turn.
 
-Omit `--wait` to use the command’s default bounded wait, which returns as soon as any session becomes `ready`, needs `attention`, or reports an `error`. Use that [waiting form](#inactivity) when CLI sessions are the last outstanding dependencies. The wait is not a hard process deadline: build preparation and a blocking Claude session lookup can extend the invocation. Give the host invocation a finite timeout of at least 120 seconds. `subagent-signal --help` reports the default and override bounds and must be used alone.
+Omit `--wait` to use the command’s default bounded wait, which returns as soon as any session becomes `ready`, needs `attention`, or reports an `error`. Use that [waiting form](#inactivity) when CLI sessions are the last outstanding dependencies. The wait is not a hard process deadline: a blocking Claude session lookup can extend the invocation. Give the host invocation a finite timeout of at least 120 seconds. `--help` reports the default and override bounds and must be used alone.
 
 A successful observation prints one JSON line with `observedAt`, the observation time in Unix milliseconds, and `sessions`, one entry per session argument in the given order. Each entry has `session` and `state`, which describes the requested turn, not a state reported by the participant’s CLI. Every state except `error` adds `nextSince`, the current complete-line count for the next dispatch, not a read cursor. The command anchors on the latest turn start after `<since>`, as the participant reference defines it. Until that start is recorded, it reports `working` with `progressAt: null`. That includes a fresh launch whose transcript does not exist yet, but a follow-up whose transcript is missing reports an `error` unless the participant reference describes an exception.
 
@@ -96,7 +96,7 @@ A `null` `progressAt` leaves the clock unchanged, and so does entering the final
 During the final waiting phase, combine the wait and observation using the command’s default:
 
 ```sh
-subagent-signal --claude '<since>:<uuid>' --codex '<since>:<uuid>'
+node '<skill-directory>/scripts/subagent-signal.ts' --claude '<since>:<uuid>' --codex '<since>:<uuid>'
 ```
 
 Do not add a separate sleep or status call. Stop each session at the first successful check that establishes its inactivity threshold. Opportunistic checks cannot guarantee immediate error detection or exact deadline enforcement between checks. After a monitoring gap, a successful check examines the intervening records using the same fixed boundary. If observation fails, report a monitoring limitation rather than proven inactivity. A single long model request or blocking command writes nothing until it finishes.
@@ -115,7 +115,7 @@ When coordinator action is needed or a stopping condition is reached, the partic
 
 Apply the shared **Progress and recovery**, **Outcomes**, and **Validation reporting** policies to errors. Report material limitations and required user actions, not an inventory of successfully recovered errors.
 
-The compiled `subagent-signal` exits `0` after an observation, including `attention` and `error` entries, or help. This departs from the repository’s portable default so that one session that cannot be observed does not hide another session’s result. Exit `2` reports an invalid invocation or a failed write to standard output, with diagnostics on standard error. For failures before the monitor runs, use the shared wrapper contract routed from [Observe the Current Turn](#observe-the-current-turn). Treat any unsuccessful check as a monitoring limitation.
+`subagent-signal` exits `0` after an observation, including `attention` and `error` entries, or help. This departs from the repository’s portable default so that one session that cannot be observed does not hide another session’s result. Exit `2` reports an invalid invocation or a failed write to standard output, with diagnostics on standard error. Treat any unsuccessful check as a monitoring limitation.
 
 An `error` entry reports one session the command could not observe, such as an unreadable or malformed transcript, a missing transcript when `<since>` is above 0, a `<since>` beyond the complete transcript, several transcripts for one UUID, or a failed or non-unique Claude session lookup. Malformed records are identified by path and line number without their contents. Check that session alone with `--wait 0` up to two more times. If the error persists, report a monitoring limitation and pause or stop that exchange while continuing to watch the others. Do not advance `<since>`, restart the inactivity clock, or infer inactivity from an error.
 
@@ -129,10 +129,10 @@ After establishing [completion](#read-turn-signals), apply the participant’s c
 
 ## Validate Monitor Changes
 
-For a monitor change or a reproduced compatibility problem, run its focused contract tests from the domfiles root:
+For a monitor change or a reproduced compatibility problem, run its focused contract tests:
 
 ```sh
-cargo test --locked --test subagent-signal-test
+node --test '<skill-directory>/scripts/subagent-signal.test.ts'
 ```
 
-The tests use temporary fixtures, including a temporary home directory, stub the Claude session listing, and write Codex rollouts directly. They exercise parsing, turn states for both participants, several sessions at once, progress, waits, and launcher behavior without starting a live exchange. For launcher coverage, follow **Validate Command Wrappers** in `skill-development`’s `references/domfiles-script-policy.md`.
+The tests use temporary fixtures, including a temporary home directory, stub the Claude session listing, and write Codex rollouts directly. They exercise parsing, turn states for both participants, several sessions at once, progress, and waits without starting a live exchange.
