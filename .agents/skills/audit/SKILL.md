@@ -24,7 +24,6 @@ The table lists higher-precedence rules first. Apply publication audit scope whe
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
 2. Apply the precedence table above to resolve the reportable scope.
 3. Exclude these paths in publication audit mode and in every default repository scope, including `/audit` without an explicit scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the security exclusions above:
-    - `.agents/skills/zed-settings/scripts` and its descendants otherwise require an explicit request for that subtree or the Zed settings skill scripts. Agent documentation or Zed settings alone does not count as explicit inclusion.
     - `home/.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
 4. Inspect content outside the reportable scope only when needed as supporting evidence for a path in the reportable scope. Security exclusions still apply, and supporting evidence does not become reportable.
 

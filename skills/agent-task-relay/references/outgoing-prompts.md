@@ -10,6 +10,8 @@ Carry the selected checkout or isolation requirement when material. Leave checko
 
 Define the owned scope, exclusions, source constraints, stopping conditions, and expected result. Carry the [opportunity reporting contract](../SKILL.md#findings-and-opportunities) into every assignment and require recipients to preserve it through further delegation. A full external handoff transfers completion ownership to the receiving conversation by default. When the sender remains responsible for synthesis, integration, or follow-up, require an evidence-bearing reply instead. For a review, request stable finding identifiers, precise source locations, supporting evidence, consequences, material uncertainty, relevant validation, and an explicit statement of whether any in-scope findings remain standing. Distinguish reusable validation from claims needing independent verification, and require reassessment of changed or uncertain premises.
 
+When an assignment depends on host-rendered events that the recipient cannot observe through its tools, such as approval prompts, dialogs, or notifications, assign those observations and any required responses to the relaying user outside the prompt. Ask the recipient only for evidence it can observe, such as tool schemas, tool results, command output, and file state.
+
 End every initial or follow-up assignment with the exact standalone line `**Do not drift.**`. Put every required result, process constraint, and handoff instruction before it. Omit that guard from evidence-only transfers.
 
 ### Independent Review Context

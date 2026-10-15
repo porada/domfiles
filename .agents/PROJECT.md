@@ -32,11 +32,9 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 GitHub CLI can fall back to storing a token in plaintext when secure credential storage is unavailable. That fallback is outside the supported boundary for agent use.
 
-### pnpm Shared Store
+### Zed Agent Permissions
 
-Local development processes, including agents and their subprocesses, are mutually trusted. The shared pnpm store therefore prioritizes cross-project reuse over per-project cache isolation.
-
-The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default location hard link probes.
+Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandboxed`, and native `fetch` deliberately has no permission rules. With the terminal unsandboxed, fetch rules would only restrict destinations that terminal commands can already reach.
 
 ## Agent Integration
 
@@ -101,8 +99,6 @@ The public [`sensible-commit-flow` skill](../skills/sensible-commit-flow/SKILL.m
 The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-flow/SKILL.md) applies alongside it and routes global callers through the public workflow. Its editorial model comes from the repository owner’s 2026 diff-to-message history, with bodyless authored messages selected explicitly. Inherited and Git-generated messages retain operation context under the public [message constraints](../skills/sensible-commit-flow/SKILL.md#preserve-message-constraints), rather than being normalized to that personal model. The global [**Commit gate**](GLOBAL.md#conduct) and [**Index preservation**](GLOBAL.md#collaboration) policies remain applicable in managed installations.
 
 Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [**Outcomes**](GLOBAL.md#communication) policy has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
-
-The [global Git access checkpoint](GLOBAL.md#git-write-access) surfaces capability requirements before implementation or commit workflow loading, so a requested commit does not introduce a late permission interruption.
 
 Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b8631c30f97ae1adb61bcdc) is the recorded behavioral baseline. The history update handoff uses an explicit expected-object-ID [push lease](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L230-L291) so background fetches cannot silently refresh its lease expectation.
 
@@ -370,4 +366,4 @@ No standardized environment variable covers command echo suppression. `NO_COLOR`
 
 ### Zed CLI Open Behavior
 
-`cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [Zed settings policy](skills/zed-settings/SKILL.md#apply-general-policy) owns the redundancy criterion.
+`cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [**Zed settings**](../AGENTS.md#general) policy owns the redundancy criterion.
