@@ -228,29 +228,7 @@
 		"flexible": false,
 		"limit_content_width": false,
 		"sandbox_permissions": {
-			"allow_all_hosts": true,
-			"write_paths": [
-				"/private/tmp",
-				"/tmp",
-				"/Users/dom/.agents",
-				"/Users/dom/.cache",
-				"/Users/dom/.cargo",
-				"/Users/dom/.claude",
-				"/Users/dom/.claude.json",
-				"/Users/dom/.codex",
-				"/Users/dom/.local/state/domfiles",
-				"/Users/dom/.npm",
-				"/Users/dom/.yarn",
-				"/Users/dom/.yarnrc",
-				"/Users/dom/Library/Caches/Codex",
-				"/Users/dom/Library/Caches/Homebrew",
-				"/Users/dom/Library/Caches/pnpm",
-				"/Users/dom/Library/Caches/typescript",
-				"/Users/dom/Library/Caches/Yarn",
-				"/Users/dom/Library/Caches/Zed",
-				"/Users/dom/Library/pnpm",
-				"/Users/dom/Projects"
-			]
+			"allow_unsandboxed": true
 		},
 		"show_merge_conflict_indicator": false,
 		"terminal_init_command": "claude",
@@ -260,18 +238,7 @@
 			"position": "right"
 		},
 		"tool_permissions": {
-			"default": "allow",
-			"tools": {
-				"fetch": {
-					"default": "deny",
-					"always_allow": [
-						{
-							"pattern": "^(?i:https://(?:[^./?#:@]+\\.)*[^./?#:@]+)(?:[/?#]|$)",
-							"case_sensitive": true
-						}
-					]
-				}
-			}
+			"default": "allow"
 		}
 	}
 }

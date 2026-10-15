@@ -20,10 +20,6 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ## Security
 
-### Cargo Shared State
-
-The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to the entire default Cargo home directory rather than enumerating cache directories and metadata files. Under the [shared pnpm store’s mutual trust model](#pnpm-shared-store), this intentionally includes Cargo configuration, credentials, and installed executables.
-
 ### Dependency Installation Policy
 
 [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids installation time script execution without disabling esbuild’s runtime build API. It gives up the script’s binary version check, fallback download, and launcher optimization, so optional dependencies remain required by this installation model.
@@ -41,32 +37,6 @@ GitHub CLI can fall back to storing a token in plaintext when secure credential 
 Local development processes, including agents and their subprocesses, are mutually trusted. The shared pnpm store therefore prioritizes cross-project reuse over per-project cache isolation.
 
 The [synchronization script](../home/.local/bin/domfiles-sync-install) explicitly selects pnpm’s standard macOS store location instead of a relative per-project store. An explicit setting avoids pnpm 12’s default location hard link probes.
-
-The [Zed settings](../home/.config/zed/settings.json) grant every sandboxed terminal command write access to pnpm’s entire home directory, covering both dependency storage and package manager bootstrap state without tracking internal subdirectories. The separate cache grant remains necessary because that cache lives outside pnpm’s home. Under the mutual trust model above, this boundary intentionally permits changes to pnpm-managed executables later run outside the sandbox. Zed requires literal absolute paths without home expansion or glob matching, so the grants include the repository owner’s approved macOS username.
-
-### Zed Agent Permission Model
-
-The terminal intentionally has no configured command patterns because they classify normalized text rather than semantic capabilities. Equivalent effects can remain available through another executable, generated code, or a native tool.
-
-At Zed commit `1662f5f3`, terminal sandboxing requires the feature to be enabled, a local project, a Linux, macOS, or Windows integration, and persistent `agent.sandbox_permissions.allow_unsandboxed` to be false. A once-only or thread-wide unsandboxed grant removes the sandbox wrapper for selected commands without removing the sandboxed tool surface. Commands without the sandbox wrapper run with Zed’s ambient process permissions.
-
-At that revision, native tools calling `ToolCallEventStream::authorize` use configured permission evaluation plus built-in checks. `diagnostics`, `find_path`, `grep`, `list_directory`, and `read_file` bypass `decide_permission_from_settings` and use their built-in checks. External Agents are outside Zed Agent’s operating system sandbox. Their `AcpThread::request_tool_call_authorization` path uses ACP-supplied options, not the native evaluator.
-
-### Zed Fetch and Sandbox Host Scope
-
-Unrestricted host access intentionally replaces the persistent host inventory to avoid network destination prompts and repeated allowlist maintenance. This gives up destination filtering for terminal traffic, including access to loopback and private networks. Filesystem write restrictions, protected Git metadata, and independent fetch URL rules remain separate boundaries.
-
-The [fetch and network permission policy](skills/zed-settings/references/fetch-and-network-permissions.md#apply-fetch-and-network-permission-policy) owns the configuration model and the distinction between unrestricted terminal networking and native fetch’s retained URL and DNS checks.
-
-### Zed Shared Temporary Directory
-
-The [Zed settings](../home/.config/zed/settings.json) grant sandboxed terminal commands write access to `/private/tmp`, macOS’s canonical target for `/tmp`, rather than enumerating individual tools’ temporary directories. This avoids repeated permission requests for tools that use fixed `/tmp` paths instead of Zed’s per-thread `TMPDIR`.
-
-Under the [shared pnpm store’s mutual trust model](#pnpm-shared-store), this deliberately allows sandboxed terminal commands to create, modify, or delete entries throughout the shared temporary directory, including unrelated applications’ temporary files owned by the same user. Normal macOS permissions and Zed’s Git metadata protection still apply.
-
-### Zed Worktree Permission Coupling
-
-While Zed Agent’s terminal sandbox is active, open worktrees are normal project write roots, independent of directory and branch names. Protected Git administrative metadata requires a separate grant, including for top-level worktree moves. These sandbox limits do not apply to commands run without the sandbox wrapper.
 
 ## Agent Integration
 
@@ -123,8 +93,6 @@ The [Codex CLI runtime configuration](../skills/.domfiles-cli-subagent/reference
 ### Codex Subagent Hosts
 
 Unlike `claude --bg`, `codex exec` has no detached mode, so the [Codex CLI procedure](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs) prefers a host background job that reports its exit and can be stopped on request, as Claude Code’s background jobs do. At Zed v1.24.2, Zed Agent’s `terminal` tool documents only foreground commands bounded by `timeout_ms`, with no background execution, exit notification, or cancellation. A coordinator in Zed therefore uses the procedure’s foreground fallback, which blocks it for each Codex turn and leaves the timeout as the turn’s only limit. Whether `timeout_ms` accepts 2 hours is unverified, because its schema sets no maximum. Detaching the process from the shell was not adopted, because stopping it would require tracking its process and its exit would go unreported.
-
-Zed’s terminal sandbox also blocks Codex itself. With Zed 1.24.2’s generated profile and the configured `write_paths`, `codex exec` fails before its session starts with `Failed to synchronize managed preferences`, because the profile omits `ipc-posix-shm-read*` for the `apple.cfprefs.` prefix. Adding that rule lets the turn start, but Codex then cannot apply its own command sandbox inside Zed’s, and its commands fail with `sandbox_apply: Operation not permitted`. No `write_paths` entry helps, because neither failure involves a file write, and Zed’s settings cannot add other sandbox rules. The procedure therefore asks the host’s approval to run each Codex command outside its sandbox, where Codex’s own `workspace-write` sandbox still applies to the commands it runs. This tradeoff was accepted deliberately.
 
 ### Commit Workflow
 
