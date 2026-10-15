@@ -42,4 +42,4 @@ Write link text to read naturally within the sentence, even when it uses the sam
 
 - **Documentation syntax:** Write named placeholders as `<lower-kebab-case>`. Use `…` only for omitted or repeatable content and ordinary ellipses. Preserve exact language, markup, regex, and quoted source syntax.
 - **Code tokens:** Wrap identifiers, paths, commands, and quoted code tokens in backticks.
-- **Commit references:** Write abbreviated commit hashes at 8 characters unless disambiguation or an external format requires the full object ID.
+- **Commit references:** Write abbreviated commit hashes at 8 characters by default. Use a full object ID only when disambiguation or an external format requires it.

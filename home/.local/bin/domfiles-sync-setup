@@ -27,7 +27,7 @@ for source in \
   .dom-sensible-commit-flow \
   .dom-sensible-contribution-flow \
   .domfiles-agent-documentation \
-  .domfiles-claude-cli-subagent \
+  .domfiles-cli-subagent \
   .domfiles-diagnose \
   .domfiles-skill-development \
   .domfiles-subagent-review \

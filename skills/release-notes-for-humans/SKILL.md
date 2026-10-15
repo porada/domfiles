@@ -165,7 +165,7 @@ Apply the [typography conventions](references/typography.md) to all prose.
 
 ### Secrets and Authentication
 
-Never directly handle real credentials or authentication identities, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through non-disclosing operations. When direct credential handling is required, provide a command for the user to run.
+Never directly handle credentials or other secret-bearing authentication material, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through ordinary tool operations that do not expose credentials or private machine or account values. Agents may automatically make task-required, read-only queries for public, non-secret account identifiers, including the authenticated account’s public username. Request only the fields needed and expose or retain only the minimum result required. This permission does not authorize inspecting credential stores, retrieving private account data, changing authentication configuration, switching accounts, broadening access, or taking otherwise unauthorized actions. When direct credential handling is required, provide a command for the user to run.
 
 ### Instruction Authority
 

@@ -108,7 +108,23 @@ Claude Code and Zed’s Claude Agent load the project’s [`AGENTS.md`](../AGENT
 
 The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude’s remaining runtime state under `~/.claude`, together with `~/.claude.json`, remains machine-local outside the repository.
 
-The global [**Claude readiness** checkpoint](GLOBAL.md#collaboration) starts the intended exchange before implementation so workspace trust requirements surface while the user can resolve them. The [CLI procedure](../skills/.domfiles-claude-cli-subagent/references/claude-cli.md#establish-readiness) uses a resumable session rather than print mode, whose skipped trust dialog cannot establish background launch readiness.
+The global [**CLI subagent readiness** checkpoint](GLOBAL.md#collaboration) starts the intended exchange before implementation so workspace trust requirements surface while the user can resolve them. The [Claude procedure](../skills/.domfiles-cli-subagent/references/claude-cli.md#establish-readiness) uses a resumable session rather than print mode, whose skipped trust dialog cannot establish background launch readiness.
+
+The [Claude launch procedure](../skills/.domfiles-cli-subagent/references/claude-cli.md#launch-a-fresh-conversation) passes each assignment on stdin, a form `claude --help` does not document. Its statement that stdin leaves no input to answer a human-only prompt assumes that `--bg` reports a trust requirement and stops rather than asking. A startup question that read stdin could instead take the assignment as its answer. This assumption was accepted unverified, because testing it in an untrusted directory could itself trust that directory.
+
+### CLI Subagent Monitor Portability
+
+[`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent_signal.rs) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. Both are accepted while `cli-subagent` serves only domfiles-managed installations. Any promotion of the skill to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor, because public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
+
+### Codex Subagent Approvals
+
+The [Codex CLI runtime configuration](../skills/.domfiles-cli-subagent/references/codex-cli.md#apply-runtime-configuration) runs every turn with `--approve-for-me`, which sends sandbox escalation requests to Codex’s automatic review because no person can answer them in `codex exec`. It remains unverified whether that review approves or denies a request unattended or leaves the turn waiting, and whether the option still applies to turns started through `resume`. A live probe was deliberately skipped, because neither outcome would change the documented flow. A turn left waiting writes nothing. When the turn runs as a background job, the [inactivity procedure](../skills/.domfiles-cli-subagent/references/session-coordination.md#inactivity) stops it at the first successful check that establishes 15 minutes without progress. When it runs [in the foreground](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs), as in Zed, it blocks the coordinator until its timeout of at most 2 hours, and other sessions go unchecked until then.
+
+### Codex Subagent Hosts
+
+Unlike `claude --bg`, `codex exec` has no detached mode, so the [Codex CLI procedure](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs) prefers a host background job that reports its exit and can be stopped on request, as Claude Code’s background jobs do. At Zed v1.24.2, Zed Agent’s `terminal` tool documents only foreground commands bounded by `timeout_ms`, with no background execution, exit notification, or cancellation. A coordinator in Zed therefore uses the procedure’s foreground fallback, which blocks it for each Codex turn and leaves the timeout as the turn’s only limit. Whether `timeout_ms` accepts 2 hours is unverified, because its schema sets no maximum. Detaching the process from the shell was not adopted, because stopping it would require tracking its process and its exit would go unreported.
+
+Zed’s terminal sandbox also blocks Codex itself. With Zed 1.24.2’s generated profile and the configured `write_paths`, `codex exec` fails before its session starts with `Failed to synchronize managed preferences`, because the profile omits `ipc-posix-shm-read*` for the `apple.cfprefs.` prefix. Adding that rule lets the turn start, but Codex then cannot apply its own command sandbox inside Zed’s, and its commands fail with `sandbox_apply: Operation not permitted`. No `write_paths` entry helps, because neither failure involves a file write, and Zed’s settings cannot add other sandbox rules. The procedure therefore asks the host’s approval to run each Codex command outside its sandbox, where Codex’s own `workspace-write` sandbox still applies to the commands it runs. This tradeoff was accepted deliberately.
 
 ### Commit Workflow
 
@@ -134,13 +150,11 @@ The global [contribution authorization policy](GLOBAL.md#contribution-preparatio
 
 Conditional global policy may move into a globally exposed skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
 
-The **Collaboration** policy is the standing example of what does not move. Its delegation rules shape how much work is done directly on every task rather than at one recognizable decision point. An agent that never loads them cannot notice that evidence has outgrown the main thread. Missing them also drops the boundaries a subagent inherits.
+The [Collaboration](GLOBAL.md#collaboration) section combines shared-state safeguards with conditional delegation procedures. The safeguards apply even without delegation, while the procedures have recognizable triggers and are candidates for individual assessment against these criteria. **Inherited boundaries** remains global so authority and security limits do not depend on loading a particular delegation workflow.
 
 ### Global Agent Instructions
 
-The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude, while the tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. Both agents therefore load one instruction source across every project. It is not project scoped. Its [**Global redundancy baseline**](../AGENTS.md#general) is defined in project instructions.
-
-The ChatGPT app still uses `~/.codex`, where synchronization continues to link this source as `AGENTS.md`. The Codex CLI is no longer provisioned, and the [migration stage](../home/.local/bin/domfiles-sync-migrate) removes its Homebrew installation.
+The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex. The tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped. Its [**Global redundancy baseline**](../AGENTS.md#general) is defined in project instructions.
 
 ### Global System-Available Tooling
 
@@ -233,9 +247,9 @@ The final dependency status is advisory. Its result remains visible while synchr
 
 ## Tooling
 
-### Claude Code Distribution
+### Agent CLI Distribution
 
-`claude` is intentionally installed through Homebrew’s `claude-code` cask rather than declared as an `@anthropic-ai/claude-code` project dependency. This keeps the CLI machine-level, follows Anthropic’s stable Homebrew channel, and excludes it from dependency installation in CI because `claude` is a development Homebrew dependency. The Homebrew CLI installation is separate from the `claude-acp` registry package managed by Zed.
+`claude` and `codex` are intentionally installed through Homebrew’s `claude-code` and `codex` casks rather than declared as `@anthropic-ai/claude-code` or `@openai/codex` project dependencies. This keeps both CLIs machine-level and excludes them from dependency installation in CI, because they are development Homebrew dependencies. For Claude, the cask also follows Anthropic’s stable Homebrew channel. The Homebrew CLI installations are separate from the agent packages Zed manages, such as the `claude-acp` registry package.
 
 ### Cross-Shell Helper Differences
 

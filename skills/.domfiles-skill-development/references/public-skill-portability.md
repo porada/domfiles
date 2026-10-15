@@ -6,8 +6,6 @@ Apply the applicable skill classification’s independent behavior requirement f
 - **Standalone mirrors:** A public skill may mirror an applicable global instruction when the copy materially improves its independently installed behavior. Rephrase and arrange the standalone copy as needed for consistency with the skill, but preserve the source rule’s complete conditions, exceptions, meaning, normative force, scope, and standalone behavior. Treat it as required standalone context rather than a second definition, and realign it whenever either occurrence changes.
 - Treat every remote peer as an optional enhancement rather than a substitute for behavior the skill advertises.
 
-Keep the global **Writing** policy’s **Numbering** rule in the global instructions rather than mirroring it into public skills.
-
 ## Load Conditional Contracts
 
 - **Public naming and promotion:** Before public creation or renaming, or before moving or rewriting content in a promotion, follow the [public naming and promotion contract](public-skill-promotion.md). Also load it to review or audit those operations.
@@ -48,7 +46,9 @@ Group the inline policies under a final `## General Policies` section in this or
 
 Include typography only when creating, editing, or reviewing prose for human readers is a core advertised capability or the skill defines standards for human-facing text in authored code. Producing or transporting instructions addressed to another agent, or prose as a supporting step in another workflow, does not, by itself, establish eligibility. Otherwise, inherit applicable user and project writing instructions. Standalone completeness alone does not justify typography defaults.
 
-For an eligible skill, bundle a verbatim copy of the [typography template](../assets/typography.txt) at `references/typography.md`. Route to the bundled reference deterministically from `SKILL.md` before the skill creates, delivers, edits, or reviews prose. Apply a narrower user, project, surface, language, or syntax rule when the template permits it, but keep the shared template rules unchanged. For an ineligible skill, omit both the reference and its route.
+For maintenance in domfiles, derive the [typography template](../assets/typography.txt) from `.agents/GLOBAL.md`’s final `## Writing` section through the end of the file. Replace `## Writing` with `# Typography`, reduce every descendant heading level by one, and preserve all remaining content verbatim. Make shared rule changes in the global source before updating the template and bundled copies.
+
+For an eligible skill, bundle a verbatim copy of the typography template at `references/typography.md`. Route to the bundled reference deterministically from `SKILL.md` before the skill creates, delivers, edits, or reviews prose. Apply a narrower user, project, surface, language, or syntax rule when the template permits it, but keep the shared template rules unchanged. For an ineligible skill, omit both the reference and its route.
 
 ### Secrets and Authentication
 

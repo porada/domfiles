@@ -10,8 +10,8 @@ regex = "=1.12.3"
 serde_json = "1.0.154"
 
 [[bin]]
-name = "claude-signal"
-path = "skills/.domfiles-claude-cli-subagent/scripts/claude_signal.rs"
+name = "subagent-signal"
+path = "skills/.domfiles-cli-subagent/scripts/subagent_signal.rs"
 bench = false
 test = false
 
@@ -22,8 +22,8 @@ bench = false
 test = false
 
 [[test]]
-name = "claude-signal-test"
-path = "skills/.domfiles-claude-cli-subagent/scripts/claude_signal.test.rs"
+name = "subagent-signal-test"
+path = "skills/.domfiles-cli-subagent/scripts/subagent_signal.test.rs"
 
 [[test]]
 name = "zed-match-test"

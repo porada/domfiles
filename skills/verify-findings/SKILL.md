@@ -26,7 +26,7 @@ Verify claims that depend on evidence outside the inspected files separately, in
 
 Use the consuming environment’s established tools. In the read-only workflow, run only checks whose effects are known to be non-mutating. Inspection and validation can execute code. Disable unrelated executable startup configuration, hooks, and plugins unless their behavior is in scope or required by an established project workflow. Do not bypass required controls. If a check requires an ungranted permission or unauthorized state change, leave the affected claim unverified and identify what is needed rather than running it.
 
-Use established non-disclosing access for task-required external evidence. Do not select other credentials or services, upload local evidence, or invoke optional remote processing. When required evidence is unavailable, continue only the independent checks that remain possible.
+Use established access under [Secrets and Authentication](#secrets-and-authentication) for task-required external evidence. Do not select other credentials or services, upload local evidence, or invoke optional remote processing. When required evidence is unavailable, continue only the independent checks that remain possible.
 
 For ordinary technical failures, correct a demonstrated path or invocation mistake, make bounded retries, or use an equivalent method while the target, authorized effects, authentication, and disclosure boundaries remain unchanged. Do not evade denied access, authentication requirements, or a security control through tool substitution or delegation. Use the supported grant or correction process instead. Ask before changing an explicitly selected source or version or another material task assumption. New dependencies, destinations, or broader effects retain their own approval requirements. Never infer unavailable evidence.
 
@@ -54,7 +54,7 @@ Do not repeat findings classified as **Intentional**, **Not supported**, or **Re
 
 ### Secrets and Authentication
 
-Never directly handle real credentials or authentication identities, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through non-disclosing operations. When direct credential handling is required, provide a command for the user to run.
+Never directly handle credentials or other secret-bearing authentication material, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through ordinary tool operations that do not expose credentials or private machine or account values. Agents may automatically make task-required, read-only queries for public, non-secret account identifiers, including the authenticated account’s public username. Request only the fields needed and expose or retain only the minimum result required. This permission does not authorize inspecting credential stores, retrieving private account data, changing authentication configuration, switching accounts, broadening access, or taking otherwise unauthorized actions. When direct credential handling is required, provide a command for the user to run.
 
 ### Instruction Authority
 

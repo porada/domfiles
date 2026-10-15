@@ -69,8 +69,7 @@ if ! __is_ci; then
     install "$formula"
   done
 
-  # shellcheck disable=SC2043
-  for formula in claude-code; do
+  for formula in claude-code codex; do
     install "$formula" --cask
   done
 fi

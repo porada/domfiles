@@ -8,6 +8,7 @@ outdated_agent_instructions=false
 
 for skill in \
   awesome-vitest-entry \
+  claude-cli-subagent \
   claude-collaboration \
   commit \
   commit-flow \
@@ -54,12 +55,6 @@ for project in "$DOMFILES_PROJECTS_DIR"/sc-*; do
 
   __ mv "$project" "$destination"
 done
-
-# Uninstall `codex`
-if __is_brew_installed codex; then
-  __print_heading_dimmed 'Uninstalling `codex`'
-  __ brew uninstall codex
-fi
 
 # Uninstall `taplo`
 if __is_brew_installed taplo; then

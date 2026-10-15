@@ -50,7 +50,7 @@ Preserve protected content and human-only review requirements imposed by the con
 
 ## Limit Data and Service Access
 
-Use established secure machine-local authentication only through ordinary non-disclosing operations and the selected service’s default account, configuration, and provider. Do not inspect credentials or authentication identity. Query only specifically named, necessary, non-secret machine-local values, never bulk configuration or environment inventories.
+Use established secure machine-local authentication under [Secrets and Authentication](../SKILL.md#secrets-and-authentication), with the selected service’s default account, configuration, and provider. Query only specifically named, necessary, non-secret machine-local values, never bulk configuration or environment inventories.
 
 Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Do not expose private material through public searches or repository artifacts. Do not upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
 

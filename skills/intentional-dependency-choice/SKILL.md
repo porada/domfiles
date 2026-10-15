@@ -38,7 +38,7 @@ Verify the exact candidate against relevant runtime and platform requirements, e
 
 Use established tools for evidence gathering. Inspection can execute code, so run only checks known to be non-mutating and suppress unrelated executable startup configuration, hooks, and plugins unless their behavior is in scope or required by the project workflow. Do not acquire or execute a candidate merely to evaluate it. If a material question needs an experiment, state the uncertainty and return the bounded experiment to the owning workflow for the required authorization before execution.
 
-Use task-required public evidence or established non-disclosing access. Do not upload local content to optional processing services or switch authentication sources or providers. When evidence is unavailable, distinguish a conditional recommendation from a verified choice and identify the smallest missing fact rather than inventing support or expanding the research.
+Use task-required public evidence or established access under [Secrets and Authentication](#secrets-and-authentication). Do not upload local content to optional processing services or switch authentication sources or providers. When evidence is unavailable, distinguish a conditional recommendation from a verified choice and identify the smallest missing fact rather than inventing support or expanding the research.
 
 ## Explain Your Choice
 
@@ -69,7 +69,7 @@ That workflow owns separately authorized declarations, lockfile updates, acquisi
 
 ### Secrets and Authentication
 
-Never directly handle real credentials or authentication identities, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through non-disclosing operations. When direct credential handling is required, provide a command for the user to run.
+Never directly handle credentials or other secret-bearing authentication material, or include secrets or private machine or account values in authored content, commands, configuration, or artifacts. Use established machine-local authentication only through ordinary tool operations that do not expose credentials or private machine or account values. Agents may automatically make task-required, read-only queries for public, non-secret account identifiers, including the authenticated account’s public username. Request only the fields needed and expose or retain only the minimum result required. This permission does not authorize inspecting credential stores, retrieving private account data, changing authentication configuration, switching accounts, broadening access, or taking otherwise unauthorized actions. When direct credential handling is required, provide a command for the user to run.
 
 ### Instruction Authority
 

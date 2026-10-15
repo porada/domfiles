@@ -1,7 +1,7 @@
 ---
 name: subagent-review
 description: |-
-    Use when preparing or performing a review delegated to a subagent, or coordinating its findings, authorized fixes, and re-review. Applies to native subagents and Claude CLI review sessions, including review phases within another task.
+    Use when preparing or performing a review delegated to a subagent, or coordinating its findings, authorized fixes, and re-review. Applies to native subagents and Claude or Codex CLI review sessions, including review phases within another task.
 
     Do not use merely for a main agent’s direct review or self-review, externally supplied reports handled by `agent-task-relay`, or standalone findings verification.
 
