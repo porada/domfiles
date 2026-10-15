@@ -48,7 +48,7 @@ When compaction or uncertain retention requires a refreshed handoff, retain its 
 
 Use the domfiles-managed `subagent-signal` command through `PATH` instead of reconstructing transcript readers or polling session listings separately. Apply the global **Output economy** policy. The command finds each session’s transcript itself.
 
-Before invoking the command, read **Run Command Wrappers** in `skill-development`’s `references/domfiles-script-policy.md` for launcher prerequisites, build effects, and failure statuses. The compiled observation is read-only. It does not dispatch prompts or stop sessions.
+The compiled observation is read-only. It does not dispatch prompts or stop sessions.
 
 ### Read Turn Signals
 
@@ -115,7 +115,7 @@ When coordinator action is needed or a stopping condition is reached, the partic
 
 Apply the shared **Progress and recovery**, **Outcomes**, and **Validation reporting** policies to errors. Report material limitations and required user actions, not an inventory of successfully recovered errors.
 
-The compiled `subagent-signal` exits `0` after an observation, including `attention` and `error` entries, or help. This departs from the repository’s portable default so that one session that cannot be observed does not hide another session’s result. Exit `2` reports an invalid invocation or a failed write to standard output, with diagnostics on standard error. For failures before the monitor runs, use the shared wrapper contract routed from [Observe the Current Turn](#observe-the-current-turn). Treat any unsuccessful check as a monitoring limitation.
+The compiled `subagent-signal` exits `0` after an observation, including `attention` and `error` entries, or help. This departs from the repository’s portable default so that one session that cannot be observed does not hide another session’s result. Exit `2` reports an invalid invocation or a failed write to standard output, with diagnostics on standard error. Treat any unsuccessful check as a monitoring limitation.
 
 An `error` entry reports one session the command could not observe, such as an unreadable or malformed transcript, a missing transcript when `<since>` is above 0, a `<since>` beyond the complete transcript, several transcripts for one UUID, or a failed or non-unique Claude session lookup. Malformed records are identified by path and line number without their contents. Check that session alone with `--wait 0` up to two more times. If the error persists, report a monitoring limitation and pause or stop that exchange while continuing to watch the others. Do not advance `<since>`, restart the inactivity clock, or infer inactivity from an error.
 
@@ -135,4 +135,4 @@ For a monitor change or a reproduced compatibility problem, run its focused cont
 cargo test --locked --test subagent-signal-test
 ```
 
-The tests use temporary fixtures, including a temporary home directory, stub the Claude session listing, and write Codex rollouts directly. They exercise parsing, turn states for both participants, several sessions at once, progress, waits, and launcher behavior without starting a live exchange. For launcher coverage, follow **Validate Command Wrappers** in `skill-development`’s `references/domfiles-script-policy.md`.
+The tests use temporary fixtures, including a temporary home directory, stub the Claude session listing, and write Codex rollouts directly. They exercise parsing, turn states for both participants, several sessions at once, progress, waits, and launcher behavior without starting a live exchange.

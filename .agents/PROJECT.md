@@ -177,10 +177,6 @@ Client-specific installation roots and differing canonical and installed basenam
 
 Edits to an exposed global skill affect its installation through the symlink and may change agent behavior across projects. The [skill synchronization policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#synchronize-skill-links) owns live link reconciliation after discovery changes. [`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup for future synchronization rather than compatibility aliases, so clients discover each logical skill once.
 
-### Skill-Owned Script Scope
-
-`domfiles sync` creates installed global skill symlinks that point to their source directories in this checkout rather than copying them. Their host toolchain, dependencies, and root validation remain reachable from unrelated projects, satisfying the [portable skill script contract](../skills/.domfiles-skill-development/references/portable-skill-scripts.md)’s reachable host prerequisite.
-
 ### Verify Findings Skill
 
 The user-selected [`verify-findings`](../skills/verify-findings/SKILL.md) name favors an intuitive action over avoiding an existing descriptive name on skills.sh.

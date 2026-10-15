@@ -20,7 +20,7 @@ Before moving or rewriting content in a promotion to the public category, comple
 
 For every category change, update the canonical location, metadata, documentation links, and installation behavior together.
 
-Bring a skill’s scripts into conformance with the [portable skill script contract](portable-skill-scripts.md) before promoting it from internal to global. Remove or relocate them before promoting the skill into a public category that does not support bundled scripts.
+Bring a skill’s scripts into conformance with the [portable command contract](skill-owned-scripts.md#support-portable-commands) before promoting it from internal to global. Remove or relocate them before promoting the skill into a public category that does not support bundled scripts.
 
 ## Global Reach
 
