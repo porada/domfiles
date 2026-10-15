@@ -34,12 +34,6 @@ By default, inspect tracked `HEAD` directly rather than materializing an isolate
 
 An explicit user direction may select another route, but it does not establish that an existing tool preserves the selected tree. Do not design or implement a materializer without authorization for that additional work. When the audit requires an isolated copy, follow [Publication Audit Staging](references/publication-audit-staging.md).
 
-## Partition Large Audits
-
-- Divide a large scope into complete, non-overlapping passes and treat them as one continuous audit.
-- Resolve each pass’s scope before execution so supported clients can discover every applicable project-local skill from its description. When delegating a pass, identify those skills for the delegate without loading their bodies into the coordinating context.
-- Apply the global **Prompt contract** policy to every delegated pass. Identify this command-only audit workflow by its project-relative path, `.agents/skills/audit/SKILL.md`. Keep coverage tracking, cross-pass synthesis, issue IDs, and the reportable scope in the coordinating context.
-
 ## Audit Contents
 
 For every path in the reportable scope:

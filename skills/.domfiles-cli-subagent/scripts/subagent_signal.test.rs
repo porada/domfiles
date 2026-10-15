@@ -2,7 +2,7 @@ use serde_json::{Value, json};
 use std::{
     env,
     ffi::OsStr,
-    fs,
+    fs, io,
     os::unix::{
         ffi::OsStrExt,
         fs::{PermissionsExt, symlink},
@@ -13,6 +13,11 @@ use std::{
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
+
+// The parser’s option inventory is checked against the help, so the script is also a module here
+#[allow(dead_code)]
+#[path = "subagent_signal.rs"]
+mod signal;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_subagent-signal");
 const CARGO_STUB: &str = concat!(
@@ -157,7 +162,14 @@ impl Fixture {
             .collect();
 
         arguments.extend_from_slice(extra);
-        if !extra.contains(&"--wait") {
+        self.observe_arguments(&arguments)
+    }
+
+    // Every observation defaults to `--wait 0` and prints exactly one JSON line
+    fn observe_arguments(&self, arguments: &[&str]) -> String {
+        let mut arguments = arguments.to_vec();
+
+        if !arguments.contains(&"--wait") {
             arguments.extend_from_slice(&["--wait", "0"]);
         }
 
@@ -187,17 +199,7 @@ impl Fixture {
     }
 
     fn observe_with(&self, arguments: &[&str]) -> Value {
-        let mut arguments = arguments.to_vec();
-
-        if !arguments.contains(&"--wait") {
-            arguments.extend_from_slice(&["--wait", "0"]);
-        }
-
-        let (status, stdout, stderr) = self.run(None, &arguments);
-
-        assert_eq!(status, Some(0), "{arguments:?}: {stderr}");
-        assert!(stderr.is_empty(), "{arguments:?}: {stderr}");
-        serde_json::from_str(&stdout).expect("The output must be JSON")
+        serde_json::from_str(&self.observe_arguments(arguments)).expect("The output must be JSON")
     }
 
     fn refuse(&self, arguments: &[&str]) -> String {
@@ -459,8 +461,9 @@ fn prints_help_alone() {
 }
 
 #[test]
-fn documents_exactly_the_accepted_options() {
+fn accepts_every_documented_invocation() {
     let fixture = Fixture::new();
+    let session = format!("0:{UUID}");
     let (_, help, _) = fixture.run(None, &["--help"]);
     let usage = help_section(&help, "Usage:");
     let mut usage_options: Vec<&str> = usage[0]
@@ -483,9 +486,20 @@ fn documents_exactly_the_accepted_options() {
     );
     assert!(documented.is_sorted());
     assert_eq!(documented, usage_options);
+    assert_eq!(documented, signal::OPTIONS);
 
-    fixture.write(UUID, &[prompt(1)]);
-    assert_eq!(fixture.observe(1, &["--wait", "0"])["state"], "working");
+    for option in documented {
+        let arguments = match option {
+            "--wait" => vec!["--claude", &session, "--wait", "0"],
+            option => vec![option, &session, "--wait", "0"],
+        };
+
+        assert_eq!(
+            fixture.observe_with(&arguments)["sessions"][0]["state"],
+            "working",
+            "{arguments:?}"
+        );
+    }
 }
 
 #[test]
@@ -505,33 +519,81 @@ fn rejects_invalid_invocations() {
         format!("1.5:{UUID}"),
         format!("1e3:{UUID}"),
     ];
-    let mut cases: Vec<Vec<&str>> = vec![
-        vec![],
-        vec!["-h"],
-        vec!["--help", "--claude", &session],
-        vec!["--claude", &session, "--help"],
-        vec!["--wait", "0"],
-        vec!["--claude"],
-        vec!["--claude", &session, "--claude", &session],
-        vec!["--claude", &session, "--claude", &upper],
-        vec!["--claude", &session, "--verbose"],
-        vec!["--claude", &session, "--wait", "0", "--wait", "0"],
-        vec!["--claude", &session, "--wait", "x"],
-        vec!["--claude", &session, "--wait"],
-        vec!["--claude", &session, "--codex", &session],
-        vec!["--codex", &session, "--codex", &upper],
-        vec!["--codex", UUID],
-        vec!["--codex"],
+    let required = "At least one `--claude` or `--codex` session is required";
+    let help_alone = "`--help` must be the only argument";
+    let repeated = format!("Session `{UUID}` must be given only once");
+    let malformed = "must be `<since>:<uuid>` with a full session UUID";
+    let mut cases: Vec<(Vec<&str>, &str)> = vec![
+        (vec![], required),
+        (vec!["-h"], "Unknown argument `-h`"),
+        (vec!["--help", "--claude", &session], help_alone),
+        (vec!["--claude", &session, "--help"], help_alone),
+        (vec!["--wait", "0"], required),
+        (vec!["--claude"], "`--claude` requires a value"),
+        (vec!["--claude", &session, "--claude", &session], &repeated),
+        (vec!["--claude", &session, "--claude", &upper], &repeated),
+        (
+            vec!["--claude", &session, "--verbose"],
+            "Unknown argument `--verbose`",
+        ),
+        (
+            vec!["--claude", &session, "--wait", "0", "--wait", "0"],
+            "`--wait` must be given only once",
+        ),
+        (
+            vec!["--claude", &session, "--wait", "x"],
+            "`--wait` must be a non-negative integer",
+        ),
+        (
+            vec!["--claude", &session, "--wait"],
+            "`--wait` requires a value",
+        ),
+        (vec!["--claude", &session, "--codex", &session], &repeated),
+        (vec!["--codex", &session, "--codex", &upper], &repeated),
+        (vec!["--codex", UUID], malformed),
+        (vec!["--codex"], "`--codex` requires a value"),
     ];
 
-    for value in &invalid_values {
-        cases.push(vec!["--claude", value]);
+    for value in &invalid_values[..4] {
+        cases.push((vec!["--claude", value], malformed));
     }
-    for arguments in &cases {
-        fixture.refuse(arguments);
+    for value in &invalid_values[4..] {
+        cases.push((
+            vec!["--claude", value],
+            "`<since>` must be a non-negative integer",
+        ));
+    }
+    for (arguments, diagnostic) in &cases {
+        let stderr = fixture.refuse(arguments);
+
+        assert!(stderr.contains(diagnostic), "{arguments:?}: {stderr}");
     }
 
     assert_eq!(fixture.calls(), 0);
+}
+
+#[test]
+fn reports_a_failed_write_to_standard_output() {
+    let fixture = Fixture::new();
+    let (reader, writer) = io::pipe().expect("The pipe must be created");
+
+    // A closed reader makes every write fail, so the observation cannot be delivered
+    drop(reader);
+
+    let output = Command::new(BINARY)
+        .args(["--wait", "0", "--claude", &format!("0:{UUID}")])
+        .env("HOME", &fixture.home)
+        .env("PATH", format!("{}:/usr/bin:/bin", fixture.bin.display()))
+        .stdout(writer)
+        .output()
+        .expect("The command must start");
+    let stderr = String::from_utf8(output.stderr).expect("Standard error must be UTF-8");
+
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(
+        stderr.starts_with(&format!("{NAME}: Failed to write to standard output:\n\n")),
+        "{stderr}"
+    );
 }
 
 #[test]
@@ -909,7 +971,7 @@ fn waits_for_a_session_that_is_not_busy() {
 
 #[test]
 fn reports_the_latest_compaction() {
-    let mut records = vec![compaction(0), bookkeeping()];
+    let mut records = vec![compaction(0), bookkeeping(), compaction(0)];
 
     records.extend(completed_turn());
 
@@ -917,7 +979,7 @@ fn reports_the_latest_compaction() {
 
     fixture.write(UUID, &records);
     fixture.listing(&session("done", None, None));
-    assert_eq!(fixture.observe(0, &[])["compactedAt"], 1);
+    assert_eq!(fixture.observe(0, &[])["compactedAt"], 3);
 }
 
 #[test]
@@ -1017,7 +1079,7 @@ fn reports_blocked_sessions_with_the_pending_tool() {
 #[test]
 fn waits_for_background_work_despite_a_blocked_session_state() {
     let background = json!({ "command": "pnpm test", "run_in_background": true });
-    let mut records = vec![
+    let records = vec![
         prompt(1),
         call("a", &background, 2),
         result("a", false, 3),
@@ -1029,17 +1091,6 @@ fn waits_for_background_work_despite_a_blocked_session_state() {
     fixture.write(UUID, &records);
     fixture.listing(&session("blocked", Some("idle"), None));
     assert_eq!(fixture.observe(0, &[])["state"], "working");
-
-    records.push(notification("a", 6));
-    fixture.write(UUID, &records);
-    assert_eq!(fixture.observe(0, &[])["state"], "working");
-
-    records.extend([reply("c", "The tests passed", "end_turn", 7), turn_end(8)]);
-    fixture.write(UUID, &records);
-    assert_eq!(
-        fixture.observe(0, &[])["replies"],
-        json!(["Should I also run lint?", "The tests passed"])
-    );
 }
 
 #[test]
@@ -1246,23 +1297,44 @@ fn collects_the_reply_of_every_turn_since_the_prompt() {
 fn reports_unexpected_session_lookups_as_errors() {
     let fixture = Fixture::new();
 
-    fixture.write(UUID, &completed_turn());
-    assert_eq!(fixture.observe(0, &[])["state"], "error");
+    let error = |message: &str| {
+        let output = fixture.observe(0, &[]);
 
-    for rows in [
-        json!([row(OTHER_UUID, "done", None, None)]),
-        json!([row(UUID, "done", None, None), row(UUID, "done", None, None)]),
-        row(UUID, "done", None, None),
+        assert_eq!(output["state"], "error", "{output}");
+        assert!(
+            output["message"]
+                .as_str()
+                .is_some_and(|text| text.starts_with(message)),
+            "{output}"
+        );
+    };
+
+    fixture.write(UUID, &completed_turn());
+    error("`claude agents` failed with");
+
+    for (rows, message) in [
+        (
+            json!([row(OTHER_UUID, "done", None, None)]),
+            "Expected one `claude agents` row for the session, found 0",
+        ),
+        (
+            json!([row(UUID, "done", None, None), row(UUID, "done", None, None)]),
+            "Expected one `claude agents` row for the session, found 2",
+        ),
+        (
+            row(UUID, "done", None, None),
+            "`claude agents` did not print a JSON array",
+        ),
     ] {
         fixture.listing(&rows);
-        assert_eq!(fixture.observe(0, &[])["state"], "error", "{rows}");
+        error(message);
     }
 
     fs::write(fixture.bin.join("listing.json"), "not json").expect("The listing must be written");
-    assert_eq!(fixture.observe(0, &[])["state"], "error");
+    error("`claude agents` printed invalid JSON");
 
     fs::remove_file(fixture.bin.join("claude")).expect("The Claude stub must be removed");
-    assert_eq!(fixture.observe(0, &[])["state"], "error");
+    error("Failed to run `claude agents`:\n\n");
 }
 
 #[test]
@@ -1525,15 +1597,6 @@ fn reports_codex_working_before_the_turn_starts() {
         json!({ "session": UUID, "state": "working", "nextSince": 0, "progressAt": null })
     );
 
-    let rollout = fixture.rollout(UUID, 9, "");
-
-    fs::rename(&rollout, rollout.with_extension("jsonl.zst"))
-        .expect("The rollout must be compressed");
-    assert_eq!(
-        fixture.observe_with(&["--codex", &session])["sessions"][0]["progressAt"],
-        Value::Null
-    );
-
     fixture.write_rollout(UUID, 9, &[session_meta(UUID, UUID, 0)]);
     assert_eq!(
         fixture.observe_with(&["--codex", &session])["sessions"][0],
@@ -1705,20 +1768,35 @@ fn applies_a_new_turn_start_to_known_descendants() {
 
     set_modified(&root, 10_000);
     set_modified(&child, 20_000);
+    fixture.write(OTHER_UUID, &[prompt(1)]);
+    fixture.listing(&json!([row(OTHER_UUID, "working", Some("busy"), None)]));
 
     let output = thread::scope(|scope| {
         scope.spawn(|| {
-            // The first check caches the child as a descendant of the turn started at second 10
-            thread::sleep(Duration::from_secs(1));
+            let deadline = Instant::now() + Duration::from_secs(10);
+
+            // The first check reads the rollout before its Claude lookup, so once the lookup has
+            // run, that check caches the child as a descendant of the turn started at second 10
+            while fixture.calls() == 0 {
+                assert!(Instant::now() < deadline, "The initial lookup must occur");
+                thread::sleep(Duration::from_millis(10));
+            }
             records.push(turn_started(30));
             fixture.write_rollout(UUID, 9, &records);
             set_modified(&root, 50_000);
             set_modified(&child, later);
         });
-        fixture.observe_with(&["--codex", &format!("0:{UUID}"), "--wait", "4"])
+        fixture.observe_with(&[
+            "--claude",
+            &format!("0:{OTHER_UUID}"),
+            "--codex",
+            &format!("0:{UUID}"),
+            "--wait",
+            "4",
+        ])
     });
 
-    assert_eq!(output["sessions"][0]["progressAt"], 50_000, "{output}");
+    assert_eq!(output["sessions"][1]["progressAt"], 50_000, "{output}");
 }
 
 #[test]

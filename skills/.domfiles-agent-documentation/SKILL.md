@@ -48,7 +48,6 @@ For project-authored agent documentation work, continue below. The maintenance w
 - For a standalone ordinary review, keep the reviewed material read-only. Resolve the canonical owner and validate the existing contents without editing them.
 - For a standalone audit, keep the audited material read-only. Follow an applicable model-invocable project audit workflow when one exists. Otherwise start from Git-tracked paths, add only explicitly named untracked documentation when local policy permits it, inspect the resolved documentation scope, report findings, and stop without formatting or changing that material.
 - Treat naming and prose punctuation policies as file-scoped unless a narrower surface contract defines another scope.
-- Resolve each pass’s scope before applying project and domain skills. Let supported clients discover them from their descriptions, and do not preload skills for later passes.
 
 ## Resolve Canonical Owner
 

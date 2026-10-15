@@ -1,3 +1,4 @@
 *.snap
 Cargo.lock
+home/.local/state/domfiles/agent-documentation
 pnpm-lock.yaml

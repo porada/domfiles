@@ -223,6 +223,14 @@ fn rejects_invalid_regexes() {
     for pattern in ["(", "[a", "(?=a)a"] {
         assert_refusal(["true", pattern, "a"]);
         assert_refusal(["false", pattern, "a"]);
+
+        let (_, _, stderr) = run(["true", pattern, "a"]);
+
+        // The regex error follows its context unchanged, after one blank line
+        assert!(
+            stderr.starts_with(&format!("{NAME}: Invalid regex:\n\n")),
+            "{stderr}"
+        );
     }
 }
 

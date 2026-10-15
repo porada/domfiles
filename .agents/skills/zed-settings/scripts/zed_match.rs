@@ -77,7 +77,7 @@ fn run(arguments: &[OsString]) -> Result<String, String> {
             let regex = RegexBuilder::new(&pattern)
                 .case_insensitive(!case_sensitive)
                 .build()
-                .map_err(|error| format!("Invalid regex: {error}"))?;
+                .map_err(|error| format!("Invalid regex:\n\n{error}"))?;
 
             Ok(format!("{}\n", regex.is_match(&input)))
         }
@@ -94,7 +94,7 @@ fn main() -> ExitCode {
                 .and_then(|()| stdout.flush())
             {
                 Ok(()) => return ExitCode::SUCCESS,
-                Err(error) => format!("Failed to write to standard output: {error}"),
+                Err(error) => format!("Failed to write to standard output:\n\n{error}"),
             }
         }
         Err(diagnostic) => diagnostic,

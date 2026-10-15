@@ -1,6 +1,6 @@
 use serde_json::{Value, json};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     env,
     ffi::OsString,
     fs,
@@ -16,10 +16,11 @@ const DETAIL_LIMIT: usize = 500;
 const LISTING_INTERVAL: Duration = Duration::from_secs(10);
 const MAX_WAIT_SECONDS: u64 = 90;
 const NAME: &str = "subagent-signal";
+// The value options the parser accepts beside `--help`, which the help must document exactly
+pub(crate) const OPTIONS: [&str; 3] = ["--claude", "--codex", "--wait"];
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 const SYNTHETIC_MODEL: &str = "<synthetic>";
 
-#[derive(Default)]
 struct Listing {
     state: Option<String>,
     status: Option<String>,
@@ -42,7 +43,7 @@ impl Message {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 enum Provider {
     Claude,
     Codex,
@@ -116,12 +117,12 @@ fn help() -> String {
             "  subagent-signal [--wait <seconds>] (--claude <since>:<uuid> | --codex <since>:<uuid>)...\n",
             "  subagent-signal --help\n",
             "\n",
-            "Report whether the latest requested turn of each listed Claude or Codex background session is working, ready, or needs attention. Return as soon as any session leaves `working`\n",
+            "Report whether the latest requested turn of each listed Claude or Codex session is working, ready, or needs attention. Return as soon as any session leaves `working`\n",
             "\n",
             "Options:\n",
             "  --claude <since>:<uuid>  A Claude session to observe, given once per session. `<since>` is the number of complete transcript lines recorded before the latest dispatch, or `0` for a fresh launch. Keep it fixed for every check of that turn. `<uuid>` selects the `~/.claude/projects/*/<uuid>.jsonl` transcript and the session’s `claude agents --json --all` row\n",
             "  --codex <since>:<uuid>   A Codex session to observe, given once per session. `<since>` works as for `--claude`. `<uuid>` selects the `~/.codex/sessions/*/*/*/rollout-*-<uuid>.jsonl` rollout\n",
-            "  --wait <seconds>         Wait up to this many seconds, from `0` to `{max_wait_seconds}`, for any session to become `ready`, need `attention`, or report an `error`. Defaults to `{max_wait_seconds}`\n",
+            "  --wait <seconds>         Wait up to this many seconds, from `0` to `{max_wait_seconds}`, for any session to become `ready`, need `attention`, or report an `error`. Defaults to `{max_wait_seconds}`. A slow `claude agents` lookup can extend the call beyond this wait\n",
             "\n",
             "Output:\n",
             "  One JSON object on standard output with `observedAt`, the observation time in Unix milliseconds, and `sessions`, one entry per session in the given order\n",
@@ -151,13 +152,16 @@ fn parse_arguments(arguments: &[OsString]) -> Result<Route, String> {
     let mut remaining = arguments.iter();
 
     while let Some(argument) = remaining.next() {
-        let option = match argument.to_string_lossy().as_ref() {
-            "--claude" => "--claude",
-            "--codex" => "--codex",
-            "--wait" => "--wait",
-            "--help" => return Err("`--help` must be the only argument".to_owned()),
-            text => return Err(format!("Unknown argument `{text}`")),
-        };
+        let text = argument.to_string_lossy();
+
+        if text == "--help" {
+            return Err("`--help` must be the only argument".to_owned());
+        }
+
+        let option = *OPTIONS
+            .iter()
+            .find(|option| **option == text)
+            .ok_or_else(|| format!("Unknown argument `{text}`"))?;
         let value = remaining
             .next()
             .ok_or_else(|| format!("`{option}` requires a value"))?
@@ -248,19 +252,21 @@ fn home_directory() -> Result<PathBuf, String> {
         .ok_or_else(|| "`HOME` is not set".to_owned())
 }
 
+// The upstream error follows its context unchanged, after one blank line
+fn read_failure(path: &Path, error: &io::Error) -> String {
+    format!("Failed to read `{}`:\n\n{error}", path.display())
+}
+
 fn child_directories(directory: &Path) -> Result<Vec<PathBuf>, String> {
     let entries = match fs::read_dir(directory) {
         Ok(entries) => entries,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => {
-            return Err(format!("Failed to read `{}`: {error}", directory.display()));
-        }
+        Err(error) => return Err(read_failure(directory, &error)),
     };
     let mut directories = Vec::new();
 
     for entry in entries {
-        let failure =
-            |error: io::Error| format!("Failed to read `{}`: {error}", directory.display());
+        let failure = |error: io::Error| read_failure(directory, &error);
         let entry = entry.map_err(failure)?;
 
         if entry.file_type().map_err(failure)?.is_dir() {
@@ -294,46 +300,50 @@ fn find_rollout(sessions: &Path, uuid: &str) -> Result<Option<PathBuf>, String> 
     }
 }
 
+fn is_rollout(path: &Path, suffix: &str) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.starts_with("rollout-") && name.ends_with(suffix))
+}
+
+// Sorted paths keep the result, and the first reported failure, the same for unchanged files
+fn sorted_entries(directory: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut paths = fs::read_dir(directory)
+        .and_then(|entries| {
+            entries
+                .map(|entry| entry.map(|entry| entry.path()))
+                .collect::<io::Result<Vec<PathBuf>>>()
+        })
+        .map_err(|error| read_failure(directory, &error))?;
+
+    paths.sort();
+    Ok(paths)
+}
+
 fn rollouts(sessions: &Path, suffix: &str) -> Result<Vec<PathBuf>, String> {
     let mut matches = Vec::new();
 
     for day in date_directories(sessions)? {
-        for entry in fs::read_dir(&day)
-            .map_err(|error| format!("Failed to read `{}`: {error}", day.display()))?
-        {
-            let path = entry
-                .map_err(|error| format!("Failed to read `{}`: {error}", day.display()))?
-                .path();
-
-            if path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.starts_with("rollout-") && name.ends_with(suffix))
-            {
-                matches.push(path);
-            }
-        }
+        matches.extend(
+            sorted_entries(&day)?
+                .into_iter()
+                .filter(|path| is_rollout(path, suffix)),
+        );
     }
 
     Ok(matches)
 }
 
 fn find_transcript(projects: &Path, uuid: &str) -> Result<Option<PathBuf>, String> {
-    let entries = match fs::read_dir(projects) {
-        Ok(entries) => entries,
+    let projects_entries = match fs::metadata(projects) {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
-        Err(error) => {
-            return Err(format!("Failed to read `{}`: {error}", projects.display()));
-        }
+        _ => sorted_entries(projects)?,
     };
     let name = format!("{uuid}.jsonl");
     let mut matches = Vec::new();
 
-    for entry in entries {
-        let candidate = entry
-            .map_err(|error| format!("Failed to read `{}`: {error}", projects.display()))?
-            .path()
-            .join(&name);
+    for project in projects_entries {
+        let candidate = project.join(&name);
 
         match fs::metadata(&candidate) {
             Ok(metadata) if metadata.is_file() => matches.push(candidate),
@@ -344,9 +354,7 @@ fn find_transcript(projects: &Path, uuid: &str) -> Result<Option<PathBuf>, Strin
                     error.kind(),
                     io::ErrorKind::NotADirectory | io::ErrorKind::NotFound
                 ) => {}
-            Err(error) => {
-                return Err(format!("Failed to read `{}`: {error}", candidate.display()));
-            }
+            Err(error) => return Err(read_failure(&candidate, &error)),
         }
     }
 
@@ -357,8 +365,7 @@ fn find_transcript(projects: &Path, uuid: &str) -> Result<Option<PathBuf>, Strin
 }
 
 fn read_records(path: &Path) -> Result<Vec<Value>, String> {
-    let bytes =
-        fs::read(path).map_err(|error| format!("Failed to read `{}`: {error}", path.display()))?;
+    let bytes = fs::read(path).map_err(|error| read_failure(path, &error))?;
     let mut lines: Vec<&[u8]> = bytes.split(|byte| *byte == b'\n').collect();
 
     // An unterminated final record may still be in progress, so a later check reads it
@@ -384,36 +391,25 @@ fn read_records(path: &Path) -> Result<Vec<Value>, String> {
 
 fn subagent_transcripts(transcript: &Path) -> Result<Vec<PathBuf>, String> {
     let directory = transcript.with_extension("").join("subagents");
-    let entries = match fs::read_dir(&directory) {
-        Ok(entries) => entries,
+    let paths = match fs::metadata(&directory) {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => {
-            return Err(format!("Failed to read `{}`: {error}", directory.display()));
-        }
+        _ => sorted_entries(&directory)?,
     };
-    let mut paths = Vec::new();
 
-    for entry in entries {
-        let path = entry
-            .map_err(|error| format!("Failed to read `{}`: {error}", directory.display()))?
-            .path();
-
-        if path
-            .extension()
-            .is_some_and(|extension| extension == "jsonl")
-        {
-            paths.push(path);
-        }
-    }
-
-    Ok(paths)
+    Ok(paths
+        .into_iter()
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "jsonl")
+        })
+        .collect())
 }
 
 fn modified(path: &Path) -> Result<u64, String> {
     fs::metadata(path)
         .and_then(|metadata| metadata.modified())
         .map(millis)
-        .map_err(|error| format!("Failed to read `{}`: {error}", path.display()))
+        .map_err(|error| read_failure(path, &error))
 }
 
 // Any write by the session or its subagents counts as progress. Older subagent transcripts were
@@ -426,7 +422,7 @@ fn latest_write(transcript: &Path) -> Result<u64, String> {
         match fs::metadata(&path).and_then(|metadata| metadata.modified()) {
             Ok(time) => latest = latest.max(millis(time)),
             Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(format!("Failed to read `{}`: {error}", path.display())),
+            Err(error) => return Err(read_failure(&path, &error)),
         }
     }
 
@@ -590,7 +586,7 @@ fn read_listing() -> Result<Vec<Value>, String> {
         .args(["agents", "--json", "--all"])
         .stdin(Stdio::null())
         .output()
-        .map_err(|error| format!("Failed to run `claude agents`: {error}"))?;
+        .map_err(|error| format!("Failed to run `claude agents`:\n\n{error}"))?;
 
     if !output.status.success() {
         return Err(format!("`claude agents` failed with {}", output.status));
@@ -736,7 +732,7 @@ fn codex_reply(record: &Value) -> Option<&str> {
 // Returns the first record once its line is complete, so a file still being created or removed is
 // skipped until a later check. A complete line that is not JSON identifies no session
 fn first_record(path: &Path) -> Result<Option<Value>, String> {
-    let failure = |error: io::Error| format!("Failed to read `{}`: {error}", path.display());
+    let failure = |error: io::Error| read_failure(path, &error);
     let mut line = Vec::new();
     let file = match fs::File::open(path) {
         Ok(file) => file,
@@ -773,18 +769,10 @@ fn latest_codex_write(
         .iter()
         .map(PathBuf::as_path)
         .chain(root.parent())
-        .collect::<HashSet<&Path>>()
+        .collect::<BTreeSet<&Path>>()
     {
-        let failure = |error: io::Error| format!("Failed to read `{}`: {error}", day.display());
-
-        for entry in fs::read_dir(day).map_err(failure)? {
-            let path = entry.map_err(failure)?.path();
-
-            if path == root
-                || path
-                    .extension()
-                    .is_none_or(|extension| extension != "jsonl")
-            {
+        for path in sorted_entries(day)? {
+            if path == root || !is_rollout(&path, ".jsonl") {
                 continue;
             }
 
@@ -808,9 +796,7 @@ fn latest_codex_write(
                 match fs::metadata(&path).and_then(|metadata| metadata.modified()) {
                     Ok(time) => latest = latest.max(millis(time)),
                     Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-                    Err(error) => {
-                        return Err(format!("Failed to read `{}`: {error}", path.display()));
-                    }
+                    Err(error) => return Err(read_failure(&path, &error)),
                 }
             }
         }
@@ -874,12 +860,12 @@ fn observe_codex(
 fn read_transcript(
     session: &Session,
     home: &Result<PathBuf, String>,
+    sessions: &Path,
 ) -> Result<Option<Transcript>, String> {
     let home = home.as_ref()?;
-    let sessions = home.join(".codex/sessions");
     let found = match session.provider {
         Provider::Claude => find_transcript(&home.join(".claude/projects"), &session.uuid)?,
-        Provider::Codex => find_rollout(&sessions, &session.uuid)?,
+        Provider::Codex => find_rollout(sessions, &session.uuid)?,
     };
     let Some(path) = found else {
         // Only a fresh launch may precede its transcript, because a follow-up appends to it.
@@ -887,7 +873,7 @@ fn read_transcript(
         // file before appending, so a compressed-only rollout is still pending
         if session.since == 0
             || (matches!(session.provider, Provider::Codex)
-                && !rollouts(&sessions, &format!("-{}.jsonl.zst", session.uuid))?.is_empty())
+                && !rollouts(sessions, &format!("-{}.jsonl.zst", session.uuid))?.is_empty())
         {
             return Ok(None);
         }
@@ -919,13 +905,10 @@ fn read_transcript(
 fn observe_turn(
     transcript: &Transcript,
     turn: Turn<'_>,
-    rows: Option<&Result<Vec<Value>, String>>,
+    rows: &Result<Vec<Value>, String>,
     uuid: &str,
 ) -> Result<Signal, String> {
-    let rows = rows
-        .ok_or_else(|| "The session lookup did not run".to_owned())?
-        .as_ref()
-        .map_err(String::clone)?;
+    let rows = rows.as_ref().map_err(String::clone)?;
 
     match decide(
         turn,
@@ -995,38 +978,34 @@ fn observe(options: &Options) -> String {
         vec![HashMap::new(); options.sessions.len()];
     let mut checked_at: Option<Instant> = None;
     let mut looked_up: Vec<Option<usize>> = vec![None; options.sessions.len()];
-    let mut rows: Option<Result<Vec<Value>, String>> = None;
+    // The first poll with a turn always looks the sessions up, so no turn sees this empty value
+    let mut rows: Result<Vec<Value>, String> = Ok(Vec::new());
 
     loop {
         let transcripts: Vec<Result<Option<Transcript>, String>> = options
             .sessions
             .iter()
-            .map(|session| read_transcript(session, &home))
-            .collect();
-        let claude_anchor =
-            |session: &Session, transcript: &Result<Option<Transcript>, String>| match (
-                session.provider,
-                transcript,
-            ) {
-                (Provider::Claude, Ok(Some(transcript))) => transcript.anchor,
-                _ => None,
-            };
-        let turns: Vec<Option<Turn<'_>>> = options
-            .sessions
-            .iter()
-            .zip(&transcripts)
-            .map(|(session, transcript)| {
-                let anchor = claude_anchor(session, transcript)?;
-                let records = &transcript.as_ref().ok()?.as_ref()?.records;
-
-                Some(analyze_turn(&records[anchor + 1..]))
-            })
+            .map(|session| read_transcript(session, &home, &sessions_directory))
             .collect();
         let anchors: Vec<Option<usize>> = options
             .sessions
             .iter()
             .zip(&transcripts)
-            .map(|(session, transcript)| claude_anchor(session, transcript))
+            .map(
+                |(session, transcript)| match (session.provider, transcript) {
+                    (Provider::Claude, Ok(Some(transcript))) => transcript.anchor,
+                    _ => None,
+                },
+            )
+            .collect();
+        let turns: Vec<Option<Turn<'_>>> = anchors
+            .iter()
+            .zip(&transcripts)
+            .map(|(anchor, transcript)| {
+                let records = &transcript.as_ref().ok()?.as_ref()?.records;
+
+                Some(analyze_turn(&records[(*anchor)? + 1..]))
+            })
             .collect();
 
         // One lookup serves every session. A closed turn without pending work needs fresh session
@@ -1041,7 +1020,7 @@ fn observe(options: &Options) -> String {
                             .any(|turn| turn.closed && !turn.pending_work)
                 }))
         {
-            rows = Some(read_listing());
+            rows = read_listing();
             checked_at = Some(Instant::now());
             looked_up = anchors;
         }
@@ -1065,7 +1044,7 @@ fn observe(options: &Options) -> String {
                 };
                 let signal = match (session.provider, transcript.anchor, turn) {
                     (Provider::Claude, _, Some(turn)) => {
-                        observe_turn(transcript, turn, rows.as_ref(), &session.uuid)
+                        observe_turn(transcript, turn, &rows, &session.uuid)
                     }
                     (Provider::Codex, Some(anchor), _) => observe_codex(
                         transcript,
@@ -1124,7 +1103,7 @@ fn main() -> ExitCode {
                 .and_then(|()| stdout.flush())
             {
                 Ok(()) => return ExitCode::SUCCESS,
-                Err(error) => format!("Failed to write to standard output: {error}"),
+                Err(error) => format!("Failed to write to standard output:\n\n{error}"),
             }
         }
         Err(diagnostic) => diagnostic,
