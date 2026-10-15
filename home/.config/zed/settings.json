@@ -20,8 +20,24 @@
 		"button": false
 	},
 	"context_servers": {
+		"chrome": {
+			"command": "pnpm",
+			"args": [
+				"dlx",
+				"chrome-devtools-mcp@latest",
+				"--isolated",
+				"--no-performance-crux",
+				"--no-usage-statistics"
+			]
+		},
 		"grep": {
 			"url": "https://mcp.grep.app"
+		},
+		"safari": {
+			"command": "safaridriver",
+			"args": [
+				"--mcp"
+			]
 		}
 	},
 	"debugger": {
@@ -215,6 +231,7 @@
 			"allow_all_hosts": true,
 			"write_paths": [
 				"/private/tmp",
+				"/tmp",
 				"/Users/dom/.agents",
 				"/Users/dom/.cache",
 				"/Users/dom/.cargo",
