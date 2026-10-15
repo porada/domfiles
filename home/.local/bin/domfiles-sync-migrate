@@ -35,6 +35,14 @@ for skill in \
   done
 done
 
+# Remove legacy `pnpm` store config
+if __is_callable node && __is_callable pnpm; then
+  if [ "$(pnpm config get --global store-dir)" = "$HOME/Library/pnpm/store" ]; then
+    __print_heading_dimmed 'Removing legacy `pnpm` store config'
+    __ pnpm config delete --global store-dir
+  fi
+fi
+
 # Rename Standard Config projects
 renamed_projects=false
 

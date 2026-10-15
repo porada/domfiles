@@ -82,7 +82,6 @@ fi
 # Configure `pnpm`
 if __is_callable node && __is_callable pnpm; then
   __print_heading_dimmed 'Configuring `pnpm`'
-  __ pnpm config set --global store-dir "$HOME/Library/pnpm/store"
   __ pnpm config set --global macosBackup --json '{
   "excludeModulesDir": true,
   "excludeStoreDir": true

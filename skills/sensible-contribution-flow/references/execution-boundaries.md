@@ -32,7 +32,7 @@ Classify actual effects rather than labels such as discovery, inspection, or val
 
 Prefer established repository entrypoints and tool versions. For incidental execution, suppress optional startup files, environment-selected configuration, hooks, and plugins unless that configured behavior is in scope or required by the repository workflow. Preserve required commit hooks, package integrity checks, signing, and trust controls. Suppressing optional inspection helpers is not a substitute for a sandbox.
 
-Use supported permission mechanisms. Request the narrowest necessary grant, and treat it as capability only for the task-authorized effect. Never bypass approvals, change execution identity or privilege, disable a security control, or activate untrusted directory-local startup configuration. If the task requires such a change, provide instructions for the user rather than performing it. Bound long-running checks and report timeouts instead of claiming completion.
+Use supported permission mechanisms. Request the narrowest necessary grant, and treat it as capability only for the task-authorized effect. Never bypass approvals, change execution identity or privilege, disable a security control, or activate untrusted directory-local startup configuration. If the task requires such a change, provide instructions for the user rather than performing it. Only a direct user request for that exact change permits disabling a security control in the user’s own configuration. Bound long-running checks and report timeouts instead of claiming completion.
 
 ## Handle Dependencies and Protected Content
 
