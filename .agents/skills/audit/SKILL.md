@@ -21,7 +21,7 @@ The table lists higher-precedence rules first. Apply publication audit scope whe
 | Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from its regular files rather than the active checkout, and exclude every untracked or ignored path, including `home/.config/fish/local.fish`. Apply the [publication audit requirements](#inspect-publication-audit-trees). |
 | Default scope | Start with Git-tracked regular files, exclude symbolic links and untracked or ignored paths except `home/.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
-1. Read every applicable `AGENTS.md` file before reviewing any other repository content. Consult `.agents/PROJECT.md` for relevant project rationale before resolving the audit scope.
+1. Read every applicable `AGENTS.md` file before reviewing any other repository content.
 2. Apply the precedence table above to resolve the reportable scope.
 3. Exclude these paths in publication audit mode and in every default repository scope, including `/audit` without an explicit scope. An explicit exhaustive scope such as “every tracked file” includes them, subject to the security exclusions above:
     - `home/.config/zed/settings.json` and `.zed/settings.json` otherwise require explicit inclusion of either file or Zed settings.
@@ -39,7 +39,7 @@ For every path in the reportable scope:
 
 - Check for redundancies, inconsistencies, typos, and structural or type issues.
 - Ensure there is no dead or unused code.
-- Report any cases where in-scope code reimplements behavior already available in the language, standard library, or existing shared utilities in this repository. When the audit has a comparison baseline, apply this check specifically to new code.
+- Report code that reimplements behavior already available in the language, standard library, or existing shared utilities in this repository. When the audit has a comparison baseline, apply this check specifically to new code.
 - Include comments and documentation in the analysis. Report factual claims in comments or documentation that no longer match current repository behavior, the supported environment, or applicable project rationale, or that no longer make sense in their current context.
 - Report documentation that duplicates durable details or violates the [documented authority and ownership boundaries](../../../AGENTS.md#agent-documentation).
 - Apply every relevant repository instruction and loaded domain skill policy, treating domain skills as supplements for domain-specific checks and verification rather than separate audit workflows.
@@ -50,9 +50,12 @@ For every path in the reportable scope:
 - Do not report findings outside the reportable scope.
 - Base findings on the current repository contents under review. When current behavior must be verified, use authoritative installed tool behavior or official documentation and source as supporting evidence.
 - Never speculate about intent or hypothetical implementations.
-- Do not stop after individual findings. Continue until the entire scope has been reviewed, then report all findings together.
 
 ## Report Audit Results
+
+Before reporting a finding, check `.agents/PROJECT.md` for project rationale that explains or settles it.
+
+Continue until the entire scope has been reviewed, then report all findings together.
 
 Follow the global [communication](../../GLOBAL.md#communication) and [**Findings**](../../GLOBAL.md#documentation) requirements, then:
 

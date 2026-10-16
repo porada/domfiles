@@ -17,7 +17,7 @@ const LISTING_INTERVAL_MS = 10_000;
 const MAX_WAIT_SECONDS = 90;
 const NAME = 'subagent-signal';
 
-// The value options the parser accepts beside `--help`, which the help must
+// The value options the parser accepts other than `--help`, which the help must
 // document exactly
 export const OPTIONS = ['--claude', '--codex', '--wait'] as const;
 

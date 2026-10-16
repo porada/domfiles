@@ -5,7 +5,11 @@
 	},
 	"autoDreamEnabled": false,
 	"autoMemoryEnabled": false,
+	"awaySummaryEnabled": false,
 	"enableArtifact": false,
+	"env": {
+		"CLAUDE_CODE_DISABLE_MOUSE": "1"
+	},
 	"includeGitInstructions": false,
 	"model": "opus",
 	"modelSettings": {
