@@ -11,6 +11,8 @@ fi
 sync_repository=false
 
 if __is_callable git; then
+  __print_heading 'Syncing domfiles'
+
   if branch="$(git -C "$DOMFILES" symbolic-ref --quiet --short HEAD)"; then
     case "$branch" in
       main | master)
@@ -34,8 +36,6 @@ fi
 if [ "$sync_repository" = true ]; then
   stash_failed=false
   stashed_changes=false
-
-  __print_heading 'Syncing domfiles'
 
   # Ensure the remote uses SSH
   if __is_ssh_configured; then
