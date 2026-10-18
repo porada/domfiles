@@ -179,6 +179,10 @@ Client-specific installation roots and differing canonical and installed basenam
 
 Edits to an exposed global skill affect its installation through the symlink and may change agent behavior across projects. The [skill synchronization policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#synchronize-skill-links) owns live link reconciliation after discovery changes. [`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup for future synchronization rather than compatibility aliases, so clients discover each logical skill once.
 
+### Skill Security Scans
+
+[skills.sh](https://www.skills.sh/porada/domfiles) publishes third-party security audits for each public skill, including Snyk Agent Scan. Snyk’s [W011 check](https://github.com/snyk/agent-scan/blob/main/docs/issue-codes.md#W011) warns when a skill appears to expose the agent to outsider-authored content, such as GitHub issues and pull requests. The [`human-facing-writing`](../skills/human-facing-writing/SKILL.md) description and its [GitHub Collaboration route](../skills/human-facing-writing/SKILL.md#specialized-routes) therefore present that surface as copy within the authorized writing unit rather than as threads the agent reads, without narrowing the [trigger boundaries](../skills/.domfiles-skill-development/references/skill-descriptions.md#invocation-mode). This wording is intended to avoid the warning, but its effect on the scan is unverified. Skills whose workflows read outsider-authored content rely on their instruction authority boundary instead.
+
 ### Verify Findings Skill
 
 The user-selected [`verify-findings`](../skills/verify-findings/SKILL.md) name favors an intuitive action over avoiding an existing descriptive name on skills.sh.
