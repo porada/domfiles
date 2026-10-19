@@ -22,6 +22,6 @@ Apply these release scope exclusions before using a mapping:
 
 For every other listed package, wrap its complete code-formatted reference in a link to the exact mapped destination.
 
-Keep every unlisted package name backticked and unlinked. Do not infer or search for an unlisted mapping during the release note task.
+Keep every unlisted package name backticked and unlinked. Don’t infer or search for an unlisted mapping during the release note task.
 
 This map governs package name links only. Continue to link advisories, migrations, specifications, pull requests, and other non-package evidence when the link helps consumers understand the change.

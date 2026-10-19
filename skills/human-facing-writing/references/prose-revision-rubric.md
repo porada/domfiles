@@ -21,7 +21,7 @@ Use a rating only when it helps explain a material finding. Tie it to an observa
 
 Start by identifying the implied reader, what brings them to the work, the experience or change it promises, and how soon that promise becomes recognizable.
 
-Watch for background before purpose, mystery without useful curiosity, interest the work assumes without earning, or an opening promise the body does not fulfill.
+Watch for background before purpose, mystery without useful curiosity, interest the work assumes without earning, or an opening promise the body doesn’t fulfill.
 
 ### 2. Controlling Movement and Necessary Nuance
 
@@ -37,7 +37,7 @@ Watch for interchangeable parts, chronology without purpose, examples without in
 
 ### 4. Paragraph Function and Transitions
 
-Identify each paragraph’s primary job and whether it has enough development to complete it. Read the logical relationship between adjacent paragraphs even when no transition phrase makes the relationship explicit.
+Identify each paragraph’s primary job and whether it has enough development to complete it. Trace the logical relationship between adjacent paragraphs even when no transition phrase makes it explicit.
 
 Watch for mixed jobs, unsupported leaps hidden by short paragraphs, ornamental transitions, or fragments that imitate urgency without changing pace or meaning.
 
@@ -53,7 +53,7 @@ Distinguish accidental opacity from intentional ambiguity, complexity, or delaye
 
 Watch for vague references, stacked abstraction, inflated transitions, cleverness that obscures meaning, or brevity that makes a complex thought falsely simple.
 
-Look for abstract role names, actions expressed as nouns, and modifiers with an unstated reference point. Check whether these constructions leave readers to infer information the sentence needs to state. Words such as “canonical,” “invariant,” “surface,” and “verbatim” can be precise technical terms, but can also obscure a simple action or relationship. Judge their meaning in context, not their presence.
+Look for abstract role names, actions expressed as nouns, and modifiers with an unstated reference point. Check whether these constructions leave readers to infer information the sentence needs to state. Words such as “canonical,” “invariant,” “surface,” and “verbatim” can be precise technical terms, but they can also obscure a simple action or relationship. Judge their meaning in context, not their presence.
 
 ### 7. Rhythm, Pacing, and Emphasis
 

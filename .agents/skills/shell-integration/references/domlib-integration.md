@@ -14,13 +14,13 @@ When `domlib` or `home/.config/fish/config.fish` is relevant, inspect both files
 - Keep all functions defined in `domlib` alphabetized in natural order.
 - When a `domlib` function changes, keep its adjacent contract comment aligned with the resulting behavior.
 - Whenever a reusable `domlib` helper or its Fish counterpart is in scope, follow [Shared Helper Design](shared-helper-design.md).
-- Require every `$DOMFILES_*` variable defined in Fish configuration to have a same-named counterpart in `domlib`. Variables defined only in `domlib` require no Fish counterpart.
+- Require every `$DOMFILES_*` variable defined in Fish configuration to have a counterpart with the same name in `domlib`. Variables defined only in `domlib` don’t require a Fish counterpart.
 
 ## Apply `domlib` Reporting Rules
 
-- Search repository-wide call sites before reporting a `domlib` function or variable as unused. More than one call site is sufficient reuse and must not be reported on usage count grounds.
+- Search repository-wide call sites before reporting a `domlib` function or variable as unused. A function or variable with more than one call site has sufficient reuse, so don’t report it on usage count grounds.
 - Report unused functions or variables defined in `domlib`.
-    - Do not treat a `domlib` variable as unused when it exists solely as the required counterpart to a Fish-defined variable.
+    - Don’t treat a `domlib` variable as unused when it exists solely as the required counterpart to a Fish-defined variable.
 - Report every POSIX shell function prefixed with `__` when it is defined outside `domlib`.
 
 ## Apply `domlib`-Specific POSIX Conventions
@@ -32,4 +32,4 @@ When `domlib` or `home/.config/fish/config.fish` is relevant, inspect both files
 
 ## Validate `domlib`
 
-When `domlib` is in scope, verify every function has an adjacent contract comment and its comment prose stays within 80 columns.
+When `domlib` is in scope, verify that every function has an adjacent contract comment and that the comment prose stays within 80 columns.

@@ -10,7 +10,7 @@ Apply the [function documentation contract](../SKILL.md#function-documentation) 
 
 Put an autoloaded function named `<function-name>` in `<function-name>.fish` within `$fish_function_path`, and treat it as that file’s owner. Put every other exposed function in its own matching autoload file. Replace each `-` in `<function-name>` with `_` to derive `<function-namespace>`. Choose a stable underscore-form `<owner>` namespace token for the owning tool or configuration rather than deriving it mechanically from its name. The token must be unique in the target Fish function namespace. Outside source maintained by Fish itself, `<owner>` must neither equal `fish` nor begin with `fish_`, keeping generated names outside the [Fish-owned `__fish_` namespace](fish-native-idioms.md#runtime-state). Prefix every private helper owned by the function with `__<owner>_<function-namespace>_`. Within one `<owner>`, no two helper-owning functions may derive the same `<function-namespace>`. For example, private helpers for `start-app` under owner `app_tools` use names such as `__app_tools_start_app_find_root`, while a `fish_prompt` under owner `shell_theme` uses `__shell_theme_fish_prompt_git`.
 
-Fish first loads the file when resolving the matching function name and automatically reloads a changed definition after detecting the change. A helper does not independently trigger the initial load. Once loaded, every function in the file remains callable by name. Fish omits underscore-prefixed names from the default `functions` listing, but the prefix is an internal-use and namespace convention rather than access control.
+Fish first loads the file when resolving the matching function name and automatically reloads a changed definition after detecting the change. A helper doesn’t independently trigger the initial load. Once loaded, every function in the file remains callable by name. Fish omits underscore-prefixed names from the default `functions` listing, but the prefix is a convention for internal use and namespacing rather than access control.
 
 Put a shared helper that must autoload independently in its own matching file. When no single function owns it, use `__<owner>_` followed by a role-specific name instead of assigning it a `<function-namespace>`.
 
@@ -33,7 +33,7 @@ or return
 - Use `--min-args` and `--max-args` to set the accepted number of positional arguments. Repeat `--exclusive` for each set of incompatible options.
 - Use `--name` when diagnostics must identify a stable public interface rather than the current helper function. Otherwise, keep the default function name.
 - Use `--strict-longopts` when abbreviated or single-dash long options are outside the interface.
-- Use option validators for constraints on individual option values. Validate relationships between positional arguments, rules spanning several options, and other command semantics after parsing when they do not belong to one option value.
+- Use option validators for constraints on individual option values. Validate relationships between positional arguments, rules spanning several options, and other command semantics after parsing when they don’t belong to one option value.
 - Write validator error fragments to standard output because `argparse` consumes them. `argparse` reports the resulting failure to standard error.
 
 Return immediately when parsing fails unless the function deliberately translates the parser’s diagnostic or status contract.
@@ -58,7 +58,7 @@ When wrapping an external program, invoke it through `command` and forward `$arg
 
 When an alias’s name matches the first word of its body, Fish prefixes that word with `command`, or with `builtin` for a builtin. The alias then replaces a function Fish ships under that name, such as `ls`, instead of extending it. Use an abbreviation when the shipped function must still run.
 
-Before rewriting a delegated command’s arguments, establish which input forms the wrapper supports. Validate `--` handling, abbreviated and full option names, and attached and separate option values against that declared interface. Keep supported arguments as separate list elements, and reject unsupported forms before rewriting rather than partially parsing them and forwarding an altered command.
+Before rewriting a delegated command’s arguments, establish which input forms the wrapper supports. Validate `--` handling, abbreviated and full option names, and attached and separate option values against that declared interface. Keep supported arguments as separate list elements, and reject unsupported forms before rewriting. Don’t partially parse them and forward an altered command.
 
 When a wrapper takes over a command’s terminal presentation, preserve the configuration and environment variable precedence required by its declared interface. Check empty and unset values separately because they may select different behavior. Prefer the underlying command’s supported resolver when it supplies that behavior rather than duplicating its resolution logic.
 
@@ -70,7 +70,7 @@ When a wrapper takes over a command’s terminal presentation, preserve the conf
 
 ## Performance Profiling
 
-With explicit authorization to create profile artifacts, use `fish --profile=<path>` to measure commands executed after startup and `fish --profile-startup=<path>` to measure startup and configuration loading. Cache only measured repeated work with a defined validity and invalidation contract. Do not add mutable cache state merely because a path is performance-sensitive.
+With explicit authorization to create profile artifacts, use `fish --profile=<path>` to measure commands executed after startup and `fish --profile-startup=<path>` to measure startup and configuration loading. Cache only measured repeated work with a defined validity and invalidation contract. Don’t add mutable cache state merely because a path is performance-sensitive.
 
 ## Official Sources
 

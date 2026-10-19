@@ -4,7 +4,7 @@ Use technical copy evidence and reader-facing terminology to shape declaration-l
 
 ## Scope
 
-Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. This reference governs their wording and editorial review. Do not generalize family-wide coverage or JSDoc syntax from one language or project.
+Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. This reference governs their wording and editorial review. Don’t generalize family-wide coverage or JSDoc syntax from one language or project.
 
 Alongside the technical copy workflow’s [evidence requirements](technical-copy.md#evidence), inspect each declaration’s call sites, declared types, and surrounding comments before composing or propagating wording. For a requested module or family pass, complete the in-scope coverage before reviewing the family as a whole.
 
@@ -26,17 +26,17 @@ Add scope, defaults, fallback, precedence, exceptions, or deprecation guidance o
 
 Preserve semantic precision even when a shorter or more familiar phrase sounds smoother. Distinctions such as current versus legacy, direct versus inherited, or shared versus owned may carry the reason a helper exists.
 
-Under the technical copy workflow’s [composition guidance](technical-copy.md#composition), include implementation mechanics only when callers rely on them as contract. Omit cache keys, object identity, restoration steps, filtering mechanics, and similar details that merely restate the body.
+Under the technical copy workflow’s [composition guidance](technical-copy.md#composition), include implementation mechanics only when callers rely on them as part of the contract. Omit cache keys, object identity, restoration steps, filtering mechanics, and similar details that merely restate the body.
 
-Prefer the behavioral reason for an operation when names and types already expose its mechanics. Explain compatibility, recursion prevention, delegation, or another meaningful consequence when that is the helper’s significance. Keep detail proportional to neighboring comments. A technically complete comment is still editorially wrong when it makes a small helper sound uniquely complicated.
+Prefer the behavioral reason for an operation when names and types already expose its mechanics. Explain compatibility, recursion prevention, delegation, or another meaningful consequence when that’s the helper’s significance. Keep detail proportional to neighboring comments. A technically complete comment is still editorially wrong when it makes a small helper sound uniquely complicated.
 
 ## Related Comments
 
 For an explicitly requested family pass, select one evidence-backed canonical comment and propagate it directly. Ask before propagation only when a subjective choice leaves material intent unresolved by project policy, evidence, or a user decision.
 
-Use parallel grammar and abstraction for genuinely parallel helpers, changing only the domain-specific terms. Do not force symmetry when responsibilities differ.
+Use parallel grammar and abstraction for genuinely parallel helpers, changing only the domain-specific terms. Don’t force symmetry when responsibilities differ.
 
-Previously acceptable local wording may require revision when it becomes inconsistent beside the propagated family. Give each related helper its particular role in the larger control flow rather than an interchangeable purpose comment.
+Previously acceptable local wording may require revision when it becomes inconsistent beside the propagated family. Describe each related helper’s particular role in the larger control flow rather than giving it an interchangeable purpose comment.
 
 ## Presentation
 
@@ -48,7 +48,7 @@ When neither project policy nor formatter configuration defines tab width, count
 
 Rephrase to improve a wrap only when the meaning remains exact. Never remove a semantically important word or introduce an inaccurate synonym merely to shape the lines.
 
-When documentation review exposes an unnecessarily long internal name, report the resulting wrapping constraint. Propose a focused rename and explain its value only when identifier design or source changes are explicitly in scope. Do not rename source unless the current task authorizes that code change.
+When documentation review exposes an unnecessarily long internal name, report the resulting wrapping constraint. Propose a focused rename and explain its value only when identifier design or source changes are explicitly in scope. Don’t rename source unless the current task authorizes that code change.
 
 ## Validation
 

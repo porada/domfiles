@@ -4,7 +4,7 @@
 
 Treat a project-authored skill as **command-only** when it sets `disable-model-invocation: true`, and as **model-invocable** otherwise.
 
-For every model-invocable project-authored skill, preserve complete positive and negative trigger boundaries and precedence conditions, and state them as direct reasons to load the skill. Include a peer name only when it defines one such condition. Do not make loading depend on whether the task already exhibits a quality the skill enforces, such as being “focused,” “simple,” “safe,” or “bounded.”
+For every model-invocable project-authored skill, preserve complete positive and negative trigger boundaries and precedence conditions, and state them as direct reasons to load the skill. Include a peer name only when it defines one such condition. Don’t make loading depend on whether the task already exhibits a quality the skill enforces, such as being “focused,” “simple,” “safe,” or “bounded.”
 
 For every command-only project-authored skill, write concise human-facing UI copy instead. Lead with the action and outcome, add only task scope or exclusions that distinguish the command, and omit the invocation condition and literal slash command.
 
@@ -12,13 +12,13 @@ When a description advertises review or audit, define an explicit read-only bran
 
 ## Description and Body
 
-For internal and global skills, keep necessary implementation details, operational guidance, rationale, and workflows in the body, including behavioral defaults, validation, optional composition, and internal workflow. Do not let the body merely paraphrase the description’s trigger or exclusion. For model-invocable skills in these categories, also move capability exposition, behavior, and outputs from the description to the body, and remove body text that only repeats why the skill loaded.
+For internal and global skills, keep necessary implementation details, operational guidance, rationale, and workflows in the body, including behavioral defaults, validation, optional composition, and internal workflow. Don’t let the body merely paraphrase the description’s trigger or exclusion. For model-invocable skills in these categories, also move capability explanations, behavior, and outputs from the description to the body, and remove body text that only repeats why the skill loaded.
 
 For public skills in either invocation mode, also apply the [public description additions](public-skill-portability.md#keep-public-descriptions-portable).
 
 ## Composition and Exclusions
 
-Treat two skills matching one task as ordinary composition. Narrow a description only when the skills state contradictory rules for the same decision or duplicate one normative rule, and prefer a deferral clause naming the sibling over an exclusion that removes the surface. An exclusion that ends a correct overlap fails silently, because the skill simply stops loading.
+Treat two skills matching one task as ordinary composition. Narrow a description only when the skills state contradictory rules for the same decision or duplicate one normative rule. Prefer a deferral clause naming the sibling over an exclusion that removes the surface. An exclusion that ends a correct overlap fails silently because the skill simply stops loading.
 
 Before adding or retaining a description exclusion, search project-authored skills for explicit routes that compose the excluded skill or surface. When the broad skill remains independently useful, place domain-specific non-composition policy in the narrower workflow rather than excluding the domain from the broad skill.
 

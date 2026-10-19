@@ -4,9 +4,9 @@ Choose each function, sourcing, and process boundary according to the state and 
 
 ## Function State
 
-POSIX does not define `local`. Use a subshell-bodied function when assignments, directory changes, shell options, traps, file descriptors, or the file creation mask must not affect the caller.
+POSIX doesn’t define `local`. Use a subshell-bodied function when assignments, directory changes, shell options, traps, file descriptors, or the file creation mask must not affect the caller.
 
-`exit` executed while a subshell-bodied function’s own subshell is the active execution environment terminates that function subshell. On direct invocation of the function, the resulting status returns to its caller, whose own error handling may still terminate the caller’s shell. An `exit` in a nested subshell or command substitution terminates only that nested environment. This containment describes process behavior and does not create an exception to the function-level [output and status rule](#output-and-status).
+When a subshell-bodied function’s own subshell is the active execution environment, `exit` terminates that subshell. On a direct function call, the resulting status returns to the caller, whose error handling may still terminate the caller’s shell. An `exit` in a nested subshell or command substitution terminates only that nested environment. This containment describes process behavior and doesn’t create an exception to the function-level [output and status rule](#output-and-status).
 
 ```sh
 run_make_in_directory() (
@@ -33,15 +33,15 @@ run_make_in_directory() (
 
 When a function intentionally changes caller state, make that behavior part of its interface and namespace every shared variable. Avoid generic library variables such as `result`, `status`, `file`, or `tmp`.
 
-Declare a function with the template `<name>() { …; }`, not with another shell’s `function` syntax. Do not prefix a POSIX shell function or special built-in invocation with a variable assignment. When a function needs temporary variable state, assign it explicitly inside a subshell. Assignment prefixes remain available for regular built-ins and external commands when their normal temporary environment is intended.
+Declare a function with the template `<name>() { …; }`, not with another shell’s `function` syntax. Don’t prefix a POSIX shell function or special built-in invocation with a variable assignment. When a function needs temporary variable state, assign it explicitly inside a subshell. Assignment prefixes remain available for regular built-ins and external commands when their normal temporary environment is intended.
 
 ## Sourced Interfaces
 
-Use `.`, not `source`. A sourceable file should normally define functions and documented variables without parsing the caller’s positional parameters, installing global traps, changing directories, enabling shell options, or running its main operation. Allow those effects only when the sourced interface declares them and every caller is evaluated against them.
+Use `.`, not `source`. A sourceable file should normally define functions and documented variables without parsing the caller’s positional parameters, installing global traps, changing directories, enabling shell options, or running its main operation. Allow those effects only when the sourced interface declares them and every caller has been checked against them.
 
 Separate reusable library definitions from an executable entrypoint when combining them would require a non-portable test for whether the file was sourced or executed.
 
-Do not assume `$0` identifies the entrypoint file. When `sh` finds a slashless command file through `PATH`, POSIX still sets `$0` to the original command file operand. Establish the library location through an installation contract, a caller-provided interface, or an invocation contract that guarantees `$0` denotes the actual file. Define the contract’s symlink behavior as well.
+Don’t assume `$0` identifies the entrypoint file. When `sh` finds a slashless command file through `PATH`, POSIX still sets `$0` to the original command file operand. Establish the library location through an installation contract, a caller-provided interface, or an invocation contract that guarantees `$0` denotes the actual file. Define the contract’s symlink behavior as well.
 
 ShellCheck’s `source` directive (`# shellcheck source=<path>`) serves static analysis rather than runtime loading. Add one only after the source belongs to the resolved validation scope, and keep it aligned with the runtime location contract.
 
@@ -59,7 +59,7 @@ A value-producing function writes only its value to standard output. When only s
 
 When a function’s contract requires a failed prerequisite to stop later work, handle that failure explicitly rather than relying on `set -e`. Validate a direct call first, then repeat in conditional contexts: an `if` condition, negation with `!`, and non-final positions in `&&` or `||` lists. Inject the failure before a later side effect, and verify both the absence of that effect and the required status after accounting for any caller-side inversion.
 
-Some commands use a non-zero status for a domain result rather than an operational error. Classify every documented status, and propagate unexpected values. Do not put the command behind `!` when the original status matters because `!` replaces it with the inverted result.
+Some commands use a non-zero status for a domain result rather than an operational error. Classify every documented status, and propagate unexpected values. Don’t put the command behind `!` when the original status matters because `!` replaces it with the inverted result.
 
 For example, `git merge-base --is-ancestor` returns `0` when the upstream commit is an ancestor of `HEAD`, `1` when it is not, and another status when the comparison fails:
 
@@ -98,10 +98,10 @@ Never use an externally influenced value as the format string.
 
 ## Terminal Destinations
 
-Test the file descriptor whose behavior will change. Use `[ -t 0 ]` for standard input decisions, `[ -t 1 ]` for standard output decisions, and `[ -t 2 ]` for diagnostics. One terminal descriptor does not imply that either of the others also refers to a terminal.
+Test the file descriptor whose behavior will change. Use `[ -t 0 ]` for standard input decisions, `[ -t 1 ]` for standard output decisions, and `[ -t 2 ]` for diagnostics. One terminal descriptor doesn’t imply that either of the others also refers to a terminal.
 
-Use a terminal test only when the script itself changes behavior. Gate script-controlled standard output paging, color, and terminal-fit calculations on `[ -t 1 ]`. Do not duplicate a command’s own automatic terminal behavior.
+Use a terminal test only when the script itself changes behavior. Gate script-controlled standard output paging, color, and terminal-fit calculations on `[ -t 1 ]`. Don’t duplicate a command’s own automatic terminal behavior.
 
-When standard output is not a terminal, avoid terminal size queries that cannot improve the redirected result.
+When standard output isn’t a terminal, avoid terminal size queries that can’t improve the redirected result.
 
 When a wrapper takes over a command’s terminal presentation, preserve the configuration and environment variable precedence required by its declared interface. Check empty and unset values separately because they may select different behavior. Prefer the underlying command’s supported resolver when it supplies that behavior rather than duplicating its resolution logic.

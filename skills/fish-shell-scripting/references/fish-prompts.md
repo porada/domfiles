@@ -18,7 +18,7 @@ Capture `$status` according to the [runtime state rules](fish-native-idioms.md#r
 
 Write only prompt content to standard output. Keep diagnostics, startup banners, and unrelated messages out of prompt functions. Keep version control and environment probes bounded. Prefer variables, builtins, and documented Fish helpers such as `prompt_pwd` and `prompt_hostname` when their behavior matches the design.
 
-Set and reset color or style at deliberate boundaries with `set_color` so one segment cannot alter another segment’s presentation accidentally. Treat literal labels, failure text, and user-facing symbols as human-facing text under the [human-facing text contract](../SKILL.md#human-facing-text). Pure control sequences and exact glyph tokens remain syntax or presentation data.
+Set and reset color or style at deliberate boundaries with `set_color` so one segment can’t accidentally alter another segment’s presentation. Treat literal labels, failure text, and user-facing symbols as human-facing text under the [human-facing text contract](../SKILL.md#human-facing-text). Pure control sequences and exact glyph tokens remain syntax or presentation data.
 
 ## Prompt States
 
@@ -29,7 +29,7 @@ Define and validate the behavior for both states of every distinction the design
 ## Validation
 
 - Check each supported state and layout, including local and remote sessions, root and non-root users, version control state present and absent, multi-line prompts, right prompts, mode prompts, and transient rendering.
-- Check inherited prompt color defaults in an interactive Fish process. A non-interactive `fish --command` invocation does not establish the interactive default theme state.
+- Check inherited prompt color defaults in an interactive Fish process. A non-interactive `fish --command` invocation doesn’t establish the interactive default theme state.
 - Confirm that prompt output remains absent from non-interactive startup paths.
 - Exercise successful and failed previous commands, including pipelines when the prompt renders `$pipestatus`. Confirm that no prompt operation replaces captured state before rendering it.
 - Inspect color and style boundaries and line endings in an interactive Fish session or an established prompt test harness.

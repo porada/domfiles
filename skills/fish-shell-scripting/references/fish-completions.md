@@ -12,7 +12,7 @@ Choose the registration target that matches how Fish resolves the completed comm
 
 Model every option and operand from the target command’s verified interface. Represent short, GNU-style long, and old-style options accurately, distinguishing required arguments, optional arguments, and positional operands. Use a condition only when applicability depends on state evaluated at completion time, such as the current command line, variables, command availability, or the filesystem, and keep each condition quiet and fast.
 
-Disable or force file completion deliberately because custom candidates do not disable file candidates by themselves. Use wrapped command completion only for a command name target whose relevant interface matches the delegated command. Fish ignores wrapping for `complete --path`.
+Disable or force file completion deliberately because custom candidates don’t disable file candidates by themselves. Use wrapped command completion only for a command name target whose relevant interface matches the delegated command. Fish ignores wrapping for `complete --path`.
 
 Descriptions supplied to `complete` are human-facing technical copy. Apply the [human-facing text contract](../SKILL.md#human-facing-text) and use the target command’s help terminology.
 
@@ -28,7 +28,7 @@ For dynamic candidates, pass the command substitution literally so it runs at co
 complete --command example --arguments '$(example candidates)'
 ```
 
-Do not write `--arguments "$(example candidates)"`. It runs the generator while the definition loads, then stores the output as an expression that Fish tokenizes and expands again at completion time. When a definition-time snapshot is intentional, serialize it explicitly as an escaped stored expression.
+Don’t write `--arguments "$(example candidates)"`. It runs the generator while the definition loads, then stores the output as an expression that Fish tokenizes and expands again at completion time. When you intend to capture a snapshot at definition time, serialize it explicitly as an escaped stored expression.
 
 Keep the two escaping boundaries distinct. First preserve the stored Fish expression, then escape any data that the completed command will interpret later.
 

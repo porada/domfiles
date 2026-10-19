@@ -10,13 +10,13 @@ Apply the applicable skill classification’s independent behavior requirement f
 
 Classify each inherited requirement by its responsibility:
 
-- **Host-owned policy:** Keep general collaboration preferences and operating rules with their existing owner. Do not copy them merely because they also apply to the skill. Keep the skill compatible with applicable host requirements without depending on their presence.
-- **Skill-owned rules:** Put the domain protocol in the skill as its canonical owner. Absorb inherited guidance only when that domain genuinely owns it. Remove or replace an old definition only within authorized scope and when every affected task still receives the rule. Do not relocate a broader global policy into a narrower skill.
+- **Host-owned policy:** Keep general collaboration preferences and operating rules with their existing owner. Don’t copy them merely because they also apply to the skill. Keep the skill compatible with applicable host requirements without depending on their presence.
+- **Skill-owned rules:** Put the domain protocol in the skill as its canonical owner. Absorb inherited guidance only when that domain genuinely owns it. Remove or replace an old definition only within authorized scope and when every affected task still receives the rule. Don’t relocate a broader global policy into a narrower skill.
 - **Standalone defaults:** When the advertised workflow needs a local rule without the host’s policy, write the smallest sufficient rule on the narrowest applicable surface. This is a minimal fork for that workflow, not a reproduction of the global policy. Preserve the conditions, exceptions, and safeguards needed within its stated scope without importing unrelated procedures or inventories.
 
 Keep the source policy as the owner of broader behavior and identify the local default’s narrower responsibility during maintenance. Retain a complete standalone mirror only when an explicit surface contract requires semantic or verbatim equivalence, such as the typography contract below. Neither shortening nor classification authorizes weakening a security boundary.
 
-Validate the skill alone for its advertised behavior and with the maintainer’s global policies for compatible composition. For a new skill, derive expected behavior from the authorized task rather than inventing a prior skill flow. For promotions and changes to existing skills, preserve the prior combined flow unless a behavior change is expressly authorized. Compare scope, permissions, reporting, checkpoints, continuation, and completion. Do not add runtime detection of the maintainer’s setup, duplicate checks, or another approval merely to compose the rules.
+Validate the skill alone for its advertised behavior and with the maintainer’s global policies for compatible composition. For a new skill, derive expected behavior from the authorized task rather than inventing a prior skill flow. For promotions and changes to existing skills, preserve the prior combined flow unless a behavior change is expressly authorized. Compare scope, permissions, reporting, checkpoints, continuation, and completion. Don’t add runtime detection of the maintainer’s setup, duplicate checks, or another approval merely to compose the rules.
 
 ## Load Conditional Contracts
 
@@ -32,7 +32,7 @@ Validate the skill alone for its advertised behavior and with the maintainer’s
 
 When creating or updating a public skill’s consumer-facing `README.md` for `porada/domfiles`, use the [public skill README template](../assets/readme-skill.txt). Its layout progresses from discovery and purpose through installation to attribution.
 
-Use the frontmatter `name` for `<skill-name>`. For `<intro-text>`, copy all introductory paragraphs between the `SKILL.md` title and the first section heading, preserving their text and paragraph breaks. Do not use the frontmatter description.
+Use the frontmatter `name` for `<skill-name>`. For `<intro-text>`, copy all introductory paragraphs between the `SKILL.md` title and the first section heading, preserving their text and paragraph breaks. Don’t use the frontmatter description.
 
 For public skills from other repositories, follow their README conventions rather than this publisher-specific template.
 
@@ -42,9 +42,9 @@ Treat a public skill catalog and its collection README as consumer-facing docume
 
 When `skills.sh.json` and a collection README present the same catalog, use the JSON file as the canonical source for group descriptions, group order, group titles, skill membership, and skill order. Mirror those values exactly in the README’s catalog section, linking each skill identifier to its public directory. Keep the README’s other content independent.
 
-Within catalog work, propose improvements to the canonical groupings when useful, but apply grouping changes only with explicit user approval. A direct request specifying the grouping change supplies that approval. General maintenance or synchronization permission does not approve regrouping.
+Within catalog work, propose improvements to the canonical groupings when useful, but apply grouping changes only with explicit user approval. A direct request specifying the grouping change supplies that approval. General maintenance or synchronization permission doesn’t approve regrouping.
 
-When authorized shared catalog content changes, update both surfaces together, obtaining any required README edit permission before changing either. Validate the complete correspondence, not just changed entries, alongside JSON syntax, public skill identifiers, and schema constraints.
+When authorized shared catalog content changes, update both surfaces together. Obtain any required README edit permission before changing either. Validate the complete correspondence, not just changed entries, alongside JSON syntax, public skill identifiers, and schema constraints.
 
 ## Include Shared Public Policies
 
@@ -72,7 +72,7 @@ Copy the [instruction authority template](../assets/instruction-authority.txt) v
 
 ### Stale Guidance
 
-Include stale guidance when a reachable workflow depends on operational assets or peer guidance, follows bundled or remote instructional references, or prescribes external interface behavior, including file formats, that its directions depend on. Evaluate inline instructions as well as links. Task evidence is not itself a dependency on skill guidance, and the absence of references does not establish ineligibility.
+Include stale guidance when a reachable workflow depends on operational assets or peer guidance, follows bundled or remote instructional references, or prescribes external interface behavior, including file formats, that its directions depend on. Evaluate inline instructions as well as links. Task evidence isn’t itself a dependency on skill guidance, and the absence of references doesn’t establish ineligibility.
 
 For an eligible skill, copy the [stale guidance route template](../assets/stale-guidance.txt) verbatim into its fully loaded `SKILL.md` entrypoint and bundle a verbatim copy of the [guidance recovery template](../assets/guidance-recovery.txt) at `references/guidance-recovery.md`. Load the complete entrypoint before following any reference, but load the recovery reference only when its failure condition occurs. Preserve any workflow-specific failure procedure, including optional peer recovery, rather than replacing it with the generic route. The inline template supplies the safe fallback when the recovery reference itself is unavailable.
 
@@ -92,13 +92,13 @@ Select the checks below by the affected public contract. A whole-skill audit, cr
 
 ### Conditional and Installation Checks
 
-- **Creation and promotion:** Apply the [public promotion validation](public-skill-promotion.md#validate-public-promotion) for creation or promotion, including reviews and audits of those operations. Do not require the promotion contract’s standalone dependency analysis for other public maintenance.
+- **Creation and promotion:** Apply the [public promotion validation](public-skill-promotion.md#validate-public-promotion) for creation or promotion, including reviews and audits of those operations. Don’t require the promotion contract’s standalone dependency analysis for other public maintenance.
 - **Optional peers:** Run the [optional public peer validation](optional-public-peers.md#validate-optional-public-peers) when the scope includes creation, promotion, an audit of peer behavior, or a change affecting peer declarations, routing, retrieval, or fallback behavior. Cover every relationship within that affected contract, including unchanged declarations. When the optional peer template changes, this includes every derived reference.
 
 ### Mirror Alignment
 
-When a global instruction or this public contract, including its conditional references, changes, search public skills for affected standalone defaults, required mirrors, and close semantic variants. Recheck each default’s local responsibility and combined behavior without expanding it into a complete global mirror. Preserve semantic or verbatim equivalence where its surface contract requires it. When a shared public policy template changes, align every verbatim template-derived copy under that template’s copy contract in the same change, including conditional references.
+When a global instruction, this public contract, or its conditional references change, search public skills for affected standalone defaults, required mirrors, and close semantic variants. Recheck each default’s local responsibility and combined behavior without expanding it into a complete global mirror. Preserve semantic or verbatim equivalence where its surface contract requires it. When a shared public policy template changes, align every verbatim template-derived copy under that template’s copy contract in the same change, including conditional references.
 
 Propagation-only changes carry an established source update into its consumers without unrelated skill changes. Review the canonical wording once, then verify the complete affected consumer set for exact template correspondence or preserved local meaning, link resolution, and local integration. Check both standalone sufficiency and the maintained combined flow for changed defaults. Select behavioral checks for the contract changed by the source, not merely the mechanics of copying it. Apply whole-skill and optional peer checks only where that contract affects them. Reopen settled wording only when a consumer requires adaptation or exposes a concrete conflict, and review that delta and its integration boundaries rather than restarting unrelated whole-skill reviews.
 
-For changes beyond propagation, re-evaluate ownership, standalone defaults, and required mirrors under [Resolve Standalone Policy](#resolve-standalone-policy). Preserve the conditions and boundaries needed by the selected local responsibility, add newly required standalone behavior on its narrowest applicable surface, and remove wording that no longer adds standalone value. Do not grow the shared contract to mirror unrelated global instructions.
+For changes beyond propagation, re-evaluate ownership, standalone defaults, and required mirrors under [Resolve Standalone Policy](#resolve-standalone-policy). Preserve the conditions and boundaries needed by the selected local responsibility, add newly required standalone behavior on its narrowest applicable surface, and remove wording that no longer adds standalone value. Don’t expand the shared contract to mirror unrelated global instructions.

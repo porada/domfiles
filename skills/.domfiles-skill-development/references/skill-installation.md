@@ -10,7 +10,7 @@ Use action-based names for skills that set `disable-model-invocation: true`.
 
 ## Internal Skill Names
 
-Use unprefixed names for project-authored internal skills unless the repository bundles third-party skills. When it does, prefix project-authored internal skill names with the project name and preserve third-party names. Globally available skills outside the repository do not count as bundled third-party skills.
+Use unprefixed names for project-authored internal skills unless the repository bundles third-party skills. When it does, prefix project-authored internal skill names with the project name and preserve third-party names. Globally available skills outside the repository don’t count as bundled third-party skills.
 
 ## Category Changes
 
@@ -20,17 +20,17 @@ Before moving or rewriting content in a promotion to the public category, comple
 
 For every category change, update the canonical location, metadata, documentation links, and installation behavior together.
 
-Bring a skill’s scripts into conformance with the [portable command contract](skill-owned-scripts.md#support-portable-commands) before promoting it from internal to global. Remove or relocate them before promoting the skill into a public category that does not support bundled scripts.
+Bring a skill’s scripts into conformance with the [portable command contract](skill-owned-scripts.md#support-portable-commands) before promoting it from internal to global. Remove or relocate them before promoting the skill into a public category that doesn’t support bundled scripts.
 
 ## Global Reach
 
-Write a global skill for every consuming project supported by its globally exposed installation. Treat any canonical source prefix used only for distribution as a namespace rather than a repository scope. Name or depend on the source repository only when the behavior requires repository-managed infrastructure.
+Write a global skill to serve every consuming project supported by its globally exposed installation. Treat any canonical source prefix used only for distribution as a namespace rather than a repository scope. Name or depend on the source repository only when the behavior requires repository-managed infrastructure.
 
 ## Distributed Links
 
 For a skill with a supported installation outside its canonical repository:
 
 - Keep relative links within the installed skill directory. Link to a sibling only when every supported installation guarantees that sibling and the same relative path resolves from the canonical source and every installation. Otherwise refer to the sibling by its frontmatter `name` without a Markdown link.
-- Do not use relative links that leave the installed skills root or target a client-specific global instruction path. Refer to an already loaded global policy by its stable policy or section name instead.
+- Don’t use relative links that leave the installed skills root or target a client-specific global instruction path. Refer to an already loaded global policy by its stable policy or section name instead.
 
 Verify every relevant skill frontmatter name. Resolve every relative link from each supported installation root and reject links that escape the installed skills tree or target an unavailable peer.

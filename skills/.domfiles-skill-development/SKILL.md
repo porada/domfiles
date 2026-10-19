@@ -19,9 +19,9 @@ metadata:
 
 Resolve each in-scope skill through [Skill Installation](references/skill-installation.md) before planning, including during reviews and audits. Apply the consuming project’s instructions rather than assuming that source location determines installation reach.
 
-For documentation work, including assets, catalogs, metadata, public READMEs, and references, compose with `agent-documentation`. It owns the shared authority, ownership, writing composition, change, review, validation, and reporting lifecycle. Add the contracts selected below without restarting that lifecycle. For script-only work without documentation changes, follow the script route directly.
+For documentation work, including assets, catalogs, metadata, public READMEs, and references, compose with `agent-documentation`. It owns the shared lifecycle for authority, ownership, writing composition, changes, reviews, validation, and reporting. Add the contracts selected below without restarting that lifecycle. For script-only work without documentation changes, follow the script route directly.
 
-An explicit change takes precedence when the request also uses review or audit language. Standalone reviews and audits remain read-only. Apply the global **Explicit user direction** policy to this skill’s authoring conventions and procedures, including routed contracts. A procedural waiver does not change a script’s implemented capabilities or bypass native access controls. Select every applicable contract before the work it governs, and load each once.
+An explicit change takes precedence when the request also uses review or audit language. Standalone reviews and audits remain read-only. Apply the global **Explicit user direction** policy to this skill’s authoring conventions and procedures, including routed contracts. A procedural waiver doesn’t change a script’s implemented capabilities or bypass native access controls. Select every applicable contract before starting the work it governs, and load each once.
 
 ## Select Contracts
 
@@ -37,10 +37,10 @@ Before changing any project-authored path under `.agents/skills` or `skills/huma
 
 ## Keep Skill Contents Operational
 
-Never document auxiliary information anywhere in a project-authored skill directory. Auxiliary information records how the skill itself was authored or maintained without helping a reader understand or execute its advertised workflow, such as change histories, research logs, review records, and verification baselines. Keep durable context in the source project’s reference documentation and task-local evidence in the conversation or task artifacts outside the skill. Preserve operational requirements, safety boundaries, and supporting explanations needed to apply the skill.
+Never document auxiliary information anywhere in a project-authored skill directory. Auxiliary information records how the skill itself was authored or maintained without helping a reader understand or execute its advertised workflow. Examples include change histories, research logs, review records, and verification baselines. Keep durable context in the source project’s reference documentation and task-local evidence in the conversation or task artifacts outside the skill. Preserve operational requirements, safety boundaries, and supporting explanations needed to apply the skill.
 
 ## Validate Selected Contracts
 
-For documentation work, use `agent-documentation`’s **Select Validation Scope** to determine applicable checks. For every change, review, or audit, run the installation contract’s identity and link checks and the applicable checks from selected references. Validate complete declared scopes, including affected mirror families and the full description set when required. Conditional loading does not reduce an invariant to changed lines or omit validation of an unchanged declaration that the active contract covers.
+For documentation work, use `agent-documentation`’s **Select Validation Scope** to determine applicable checks. For every change, review, or audit, run the installation contract’s identity and link checks and the applicable checks from selected references. Validate complete declared scopes, including affected mirror families and the full description set when required. Conditional loading doesn’t limit an invariant to changed lines or excuse skipping validation of an unchanged declaration covered by the active contract.
 
-For documentation work, return the skill-specific results to `agent-documentation`’s shared validation and reporting lifecycle. For script-only work, complete the script contract’s validation and report concrete contract findings or the resulting change and any limitations under the applicable communication policy. Do not turn a contract review into an implementation audit.
+For documentation work, return the skill-specific results to `agent-documentation`’s shared validation and reporting lifecycle. For script-only work, complete the script contract’s validation and report concrete contract findings or the resulting change and any limitations under the applicable communication policy. Don’t turn a contract review into an implementation audit.

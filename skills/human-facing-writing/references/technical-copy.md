@@ -8,17 +8,17 @@ Move from evidence to composition, propagation, and final validation.
 
 ### Evidence
 
-Start by identifying the technical concepts the intended reader can be expected to know. Inspect nearby copy for established terminology and formatting, but do not treat it as automatic authority.
+Start by identifying the technical concepts the intended reader can be expected to know. Inspect nearby copy for established terminology and formatting, but don’t treat it as automatic authority.
 
-For new technical copy or any edit that changes technical meaning, inspect the relevant implementation, tests, and other authoritative evidence. Use verified facts to bound what the copy may claim rather than dictate every detail it must include. A meaning-neutral wording edit may rely on the supplied text.
+For new technical copy or any edit that changes technical meaning, inspect the relevant implementation, tests, and other authoritative evidence. Use verified facts to set the limits of what the copy may claim rather than dictate every detail it must include. A meaning-neutral wording edit may rely on the supplied text.
 
-Verify documented defaults against shipped values, not merely another documentation copy. Agreement between documents does not establish correctness. Correct stale copy rather than changing implementation to match it unless a behavior change is explicitly in scope.
+Verify documented defaults against shipped values, not merely another documentation copy. Agreement between documents doesn’t establish correctness. Correct stale copy rather than changing implementation to match it unless a behavior change is explicitly in scope.
 
 ### Composition
 
 Lead with the answer, action, identity, failure, or observable behavior. Put the useful point before introductory context, but keep every distinction that affects behavior.
 
-Preserve exact literal tokens. Do not retain a category term solely because a parser, grammar, protocol, implementation, standard, or upstream tool treats it as canonical. When direct wording preserves the complete meaning and scope, name what the reader supplies, sees, or does.
+Preserve exact literal tokens. Don’t retain a category term solely because a parser, grammar, protocol, implementation, standard, or upstream tool treats it as canonical. When direct wording preserves the complete meaning and scope, name what the reader supplies, sees, or does.
 
 Prefer concise wording that readers can understand directly. When a compact label hides who acts, what happens, or how its parts relate, express that meaning with a verb or clause. Keep established technical terms when they aid understanding or preserve a necessary distinction.
 
@@ -26,7 +26,7 @@ Preserve causal framing, technical relationships, and the established tone. Inst
 
 Technical precision doesn’t require a cold or impersonal tone. Use direct second-person wording and an honest stance when they suit the surface and intended reader.
 
-When a value’s representation is used only for comparison or lookup, describe those semantics without suggesting that the value itself is coerced, stringified, or mutated. Include implementation detail only when it explains a required action, limitation, non-obvious decision, or technical consequence.
+When a value’s representation is used only for comparison or lookup, describe that use without suggesting that the value itself is coerced, stringified, or mutated. Include implementation detail only when it explains a required action, limitation, non-obvious decision, or technical consequence.
 
 ### Propagation
 
@@ -43,7 +43,7 @@ Apply the [typography and technical token conventions](typography.md). Distingui
 ## Surface Conventions
 
 - **CLI documentation and command output:** Treat `--help` text and usage lines as human-facing documentation, along with descriptions of options, inputs, modes, defaults, side effects, output behavior, and exit statuses. Keep every claim accurate to the implementation. Name accepted inputs directly when clear wording preserves the complete contract and lets readers locate any external documentation they need. Use a formal term only when no clearer description can retain the supported behavior or necessary discoverability. Use one reader-facing term consistently. Preserve exact literal token spelling across help, project-authored `stdout` or `stderr` messages, and adjacent exact-string tests. Preserve machine-readable output contracts unless the task explicitly changes them.
-- **Explanatory source comments:** Explain non-obvious intent, constraints, invariants, or consequences rather than narrating nearby code. Proactively document a surprising tradeoff that could look accidental. Do not remove a comment whose purpose is to establish that behavior, a tradeoff, or an omission is intentional unless the current request explicitly authorizes its removal. Omit terminal periods from ordinary `//` comments.
+- **Explanatory source comments:** Explain non-obvious intent, constraints, invariants, or consequences rather than narrating nearby code. Proactively document a surprising tradeoff that could look accidental. Don’t remove a comment whose purpose is to establish that behavior, a tradeoff, or an omission is intentional unless the current request explicitly authorizes its removal. Omit terminal periods from ordinary `//` comments.
 - **Documentation comments and docstrings:** Follow the [documentation comment workflow](documentation-comments.md), including for JSDoc and language-native forms.
 - **Package and repository descriptions:** Use one compact phrase without terminal punctuation. When both requested surfaces represent the same artifact, scope, and proposition, matching wording is the default.
 - **README and collaboration copy:** For README, technical document, issue, pull request, and discussion copy, including titles, bodies, and comments, follow the [technical document workflow](technical-documents.md).
@@ -54,6 +54,6 @@ Apply the [typography and technical token conventions](typography.md). Distingui
 
 Make every material claim specific enough to check. Use exact names, values, conditions, or observable results as evidence only when they are appropriate to expose under the entrypoint’s [Secrets and Authentication](../SKILL.md#secrets-and-authentication) policy.
 
-Evidence and illustration are not substitutes for each other. Neither an unnamed category nor a generic scenario is a concrete case. Include an example only when it clarifies non-obvious behavior, a required action, or a meaningful contrast. Use the smallest example that remains complete, and place it next to what it demonstrates.
+Evidence and illustration aren’t substitutes for each other. Neither an unnamed category nor a generic scenario is a concrete case. Include an example only when it clarifies non-obvious behavior, a required action, or a meaningful contrast. Use the smallest example that remains complete, and place it next to what it demonstrates.
 
-Add a canonical link only when it helps the reader act, verify a claim, or reach necessary technical detail. Do not link every package, identifier, or named concept merely because a URL exists.
+Add a canonical link only when it helps the reader act, verify a claim, or reach necessary technical detail. Don’t link every package, identifier, or named concept merely because a URL exists.

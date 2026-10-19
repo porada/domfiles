@@ -14,9 +14,9 @@ Add a module name prefix only when a message may appear in a shared or ambient c
 
 For an operation failure, use `Failed to …`. Avoid `cannot` and `can’t`. State a concrete incompatibility directly instead of turning it into a generic failure headline.
 
-Include a project-authored explanation only when it is accurate, succinct, useful, and established by the project’s own evidence. Keep it on the same line as the headline, separated by a period.
+Include a project-authored explanation only when it’s accurate, succinct, useful, and established by the project’s own evidence. Keep it on the same line as the headline, separated by a period.
 
-Do not hedge a known condition, list speculative causes, repeat the headline, or invent an explanation for an upstream failure. Keep independently surfaced failures separate and self-contained. Unless project policy requires it, omit terminal punctuation from the final sentence.
+Don’t hedge a known condition, list speculative causes, repeat the headline, or invent an explanation for an upstream failure. Keep independently surfaced failures separate and self-contained. Unless project policy requires it, omit terminal punctuation from the final sentence.
 
 ## Actionable Detail
 
@@ -28,15 +28,15 @@ Include the exact case, expected or received values, or a reason only when the d
 
 For a known contract incompatibility, name the unsupported property. Present expected values before the received value, adapting the wording when several values are accepted.
 
-When the evidence establishes a concrete consumer-facing incompatibility, use it instead of internal architecture language. Do not replace that language with another broad claim, such as a universal inability to use a component.
+When the evidence establishes a concrete consumer-facing incompatibility, use it instead of internal architecture language. Don’t replace that language with another broad claim, such as a universal inability to use a component.
 
 ## Upstream Errors
 
-Evaluate exposure before including an upstream error. When appropriate, preserve it completely and unchanged. Otherwise, omit it or apply only the redactions defined by an explicit project policy. Do not present a redacted error as complete or unchanged.
+Evaluate exposure before including an upstream error. When appropriate, preserve it completely and unchanged. Otherwise, omit it or apply only the redactions defined by an explicit project policy. Don’t present a redacted error as complete or unchanged.
 
 When an original error follows, end the project-authored context with a colon and place one blank line before the unchanged upstream text. Keep a useful file path or other project-authored context in the headline before the colon. Do not add a period before the colon.
 
-Do not merge, normalize, improve, summarize, duplicate, or speculatively explain wording owned by the upstream dependency.
+Don’t merge, normalize, improve, summarize, duplicate, or speculatively explain wording owned by the upstream dependency.
 
 ## Related Messages
 

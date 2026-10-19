@@ -4,10 +4,10 @@
 
 A status item communicates release state rather than an ordinary consumer outcome. Render its exact italicized text as one unordered list item using the marker required by the release surface.
 
-For a package section within a non-initial synchronized release, evaluate status eligibility against the package’s complete evidence inventory, including outcomes covered by `All Packages`.
+For a package section within a non-initial synchronized release, use the package’s complete evidence inventory, including outcomes covered by `All Packages`, to determine whether a status item applies.
 
-- **Initial release:** Use `_Initial release._` only after the user confirms that the release is initial. In an initial package section within a non-initial synchronized release, use it only when the package’s complete evidence inventory contains no more specific consumer-facing item. Do not substitute unbulleted prose or an emoji-only body.
-- **No functional changes:** Use `_No functional changes._` for a non-initial package section in a synchronized release whose complete evidence inventory contains no consumer-relevant item beyond outcomes already covered by `All Packages`. This status also applies to an initial package section within a non-initial synchronized release when its evidence inventory contains consumer-relevant outcomes and all are covered by `All Packages`. In these shared-outcome cases, the established token means no package-specific changes. A package-specific dependency update or similar consumer-relevant change still requires its own item. A required synchronized version bump alone does not count as an item. Keep this status as the section’s only release note item.
+- **Initial release:** Use `_Initial release._` only after the user confirms that the release is initial. In an initial package section within a non-initial synchronized release, use it only when the package’s complete evidence inventory contains no more specific consumer-facing item. Don’t substitute unbulleted prose or an emoji-only body.
+- **No functional changes:** Use `_No functional changes._` for a non-initial package section in a synchronized release whose complete evidence inventory contains no consumer-relevant item beyond outcomes already covered by `All Packages`. This status also applies to an initial package section within a non-initial synchronized release when its evidence inventory contains consumer-relevant outcomes and all are covered by `All Packages`. In these shared-outcome cases, the established token means no package-specific changes. A package-specific dependency update or similar consumer-relevant change still requires its own item. A required synchronized version bump alone doesn’t count as an item. Keep this status as the section’s only release note item.
 
 ## Aggregate Release Note Files
 
@@ -19,7 +19,7 @@ Apply the [approval gates](approval-gates.md) before normalizing the delimiters 
 
 ## Structured Releases
 
-Add a level-3 heading when a release has a clear theme, migration context, or substantial group of related changes. Reserve level 4 for a subsection within that theme:
+Add a level 3 heading when a release has a clear theme, migration context, or substantial group of related changes. Reserve level 4 for a subsection within that theme:
 
 ```text
 ### The Compatibility Release
@@ -32,9 +32,9 @@ Add a level-3 heading when a release has a clear theme, migration context, or su
 - Preserved explicitly tagged values when applying quoting options.
 ```
 
-Keep detail lists flat under a neutral subject heading such as `Option Handling`. Do not use nested bullets merely to group details. When a top-level summary points to a later subsection, connect them with a compact cross-reference such as `(outlined below)`, and use the same wording throughout the note.
+Keep detail lists flat under a neutral subject heading such as `Option Handling`. Don’t nest bullets merely to group details. When a top-level summary points to a later subsection, connect them with a compact cross-reference such as `(outlined below)`, and use the same wording throughout the note.
 
-Do not repeat migration prose in later patch releases unless the user explicitly requests the reminder. When migration guidance intentionally repeats across one major release line, name that major version rather than referring to “this release.”
+Don’t repeat migration prose in later patch releases unless the user explicitly requests the reminder. When migration guidance intentionally repeats across one major release line, name that major version rather than referring to “this release.”
 
 ## Hosted Release Bodies
 
@@ -64,6 +64,6 @@ Give every package a stable section when one repository publishes several packag
 
 Put `Breaking Changes` first, followed by `All Packages` when needed. Then use the package order established by the supplied draft or repository metadata. If neither establishes an order, alphabetize the package sections.
 
-Use `All Packages` only for a change that applies uniformly to every package in the synchronized package set. Do not repeat that change in package-specific sections.
+Use `All Packages` only for a change that applies uniformly to every package in the synchronized package set. Don’t repeat that change in package-specific sections.
 
-Apply the [status item rules](#status-items) when a package has no package-specific consumer-relevant item to list. Outside a synchronized release, having no item to list normally does not warrant a release.
+Apply the [status item rules](#status-items) when a package has no package-specific consumer-relevant item to list. Outside a synchronized release, having no item to list normally doesn’t warrant a release.

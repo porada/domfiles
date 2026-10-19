@@ -15,10 +15,10 @@ Coordinate Claude or Codex as a subagent under the global **Collaboration** poli
 
 ## Bound the Exchange
 
-- **Authority:** An explicit collaboration request authorizes only the covered exchange with the requested participant. Loading this skill does not authorize additional disclosure. Preserve all governing scope, approval, and security gates in the coordinator’s thread.
-- **New user input:** Treat new user questions and notes as addressed to the coordinator by default. An active CLI exchange does not authorize forwarding them. Share only information necessary for the existing assignment, or additions the user explicitly asks to involve the participant in.
+- **Authority:** An explicit collaboration request authorizes only the covered exchange with the requested participant. Loading this skill doesn’t authorize additional disclosure. Preserve all governing scope, approval, and security gates in the coordinator’s thread.
+- **New user input:** Treat new user questions and notes as addressed to the coordinator by default. An active CLI exchange doesn’t authorize forwarding them. Share only information needed for the existing assignment, or additions the user explicitly asks to involve the participant in.
 - **Recursion:** A participant launched through this workflow, and every delegate beneath it, must not start or resume another CLI subagent through `claude`, `codex`, or any other agent CLI, directly or indirectly. Ordinary native subagent delegation remains permitted on both sides within the inherited assignment boundaries.
-- **One unit per session:** Assign a CLI session work as you would a native subagent, under the same inherited boundaries. The participant owns its native subagents and background commands, so during normal operation the coordinator neither tracks nor cancels them individually.
+- **One unit per session:** Assign work to a CLI session as you would to a native subagent, under the same inherited boundaries. The participant owns its native subagents and background commands, so during normal operation the coordinator neither tracks nor cancels them individually.
 
 ## Prepare the Assignment
 
@@ -29,11 +29,11 @@ Before composing a live assignment, load [Session Coordination](references/sessi
 ## Dispatch and Coordinate
 
 1. Start a fresh conversation by default, one per independent assignment when the work splits. Resume a specific full session UUID when continuing the assigned work, including after its readiness-only exchange. Follow the participant reference’s launch and resumption procedures.
-2. Check the pending sessions opportunistically, observing all of them in one call regardless of participant. Do not replace useful concurrent work with a blocking polling script.
+2. Check pending sessions opportunistically, observing all of them in one call regardless of participant. Don’t replace useful concurrent work with a blocking polling script.
 3. When CLI sessions become the last outstanding dependencies, await those same sessions together under the [inactivity policy](references/session-coordination.md#inactivity). This is a change in the coordinator’s scheduling, not a foreground relaunch.
 4. Retrieve the complete response for each session’s latest requested turn before treating it as finished.
 
-Background execution does not itself give the host a completion callback or the ability to wake a yielded thread. Use only scheduling capabilities the host actually provides. Do not promise automatic follow-up after yielding when none exists, and do not leave a running session without an identified monitoring owner.
+Background execution doesn’t itself give the host a completion callback or the ability to wake a yielded thread. Use only scheduling capabilities the host actually provides. Don’t promise automatic follow-up after yielding when none exists, and don’t leave a running session without an identified monitoring owner.
 
 ## Resolve Feedback
 

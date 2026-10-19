@@ -8,17 +8,17 @@ Fish selects configuration snippets across the configured `conf.d` directories b
 
 Put independent startup snippets in `conf.d/*.fish` when their order and override behavior are deliberate. Put user-level overrides and coordination in `$__fish_config_dir/config.fish`. Fish resolves that directory from `$XDG_CONFIG_HOME` or its `$HOME/.config/fish` fallback.
 
-Keep setup required by non-interactive shells outside interactive-only guards. Guard prompts, abbreviations, bindings, and other interactive behavior with `status is-interactive` so remote commands and file transfer sessions do not receive unrelated output or state. Guard login-only behavior with `status is-login`.
+Keep setup required by non-interactive shells outside interactive-only guards. Guard prompts, abbreviations, bindings, and other interactive behavior with `status is-interactive` so remote commands and file transfer sessions don’t receive unrelated output or state. Guard login-only behavior with `status is-login`.
 
 ## Declarative Startup
 
 Make startup mutations idempotent. Sourcing a configuration file again should produce the same state unless accumulation is its documented purpose. Use duplicate-safe operations, rebuild owned lists, or guard one-time work instead of repeatedly appending values that may already exist.
 
-Keep startup code quiet, deterministic, and fast without suppressing errors broadly merely to keep startup silent. Derive configuration-relative paths using the [path rules](fish-native-idioms.md#paths).
+Keep startup code quiet, deterministic, and fast. Don’t broadly suppress errors merely to keep startup silent. Derive configuration-relative paths using the [path rules](fish-native-idioms.md#paths).
 
 Choose whether version-controlled startup files should recreate state for each session or Fish should preserve a mutable preference across sessions. Use global variables when version-controlled startup files should determine each session’s state. `fish_add_path --global` ignores non-existent directories, normalizes accepted paths, avoids duplicates, and leaves an existing entry in place unless directed to move it.
 
-Use universal variables for intentionally mutable, cross-session preferences managed independently of version-controlled startup files. Do not append to them on every startup. Manage them through `set --universal`, and never edit `fish_variables` directly.
+Use universal variables for intentionally mutable, cross-session preferences managed independently of version-controlled startup files. Don’t append to them on every startup. Manage them through `set --universal`, and never edit `fish_variables` directly.
 
 ## Event Handlers
 
@@ -30,7 +30,7 @@ An `--on-signal <signal>` handler receives only a signal delivered to Fish. Regi
 
 Treat `--on-variable <name>` as a notification that Fish may combine or delay, not as a callback for every assignment. Fish guarantees neither exact timing nor one invocation for each `set`. It may skip intermediate values or run after a same-value assignment. Use it to invalidate or synchronize derived state, not as a transaction log or correctness-critical trigger.
 
-Load the defining file before the event can occur because Fish cannot discover an unloaded handler from its declaration. Ordinary autoloading by function name is insufficient. Do not depend on handler order when several functions subscribe to the same event.
+Load the defining file before the event can occur because Fish can’t discover an unloaded handler from its declaration. Ordinary autoloading by function name is insufficient. Don’t depend on handler order when several functions subscribe to the same event.
 
 Keep handlers fast and avoid unexpected interactive output unless that output is the feature. Treat event names, variable names, and process targets as part of the handler contract. Document non-obvious lifetimes in the handler’s source docstring.
 

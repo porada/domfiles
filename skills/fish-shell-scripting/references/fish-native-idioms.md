@@ -4,7 +4,7 @@ Command forms with angle-bracketed names are templates requiring substitution.
 
 ## Variable Scope and State
 
-Fish treats scope and exportedness as separate properties. Use `set` to create, update, export, scope, query, and erase variables. Do not write bare assignments except for the supported single-command `<name>=<value> <command>` override when that exact lifetime is intended.
+Fish treats scope and exportedness as separate properties. Use `set` to create, update, export, scope, query, and erase variables. Don’t write bare assignments except for the supported single-command `<name>=<value> <command>` override when that exact lifetime is intended.
 
 - Explicitly scope the assignment that introduces important state. After that declaration, an unscoped `set` may intentionally update the narrowest existing variable.
 - Use `set --local` for a value confined to the current block and `set --function` for one needed across blocks in the current function.
@@ -21,27 +21,27 @@ Choose the narrowest check that establishes the required property, from definiti
 | Exact element count         | `test $(count $<name>) -eq <count>` |
 | Joined content is non-empty | `test -n "$<name>"`                 |
 
-An undefined variable, a defined empty list, and a list containing one empty string are different states. Do not pass an unquoted, potentially empty list as the only input to a `string` or `path` command whose own standard input is piped or redirected. If the list expands to zero arguments, the command reads that input instead. A function or block that receives piped input does not hand it to such a command, so a call without its own redirection needs no guard. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
+An undefined variable, a defined empty list, and a list containing one empty string are different states. Don’t pass an unquoted, potentially empty list as the only input to a `string` or `path` command whose own standard input is piped or redirected. If the list expands to zero arguments, the command reads that input instead. A function or block that receives piped input doesn’t hand it to such a command, so a call without its own redirection needs no guard. Use `set --erase <name>` to remove a variable or list element. `set -e` is shorthand for erase, not POSIX-style error handling.
 
-Treat special read-only variables such as `$status` as immutable. Do not assign or erase them with `set` or target them with a single-command override.
+Treat special read-only variables such as `$status` as immutable. Don’t assign or erase them with `set` or target them with a single-command override.
 
-When Fish code owns the representation of stored boolean state and neither an applicable policy nor the user selects another form, use the literal values `true` and `false`. Initialize the variable before use, compare it explicitly with `=`, and do not encode owned boolean state through unset or empty values or `0` and `1`.
+When Fish code owns the representation of stored boolean state and neither an applicable policy nor the user selects another form, use the literal values `true` and `false`. Initialize the variable before use, compare it explicitly with `=`, and don’t encode owned boolean state through unset or empty values or `0` and `1`.
 
-By default, a called Fish function cannot read its caller’s unexported local variables. Exported locals remain visible, and `--no-scope-shadowing` lets a function access variables in its calling scope.
+By default, a called Fish function can’t read its caller’s unexported local variables. Exported locals remain visible, and `--no-scope-shadowing` lets a function access variables in its calling scope.
 
-When caller scope inheritance is not part of the function’s contract, use a single-command override such as `<name>=<value> <function-name>` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` is not equivalent because it can invoke only external commands.
+When inheriting the caller’s scope isn’t part of the function’s contract, use a single-command override such as `<name>=<value> <function-name>` for a temporary value. Fish exports the override for the invocation, so the called function, nested functions, and external commands it starts can read it. Fish applies the override before expanding the rest of the command line. `env` isn’t equivalent because it can invoke only external commands.
 
 ## Runtime State
 
 Capture `$status` as the first command in any function whose behavior depends on the preceding command, especially prompt and event functions. Avoid mutable global state when a local or function-scoped value is sufficient, and remember that a global variable can shadow a universal variable of the same name.
 
-Never define a user function whose name begins with `__fish_`, because it can shadow one of Fish’s internal helpers. Do not modify other undocumented Fish internals. Call or configure an existing `__fish_*` interface only when official Fish documentation exposes it for that use.
+Never define a user function whose name begins with `__fish_`, because it can shadow one of Fish’s internal helpers. Don’t modify other undocumented Fish internals. Call or configure an existing `__fish_*` interface only when official Fish documentation exposes it for that use.
 
 ## Argument Lists
 
 Every Fish variable is a one-dimensional list. Keep ordinary command arguments in that representation from construction through execution. Store one logical argument per element, then expand the list unquoted when the receiving command should get those elements separately.
 
-Use `$argv` for positional arguments and whole-list forwarding. Use `count` instead of `$#`, and do not use `$1`, `$@`, `$*`, or arrays from another shell.
+Use `$argv` for positional arguments and whole-list forwarding. Use `count` instead of `$#`, and don’t use `$1`, `$@`, `$*`, or arrays from another shell.
 
 A command and its fixed arguments use the same representation:
 
@@ -50,7 +50,7 @@ set --local editor emacs --no-window-system
 $editor README.md
 ```
 
-Do not route ordinary arguments through `eval`. Use it only when generated Fish syntax, such as a pipeline or compound construct, must be parsed again. Use 1-based indices and slices such as `$items[1]`, `$items[2..-1]`, and `$items[-1]`. Do not rely on `$IFS` for ordinary variable expansion because Fish performs no post-expansion word splitting.
+Don’t route ordinary arguments through `eval`. Use it only when generated Fish syntax, such as a pipeline or compound construct, must be parsed again. Use 1-based indices and slices such as `$items[1]`, `$items[2..-1]`, and `$items[-1]`. Don’t rely on `$IFS` for ordinary variable expansion because Fish performs no post-expansion word splitting.
 
 When a verified command interface supports it, place `--` after fixed options and before externally supplied positional arguments.
 
@@ -58,11 +58,11 @@ When a verified command interface supports it, place `--` after fixed options an
 
 Decide how many arguments an expansion may produce before combining it with other text.
 
-Use quotes for Fish semantics rather than visual consistency. Leave literal tokens unquoted when Fish parses them identically. Use single quotes for literal text that must remain unexpanded. Use double quotes when interpolation must remain one argument. Do not require or restore quotes that `fish_indent` removes without changing semantics.
+Use quotes for Fish semantics rather than visual consistency. Leave literal tokens unquoted when Fish parses them identically. Use single quotes for literal text that must remain unexpanded. Use double quotes when interpolation must remain one argument. Don’t require or restore quotes that `fish_indent` removes without changing semantics.
 
 Quote an expansion when the receiving command must get exactly one argument. A double-quoted empty or undefined variable becomes one empty argument. A quoted multi-element list joins with spaces, while a quoted path variable joins with colons.
 
-Adjacent list expansions form a Cartesian product. Attached text combines with every element, while an empty unquoted list can remove the entire token. For pairwise operations, require equal list lengths and index both lists explicitly because adjacent expansions do not zip lists.
+Adjacent list expansions form a Cartesian product. Attached text combines with every element, while an empty unquoted list can remove the entire token. For pairwise operations, require equal list lengths and index both lists explicitly because adjacent expansions don’t zip lists.
 
 Before attaching text to a sensitive value, establish the required element count and content. For example, require one non-empty root before constructing a path:
 
@@ -85,7 +85,7 @@ Recognize `&&`, `||`, `!`, and `$()` as valid Fish syntax during review. For an 
 
 ## Output and Failure Contracts
 
-Fish has no direct equivalent of `set -euo pipefail`. Do not add that option sequence or invent a blanket strict mode.
+Fish has no direct equivalent of `set -euo pipefail`. Don’t add that option sequence or invent a blanket strict mode.
 
 Use `return` from a function and `exit` from a script. Preserve a failing status deliberately instead of allowing a logging or cleanup command to overwrite it. Treat standard output as returned data and standard error as diagnostics unless the receiving interface defines another contract. An `argparse` validator is an exception because it writes its diagnostic fragment to standard output for `argparse` to consume.
 
@@ -98,9 +98,9 @@ or return
 
 Assignment-mode `set` preserves the status of its final command substitution. Copy that status immediately when logging, cleanup, or another command must run before returning it.
 
-Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code. A failing command does not stop a Fish function, so add `or true` only where that status would otherwise become the function’s result or reach a later status check.
+Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code. A failing command doesn’t stop a Fish function, so add `or true` only where that status would otherwise become the function’s result or reach a later status check.
 
-Inspect `$pipestatus` only when individual pipeline stages matter. Do not reinterpret every non-zero upstream status as whole-pipeline failure.
+Inspect `$pipestatus` only when individual pipeline stages matter. Don’t reinterpret every non-zero upstream status as whole-pipeline failure.
 
 After a pipeline, `$status` is the pipeline result. It normally comes from the final foreground process and then reflects any `not` or `!` negation. `$pipestatus` contains one unnegated status per pipeline process. Inspect or copy these values immediately.
 
@@ -112,11 +112,11 @@ Treat variables whose names end in `PATH` as lists internally and as colon-delim
 
 ## Globs
 
-Use `*` for one path segment and `**` when recursive descent is intended. Do not introduce `?` globs because current Fish treats `?` as an ordinary character by default.
+Use `*` for one path segment and `**` when recursive descent is intended. Don’t introduce `?` globs because current Fish treats `?` as an ordinary character by default.
 
-Expect an ordinary unmatched glob to stop the command with a non-zero status. An unmatched glob expands to zero arguments when it is an argument to `set`, `path`, `count`, or `for`, or when it appears in the value of a single-command variable override. The override does not exempt other globs in the same command.
+Expect an ordinary unmatched glob to stop the command with a non-zero status. An unmatched glob expands to zero arguments when it is an argument to `set`, `path`, `count`, or `for`, or when it appears in the value of a single-command variable override. The override doesn’t exempt other globs in the same command.
 
-Quote a wildcard that the called program or remote system must interpret. Do not store a wildcard in a variable expecting Fish to expand it later because Fish does not glob expanded variables again.
+Quote a wildcard that the called program or remote system must interpret. Don’t store a wildcard in a variable and expect Fish to expand it later because Fish doesn’t glob expanded variables again.
 
 ## Redirections
 
@@ -124,7 +124,7 @@ Use `2>` for standard error. Use `&>` or explicit descriptor redirections only w
 
 ## Processes
 
-Prefer a pipe when a consumer accepts standard input. Use `$(<producer> | psub)` only when the consumer requires a filename. Use `begin … end` to group commands for redirection or scope, knowing that it does not create a subprocess. Use an explicit `fish --command '<code>'` only when process isolation is required. Replace heredocs with a pipe, `printf`, or a quoted multi-line string according to the receiving command’s interface.
+Prefer a pipe when a consumer accepts standard input. Use `$(<producer> | psub)` only when the consumer requires a filename. Use `begin … end` to group commands for redirection or scope. It doesn’t create a subprocess. Use an explicit `fish --command '<code>'` only when process isolation is required. Replace heredocs with a pipe, `printf`, or a quoted multi-line string according to the receiving command’s interface.
 
 ## Official Sources
 

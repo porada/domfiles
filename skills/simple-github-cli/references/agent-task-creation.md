@@ -10,7 +10,7 @@ When a direct user request already authorizes the clear, bounded handoff and tas
 
 Confirmation authorizes only the stated handoff. It satisfies the entrypoint’s [Remote Changes](../SKILL.md#remote-changes) gate only when the user explicitly authorizes creating the agent task against the named target.
 
-Handoff confirmation alone does not grant commit authorization. Carry an explicit user command to commit when the receiving task needs it, whether supplied in the same response or separately. Do not infer permission for unstated remote submissions, publication, secret access, dependency changes, or scope expansion.
+Handoff confirmation alone doesn’t grant commit authorization. When the receiving task needs it, carry an explicit user command to commit, whether supplied in the same response or separately. Don’t infer permission for unstated remote submissions, publication, secret access, dependency changes, or scope expansion.
 
 Carry existing approvals with their exact user source and scope. Require the receiving agent to follow applicable project policies and request any required approval not already covered by the assignment.
 
@@ -18,11 +18,11 @@ Carry existing approvals with their exact user source and scope. Require the rec
 
 After establishing authorization, compose a task description with a descriptive heading and an explicit receiving action. Define the bounded assignment, owned scope, exclusions, source and access constraints, mutation and approval boundaries, required process and validation, stop conditions, and output or handoff contract. For a review assignment, require an explicit statement of whether any in-scope findings remain standing.
 
-Preserve the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent cannot expand scope, provide user-only approval, transfer access, or circumvent a boundary, and must return any boundary request to the user rather than crossing it.
+Preserve the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent can’t expand scope, provide user-only approval, transfer access, or circumvent a boundary, and that it must return any boundary request to the user rather than crossing it.
 
 Authorize an operation that writes a commit in any repository, directly or indirectly, only when the task description identifies the user’s explicit command to commit. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working tree changes only.
 
-Do not include credentials, tokens, private keys, secret values, secret-bearing URLs, or other private material. Rely only on access already available in the receiving environment.
+Don’t include credentials, tokens, private keys, secret values, secret-bearing URLs, or other private material. Rely only on access already available in the receiving environment.
 
 End the task description with the exact standalone line:
 
@@ -39,4 +39,4 @@ gh agent-task create \
     --base=<base-ref>
 ```
 
-Do not add `--follow` unless the user explicitly requests log following.
+Don’t add `--follow` unless the user explicitly requests log following.

@@ -14,7 +14,7 @@ The available representations progress from shell-managed values to stream and f
 | Line-oriented text | Standard input or a file | Read with `IFS= read -r` |
 | Exact or opaque data | A pipe or file | Do not route it through a shell variable |
 
-Shell variables cannot contain NUL bytes. Command substitution removes trailing newlines and runs in a subshell environment, so changes to variables, directories, options, and traps do not reach the caller. Newline-delimited text cannot represent arbitrary pathnames.
+Shell variables can’t contain NUL bytes. Command substitution removes trailing newlines and runs in a subshell environment, so changes to variables, directories, options, and traps don’t reach the caller. Newline-delimited text can’t represent arbitrary pathnames.
 
 Choose the boundary that preserves the contract rather than the one that makes the next command shortest.
 
@@ -22,7 +22,7 @@ Choose the boundary that preserves the contract rather than the one that makes t
 
 Treat `"$@"` as the shell’s argument vector container. It expands to one field per positional parameter and preserves empty arguments. Quoted `"$*"` joins the parameters into one field using the first character of `IFS`. Unquoted `$@` and `$*` perform field splitting and pathname expansion, so they cannot preserve the original vector.
 
-Build a command and its arguments with `set --`, then execute `"$@"`. Do not store a command or argument list in a scalar, reconstruct one through unquoted expansion, or use `eval` to recover boundaries that the representation has already discarded.
+Build a command and its arguments with `set --`, then execute `"$@"`. Don’t store a command or argument list in a scalar, reconstruct one through unquoted expansion, or use `eval` to recover boundaries that the representation has already discarded.
 
 ```sh
 file='build output.log'
@@ -58,7 +58,7 @@ done
 
 Use a separate rebuilding pass when arguments must be removed, inserted, or reordered. Record the original argument count before shifting or appending, process only that many original arguments, then execute the rebuilt vector. Without that boundary, an appended argument can be mistaken for original input.
 
-Validate positional cardinality before assigning required parameters. Leave `$#` unquoted in numeric tests. Own one mutable positional parameter vector at a time. A function invocation temporarily replaces the positional parameters and restores the caller’s parameters when it returns, so an ordinary helper function can use `set --` without adding a process boundary.
+Validate the number of positional parameters before assigning required parameters. Leave `$#` unquoted in numeric tests. Own one mutable positional parameter vector at a time. A function invocation temporarily replaces the positional parameters and restores the caller’s parameters when it returns, so an ordinary helper function can use `set --` without adding a process boundary.
 
 ## Parameter Validation
 
@@ -69,19 +69,19 @@ The operator controls both the trigger and the result. Adding `:` expands the tr
 | Expand and substitute the provided text | `${<parameter>-<provided-text>}` | `${<parameter>:-<provided-text>}` |
 | Expand the provided text, write it to standard error, and exit a non-interactive shell | `${<parameter>?<provided-text>}` | `${<parameter>:?<provided-text>}` |
 
-In these templates, `<parameter>` stands for the parameter name, and `<provided-text>` stands for the shell text after the operator. That text may contain whitespace, including more than one whitespace-delimited token. When the trigger does not apply, each form expands to the parameter’s current value.
+In these templates, `<parameter>` stands for the parameter name, and `<provided-text>` stands for the shell text after the operator. That text may contain whitespace, including more than one whitespace-delimited token. When the trigger doesn’t apply, each form expands to the parameter’s current value.
 
 Use `${optional-}` when absence is valid under `set -u`. In contexts that permit field splitting or pathname expansion, quote parameter expansions and command substitutions unless that parsing is intentional and bounded. Use double quotes where expansion may occur and single quotes for literals that would otherwise require escaping. Treat unquoted expansions in those contexts as explicit parsing operations. Assignment values and the word tested by `case` do not undergo field splitting or pathname expansion.
 
-Do not encode a list in a space- or newline-delimited scalar. It cannot preserve empty elements, and its result depends on `IFS` and pathname expansion. Restrict an `IFS` change to the smallest applicable scope when a loop list comes from an unquoted parameter expansion, command substitution, or arithmetic expansion. Literal words and pathname expansion results do not require that change.
+Don’t encode a list in a space- or newline-delimited scalar. It can’t preserve empty elements, and its result depends on `IFS` and pathname expansion. Restrict an `IFS` change to the smallest applicable scope when a loop list comes from an unquoted parameter expansion, command substitution, or arithmetic expansion. Literal words and pathname expansion results don’t require that change.
 
 ## Conditions and Arithmetic
 
 Put a command directly in `if`, `while`, or `until` when its status is the condition. Keep each `test` or `[ … ]` invocation to one predicate, then compose predicates with the shell’s `!`, `&&`, and `||` syntax. Avoid the ambiguous `-a` and `-o` operators, and use `=` rather than `==`.
 
-Do not create an `if`, `elif`, or loop branch solely to hold a no-op command. Prefer a negated condition or an early `continue`, `return`, or `exit` so each remaining branch performs required work while preserving the [output and status contract](functions-and-interfaces.md#output-and-status). Empty `case` arms may represent accepted patterns without a command.
+Don’t create an `if`, `elif`, or loop branch solely to hold a no-op command. Prefer a negated condition or an early `continue`, `return`, or `exit` so each remaining branch performs required work while preserving the [output and status contract](functions-and-interfaces.md#output-and-status). Empty `case` arms may represent accepted patterns without a command.
 
-When shell grammar genuinely requires a no-op command, use `true` for success or `false` for failure instead of `:`. Account for `false` under `set -e`. Reserve `:` for parameter expansion or redirection side effects.
+When shell grammar requires a no-op command, use `true` for success or `false` for failure instead of `:`. Account for `false` under `set -e`. Reserve `:` for parameter expansion or redirection side effects.
 
 Use `case` for patterns, enumerated values, and numeric validation. Validate both the syntax and the target-supported range before arithmetic expansion. This example accepts decimal values from `0` through `999` without leading zeros, leaving room for the increment to produce `1000`:
 
@@ -105,23 +105,23 @@ Arithmetic expansion is POSIX. The arithmetic command form `((…))` requires an
 
 Use `getopts` for a conventional portable short-option interface. Start the option specification with `:` when the command owns parser diagnostics. Reset `OPTIND=1` when a reusable function may parse more than once in the same shell, then shift by `OPTIND - 1` after parsing.
 
-Parse required long options with an explicit `case` loop. Define the behavior for `--`, missing option values, unknown options, and the first positional operand. Do not use the external `getopt` utility as a portable parser.
+Parse required long options with an explicit `case` loop. Define the behavior for `--`, missing option values, unknown options, and the first positional operand. Don’t use the external `getopt` utility as a portable parser.
 
-Validate option relationships and positional cardinality after parsing. Protect externally supplied operands with `--` only when the receiving utility supports it. Prefer a dedicated option such as `grep -e "$pattern"` when an operand could otherwise be parsed as an option. Prefix a relative pathname with `./` when the utility has no suitable option boundary.
+Validate option relationships and the number of positional parameters after parsing. Protect externally supplied operands with `--` only when the receiving utility supports it. Prefer a dedicated option such as `grep -e "$pattern"` when an operand could otherwise be parsed as an option. Prefix a relative pathname with `./` when the utility has no suitable option boundary.
 
 Before rewriting a delegated command’s arguments, establish which input forms the wrapper supports. Validate `--` handling, abbreviated and full option names, and attached and separate option values against that declared interface. Preserve supported argument boundaries, and reject unsupported forms before rewriting rather than partially parsing them and forwarding an altered command.
 
 ## Line-Oriented Input
 
-Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. Status `1` indicates EOF. A greater status indicates an error. Clear `line` before each call so an unsuccessful `read` cannot reuse the previous record. Accept a non-empty value returned with status `1` only when a final unterminated line is valid input.
+Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. Status `1` indicates EOF, and a greater status indicates an error. Clear `line` before each call so an unsuccessful `read` can’t reuse the previous record. Accept a non-empty value returned with status `1` only when a final unterminated line is valid input.
 
 Keep the loop body short enough that the read boundary remains visible. Move longer processing into a named helper.
 
 In an executable entrypoint, open the file on a dedicated descriptor before the loop when a command in the body may consume standard input. Treat `read` and line processing as independent failure sources. When the loop owns a dedicated descriptor, treat opening and closing it as additional failure sources, and close it after the loop.
 
-Capture each processing or input/output error status immediately. Stop processing when the interface requires it, and propagate statuses according to the interface’s stated precedence and the [output and status contract](functions-and-interfaces.md#output-and-status). Do not rely on `set -e` to supply that contract.
+Capture each processing or input/output error status immediately. Stop processing when the interface requires it, and propagate statuses according to the interface’s stated precedence and the [output and status contract](functions-and-interfaces.md#output-and-status). Don’t rely on `set -e` to supply that contract.
 
-Do not iterate over `$(cat "$file")`. Command substitution removes trailing newlines, field splitting discards line boundaries, and pathname expansion can reinterpret the resulting text.
+Don’t iterate over `$(cat "$file")`. Command substitution removes trailing newlines, field splitting discards line boundaries, and pathname expansion can reinterpret the resulting text.
 
 ## Pathname Boundaries
 

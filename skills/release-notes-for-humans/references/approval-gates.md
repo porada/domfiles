@@ -6,7 +6,7 @@ An explicit request authorizes the revisions it covers, including consolidation 
 
 ## Approval Requirement
 
-For consolidation or any listed change not already authorized, show the exact before and after, explain the supporting evidence or material effect, and ask whether to apply it. Approval covers only the proposed change. Without that approval, retain the affected supplied text.
+For consolidation or any listed change that isn’t already authorized, show the exact before and after, explain the supporting evidence or material effect, and ask whether to apply it. Approval covers only the proposed change. Without that approval, retain the affected supplied text.
 
 - Removing or reclassifying a supplied release note item, including treating a supplied refactor as internal-only.
 - Removing a supplied rationale or exact dependency version.

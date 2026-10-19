@@ -1,12 +1,12 @@
 # Compose Messages
 
-Apply the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints). Only when authoring wording and the available instructions and task context leave repository conventions unclear, consult a bounded sample of recent relevant local commit messages for vocabulary and conventions. Do not derive editorial rules from Git-generated messages or let repeated maintenance and release commits dominate the sample. Do not fetch remote history for this purpose or sample style for exact supplied or inherited messages.
+Apply the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints). Only when you’re authoring wording and the available instructions and task context leave repository conventions unclear, consult a bounded sample of recent relevant local commit messages for vocabulary and conventions. Do not derive editorial rules from Git-generated messages or let repeated maintenance and release commits dominate the sample. Do not fetch remote history for this purpose or sample style for exact supplied or inherited messages.
 
 Use this decision order for each group:
 
 1. Identify the dominant intended change, using verified task context rather than patch mechanics alone. Distinguish the actual change from capabilities that can merely be inferred from it.
 2. Choose the narrowest durable repository concept that captures that intent. Name a concrete artifact or surface when sufficient. Move up to a capability, maintenance class, or subsystem only when the narrower objects are supporting details. Reuse established compact vocabulary such as `config` and `README` when it fits.
-3. Choose a semantic verb. Added lines do not necessarily mean `Add`, and deleted lines do not necessarily mean `Remove`. Use the role guide below as a vocabulary aid, not an exhaustive list or a rigid taxonomy.
+3. Choose a semantic verb. Added lines don’t necessarily mean `Add`, and deleted lines don’t necessarily mean `Remove`. Use the role guide below as a vocabulary aid, not an exhaustive list or a rigid taxonomy.
 4. Add a qualifier only when it distinguishes a material condition, mechanism, purpose, or scope. Describe the delta rather than inventorying the resulting state. A conjunction may join objects under one action, but should not combine unrelated changes.
 5. Apply the [message form](#message-form), then use the entrypoint’s [writing composition](../SKILL.md#compose-prose) with the established intent and constraints. Check that the subject covers its assigned hunks and the complete message claims no unverified motivation or outcome.
 
@@ -16,8 +16,8 @@ The role guide is alphabetized by editorial role:
 | --- | --- |
 | Adoption | Use `Install` for managed provisioning, `Set up` for integrated first-time configuration, and `Use` for adopting a selected mechanism. |
 | Creation | Use `Add` for a concrete artifact or supported case, `Establish` for durable architecture, and `Introduce` for a named public option or substantial capability. |
-| Maintenance | Use `Adjust` or `Tweak` for a bounded refinement and `Update` for an existing surface or recurring maintenance class. Do not force a distinction between near-synonyms that context cannot establish. |
-| Organization | Use `Clean up` for heterogeneous pruning within one area and `Refactor` when structure or ownership is the organizing decision. `Refactor` does not guarantee behavior preservation. Prefer a direct operation such as `Extract`, `Move`, `Remove`, or `Rename` when that operation defines the change. |
+| Maintenance | Use `Adjust` or `Tweak` for a bounded refinement and `Update` for an existing surface or recurring maintenance class. Don’t force a distinction between near-synonyms that context can’t establish. |
+| Organization | Use `Clean up` for heterogeneous pruning within one area and `Refactor` when structure or ownership is the organizing decision. `Refactor` doesn’t guarantee behavior preservation. Prefer a direct operation such as `Extract`, `Move`, `Remove`, or `Rename` when that operation defines the change. |
 | Outcomes | Use `Disable` or `Enable` for the resulting inactive or active state and `Warn on` for warning severity. Use `Fix` for an established defect. Choose a precise outcome verb such as `Ensure`, `Preserve`, `Prevent`, or `Reject` when it states the effect more clearly. |
 
 ## Message Form
