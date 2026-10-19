@@ -53,7 +53,7 @@ Distinguish accidental opacity from intentional ambiguity, complexity, or delaye
 
 Watch for vague references, stacked abstraction, inflated transitions, cleverness that obscures meaning, or brevity that makes a complex thought falsely simple.
 
-Look for abstract role names, actions expressed as nouns, and modifiers with an unstated reference point. Check whether these constructions leave readers to infer information the sentence needs to state.
+Look for abstract role names, actions expressed as nouns, and modifiers with an unstated reference point. Check whether these constructions leave readers to infer information the sentence needs to state. Words such as “canonical,” “invariant,” “surface,” and “verbatim” can be precise technical terms, but can also obscure a simple action or relationship. Judge their meaning in context, not their presence.
 
 ### 7. Rhythm, Pacing, and Emphasis
 
@@ -63,11 +63,15 @@ Watch for unrelenting staccato, unbroken density, sentence length variation that
 
 Also watch for repeated syntax that neither develops the thought nor earns a purposeful break, lists used as default structure, repetition that performs no meaningful semantic, rhythmic, emotional, or structural work, or emphasis that replaces hierarchy and reasoning.
 
+Examples include repeated “not X, but Y” contrasts without a useful distinction, lists padded to three items, clauses balanced only for effect, and chains of “so” or “which” clauses that give every sentence the same movement. Keep genuine comparisons and useful connections. Splitting every clause or avoiding every familiar construction can make the prose less natural.
+
 ### 8. Voice and Reader Relationship
 
 Identify the writer’s stance toward the reader, then judge whether it suits the subject, evidence, stakes, and intended experience. Keep confidence proportional to what the work has earned.
 
-Watch for borrowed swagger, unsupported authority, false intimacy, generic encouragement, tonal inconsistency, manipulation, or a voice that eclipses the subject.
+Watch for borrowed swagger, unsupported authority, false intimacy, generic encouragement, tonal inconsistency, manipulation, or a voice that eclipses the subject. Look for automatic agreement, stock compliments such as “Good catch,” and closing offers such as “Happy to adjust” that don’t respond to anything particular in the exchange. Preserve genuine gratitude and meaningful offers.
+
+Check whether words such as “crucially,” “robust,” and “comprehensive” announce significance or diligence the prose should demonstrate. Repeated “now,” “the existing,” or “unchanged” can make a passage sound like a change log, but may carry necessary history or compatibility information. Keep formal evidence wording when its precision matters, and never replace it with invented experience or uncertainty.
 
 ### 9. Openings, Boundaries, and Endings
 

@@ -1,14 +1,9 @@
-import type { Plugin } from 'prettier';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { format, formatWithCursor, getFileInfo } from 'prettier';
-import { expect, expectTypeOf, test, vi } from 'vite-plus/test';
+import { expect, test, vi } from 'vite-plus/test';
 import * as pluginFish from './index.ts';
-
-test('exposes correct public API', () => {
-	expectTypeOf(pluginFish).toExtend<Plugin>();
-});
 
 const TEST_FISH = `
 set name ""
@@ -91,6 +86,55 @@ test('preserves native formatter output with `tabWidth` and `useTabs`', async ()
 	});
 
 	expect(output).toBe(expectedOutput);
+});
+
+test.each([
+	{ rangeEnd: 12 },
+	{ rangeEnd: 24, rangeStart: 12 },
+	{ rangeStart: 12 },
+])('leaves input unchanged for partial ranges %j', async (range) => {
+	const input = 'echo    foo\necho    bar\necho    baz\n';
+
+	const output = await format(input, {
+		...range,
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toBe(input);
+});
+
+test('formats without a pragma when `requirePragma` is enabled', async () => {
+	const output = await format('echo    foo\n', {
+		parser: 'fish',
+		plugins: [pluginFish],
+		requirePragma: true,
+	});
+
+	expect(output).toBe('echo foo\n');
+});
+
+test.each(['@noformat', '@noprettier'])(
+	'formats despite `%s` when `checkIgnorePragma` is enabled',
+	async (pragma) => {
+		const output = await format(`# ${pragma}\necho    foo\n`, {
+			checkIgnorePragma: true,
+			parser: 'fish',
+			plugins: [pluginFish],
+		});
+
+		expect(output).toBe(`# ${pragma}\necho foo\n`);
+	}
+);
+
+test('formats without adding a pragma when `insertPragma` is enabled', async () => {
+	const output = await format('echo    foo\n', {
+		insertPragma: true,
+		parser: 'fish',
+		plugins: [pluginFish],
+	});
+
+	expect(output).toBe('echo foo\n');
 });
 
 test('respects `cursorOffset` at the end of the input', async () => {

@@ -24,13 +24,15 @@ Prefer concise wording that readers can understand directly. When a compact labe
 
 Preserve causal framing, technical relationships, and the established tone. Instead of asserting importance, quality, or magnitude, state the mechanism, failure mode, boundary, or observable consequence that earns the claim. Ground claims about quality, maintenance, compatibility, performance, and testing in concrete evidence or careful qualifiers. Never overpromise.
 
-Technical precision need not sound cold or impersonal. Use contractions, direct second-person wording, and an honest stance when they suit the surface and intended reader.
+Technical precision doesn’t require a cold or impersonal tone. Use direct second-person wording and an honest stance when they suit the surface and intended reader.
 
 When a value’s representation is used only for comparison or lookup, describe those semantics without suggesting that the value itself is coerced, stringified, or mutated. Include implementation detail only when it explains a required action, limitation, non-obvious decision, or technical consequence.
 
 ### Propagation
 
-When propagating or unifying copy, align verified shared facts and use consistent reader-facing terminology for the same concept in the same role. Reuse wording only when the roles, constraints, and observable behavior are semantically equivalent. After each replacement, move, or removal, review every affected passage and its surrounding copy independently in context. Confirm that surviving headings, lead sentences, and quoted fragments still match the remaining content, and that references such as “both,” “below,” and “that decision” still identify the intended subjects or locations. When behavior changes, revise contradictory existing wording rather than appending a correct explanation beneath it.
+When propagating or unifying copy, align verified shared facts and use consistent reader-facing terminology for the same concept in the same role. Reuse wording only when the roles, constraints, and observable behavior are semantically equivalent. After each replacement, move, or removal, review every affected passage and its surrounding copy independently in context. Confirm that surviving headings, lead sentences, and quoted fragments still match the remaining content, and that references such as “both,” “below,” and “that decision” still identify the intended subjects or locations.
+
+When behavior changes, revise the complete affected passage or workflow into a coherent statement of the current contract. Integrate requirements into their owning rules and steps rather than adding corrective caveats. Remove obsolete branches, distinctions, and contrast wording whose only purpose was to accommodate or reject the previous design. Preserve historical context, migration guidance, and explicit safeguards when they still serve current readers. Prefer the smallest coherent revision over the smallest textual diff, without expanding into unrelated rewriting.
 
 ### Validation
 

@@ -21,6 +21,7 @@ for skill in \
   prose \
   release-notes \
   repository-harmonization \
+  subagent-review \
   technical-copy \
   verify; do
   for path in "$HOME/.agents/skills/$skill" "$HOME/.claude/skills/$skill"; do

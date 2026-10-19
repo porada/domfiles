@@ -420,8 +420,9 @@ __git_is_path_changed_in_commit() (
   [ -n "$changed_files" ]
 )
 
-# Prints skipped files from the repository at `$1`. Applies any remaining
-# arguments as filters relative to that location
+# Prints tagged `git ls-files -v` entries for skipped files in repository `$1`.
+# Applies any remaining arguments as filters relative to that location. Callers
+# own display path extraction
 __git_skipped_files() (
   if [ $# -eq 0 ]; then
     __print_error_and_exit '`__git_skipped_files` requires at least one argument'

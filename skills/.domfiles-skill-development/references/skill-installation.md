@@ -16,7 +16,7 @@ Use unprefixed names for project-authored internal skills unless the repository 
 
 Before moving content in a promotion that retains an overlay or another source owner, classify every existing rule and reference as promoted, retained under a named owner, or removed.
 
-Before moving or rewriting content in a promotion to the public category, complete the [public promotion profile](public-skill-promotion.md#build-public-promotion-profiles).
+Before moving or rewriting content in a promotion to the public category, complete the [standalone dependency analysis](public-skill-promotion.md#analyze-standalone-dependencies).
 
 For every category change, update the canonical location, metadata, documentation links, and installation behavior together.
 

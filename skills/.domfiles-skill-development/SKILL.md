@@ -3,7 +3,7 @@ name: skill-development
 description: |-
     Use for creating, editing, reviewing, auditing, or maintaining project-authored skills, including their assets, descriptions, invocation modes, references, scripts, and adjacent contract tests. Also use for discovery, installation reach, optional peers, promotion, public skill catalogs and READMEs, script contract architecture, skill categories, and standalone behavior.
 
-    Use when a global instruction changes or is evaluated and supplies a public skill mirror, or when a project-authored asset canonically supplies a public skill surface, regardless of that asset’s source category.
+    Use when a global instruction changes or is evaluated and supplies a public skill mirror or standalone default, or when a project-authored asset canonically supplies a public skill surface, regardless of that asset’s source category.
 
     Do not use for ordinary project source or agent documentation that does not affect a skill contract.
 
@@ -27,7 +27,7 @@ An explicit change takes precedence when the request also uses review or audit l
 
 - **Documentation:** When authoring, reviewing, auditing, or maintaining skill documentation, follow [Skill Authoring](references/skill-authoring.md) for entrypoints, references, overlays, examples, and inherited policy.
 - **Descriptions:** When authoring or assessing a skill’s description or invocation mode, follow [Skill Descriptions](references/skill-descriptions.md).
-- **Public behavior:** For every public skill or canonical public-surface asset in scope, follow [Public Skill Portability](references/public-skill-portability.md). Also follow it for every public mirror affected by a global instruction change or evaluation, even when the request names only the global source. Select its conditional creation, promotion, naming, and optional peer contracts before the corresponding work. Its README contract applies when creating or updating a public skill README.
+- **Public behavior:** For every public skill or canonical public-surface asset in scope, follow [Public Skill Portability](references/public-skill-portability.md). Also follow it for every public mirror or standalone default affected by a global instruction change or evaluation, even when the request names only the global source. Select its conditional creation, promotion, naming, and optional peer contracts before the corresponding work. Its README contract applies when creating or updating a public skill README.
 - **Public catalogs:** When maintaining a public skill catalog or its collection README, follow [Maintain Public Skill Catalogs](references/public-skill-portability.md#maintain-public-skill-catalogs).
 - **Script contracts:** Before planning a new or changed skill-owned script, adjacent contract test, or script-owned artifact, or reviewing or auditing one, follow [Skill-Owned Scripts](references/skill-owned-scripts.md). This skill owns necessity, canonical ownership and location, observable interfaces, operation modes, effects, artifacts, schemas, invocation, and contract coverage. The owning domain skill supplies domain semantics, and applicable implementation workflows govern internal concerns.
 

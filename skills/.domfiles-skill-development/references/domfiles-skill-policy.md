@@ -13,22 +13,22 @@ Follow the [internal skill naming policy](skill-installation.md#internal-skill-n
 
 ## Synchronize Skill Links
 
-After task-authorized changes under `skills/` alter the exposed skill set, logical names, or source-to-install mapping, update the applicable provisioning and retired-name mappings, then reconcile the affected links in `~/.agents/skills/` and `~/.claude/skills/` before completing the task. Do this directly rather than asking the user to run `domfiles sync`, running full synchronization, or adding a separate synchronization command. Content-only edits to already linked sources require no link update.
+When task-authorized changes under `skills/` alter the exposed skill set, logical names, or source-to-install mapping, update the applicable provisioning and retired-name mappings, then reconcile the affected links in `~/.agents/skills/` and `~/.claude/skills/` before completing the task. Reconcile those links directly rather than asking the user to run `domfiles sync`, running full synchronization, or adding a separate synchronization command. Content-only edits to sources already linked require no link update.
 
-Establish the provisioned checkout from the installed `domfiles` command or existing managed links before choosing targets. Keep discovery pointed at that checkout, not a disposable task worktree. If the task’s changes are in another checkout or their intended source is not yet available in the provisioned checkout, leave the affected links unchanged and report reconciliation pending integration there.
+Identify the provisioned checkout from the installed `domfiles` command or existing managed links before choosing targets. Keep discovery pointed at that checkout, not a disposable task worktree. If the task’s changes are in another checkout or their intended source is not yet available in the provisioned checkout, leave the affected links unchanged and report that reconciliation awaits integration into that checkout.
 
-Use the task’s before-and-after source paths and installed names to bound the affected links. Inspect their path-level state before mutation, retain existing link targets until verification, and create, replace, or remove only links whose task ownership is established. Preserve unrelated skills, real files and directories, and links owned by another installation. Return conflicts or required access grants through the existing execution checkpoint rather than broadening cleanup.
+Use the task’s before-and-after source paths and installed names to identify exactly which links it affects. Inspect their path-level state before mutation, retain existing link targets until verification, and create, replace, or remove only links whose task ownership is established. Preserve unrelated skills, real files and directories, and links owned by another installation. Use the existing execution checkpoint for conflicts or required access grants rather than broadening cleanup.
 
-Verify that each affected installed name resolves to its intended source and that task-retired names are absent. Confirm both discovery roots without reading unrelated skill contents or configuration.
+Verify that each affected installed name resolves to its intended source and that names retired by the task are absent. Confirm both discovery roots without reading unrelated skill contents or configuration.
 
 ## Maintain Public Behavior
 
 Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
 
-When changing a public skill contract or its standalone fallback, consult the **Public Skill Fallback Families** section of domfiles’ `.agents/PROJECT.md` to identify related guidance.
+When changing a public skill contract or its standalone fallback, consult the **Shared Skill Contracts** section of domfiles’ `.agents/PROJECT.md` to identify related guidance.
 
 ## Develop Scripts
 
 Write skill-owned scripts in TypeScript that Node.js runs directly, without a build step. Use another language only when a concrete ecosystem, interoperability, runtime, or tooling constraint makes it materially more correct, maintainable, or proportionate.
 
-Treat every skill-owned script as a [portable command](skill-owned-scripts.md#support-portable-commands), regardless of its skill’s installation category, without a `home/.local/bin` wrapper. Run TypeScript scripts with `node`, and write their adjacent tests with `node:test` and `node:assert`, running independent tests concurrently through `describe(…, { concurrency: true })`.
+Treat every skill-owned script as a [portable command](skill-owned-scripts.md#support-portable-commands), regardless of its skill’s installation category, without a `home/.local/bin` wrapper. Run TypeScript scripts with `node`. Write their adjacent tests with `node:test` and `node:assert`, and run independent tests concurrently through `describe(…, { concurrency: true })`.

@@ -6,7 +6,7 @@ Follow the [shared runtime rules](session-coordination.md#apply-runtime-configur
 
 Use `--permission-mode auto` for every fresh launch. Do not read Zed settings or run configuration or version discovery commands before launch or resumption. Never use `bypassPermissions`. The selected mode does not transfer interactive approvals into an unattended CLI process or authorize otherwise prohibited effects.
 
-Unless the user explicitly selects otherwise, use `--model opus` for the latest available Opus and `--effort xhigh`. Do not add a monetary budget or automatic fallback model. Native background summaries may use auxiliary Haiku-class requests, so the primary assignment’s model selection does not imply that every CLI request uses Opus.
+Unless the user explicitly selects otherwise, use `--model opus` for the latest available Opus and `--effort xhigh`. Do not add a monetary budget or automatic fallback model. Native background summaries may use auxiliary Haiku-class requests, so choosing Opus for the primary assignment does not mean every CLI request uses it.
 
 The procedures below use the native background interface, not an async print mode runner.
 
@@ -16,9 +16,9 @@ Follow the [shared readiness procedure](session-coordination.md#establish-readin
 
 ## Prepare Implementation Assignments
 
-Native background sessions can require an isolated worktree before edits. Their worktree tool may default to a remote default-branch base rather than the coordinator’s current `HEAD`. For implementation, establish the intended base and any necessary uncommitted inputs, checkout and branch authority under the global **Concurrent work** and **Commit gate** policies, delivery into the coordinator’s checkout, and cleanup ownership before edits begin. Do not assume the tool’s default base contains the assigned changes.
+Native background sessions can require an isolated worktree before edits. Their worktree tool may default to the remote default branch rather than the coordinator’s current `HEAD`. Before edits begin, establish the intended base and any necessary uncommitted inputs, checkout and branch authority under the global **Concurrent work** and **Commit gate** policies, how changes will reach the coordinator’s checkout, and who owns cleanup. Do not assume the tool’s default base contains the assigned changes.
 
-If the runtime’s checkout requirements are uncertain, have Claude establish them read-only before requesting any uncovered lifecycle effects. Verify the supported way to prepare the intended state rather than inventing tool parameters. If the required isolation or base cannot be established within current authority, return that limitation instead of editing in place around the requirement. This preparation does not authorize creating worktrees, branches, commits, or remote changes.
+If the runtime’s checkout requirements are uncertain, have Claude determine them read-only before requesting any lifecycle effects not already authorized. Verify the supported way to prepare the intended state rather than inventing tool parameters. If the required isolation or base cannot be established within current authority, report that limitation rather than editing in place to work around the requirement. This preparation does not authorize creating worktrees, branches, commits, or remote changes.
 
 ## Launch a Fresh Conversation
 
@@ -30,7 +30,9 @@ Launch with the complete assignment on stdin:
 claude --bg --effort xhigh --model opus --permission-mode auto < '<assignment-file>'
 ```
 
-Without a positional prompt, `--bg` reads its prompt from stdin, for a launch and for `--resume` alike. `claude --help` does not document this, so treat a launch or resumption that never records its prompt, and keeps reporting `working` with `progressAt: null`, as a compatibility problem under [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop). Do not use `--print`. Leave browser and MCP configuration to the existing Claude setup. Stdin holds nothing beyond the assignment, so it leaves no input to answer a human-only prompt. This does not turn an approval requirement into permission.
+Without a positional prompt, `--bg` reads its assignment from stdin on launch and `--resume`. `claude --help` does not document this input form. Treat a launch or resumption that never records its prompt and keeps reporting `working` with `progressAt: null` as a compatibility problem under [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop). Do not use `--print`. Leave browser and MCP configuration to the existing Claude setup.
+
+This launch assumes that `--bg` reports an unmet trust requirement and stops without consuming the assignment as an answer. That startup behavior remains unverified. A startup question that reads stdin could consume the assignment instead. Supplying only the assignment therefore does not guarantee that a human-only prompt remains unanswered. An approval requirement still requires the user’s decision.
 
 Do not supply `--session-id` with `--bg`, which assigns its own session identity. Capture the returned job ID, then obtain the full session UUID from the exact matching row:
 
@@ -44,13 +46,13 @@ Retain the job ID and the explicit launch values for `--effort`, `--model`, and 
 
 ## Resume the Same Exchange
 
-Follow the [shared resumption procedure](session-coordination.md#resume-the-same-exchange). Before a completed-turn follow-up, record the task row’s `pid` when available, then stop the task-owned worker while preserving the conversation:
+Follow the [shared resumption procedure](session-coordination.md#resume-the-same-exchange). Before sending a follow-up after a completed turn, record the task row’s `pid` when available, then stop the task-owned worker while preserving the conversation:
 
 ```sh
 claude stop '<job-id>'
 ```
 
-Confirm exit from the stop response and task row, using a host process status check of the recorded PID when needed. If exit cannot be established, report the limitation and do not resume. Reuse applicable termination evidence rather than stopping an already confirmed exited worker again.
+Confirm exit from the stop response and task row, using a host process status check of the recorded PID when needed. If exit cannot be established, report the limitation and do not resume. Reuse applicable evidence that the worker has exited rather than trying to stop it again.
 
 When the retained launch values still match current requirements, resume with only the background and resume arguments, passing the follow-up on stdin as [Launch a Fresh Conversation](#launch-a-fresh-conversation) describes:
 
@@ -64,9 +66,9 @@ If a launch unexpectedly creates a copy, stop only the task-owned copy, preserve
 
 ## Read Claude Signals
 
-For each `--claude` session, `subagent-signal` reads the `<uuid>.jsonl` transcript beneath `~/.claude/projects/`, the modification times of its subagent transcripts, and the session’s native CLI state from `claude agents`. The turn starts at the latest human prompt after `<since>`, and a session whose prompt is not yet recorded needs no `claude agents` lookup. `progressAt` covers the transcript and its subagent transcripts.
+For each `--claude` session, `subagent-signal` reads the `<uuid>.jsonl` transcript beneath `~/.claude/projects/`, the modification times of its subagent transcripts, and the session’s native CLI state from `claude agents`. The turn starts at the latest human prompt after `<since>`. If the session’s prompt has not yet been recorded, no `claude agents` lookup is needed. `progressAt` covers the transcript and its subagent transcripts.
 
-`ready` requires a closed turn, answered tool calls, completed recorded background commands, a later turn for any task notification recorded after the last turn ended, no pending agents or workflows, a usable final reply, and a session that is neither busy nor showing an open prompt. Claude also marks a session `blocked` when its reply asks a question, so a finished reply reports `ready` and the question appears in `replies`. Use that result rather than deriving completion again from one session field. It does not terminate the worker.
+`ready` requires a closed turn, answered tool calls, completed recorded background commands, a later turn for any task notification recorded after the last turn ended, no pending agents or workflows, a usable final reply, and a session that is neither busy nor showing an open prompt. Claude also marks a session `blocked` when its reply asks a question, so a finished reply reports `ready` and the question appears in `replies`. Use that result instead of inferring completion from a single session field. It does not terminate the worker.
 
 | Attention Reason | Meaning and Detail |
 | --- | --- |
@@ -75,10 +77,10 @@ For each `--claude` session, `subagent-signal` reads the `<uuid>.jsonl` transcri
 | `noReply` | The turn ended without a usable final reply, including synthetic API errors, output limits, refusals, or unanswered tool calls. `detail` contains `error`, `model`, `stopReason`, `text`, and `textOmitted`. |
 | `stopped` | The turn is still open or awaiting background work, and the session reports that it stopped. |
 
-A `blocked` signal does not authorize answering a user-only prompt or establish which approval is needed. Return that decision or an unclear requirement to the user.
+A `blocked` signal does not authorize answering a user-only prompt or establish which approval is needed. Ask the user to resolve the approval or clarify an unclear requirement.
 
 ## Stop a Session
 
-Use `claude stop` on the identified task-owned worker, then confirm its exit as [Resume the Same Exchange](#resume-the-same-exchange) describes. Background shell commands the session started can keep running after the stop, and they keep a later resumption of that session `busy` until they finish. When the work of a stopped, unfinished turn must continue, do not resume the stopped session. Replace it as the [shared resumption procedure](session-coordination.md#resume-the-same-exchange) describes for changed requirements.
+Use `claude stop` on the identified task-owned worker, then confirm its exit as [Resume the Same Exchange](#resume-the-same-exchange) describes. Background shell commands the session started can keep running after the stop, and they keep a later resumption of that session `busy` until they finish. If an unfinished turn’s work must continue after a stop, do not resume the stopped session. Replace it as the [shared resumption procedure](session-coordination.md#resume-the-same-exchange) describes for changed requirements.
 
 For completion cleanup, stop any remaining task-owned worker as [Resume the Same Exchange](#resume-the-same-exchange) describes. Do not automatically delete sessions with `claude rm`, which can also remove job or worktree state.

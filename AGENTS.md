@@ -29,6 +29,24 @@
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, refer to `.agents/GLOBAL.md`.
 
+### Editorial Refresh
+
+Only agents whose identity is Zed Agent may perform this editorial refresh workflow or maintain its list. Running another agent inside Zed doesn’t qualify. Other agents may make authorized task edits without performing a refresh. To rename or delete a listed document, they must coordinate with a Zed Agent to complete the list maintenance in the same change, or defer the operation.
+
+Within `agent-documentation`’s change workflow, use `human-facing-writing` for whole-document prose refreshes of paths in the [editorial refresh list](.agents/assets/editorial-refresh.txt). Refreshing `AGENTS.md` or `.agents/GLOBAL.md` requires an explicit user opt-in for that document in the current task. For every other listed document, any authorized edit requires the refresh unless the user explicitly opts out for that task. Complete any required refresh before handoff. Requested edits can proceed when the whole-document refresh is skipped.
+
+These rules authorize the applicable refresh and corresponding list maintenance within the task, subject to explicit user limits and existing approval, mutation, and security requirements. Read-only work doesn’t trigger a refresh.
+
+After making the task edits, perform a separate editorial pass over the complete final document, including sections untouched by the task. Apply `human-facing-writing` to all prose eligible for refresh, not just the changed lines. Reading the file for context, checking the task diff, or reviewing the focused changes does not complete this pass.
+
+Preserve the document’s meaning, requirements, permissions, conditions, exceptions, and workflow behavior. Preserve introductory paragraphs, typography rules, headings, structure, links, examples, commands, literal tokens, and metadata other than description wording. Skill descriptions may change wording without changing applicability. Leave `.agents/GLOBAL.md`’s final `Writing` section unchanged, and leave already sound prose alone.
+
+After completing the whole-document editorial pass, applicable validation of the final document, and preserved-meaning review of the complete refresh, remove the path. A refresh requiring no wording changes counts only when the full pass establishes that every eligible passage is already sound. Leave the path listed if any of these steps is skipped, deferred, unfinished, or unverified.
+
+Keep repository-relative paths in ascending bytewise order, one per line. Don’t add candidates or refresh untouched files. Carry a pending entry to its new path after an authorized rename. Remove the entry when the task intentionally deletes its document.
+
+When no entries remain, delete the entire list file and this **Editorial Refresh** subsection in the same change. Remove `.agents/assets/` only if it is then empty. Don’t leave an empty list or a completion notice.
+
 ## General
 
 - **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. The [public repository boundary](#public-repository-boundary) remains applicable.
@@ -41,7 +59,7 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 
 ## Validation
 
-Prefix every agent-selected pnpm-backed validation command with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error`, including checks selected through domain skills. Keep validation separate from package manager and dependency reconciliation. When a guard stops a check, diagnose the prerequisite failure and apply the global **Dependencies** policy. Complete authorized acquisition or reconciliation separately, including obtaining or selecting the project-prescribed package manager version, then rerun the check with all guards intact. Report a limitation only when recovery cannot proceed within applicable boundaries. See the [repository command rationale](.agents/PROJECT.md#repository-scoped-commands) for the overrides’ effects.
+Prefix every agent-selected pnpm-backed validation command with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error`, including checks selected through domain skills. Keep validation separate from package manager and dependency reconciliation. When a guard stops a check, diagnose the prerequisite failure and apply the global **Dependencies** policy. Complete authorized acquisition or reconciliation separately, including obtaining or selecting the project-prescribed package manager version, then rerun the check with all guards intact. Report a limitation only when recovery cannot proceed within applicable boundaries. See [pnpm Execution and Lockfile Behavior](.agents/PROJECT.md#pnpm-execution-and-lockfile-behavior) for the overrides’ effects.
 
 For changed JSON files, run `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error pnpm run lint:json <changed-json-files>`. Pass paths explicitly unless repository-wide validation is intended.
 

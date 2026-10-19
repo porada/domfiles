@@ -14,9 +14,9 @@ Project code assumes the latest Node.js 24 release or newer.
 
 Domfiles actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
 
-[`home/README.md`](../home/README.md) documents the repository owner’s configuration workflow rather than a supported onboarding path for other users. It intentionally does not restate the complete supported environment or bootstrap prerequisites. Others may install the repository, but the project makes no compatibility or support commitment for that use. `domfiles sync` reports a missing Homebrew installation before synchronization. Command Line Tools provide the Git used for the initial clone before synchronization installs the managed Git version.
+[`home/README.md`](../home/README.md) documents the owner’s configuration workflow, not general onboarding or the complete bootstrap prerequisites. Other users may install domfiles without a compatibility or support commitment. Command Line Tools provide Git for the initial clone before synchronization installs the managed version.
 
-The canonical Apple Silicon location fallback for `brew` is only a convenience for invoking Homebrew itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
+The fallback to Homebrew’s canonical Apple Silicon location is only a convenience for invoking `brew` itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
 
 `fish` is the default interactive shell on every managed machine. Shell behavior and setup logic must not assume that Bash or Zsh is the user’s default shell.
 
@@ -24,15 +24,13 @@ The canonical Apple Silicon location fallback for `brew` is only a convenience f
 
 ### Dependency Installation Policy
 
-[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids installation time script execution without disabling esbuild’s runtime build API. It gives up the script’s binary version check, fallback download, and launcher optimization, so optional dependencies remain required by this installation model.
+[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids running scripts during installation without disabling esbuild’s runtime build API. It forgoes the script’s binary version check, fallback download, and launcher optimization. Optional dependencies therefore remain required by this installation model.
 
-`trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` bounds how long that comparison can prevent installation: pnpm skips it when the target release’s age in whole minutes exceeds 43,200, or 30 days. This cutoff applies across the workspace, not only to Vercel packages. It is neither a calendar month nor a minimum release age.
+`trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` stops that comparison from blocking releases older than 30 days. This cutoff applies across the workspace, not only to Vercel packages, and is not a minimum release age.
 
 ### GitHub CLI Authentication Boundary
 
-`gh` is provisioned as a supporting agent command, but authentication remains machine-local and user-managed. The supported setup targets `github.com` with credentials stored in the operating system credential store.
-
-GitHub CLI can fall back to storing a token in plaintext when secure credential storage is unavailable. That fallback is outside the supported boundary for agent use.
+The supported GitHub CLI setup for agent use targets `github.com` with credentials stored in the operating system credential store.
 
 ### Zed Agent Permissions
 
@@ -40,97 +38,81 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 
 ## Agent Integration
 
-### Agent Authorization Model
+### Agent CLI Distribution
 
-Exact recoverability is the interruption boundary for otherwise authorized local effects that are not subject to a standing approval gate. This keeps task-scoped local work low-friction without risking irrecoverable loss, disclosure, or external mutation. Batching related decisions where their approval gates permit it preserves the context needed for assessment without returning to command-level prompts.
+`claude` and `codex` are intentionally installed through Homebrew’s `claude-code` and `codex` casks rather than declared as `@anthropic-ai/claude-code` or `@openai/codex` project dependencies. Both CLIs remain machine-level development Homebrew dependencies, so dependency installation in CI excludes them. For Claude, the cask also follows Anthropic’s stable Homebrew channel. The Homebrew CLI installations are separate from the agent packages Zed manages, such as the `claude-acp` registry package.
 
-Git publication and contribution submission require explicit authorization rather than remaining categorically user-only. History replacement retains an expected-head lease because authorization to publish does not establish that unseen remote work may be discarded. The global [authorization policy](GLOBAL.md#authorization) owns these boundaries.
+### Agent Discovery
 
-### Agent Documentation Composition
+[`.agents/GLOBAL.md`](GLOBAL.md) is the shared global instruction source. [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) exposes canonical instructions, skills, and preferences through each client’s discovery locations without duplicating content.
 
-Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them. External repositories remain self-contained and do not link to, name, or require these skills. The [repository independence contract](../skills/.domfiles-agent-documentation/references/repository-independence.md) distinguishes intentional local copies from competing policy definitions. Applicable project instructions override their fallback workflows.
+| Surface | Canonical Source | Client Location | Mechanism |
+| --- | --- | --- | --- |
+| Claude global instructions | `.agents/GLOBAL.md` | `~/.claude/CLAUDE.md` | Synchronization symlink |
+| Claude project instructions | [`AGENTS.md`](../AGENTS.md) | Repository `AGENTS.md` | Direct loading by Claude Code and Zed’s Claude Agent in the default project instruction mode, without a `CLAUDE.md` bridge |
+| Claude project skills | `.agents/skills/` | [`.claude/skills`](../.claude/skills) | Tracked directory symlink |
+| Claude settings | [`home/.claude/settings.json`](../home/.claude/settings.json) | `~/.claude/settings.json` | Synchronization symlink |
+| Codex global instructions | `.agents/GLOBAL.md` | `~/.codex/AGENTS.md` | Synchronization symlink |
+| Globally exposed skills | [Globally exposed categories](../AGENTS.md#skills) under `skills/` | `~/.agents/skills/<skill-name>` and `~/.claude/skills/<skill-name>` | Synchronization symlinks using installed names |
+| Zed global instructions | `.agents/GLOBAL.md` | `~/.config/zed/AGENTS.md` | Tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge through the managed `~/.config` link |
 
-Equivalent cross-client behavior is a separate compatibility goal, not a guarantee of the [**Global redundancy baseline**](../AGENTS.md#general).
+None of the `skills/` source namespaces is a project-local discovery surface. Project discovery remains backed by `.agents/skills/*`. Hidden source directories keep global skills, including personal overlays, out of `gh skill`’s default repository discovery. Client-specific roots and differing source and installed names motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
 
-The [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) gives every project-authored agent documentation surface and human-facing asset one writing standard, regardless of skill category or invocation mode.
-
-The explicit route also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description. Without `agent-documentation`, the writing skill’s own description determines discovery, including its exclusions for formatting-only work and work that neither evaluates nor changes wording or information architecture.
-
-### Agent Task Relay
-
-[`agent-task-relay`](../skills/agent-task-relay/SKILL.md) is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task. Reaching it through the parent skill would load both for work that needs only the relay workflow.
-
-### Browser Automation
-
-The [global browser automation policy](GLOBAL.md#browser-automation) owns browser eligibility and tool choice. [Retrieval Boundaries](GLOBAL.md#retrieval-boundaries) distinguishes browser-backed tools from purpose-built non-browser MCP tools and owns general failure handling. This keeps browser restrictions tied to browser capabilities rather than the MCP transport. Keeping browser tool preferences in the shared instruction layer avoids modifying externally owned skills and preserves them across skill updates. Browser launch configuration remains client-owned, so the policy alone does not change how an existing MCP server starts.
+[`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup rather than compatibility aliases so future synchronization leaves each logical skill discoverable once. Equivalent cross-client behavior remains a compatibility goal, not a guarantee of the [**Global redundancy baseline**](../AGENTS.md#general).
 
 ### Checkout Workflow
 
-The user creates disposable worktrees through Zed’s UI and starts agents bound to those checkouts. This makes worktree lifecycle management a user responsibility rather than an agent workflow. The global [checkout boundary](GLOBAL.md#collaboration) applies independently of contribution preparation, whose branch selection and upstream setup remain owned by [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md).
+The user creates disposable worktrees through Zed’s UI and starts agents bound to those checkouts. The user therefore manages the worktrees’ lifecycle rather than delegating it to agents. The global [checkout boundary](GLOBAL.md#collaboration) applies independently of contribution preparation, whose branch selection and upstream setup remain owned by [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md).
 
 The `worktree_directory` setting in [Zed’s configuration](../home/.config/zed/settings.json) places these worktrees under `~/Projects/.zed` for repositories directly under `~/Projects`. This shared directory is a worktree container rather than an independent project.
 
 ### Claude Agent Integration
 
-Claude Code and Zed’s Claude Agent load the project’s [`AGENTS.md`](../AGENTS.md) directly in the default project instruction mode, without a repository `CLAUDE.md` bridge. Claude’s global instruction setup is described under [global instructions](#global-agent-instructions). [`domfiles sync`](../home/.local/bin/domfiles-sync-setup) links the complete globally exposed skill set under `~/.claude/skills`, while the tracked [`.claude/skills`](../.claude/skills) symlink exposes repository-internal skills from `.agents/skills`. These native discovery locations avoid duplicating canonical content.
-
-`domfiles sync` also links [`home/.claude/settings.json`](../home/.claude/settings.json) to `~/.claude/settings.json`. The tracked file defines the shared, non-secret preference set. Claude Code [uses this user settings path for configuration updates](https://code.claude.com/docs/en/settings), and the file is managed as mutable public configuration. Credentials and private machine or account values are excluded from this settings surface.
+The [Claude user settings](../home/.claude/settings.json) are shared, non-secret preferences managed as mutable public configuration. Claude Code [writes configuration updates to this user settings path](https://code.claude.com/docs/en/settings), exposed through [agent discovery](#agent-discovery).
 
 The [`claude-acp` registry entry](../home/.config/zed/settings.json) registers Claude Agent as a Zed External Agent. Claude Agent owns its authentication, model selection, tools, native permission system, sandbox, and configuration. When subscription-backed Claude Code authentication is selected, `/login` acquires credentials interactively and stores them in macOS Keychain without placing them in tracked files. Claude’s remaining runtime state under `~/.claude`, together with `~/.claude.json`, remains machine-local outside the repository.
 
-The global [**CLI subagent readiness** checkpoint](GLOBAL.md#collaboration) starts the intended exchange before implementation so workspace trust requirements surface while the user can resolve them. The [Claude procedure](../skills/.domfiles-cli-subagent/references/claude-cli.md#establish-readiness) uses a resumable session rather than print mode, whose skipped trust dialog cannot establish background launch readiness.
+### Global System-Available Tooling
 
-The [Claude launch procedure](../skills/.domfiles-cli-subagent/references/claude-cli.md#launch-a-fresh-conversation) passes each assignment on stdin, a form `claude --help` does not document. Its statement that stdin leaves no input to answer a human-only prompt assumes that `--bg` reports a trust requirement and stops rather than asking. A startup question that read stdin could instead take the assignment as its answer. This assumption was accepted unverified, because testing it in an untrusted directory could itself trust that directory.
+The [global system-available tooling list](GLOBAL.md#system-available-tooling) names non-standard commands that agents use for development work across projects. The list draws from the dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install). It names each tool’s primary executable interfaces rather than every executable a package supplies. Agent runtimes, plugin managers, interactive editors, and system maintenance utilities stay off the list, as do Git and Homebrew, which the [supported environment](#supported-environment) guarantees.
+
+### Zed Selection-to-New-Thread Key Binding
+
+The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
+
+## Skill Maintenance
+
+### Agent Documentation Composition
+
+Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them.
+
+The explicit [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description.
+
+### Agent Task Relay
+
+[`agent-task-relay`](../skills/agent-task-relay/SKILL.md) is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task. Reaching it through the parent skill would load both for work that needs only the relay workflow.
+
+### Claude Subagent Launch
+
+The [Claude launch procedure’s startup stdin assumption](../skills/.domfiles-cli-subagent/references/claude-cli.md#launch-a-fresh-conversation) remains unverified because a probe in an untrusted directory could itself trust that directory.
 
 ### CLI Subagent Monitor Portability
 
-[`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent-signal.ts) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. Both are accepted while `cli-subagent` serves only domfiles-managed installations. Any promotion of the skill to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor, because public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
+[`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent-signal.ts) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. These limitations are accepted while `cli-subagent` serves only domfiles-managed installations. Promotion to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor. Public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
 
 ### Codex Subagent Approvals
 
-The [Codex CLI runtime configuration](../skills/.domfiles-cli-subagent/references/codex-cli.md#apply-runtime-configuration) runs every turn with `--approve-for-me`, which sends sandbox escalation requests to Codex’s automatic review because no person can answer them in `codex exec`. It remains unverified whether that review approves or denies a request unattended or leaves the turn waiting, and whether the option still applies to turns started through `resume`. A live probe was deliberately skipped, because neither outcome would change the documented flow. A turn left waiting writes nothing. When the turn runs as a background job, the [inactivity procedure](../skills/.domfiles-cli-subagent/references/session-coordination.md#inactivity) stops it at the first successful check that establishes 15 minutes without progress. When it runs [in the foreground](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs), as in Zed, it blocks the coordinator until its timeout of at most 2 hours, and other sessions go unchecked until then.
-
-### Codex Subagent Hosts
-
-Unlike `claude --bg`, `codex exec` has no detached mode, so the [Codex CLI procedure](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs) prefers a host background job that reports its exit and can be stopped on request, as Claude Code’s background jobs do. At Zed v1.24.2, Zed Agent’s `terminal` tool documents only foreground commands bounded by `timeout_ms`, with no background execution, exit notification, or cancellation. A coordinator in Zed therefore uses the procedure’s foreground fallback, which blocks it for each Codex turn and leaves the timeout as the turn’s only limit. Whether `timeout_ms` accepts 2 hours is unverified, because its schema sets no maximum. Detaching the process from the shell was not adopted, because stopping it would require tracking its process and its exit would go unreported.
-
-### Commit Workflow
-
-The public [`sensible-commit-flow` skill](../skills/sensible-commit-flow/SKILL.md) owns commit mechanics and their standalone safety boundaries. Promotion separates the reusable workflow from personal message presentation, allowing independent installation without domfiles-managed policy or sibling skills. It remains documentation-only because native Git operations can execute approved batches without a separate staging implementation.
-
-The global [`dom-sensible-commit-flow` overlay](../skills/.dom-sensible-commit-flow/SKILL.md) applies alongside it and routes global callers through the public workflow. Its editorial model comes from the repository owner’s 2026 diff-to-message history, with bodyless authored messages selected explicitly. Inherited and Git-generated messages retain operation context under the public [message constraints](../skills/sensible-commit-flow/SKILL.md#preserve-message-constraints), rather than being normalized to that personal model. The global [**Commit gate**](GLOBAL.md#conduct) and [**Index preservation**](GLOBAL.md#collaboration) policies remain applicable in managed installations.
-
-Temporary human review markers separate preparation state from intended contribution content. Keeping them outside automatic commits avoids cleanup commits without treating the human checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility for excluding marker additions from commits and their preservation. The global [**Outcomes**](GLOBAL.md#communication) policy has a separate, self-contained trigger, so reporting a pending human review step does not require loading the commit workflow or classifying an edit for exclusion.
-
-Git 2.55.0 at [`e9019fca`](https://github.com/git/git/tree/e9019fcafe0040228b8631c30f97ae1adb61bcdc) is the recorded behavioral baseline. The history update handoff uses an explicit expected-object-ID [push lease](https://github.com/git/git/blob/e9019fcafe0040228b8631c30f97ae1adb61bcdc/Documentation/git-push.adoc#L230-L291) so background fetches cannot silently refresh its lease expectation.
+It remains unverified whether [Codex’s automatic review](../skills/.domfiles-cli-subagent/references/codex-cli.md#apply-runtime-configuration) resolves sandbox escalation requests unattended or leaves the turn waiting, and whether `--approve-for-me` applies after `resume`. A silent waiting turn ends under the [inactivity procedure](../skills/.domfiles-cli-subagent/references/session-coordination.md#inactivity) or the host timeout for [foreground execution](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs).
 
 ### Contribution Flow
 
-Contribution research and preparation live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval. The [`dom-sensible-contribution-flow` overlay](../skills/.dom-sensible-contribution-flow/SKILL.md) owns personal review selection and adjacent opportunity decisions. The commit overlay supplies managed message conventions.
+Contribution research and preparation live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval.
 
-The personal [worktree lifecycle restriction](GLOBAL.md#collaboration) and [**External skills**](GLOBAL.md#documentation) policy remain global rather than constraining independently installed contribution workflows. The public skill preserves the supplied checkout default, existing state, and consuming project protections without imposing those personal gates.
+The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) delegates authority to named, domfiles-managed workflows. Renaming the installed skill therefore requires updating the policy’s named delegate, the installation mapping, and the retired-name migration together.
 
-The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) delegates authority to named, domfiles-managed workflows. Renaming the installed skill therefore requires alignment of the policy’s named delegate as well as the installation mapping and retired-name migration.
+### Human Review Markers
 
-### Deferred Global Policy
-
-Conditional global policy may move into a globally exposed skill when most sessions do not need it, following the [documentation principles](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles). Eligibility depends on invocation mode. A model-invocable deferral requires a discrete trigger the agent can recognize without the deferred content and a safe default when discovery is missed. A command-only deferral requires a complete workflow that applies only when the user invokes its slash command. Conduct that applies continuously stays inline even when it is large.
-
-The [Collaboration](GLOBAL.md#collaboration) section combines shared-state safeguards with conditional delegation procedures. The safeguards apply even without delegation, while the procedures have recognizable triggers and are candidates for individual assessment against these criteria. **Inherited boundaries** remains global so authority and security limits do not depend on loading a particular delegation workflow.
-
-### Global Agent Instructions
-
-The tracked [`.agents/GLOBAL.md`](GLOBAL.md) is the canonical global user instruction source shared by Claude, Codex, and Zed. `domfiles sync` exposes that source as `~/.claude/CLAUDE.md` for Claude and `~/.codex/AGENTS.md` for Codex. The tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge and managed `~/.config` link expose it as `~/.config/zed/AGENTS.md` for Zed. All three agents therefore load one instruction source across every project. It is not project scoped. Its [**Global redundancy baseline**](../AGENTS.md#general) is defined in project instructions.
-
-### Global System-Available Tooling
-
-The [global system-available tooling list](GLOBAL.md#system-available-tooling) covers non-standard supporting development commands available across projects. It mirrors the non-CI development dependencies and [repository-scoped commands](#repository-scoped-commands) installed by [`domfiles sync`](../home/.local/bin/domfiles-sync-install), using executable names when package names differ and subject to the inclusions and omissions below.
-
-The list also includes `fish`, `node`, and `pnpm` even though `domfiles-sync-install` classifies their Homebrew formulas as primary dependencies. They support Fish configuration checks, JavaScript and direct TypeScript execution, and pnpm-based project workflows, respectively.
-
-The list intentionally omits `claude`, `fisher`, `git`, `mole`, and `vim`. `claude` is an agent runtime rather than a supporting command. `fisher` is Fish package plumbing. `git` is guaranteed by the [supported environment](#supported-environment) and governed separately. `mole` is a system maintenance utility outside coding workflows. `vim` is an interactive editor.
-
-`brew` is intentionally absent because it is a supported environment prerequisite rather than a dependency installed by `domfiles sync`. Companion commands supplied by listed dependencies, including `corepack`, `fish_indent`, `npm`, `npx`, and `rustfmt`, are not listed separately because the list tracks primary tool interfaces rather than every available executable.
+Keeping eligible human review markers outside automatic commits avoids cleanup commits without treating the checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility and preservation. Reporting pending human review under the global [**Outcomes**](GLOBAL.md#communication) policy does not depend on the commit workflow or marker eligibility.
 
 ### Package Release Note Skills
 
@@ -138,58 +120,40 @@ The [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-hu
 
 ### Protected Skill Mutation
 
-Zed’s classification, described by the [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md), was checked at commit `dd04a229`. Zed requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location.
+Zed requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location under the [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md).
 
-Non-Zed writes to `.agents/skills` remain outside this policy, so it does not guarantee that they hide intermediate states from concurrent Zed sessions.
+### Shared Skill Contracts
 
-### Public Skill Fallback Families
+This non-exhaustive index supplements each skill’s peer declarations and the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks). Related guidance can exist without a row here. The relationships concern source maintenance, not installation dependencies.
 
-Exhaustive reporting under [**Findings**](GLOBAL.md#documentation) and propagation of that reporting contract under [**Prompt contract**](GLOBAL.md#collaboration) are personal global policy. Public skills require reviewers to state whether any findings remain standing. This is an independent workflow requirement, not a standalone mirror of the personal reporting policies. The contribution flow’s review checkpoints, contribution criteria, and readiness requirements are locally owned rather than mirrors of the global `subagent-review` protocol.
+| Canonical Contract | Related Guidance | Relationship |
+| --- | --- | --- |
+| Adjacent opportunity handling under [**Findings**](GLOBAL.md#documentation) and [review completion](../skills/subagent-review-flow/SKILL.md#complete-the-review) | [`agent-task-relay`](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone guidance |
+| Commit authority under [**Commit gate**](GLOBAL.md#conduct) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review) | Standalone guidance |
+| Contribution review checkpoints, criteria, and readiness in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md) coordination | Independent requirements, not mirrors |
+| Dependency choice in [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [Contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) | Standalone fallback |
+| [Human review marker preservation](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [Contribution marker preservation](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) | Semantic mirror |
+| [Independent review context](../skills/subagent-review-flow/SKILL.md#prepare-the-review) and [decision conflicts](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) | [Outgoing prompts](../skills/agent-task-relay/references/outgoing-prompts.md#independent-review-context), [inbound findings](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts), and [`verify-findings`](../skills/verify-findings/SKILL.md#verify-evidence) for decision conflicts | Standalone guidance |
+| Instruction source requirements under **Instruction provenance** and **Approval provenance** in [Authorization](GLOBAL.md#authorization) | [Relay fix authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [alternative commit approvals](../skills/sensible-commit-flow/references/alternative-approval-modes.md), and [contribution fix authority](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) | Standalone guidance |
+| Review reporting and delegation under [**Findings**](GLOBAL.md#documentation) and [**Prompt contract**](GLOBAL.md#collaboration) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
+| [Terminal presentation compatibility in POSIX](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) | [Fish wrapper selection](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) | Paragraph mirror required for standalone installation |
+| [Updating commit history](../skills/sensible-commit-flow/references/update-commit-history.md) | [Updating contribution history](../skills/sensible-contribution-flow/references/update-commit-history.md) | Semantic mirror |
 
-Each skill’s peer declarations own its declared fallback relationships, including the [contribution workflow’s peer table](../skills/sensible-contribution-flow/SKILL.md#compose-with-peers). The index below records selected cross-file families beyond those skill-level declarations. It is non-exhaustive and supplements the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks). An absent row does not establish that no related guidance exists.
+Alignment is semantic rather than whole-file equality. Fallbacks and mirrors retain each consuming workflow’s scope, terminology, links, and approval, delivery, and execution boundaries. The approval family shares instruction source requirements, not a grant scope or lifetime.
 
-| Canonical Contract | Standalone Guidance |
-| --- | --- |
-| Adjacent opportunity handling under [**Findings**](GLOBAL.md#documentation) and [review completion](../skills/.domfiles-subagent-review/SKILL.md#complete-the-review) | [`skills/agent-task-relay/SKILL.md`](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) |
-| [Independent review context](../skills/.domfiles-subagent-review/SKILL.md#prepare-the-review) and [decision conflicts](../skills/.domfiles-subagent-review/SKILL.md#resolve-disagreements) in `subagent-review` | [`skills/agent-task-relay/references/outgoing-prompts.md`](../skills/agent-task-relay/references/outgoing-prompts.md#independent-review-context), [`skills/agent-task-relay/references/inbound-findings.md`](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts), [`skills/verify-findings/SKILL.md`](../skills/verify-findings/SKILL.md#verify-evidence) for decision conflicts |
-| [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [`skills/sensible-contribution-flow/references/execution-boundaries.md`](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) |
-| Requirements for governing instruction sources in [Authorization](GLOBAL.md#authorization), under **Instruction provenance** and **Approval provenance** | [`skills/agent-task-relay/references/inbound-findings.md`](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [`skills/sensible-commit-flow/references/alternative-approval-modes.md`](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [`skills/sensible-contribution-flow/references/review-findings.md`](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) |
-| [`skills/sensible-commit-flow/references/preserve-human-review-markers.md`](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [`skills/sensible-contribution-flow/references/preserve-human-review-markers.md`](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) |
-| [`skills/sensible-commit-flow/references/update-commit-history.md`](../skills/sensible-commit-flow/references/update-commit-history.md) | [`skills/sensible-contribution-flow/references/update-commit-history.md`](../skills/sensible-contribution-flow/references/update-commit-history.md) |
-
-Alignment is semantic rather than whole-file equality. Fallbacks and mirrors adapt contribution-specific scope and submission terminology, links into their own lifecycle, and each consuming workflow’s approval, delivery, and execution boundaries. The approval family shares requirements for governing instruction sources, not one grant scope or lifetime. These are source maintenance relationships, not installation dependencies.
-
-### Shell Skill Composition
-
-The [POSIX terminal presentation compatibility paragraph](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) is canonical. [Fish’s copy](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) supplies required standalone context for independent installation. They form one documentation family under the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks).
+Exhaustive reporting under **Findings** and propagation under **Prompt contract** are personal global policy. Public workflows independently require reviewers to state whether any findings remain standing. That requirement is not a mirror of those policies.
 
 ### Skill Catalogs
 
-[`skills/README.md`](../skills/README.md) targets visitors installing public skills without synchronizing the repository. Its examples select user-wide installation to enact its recommendation. The root [`README.md`](../README.md) and individual skill READMEs intentionally use minimum viable `gh skill install` and `npx skills add` commands, omitting scope flags to keep the focus on the skills.
+[`skills/README.md`](../skills/README.md) targets visitors installing public skills without synchronizing the repository. Its examples use user-wide installation, as it recommends. The root [`README.md`](../README.md) and individual skill READMEs intentionally use minimum viable `gh skill install` and `npx skills add` commands, omitting scope flags to keep the focus on the skills.
 
 ### Skill Description Limit
 
-The conservative byte cap in the [skill description policy](../skills/.domfiles-skill-development/references/skill-descriptions.md#encoding-and-size) is an authoring constraint, not Zed’s unit of measurement. The [Agent Skills specification](https://agentskills.io/specification#description-field) allows 1–1,024 characters. At Zed v1.22.0 (`76659a55`), the [limit uses Unicode scalar values](https://github.com/zed-industries/zed/blob/76659a55a8c10ed355a070f8764a0b1733e3c115/crates/agent_skills/agent_skills.rs#L420-L423), [loading warns](https://github.com/zed-industries/zed/blob/76659a55a8c10ed355a070f8764a0b1733e3c115/crates/agent_skills/agent_skills.rs#L325-L341), and [strict validation rejects](https://github.com/zed-industries/zed/blob/76659a55a8c10ed355a070f8764a0b1733e3c115/crates/agent_skills/agent_skills.rs#L526-L537) overlong descriptions. The authoring cap requires revalidation whenever a supported client changes its limit.
-
-### Skill Distribution
-
-None of the `skills/` source namespaces is a project-local discovery surface. Client-specific project discovery remains backed by `.agents/skills/*`. Hidden source directories keep global skills, including personal overlays, out of the default repository discovery performed by `gh skill`.
-
-Client-specific installation roots and differing canonical and installed basenames motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
-
-Edits to an exposed global skill affect its installation through the symlink and may change agent behavior across projects. The [skill synchronization policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#synchronize-skill-links) owns live link reconciliation after discovery changes. [`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup for future synchronization rather than compatibility aliases, so clients discover each logical skill once.
+The [skill description policy](../skills/.domfiles-skill-development/references/skill-descriptions.md#encoding-and-size) uses a conservative UTF-8 byte cap rather than relying on a client’s character counting. It is an authoring constraint distinct from the [Agent Skills specification’s character limit](https://agentskills.io/specification#description-field).
 
 ### Skill Security Scans
 
-[skills.sh](https://www.skills.sh/porada/domfiles) publishes third-party security audits for each public skill, including Snyk Agent Scan. Snyk’s [W011 check](https://github.com/snyk/agent-scan/blob/main/docs/issue-codes.md#W011) warns when a skill appears to expose the agent to outsider-authored content, such as GitHub issues and pull requests. The [`human-facing-writing`](../skills/human-facing-writing/SKILL.md) description and its [GitHub Collaboration route](../skills/human-facing-writing/SKILL.md#specialized-routes) therefore present that surface as copy within the authorized writing unit rather than as threads the agent reads, without narrowing the [trigger boundaries](../skills/.domfiles-skill-development/references/skill-descriptions.md#invocation-mode). This wording is intended to avoid the warning, but its effect on the scan is unverified. Skills whose workflows read outsider-authored content rely on their instruction authority boundary instead.
-
-### Verify Findings Skill
-
-The user-selected [`verify-findings`](../skills/verify-findings/SKILL.md) name favors an intuitive action over avoiding an existing descriptive name on skills.sh.
-
-### Zed Selection-to-New-Thread Key Binding
-
-The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
+The [`human-facing-writing`](../skills/human-facing-writing/SKILL.md) description and its [GitHub Collaboration route](../skills/human-facing-writing/SKILL.md#specialized-routes) intentionally frame GitHub material as copy within the authorized writing unit to avoid Snyk Agent Scan’s [W011 warning](https://github.com/snyk/agent-scan/blob/main/docs/issue-codes.md#W011) on [skills.sh](https://www.skills.sh/porada/domfiles). This framing preserves the skill’s applicability, but its effect on the scan remains unverified.
 
 ## Synchronization
 
@@ -205,17 +169,9 @@ Repository updates are skipped when the checkout contains entries marked by `git
 
 Synchronization links the repository’s `home/.local/bin` directory to `~/.local/bin`. It does not link `home/.local/share/domlib` into the user’s home because each command resolves its real path before sourcing `../share/domlib` from the repository.
 
-`domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. An individual failure is recoverable only when the main workflow or a sync stage handles it explicitly, surfaces the result, and can continue later work independently of the failed operation. The source’s control flow defines the exact recoverable cases.
+`domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. It can finish despite visible failures only when the main workflow or a sync stage explicitly handles them and later work does not depend on the failed operation. The final dependency status is advisory.
 
-The workflow can complete with visible, explicitly handled failures. An unhandled error or a non-zero exit from a sync stage stops the broader workflow.
-
-The final dependency status is advisory. Its result remains visible while synchronization continues to completion.
-
-## Tooling
-
-### Agent CLI Distribution
-
-`claude` and `codex` are intentionally installed through Homebrew’s `claude-code` and `codex` casks rather than declared as `@anthropic-ai/claude-code` or `@openai/codex` project dependencies. This keeps both CLIs machine-level and excludes them from dependency installation in CI, because they are development Homebrew dependencies. For Claude, the cask also follows Anthropic’s stable Homebrew channel. The Homebrew CLI installations are separate from the agent packages Zed manages, such as the `claude-acp` registry package.
+## Shell Integration
 
 ### Cross-Shell Helper Differences
 
@@ -224,7 +180,7 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 - **Command routing:** POSIX `__` routes `brew` and `pnpm` through `domlib` wrappers that add fallback or search paths, environment overrides, and custom missing-command diagnostics. Fish `__domfiles_print_and_run` invokes the requested external command directly. Fish startup establishes the supported command paths, and the generic wrapper intentionally adds no per-command routing, environment, or diagnostics.
 - **Failure handling:** Argument validation failures in POSIX `__`, `__confirm`, and `__is_boolean` terminate the running shell. Their Fish peers report the error and return status 1 because terminating from an autoloaded function would close the interactive shell.
 - **Quoting:** POSIX `__print_command` renders arguments with Python `shlex.quote`, while Fish `__domfiles_print_command` uses `string escape`. Each produces syntax for its own shell, so equivalent commands do not require byte-identical display text.
-- **Suppression lifecycle:** `domlib` normalizes `DOMFILES_SUPPRESSED` once when loaded. Fish `__domfiles_print_command` reads and validates the current value for every command because `home/.config/fish/config.fish` intentionally does not initialize it. An unsupported value therefore fails when `domlib` loads or when Fish attempts to print a command. Fish has no `__suppress` peer because a single-command variable override can limit suppression to one function invocation.
+- **Suppression lifecycle:** `domlib` normalizes `DOMFILES_SUPPRESSED` once when loaded. Fish `__domfiles_print_command` reads and validates the current value for every command because `home/.config/fish/config.fish` intentionally [does not initialize it](#suppressed-command-output). An unsupported value therefore fails when `domlib` loads or when Fish attempts to print a command. Fish has no `__suppress` peer because a single-command variable override can limit suppression to one function invocation.
 
 ### Dependency Status Labels
 
@@ -232,25 +188,31 @@ Accepted shell-specific contract differences between paired `domlib` and Fish he
 
 `domfiles dependencies` intentionally uses compact checklist labels shared by success and error output. The `ssh` row reports whether the expected SSH key pair is configured, not whether the `ssh` executable is available. The concise `ssh` label is retained for consistency with the adjacent dependency rows.
 
-`vim` is intentionally omitted from the checklist even though synchronization installs it as a primary Homebrew dependency. Its availability does not affect the command’s output or exit status.
-
 ### Development Lint Wrapper Architecture
 
-The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain their own default scopes and lint commands. File-oriented wrappers share discovery, filtering, headings, and callback dispatch through `domlib`. ShellCheck uses a native batch invocation. Fish and JSON retain per-file execution because Fish treats later operands as script arguments and the JSON check requires exactly one value per file. This preserves stable interfaces for pnpm, staged linting, language-specific CI, and targeted agent validation without duplicating the execution pipeline.
+The language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints retain independent default scopes and lint commands, while file-oriented wrappers share discovery and dispatch through `domlib`. ShellCheck runs in a batch. Fish and JSON run per file because Fish treats later operands as script arguments and the JSON check requires exactly one value per file.
 
 File-oriented wrappers’ default discovery intentionally uses line-delimited `git ls-files` output. This lets POSIX `sh` preserve discovery failures and call the in-process lint callbacks without temporary files or another language parser. Git C-quotes backslashes, control characters, and double quotes, as well as non-ASCII bytes when `core.quotePath` is enabled. A quoted pathname is skipped because it does not resolve to the original file.
 
-### `domlib` Helper Documentation
+### `domfiles-format` Command
 
-In helper comments, domfiles is an unformatted plural noun parallel to “dotfiles” when it denotes the repository or managed configuration, while `domfiles` is code-formatted only when it denotes the CLI command. The phrase “domfiles have …” is therefore intentional. The postpositive modifier in “heading, dimmed” preserves the shared base description across related helpers.
+[`domfiles-format`](../home/.local/bin/domfiles-format) intentionally has no recursive mode or `--write` option. Resolved paths containing control characters are unsupported so its confirmation list stays unambiguous. Its preflight check does not make subsequent per-file writes a batch transaction.
 
-`__is_brew_installed` intentionally owns both the no-argument Homebrew installation check and the optional package check. Repeating “returns success” makes the result of each branch explicit. `__git_skipped_files` intentionally describes semantic skipped files while preserving tagged `git ls-files -v` entries because `git-skipped` owns display path extraction and its other callers only test whether output exists. `__git_diff_list_changed_excluded_paths` lets `--commit` and `--worktree` stand for their complete modes, with the commit reference implied by the `--commit` context.
+Formatting policy comes from domfiles, not target-side Prettier configuration, `.editorconfig`, or ignore files. Native formatter configuration discovery also stays rooted in domfiles.
 
-The `__symlink` comment states the normal replacement contract and omits source containment rejection because that rejection is a safety precondition rather than an alternate supported outcome.
+### `domlib` Helper Contracts
+
+`__is_brew_installed` intentionally combines the no-argument Homebrew installation check and the optional package check in one helper rather than separate predicates. Its adjacent source comment owns both contracts.
+
+The `__git_diff_list_changed_excluded_paths` comment intentionally uses `--commit` and `--worktree` to name their complete modes, leaving the commit reference implicit in `--commit`.
+
+The `__print_heading_dimmed` comment intentionally uses “heading, dimmed” to keep the same base description as `__print_heading`.
+
+The `__symlink` comment intentionally omits rejection of a destination that equals or contains the source. It describes the normal replacement contract, not the safety preconditions for performing it.
 
 ### FFmpeg Media Preset Compatibility
 
-Every supplied input and generated output media format, dimension, duration, and other size constraint in `home/.config/fish/functions/ffmpeg-wav-png.fish` is an accepted platform compatibility constraint for current and future presets. Their compatibility is an accepted project premise rather than an independently verified property.
+All supplied input and generated output media formats, dimensions, durations, and other size constraints in `home/.config/fish/functions/ffmpeg-wav-png.fish` are accepted platform compatibility constraints for current and future presets. They are project premises, not independently verified claims.
 
 Each preset owns a complete conversion branch. The repeated discovery loop, image pairing, and output naming across those branches are intentional. Consolidating them into one shared pipeline is a non-goal, so every preset’s container, filter chain, codec options, and constraints stay independent.
 
@@ -266,11 +228,11 @@ The managed Fish configuration intentionally erases every existing abbreviation 
 
 The [`clone`](../home/.config/fish/functions/clone.fish) helper intentionally supports only `clone <repository>` and `clone <repository> <directory>`. It neither parses nor rejects Git options. Option-bearing invocations belong to `git clone` itself. An unsupported invocation can reach Git without a reliable follow-up directory change and can return a non-zero status even when Git succeeds. Both are accepted consequences of keeping the wrapper simple.
 
-For the supported one-argument form, follow-up target derivation intentionally covers only common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
+For the supported one-argument form, the helper intentionally derives the follow-up directory only from common remote URLs and ordinary local paths. Full parity with Git’s destination naming is a non-goal, including sources addressed through an inner `.git` directory.
 
 ### Fish `$DOMFILES` Variable
 
-`home/.config/fish/config.fish` intentionally defines `$DOMFILES` as an unexported global variable without a tracked reader. It is available within Fish sessions, including [machine-local configuration](#fish-local-configuration), while domfiles scripts resolve their own value through `domlib`.
+`home/.config/fish/config.fish` intentionally defines `$DOMFILES` as an unexported global variable even though no tracked code reads it. It is available within Fish sessions, including [machine-local configuration](#fish-local-configuration), while domfiles scripts resolve their own value through `domlib`.
 
 ### Fish Local Configuration
 
@@ -284,47 +246,57 @@ A bare Fish interpreter invocation can therefore execute machine-local configura
 
 ### Git Diff Presentation
 
-The lockfile-aware presentation in `git-d` and `git-view` is consolidated because it forms a substantial shared pipeline whose behavior must remain aligned.
-
-`git-view` intentionally bypasses that split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
-
-### Git Fixup Amend Behavior
-
-The `git f --amend` fallback to `HEAD` when no first parent exists preserves support for amending a root commit.
+`git-view` intentionally bypasses lockfile-aware split presentation for merge commits that change an excluded lockfile. Git’s native `-m` output keeps every patch within its parent-qualified section, which takes precedence over suppressing lockfile patches.
 
 ### Git Log Search Coloring
 
-`git l` intentionally filters the ANSI-colored formatted log directly so Git’s field colors and `grep`’s match highlighting remain a simple pipeline. Because `grep` treats ANSI escape sequences as input bytes, an expression that crosses a color boundary—for example, from the hash into the subject or from the subject into the date—does not match even though the displayed text is contiguous. This limitation is intentional in favor of implementation simplicity.
+`git l` intentionally filters the ANSI-colored formatted log directly so Git’s field colors and `grep`’s match highlighting remain a simple pipeline. Because `grep` treats ANSI escape sequences as input bytes, an expression that crosses a color boundary—for example, from the hash into the subject or from the subject into the date—does not match even though the displayed text is contiguous. This limitation is accepted to keep the pipeline simple.
 
 ### Git Short Status Command
 
-`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias or drop-in replacement for `git status`. It accepts pathspecs with an optional leading `--`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
+`git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias or drop-in replacement for `git status`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
+
+### Suppressed Command Output
+
+`DOMFILES_SUPPRESSED` affects only the `$ …` command echo, not command output, confirmations, errors, or headings. Its prefix avoids collisions with unrelated environment variables.
+
+`__is_ci` and `__domfiles_is_ci` override suppression so automated runs retain their complete diagnostic command trace. These runs have no interactive reader to benefit from suppression.
+
+`__suppress` exports the variable inside a subshell to limit suppression to one command. An assignment-prefixed function call is unsuitable because POSIX leaves assignment persistence unspecified and macOS `/bin/sh` retains it after the call.
+
+The subshell also explains why `__suppress` rejects `__domfiles_exec`: it would absorb the function’s `exec`, allowing the caller to resume and run the remaining synchronization twice. Omitting `__domfiles_exec`’s opt-in `--print` flag suppresses its echo instead.
+
+Fish intentionally has no global initialization for this variable. The configuration’s usual `set -g` would not reach `domlib`, while exporting it would suppress every domfiles command in the session.
+
+The skill-linking loop uses `__suppress` and confirms each source skill rather than routine replacement of its two fixed destinations. Destination removals remain visible in CI.
+
+## Tooling
+
+### Fish Prettier Plugin
+
+The Fish Prettier plugin intentionally exposes a whole-file native formatter with these boundaries:
+
+- **Cursor mapping:** End-of-input cursor positions are supported. Interior positions may move between tokens because the native formatter supplies no token locations or source maps, and the wrapper adds no heuristic mapping.
+- **Formatter output:** Native output is preserved verbatim rather than reinterpreted through Prettier options.
+- **Partial ranges:** Partial `rangeEnd` or `rangeStart` requests leave source unchanged. The native formatter has no range API, and Prettier’s range calculation does not recognize custom parser names.
+- **Pragmas:** `checkIgnorePragma` and `requirePragma` do not gate formatting, and `insertPragma` adds no pragma. The corresponding optional plugin hooks are absent.
+- **Standalone mode:** Unsupported because the wrapper needs Node.js to execute the formatter binary.
 
 ### Metal Toolchain
 
-The Metal Toolchain is optional provisioning for non-CI macOS environments with full Xcode. First-launch setup, license acceptance, and Xcode selection remain user-managed, preserving the [Command Line Tools–only baseline](#supported-environment).
+The Metal Toolchain is optionally provisioned in non-CI macOS environments with full Xcode. Users manage first-launch setup, license acceptance, and Xcode selection, preserving the [Command Line Tools–only baseline](#supported-environment).
 
 ### Peer Dependency Versions
 
-Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints and are not intended to mirror the currently resolved version.
+Every peer dependency in workspace packages intentionally uses the version `"*"`. The workspace catalog, root dependency declarations, and lockfile maintain the concrete compatible versions, so repeating version constraints in individual workspace packages would duplicate the same policy. These ranges are complete declarations rather than missing compatibility constraints.
 
-### Prettier Formatter Command
+### pnpm Execution and Lockfile Behavior
 
-[`domfiles-format`](../home/.local/bin/domfiles-format) intentionally has no recursive mode or `--write` option. Resolved paths containing control characters are unsupported so its confirmation list stays unambiguous. Its preflight check does not make subsequent per-file writes a batch transaction.
+With an exact `packageManager` pin at major 12 or newer, pnpm 12 stores that pin in the leading environment document in `pnpm-lock.yaml`. With the default `pmOnFail: download`, every command, including a version query, reconciles its `packageManagerDependencies`. A frozen install fails when this document is missing or stale instead of updating it. The `packageManager` field and both lockfile documents therefore change together during a pnpm major upgrade.
 
-Formatting policy comes from domfiles, not target-side Prettier configuration, `.editorconfig`, or ignore files. Native formatter configuration discovery also stays rooted in domfiles.
+The [repository-scoped command wrappers](#repository-scoped-commands) rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
 
-### Prettier Formatter Wrapper
-
-The Fish Prettier plugin is a thin whole-file wrapper. Its native formatter owns formatting semantics, so output is preserved verbatim rather than reinterpreted through Prettier options.
-
-Partial `rangeStart` and `rangeEnd` formatting is intentionally unsupported. The native formatter has no range API, and Prettier’s range calculation does not recognize custom parser names, so partial range requests leave the source unchanged. Prettier’s standalone mode is also intentionally unsupported because the wrapper requires a Node.js process to execute its external formatter binary.
-
-Prettier pragma comments—including `@format`, `@prettier`, `@noformat`, and `@noprettier`—are intentionally unsupported. The wrapper omits `hasPragma`, `hasIgnorePragma`, and `insertPragma`, so `requirePragma` and `checkIgnorePragma` do not gate formatting and `insertPragma` does not add a pragma.
-
-Interior cursor mapping is intentionally omitted. The wrapper exposes a single whole-file AST node because the native formatter provides neither token locations nor source maps. End-of-input cursor positions remain supported, but interior cursors may not remain attached to the same token after formatting. The wrapper does not implement heuristic source-to-output mapping.
-
-The `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as a forward compatibility sentinel for Prettier’s plugin contract. It is not intended to prove that currently optional exports exist. Behavioral formatting tests cover the operational `languages`, `parsers`, and `printers` exports.
+The [repository validation policy](../AGENTS.md#validation) separates agent checks from wrapper reconciliation through command-local `PNPM_CONFIG_*` overrides. They preserve package manager version enforcement while refusing automatic project dependency installation and environment lockfile changes. The environment form also takes precedence over the `--config.verify-deps-before-run` flag and pnpm’s inherited dependency check recursion guard. Native pnpm 12 dotted CLI configuration keys use kebab-case, and pnpm silently ignores camelCase spellings such as `--config.verifyDepsBeforeRun`.
 
 ### Repository-Scoped Commands
 
@@ -332,37 +304,9 @@ The `expectTypeOf(plugin).toExtend<Plugin>()` assertion intentionally serves as 
 
 The corresponding scripts in `home/.local/bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
-pnpm 12 persists an exact `packageManager` pin at major 12 or newer in a leading environment document in `pnpm-lock.yaml`. With the default `pmOnFail: download`, every command reconciles its `packageManagerDependencies`, including version output. A frozen install fails when this document is missing or stale instead of updating it. The `packageManager` field and both lockfile documents therefore change together during a pnpm major upgrade.
-
-The wrappers rely on pnpm’s default `verifyDepsBeforeRun: install` behavior to reconcile missing or outdated project dependencies before executing a command. During synchronization, the [checkout state predicate](#synchronization-checkout-state) determines whether `domfiles-sync-update` overrides this behavior with `warn`, which reports outdated dependencies and runs the command without installing them. These assumptions require revalidation when the pinned pnpm major version changes or `verifyDepsBeforeRun` is overridden.
-
-The [repository validation policy](../AGENTS.md#validation) separates agent checks from wrapper reconciliation through command-local `PNPM_CONFIG_*` overrides. They preserve package manager version enforcement while refusing automatic project dependency installation and environment lockfile changes. The environment form also takes precedence over the `--config.verify-deps-before-run` flag and pnpm’s inherited dependency check recursion guard. Native pnpm 12 dotted CLI configuration keys use kebab-case, and pnpm silently ignores camelCase spellings such as `--config.verifyDepsBeforeRun`.
-
 ### ripgrep Configuration Isolation
 
-`rg` parses command line arguments before deciding whether to read the file selected by `RIPGREP_CONFIG_PATH`. Unless `--no-config` suppresses that read, it combines the configuration arguments with the command line arguments and parses them again. A configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
-
-### String Helper Reuse
-
-The `__string_*` helpers are optional conveniences rather than a mandatory abstraction boundary.
-
-### Suppressed Command Output
-
-`DOMFILES_SUPPRESSED` affects only the `$ …` command echo, not command output, confirmations, errors, or headings.
-
-`__is_ci` and `__domfiles_is_ci` override suppression, so automated runs keep the complete command trace regardless of `DOMFILES_SUPPRESSED`. A CI log is the only record of what a run executed and has no interactive reader to spare, so suppression there would remove diagnostic value without providing the benefit it exists for.
-
-A Fish counterpart to the `DOMFILES_SUPPRESSED` initialization remains unwanted. Fish does not export `set -g`, which every `DOMFILES_*` entry in Fish configuration uses, so a counterpart in the established form would have no effect on `domlib`, while `set -gx` or `set -x` would suppress command echo for every domfiles command in the session.
-
-An exported value reaches every child script, so `DOMFILES_SUPPRESSED=true domfiles sync` covers an entire synchronization run. `__suppress` applies the same suppression to one command by exporting the variable inside a subshell, which is how `domfiles-sync-setup` keeps the agent skill linking loop from echoing without affecting later synchronization steps.
-
-That loop intentionally confirms the source skill directory rather than the two destinations it replaces. One source is the unit of work, both destination roots are fixed, and `__symlink` removes and recreates each destination on every run, so naming them would report routine churn rather than the artifact being distributed. The removals stay in the CI trace through `__suppress`.
-
-That subshell is also why `__suppress` rejects `__domfiles_exec`. It would absorb that function’s `exec`, letting the caller resume and run the remainder of `domfiles-sync` a second time. The echo there is suppressed by omitting the opt-in `--print` flag instead.
-
-The prefix form `DOMFILES_SUPPRESSED=true __symlink …` is intentionally unused. POSIX leaves it unspecified whether a variable assignment preceding a function call persists after that function returns, and macOS `/bin/sh` is Bash 3.2 in POSIX mode, where it does persist and suppresses the remainder of the script.
-
-No standardized environment variable covers command echo suppression. `NO_COLOR` and `DO_NOT_TRACK` address color and telemetry only, so this name follows the prefixed convention of `HOMEBREW_NO_*` rather than an unprefixed `SUPPRESSED`, which any unrelated exported value in the invoking shell could set.
+Without `--no-config`, `rg` combines its command line arguments with those in the file selected by `RIPGREP_CONFIG_PATH`. A configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
 
 ### Zed CLI Open Behavior
 

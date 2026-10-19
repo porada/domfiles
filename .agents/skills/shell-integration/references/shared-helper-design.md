@@ -4,7 +4,7 @@
 
 - Keep entrypoints focused on command-specific bounds and output behavior.
 - Define shared defaults in the helper that owns their behavior. Callers accepting a default must omit the corresponding argument instead of repeating its value.
-- When a loop computes a reusable value, prefer a named helper that returns the result over a call site loop with a trailing here document redirect. Retain loop redirection when POSIX scope or failure handling requires it and extraction would not improve clarity.
+- When a loop computes a reusable value, prefer a named helper that returns the result rather than placing the loop at a call site with a trailing here document redirection. Retain loop redirection when POSIX scope or failure handling requires it and extraction would not improve clarity.
 
 ## Align Cross-Shell Helper Contracts
 
@@ -12,7 +12,7 @@
 - Treat paired POSIX and Fish helpers as peer implementations of a shared contract. Neither implementation governs the other.
 - Keep their accepted inputs, `stdout` and `stderr` behavior, return statuses, side effects, defaults, failure conditions, validation timing, and adjacent contract documentation semantically aligned wherever both shells can support the same behavior.
 - Use shell-native implementations without weakening the shared contract. A preferred idiom does not take precedence when it requires lossy normalization, including command substitution that changes significant whitespace or record boundaries. Allow a shell-specific contract difference when native behavior has no equivalent in the other shell or a settled project decision intentionally selects different behavior. Document each accepted difference and its rationale in [cross-shell helper differences](../../../PROJECT.md#cross-shell-helper-differences), and keep the remainder of the pair’s contract aligned.
-- When either helper changes, inspect its counterpart. During an authorized change, update the implementations, contract documentation, and documented differences needed to keep the pair accurate. During a review, audit, or diagnosis, report required alignment without editing either helper or its documentation.
+- When either helper changes, inspect its counterpart. During an authorized change, update the implementations, contract documentation, and documented differences as needed to keep the pair accurate. During a review, audit, or diagnosis, report required alignment without editing either helper or its documentation.
 
 ## Port Helpers Between Shells
 
@@ -24,15 +24,16 @@
 
 ## Document Helper Contracts
 
-- Give every `domlib` function one adjacent natural language contract comment. Do not use `@param` or `@returns` tags.
-- Describe the semantic contract rather than narrating implementation. Include non-obvious inputs, outputs, or fallback behavior only when omitting them would mislead, and repeat a source-owned value only when the contract would not make sense without it.
 - Begin standard output contracts with `Prints …`, predicates with `Returns success …`, and side effect contracts with a direct action verb.
+- Describe the semantic contract rather than narrating implementation. Include non-obvious inputs, outputs, or fallback behavior only when their omission would mislead. Repeat a source-owned value only when the contract would not make sense without it. See [`domlib` Helper Contracts](../../../PROJECT.md#domlib-helper-contracts) for intentional comment choices and their rationale.
+- Give every `domlib` function one adjacent natural language contract comment. Do not use `@param` or `@returns` tags.
 - Let command-shaped wrappers rely on ordinary command semantics implied by their names rather than restating them.
 - Name `$1`, `$@`, and other positional parameters only when their positions clarify the contract.
-- Wrap comment prose at 80 columns while preserving ordinary sentence flow across continuation lines. Use internal punctuation between sentences. Follow [`domlib` Helper Documentation](../../../PROJECT.md#domlib-helper-documentation) for project terminology and intentional exceptions.
+- Treat domfiles as an unformatted plural noun, parallel to “dotfiles,” when it denotes the repository or managed configuration. Code-format `domfiles` only when it denotes the CLI command.
+- Wrap comment prose at 80 columns while preserving ordinary sentence flow across continuation lines. Use internal punctuation between sentences.
 
 ## Review Difficult Contracts
 
-- Treat a helper that is difficult to explain in a concise contract comment as a design review signal. Flag comments that need unrelated clauses, counterintuitive parameter positions, or implementation walkthroughs rather than broadening the comment.
-- Review option-bearing helpers for options before operands. Across related helper families, review subject and object positions for consistency.
-- Record refactor signals separately from rename signals. When both are within the resolved scope, resolve refactors before renaming. Do not force a refactor for an intentional overload documented in [`domlib` Helper Documentation](../../../PROJECT.md#domlib-helper-documentation).
+- Treat difficulty explaining a helper in a concise contract comment as a signal to review its design. Flag comments that need unrelated clauses, counterintuitive parameter positions, or implementation walkthroughs rather than broadening the comment.
+- Review whether option-bearing helpers place options before operands. Across related helper families, review subject and object positions for consistency.
+- Record refactor signals separately from rename signals. When both are within the resolved scope, resolve refactors before renaming. Do not force a refactor for an intentional overload documented in [`domlib` Helper Contracts](../../../PROJECT.md#domlib-helper-contracts).

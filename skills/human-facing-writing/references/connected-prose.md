@@ -12,16 +12,16 @@ When the current workflow authorizes writing changes, draft or revise the work b
 
 Begin by identifying the work’s dominant movement: argument, explanation, narrative, reflection, description, instruction, or a deliberate combination. Let the material determine that movement rather than forcing it into a genre template.
 
-A reading unit is the smallest section meant to be read continuously as one purposeful movement. It develops one controlling idea, question, event, experience, or argumentative step and provides a meaningful local payoff.
+A reading unit is the smallest section meant to be read continuously as one purposeful movement. It develops one controlling idea, question, event, experience, or argumentative step to a useful stopping point.
 
-One reading unit may be the whole of a short work. Add a boundary only when it would materially improve the reader’s progress. In longer work, prefer compact, purposeful units to sections that expand indefinitely. Do not impose a word count target. A unit ends when it completes its rhetorical job.
+One reading unit may be the whole of a short work. Add a boundary only when it would materially improve the reader’s progress. In longer work, prefer compact, purposeful units to sections that expand indefinitely. Do not impose a word count target. A short answer or reply may be complete once it supplies the needed fact, judgment, or action. Don’t add an opening, transition, or takeaway merely to give it a finished shape.
 
-For each reading unit:
+Scale these aims to the reading unit’s purpose and length rather than treating them as separate parts to add:
 
 1. Orient the reader and create enough forward pressure for them to continue. In argumentative or explanatory prose, reveal the destination early enough to create trust. Delay it only when the delay creates a worthwhile narrative or reflective experience.
 2. Give adjacent paragraphs distinct jobs so the unit advances instead of accumulating material. Move through claims, mechanisms, scenes, evidence, consequences, boundaries, pivots, or actions as the subject requires.
 3. Give concrete material a specific purpose: make an abstraction visible, test a claim, establish credibility, change scale, create experience, or expose a consequence. When the significance is not already clear, return from the detail to the meaning the reader should carry forward.
-4. End with a changed understanding, image, emotion, judgment, question, or action that follows from the unit. Do not recap every supporting point.
+4. Finish when the unit’s job is complete. A changed understanding, image, emotion, judgment, question, or action may provide the ending without a separate closing sentence. Do not recap every supporting point.
 
 A reading unit should be locally satisfying without pretending to be independent. A unit may rely on earlier context, carry a question forward, or prepare a later payoff.
 
@@ -39,7 +39,7 @@ Once that sequence is sound, carry context across its boundaries with proportion
 
 ## Paragraphs and Sentences
 
-Within a unit, give each paragraph one primary job and enough development to complete it. Make each sentence add or purposefully reshape what the reader knows, sees, feels, judges, or can do. Isolate a one-sentence paragraph only when that isolation changes emphasis, pace, or meaning.
+Within a unit, give each paragraph one primary job and enough development to complete it. Let supporting points receive different amounts of attention according to their importance and difficulty. Make each sentence add or purposefully reshape what the reader knows, sees, feels, judges, or can do. Isolate a one-sentence paragraph only when that isolation changes emphasis, pace, or meaning.
 
 Complete the paragraph’s local job without sealing off the thought. When the reasoning continues, let the next paragraph inherit a live term, question, condition, contrast, or consequence rather than restart the subject.
 
@@ -70,4 +70,4 @@ Do not manufacture quality by copying another writer’s swagger, sentence lengt
 
 Treat familiar rules of economy, directness, active voice, and paragraph structure as conditional tools. When a rule conflicts with the intended reading experience, keep the choice that better supports purposeful detail or repetition, intended ambiguity, voice, pacing, reading unit movement, and cohesion. Do not make prose less engaging merely to make it more compliant.
 
-Do not use readability formulas, corpus averages, or fixed quotas as proxies for attention or quality. Measurements can reveal unusual density or repetition, but the reading effect determines whether revision is needed.
+Do not use AI detector scores, readability formulas, corpus averages, or fixed quotas as proxies for attention or quality. Measurements can reveal unusual density or repetition, but the reading effect determines whether revision is needed.

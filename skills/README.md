@@ -38,6 +38,7 @@ Keep agent work organized and carry context between conversations.
 
 - [**agent-task-directories**](agent-task-directories)
 - [**agent-task-relay**](agent-task-relay)
+- [**subagent-review-flow**](subagent-review-flow)
 - [**verify-findings**](verify-findings)
 
 ### Dependencies

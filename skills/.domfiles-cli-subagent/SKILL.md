@@ -37,7 +37,7 @@ Background execution does not itself give the host a completion callback or the 
 
 ## Resolve Feedback
 
-Apply the global **Findings** policy. For delegated reviews, use `subagent-review` as for native subagents. Use the [resumption procedure](references/session-coordination.md#resume-the-same-exchange) for continued work, including required re-review.
+Apply the global **Findings** policy. For delegated reviews, use `subagent-review-flow` as for native subagents. Use the [resumption procedure](references/session-coordination.md#resume-the-same-exchange) for continued work, including required re-review.
 
 ## Finish or Pause
 

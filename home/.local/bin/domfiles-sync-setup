@@ -30,7 +30,6 @@ for source in \
   .domfiles-cli-subagent \
   .domfiles-diagnose \
   .domfiles-skill-development \
-  .domfiles-subagent-review \
   agent-task-directories \
   agent-task-relay \
   fish-shell-scripting \
@@ -41,6 +40,7 @@ for source in \
   sensible-commit-flow \
   sensible-contribution-flow \
   simple-github-cli \
+  subagent-review-flow \
   verify-findings; do
   name="${source#.domfiles-}"
   name="${name#.}"

@@ -50,7 +50,7 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 
 - Do not report the language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints as duplication merely because each retains its own default scope and lint command. Shared discovery and execution belong in `domlib`. See [development lint wrapper architecture](../../PROJECT.md#development-lint-wrapper-architecture) for rationale.
 - Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned.
-- Do not report `__string_*` helpers or equivalent inline string operations as reimplementations. See [string helper reuse](../../PROJECT.md#string-helper-reuse) for rationale.
+- Do not report `__string_*` helpers or equivalent inline string operations as reimplementations.
 
 ## Apply Domfiles Fish Conventions
 

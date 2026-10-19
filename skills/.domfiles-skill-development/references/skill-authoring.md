@@ -28,4 +28,4 @@ In project-authored skill documentation, include a code example only when it cla
 
 ## Global Policy and Standalone Context
 
-A skill may name an always-loaded global policy but must not restate it unless a distinct surface-specific application is required. A public skill that may be installed without that policy may carry a standalone mirror under the [public skill portability contract](public-skill-portability.md).
+A skill may name an always-loaded global policy but must not restate it unless a distinct surface-specific application is required. For public skills, distinguish skill-owned rules, minimal standalone defaults, and host-owned policy under [Resolve Standalone Policy](public-skill-portability.md#resolve-standalone-policy).
