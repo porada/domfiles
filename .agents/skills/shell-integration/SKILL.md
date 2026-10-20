@@ -18,8 +18,7 @@ For every Fish target, load `fish-shell-scripting` for portable language policy 
 ## Investigate Tasks
 
 1. Classify each in-scope shell file from its hashbang and syntax rather than its extension alone, then apply `fish-shell-scripting` or `posix-shell-scripting`.
-2. Don’t report `home/.config/fish/local.fish`’s [documented sourcing behavior](../../PROJECT.md#fish-local-configuration) as hidden diagnostics.
-3. Evaluate `home/.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Don’t report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
+2. Evaluate `home/.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Don’t report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
 
 For every non-Fish shell target and whenever the task touches `domlib`, a Fish `__domfiles_*` helper, shared `$DOMFILES_*` state, or command suppression, follow [`domlib` Integration](references/domlib-integration.md).
 

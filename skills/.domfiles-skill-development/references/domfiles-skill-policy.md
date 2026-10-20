@@ -1,10 +1,19 @@
 # Domfiles Skill Policy
 
-Apply these requirements only to skills maintained in domfiles, using the classification in the repository’s `AGENTS.md`. They supplement `skill-development` without imposing domfiles conventions on other repositories.
+Apply these requirements only to skills maintained in domfiles. They supplement `skill-development` without imposing domfiles conventions on other repositories.
+
+## Classify Skills
+
+Classify every project-authored skill by canonical source and supported installation. `metadata.internal: true` means public installation is unsupported, not that tracked source is private. Categories below widen installation reach, with the global overlay variant beside its category.
+
+| Category | Canonical Source | `name` | `metadata.internal` | Supported Installation |
+| --- | --- | --- | --- | --- |
+| Internal | `.agents/skills/<skill-name>` | `<skill-name>` | `true` | Project-local to domfiles. |
+| Global | `skills/.domfiles-<skill-name>` | `<skill-name>` | `true` | Globally exposed as `<skill-name>` through the system established by `domfiles sync`. |
+| Global overlay | `skills/.dom-<base-name>` | `dom-<base-name>` | `true` | Same installation surface as the global category. |
+| Public | `skills/<skill-name>` | `<skill-name>` | Omitted | Globally exposed through `domfiles sync` and independently installable through `skills` without `domfiles`. |
 
 ## Apply Category Contracts
-
-Follow the [internal skill naming policy](skill-installation.md#internal-skill-names) when naming Internal category skills.
 
 - **Global context:** Global skills may rely on domfiles-managed global instructions and the complete globally exposed skill set.
 - **Global overlays:** Inherit global requirements. Their `<base-name>` must exactly match the base skill’s frontmatter `name`, without shortening, rewording, or dropping qualifiers.

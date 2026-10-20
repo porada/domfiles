@@ -18,25 +18,33 @@ Follow the [shared readiness procedure](session-coordination.md#establish-readin
 
 ## Prepare Implementation Assignments
 
-Native background sessions can require an isolated worktree before edits. Their worktree tool may default to the remote default branch rather than the coordinator’s current `HEAD`. Before edits begin, establish the intended base and any necessary uncommitted inputs, checkout and branch authority under the global **Concurrent work** and **Commit gate** policies, how changes will reach the coordinator’s checkout, and who owns cleanup. Don’t assume the tool’s default base contains the assigned changes.
+Keep Claude’s implementation and validation in the coordinator’s supplied checkout, including any Zed-managed worktree. Keep its write scope apart from other concurrent work under the global **Concurrent work** policy, and establish branch authority under the **Commit gate** policy before edits begin. Include that checkout in the assignment and require native subagents to use it without separate worktree isolation. Leave worktree creation, switching, and cleanup to the user and host application.
 
-If the runtime’s checkout requirements are uncertain, have Claude determine them through read-only inspection before requesting any lifecycle effects not already authorized. Verify the supported way to prepare the intended state rather than inventing tool parameters. If the required isolation or base can’t be established within current authority, report that limitation rather than editing in place to work around the requirement. This preparation doesn’t authorize creating worktrees, branches, commits, or remote changes.
+The domfiles-managed Claude user settings disable [background worktree isolation](https://code.claude.com/docs/en/agent-view#how-file-edits-are-isolated), allowing background sessions to edit the current checkout. If the runtime still requires another worktree before edits, report the configuration or compatibility limitation instead of creating one or bypassing the requirement.
+
+## Limit Command Runtime
+
+Apply the [shared command limits](session-coordination.md#commands) with the Bash tool’s native `timeout`, using `300000` milliseconds by default. A [foreground command can move to the background at its timeout](https://code.claude.com/docs/en/tools-reference#foreground-commands-that-move-to-the-background), so a hard-termination guarantee isn’t a prerequisite for running it.
+
+If a command remains running when its timeout expires, stop that task immediately through the native `TaskStop` tool and confirm termination. This also applies when the timeout moves the command to the background. Don’t reset the deadline or treat backgrounding as permission to continue. Stopping may occur after the deadline, so don’t describe this as an exact execution cap. If stopping fails or can’t be confirmed, report the command as possibly still running under [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop).
 
 ## Launch a Fresh Conversation
 
 Compose the commands below under the [shared command rules](session-coordination.md#compose-commands).
 
-Launch with the complete assignment on stdin:
+Claude [refuses to start a session when workspace trust is required and no dialog can appear](https://code.claude.com/docs/en/errors#workspace-not-trusted-when-dispatching-a-background-session). Keep all three standard streams disconnected from terminals on launch and resumption to use that refusal path. Give each dispatch its own output file in the task directory, passing the complete assignment file on stdin and capturing stdout and stderr:
 
 ```sh
-claude --bg --effort xhigh --model opus --permission-mode auto < '<assignment-file>'
+claude --bg --effort xhigh --model opus --permission-mode auto < '<assignment-file>' > '<output-file>' 2>&1
 ```
+
+Read the captured output on success or failure and retain the invocation’s exit status. Continue to session identification only after a successful invocation.
 
 Without a positional prompt, `--bg` reads its assignment from stdin on launch and `--resume`. `claude --help` doesn’t document this input form. Treat a launch or resumption that never records its prompt and keeps reporting `working` with `progressAt: null` as a compatibility problem under [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop). Don’t use `--print`. Leave browser and MCP configuration to the existing Claude setup.
 
-This launch assumes that `--bg` reports an unmet trust requirement and stops without consuming the assignment as an answer. That startup behavior remains unverified. A startup question that reads stdin could consume the assignment instead, so supplying only the assignment doesn’t guarantee that a human-only prompt remains unanswered. An approval requirement still requires the user’s decision.
+On `Workspace not trusted`, use the reported cause to choose recovery. Follow [Establish Readiness](#establish-readiness) when accepting workspace trust in the supplied checkout can resolve it. Handle other causes and invocation failures through [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop).
 
-Don’t supply `--session-id` with `--bg`, which assigns its own session identity. Capture the returned job ID, then obtain the full session UUID from the exact matching row:
+Don’t supply `--session-id` with `--bg`, which assigns its own session identity. Capture the returned job ID from the output file, then obtain the full session UUID from the exact matching row:
 
 ```sh
 claude agents --all --cwd '<checkout>' --json | jq -e --arg job '<job-id>' '[.[] | select(.id == $job) | {id, sessionId, state, status, waitingFor}] | if length == 1 and (.[0].sessionId | if type == "string" then test("^[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$") else false end) then .[0] else error("Expected one task-owned job with a full session UUID") end'
@@ -58,10 +66,10 @@ Confirm exit from the exact task row using access established to read Claude’s
 
 If a query with established access to live process state confirms that the same task-owned worker survived the stop, retry `claude stop` once with authorized access to terminate that worker, then repeat the exit check. If you can’t establish exit, report the limitation and don’t resume.
 
-When the retained launch values still match current requirements, resume with only the background and resume arguments, passing the follow-up on stdin as [Launch a Fresh Conversation](#launch-a-fresh-conversation) describes:
+When the retained launch values still match current requirements, resume with only the background and resume arguments. Apply the stream redirections and result checks from [Launch a Fresh Conversation](#launch-a-fresh-conversation):
 
 ```sh
-claude --bg --resume '<full-uuid>' < '<assignment-file>'
+claude --bg --resume '<full-uuid>' < '<assignment-file>' > '<output-file>' 2>&1
 ```
 
 A worker with session `state: done` and `status: idle` can still be alive. Resuming it can create a copy even with the minimal command above. Adding configuration flags can also create a copy even when their values match. Let the CLI restore its saved options, check the restoration confirmation, and verify that the returned job resolves to the intended full UUID before the first monitoring check.

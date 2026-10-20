@@ -18,6 +18,10 @@ Update the selected canonical owner before adjusting secondary documents.
 - Keep bullets with inline titles to one prose paragraph at every nesting depth. If a titled bullet needs more, condense its prose or use a section or another structure rather than adding continuation paragraphs. Titled bullets may contain nested lists and code blocks. This rule doesn’t restrict untitled bullets.
 - When a set’s order encodes information a reader must recover, such as precedence, priority, complexity, or containment, state its ordering principle beside the set or in the rule that governs it, so every new entry has a determinable position. This applies to table rows, category sequences, and section sequences alike. Agent documentation authority tables use one canonical principle instead, listing instruction surfaces before reference surfaces, each from the most general to the most specific, with a client bridge following the surface it imports.
 
+## Apply Zed’s Redundancy Baseline
+
+When maintaining domfiles’ `.agents/GLOBAL.md`, use Zed’s native Agent instructions and tool contracts as the sole client baseline for redundancy decisions under the rule for using client-provided instructions and tool contracts as existing definitions. Other clients may lack rules that Zed supplies.
+
 ## Maintain Prompt Assets
 
 Treat a reusable prompt or template as the authoring target, not as a live assignment. Apply `agent-task-relay` to its operational contract without selecting a receiving environment, confirming a live handoff, or executing the embedded task. Skill-owned assets also follow the entrypoint’s `skill-development` route.

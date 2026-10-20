@@ -8,10 +8,6 @@ Keep each project-authored skill’s frontmatter `name` identical to its discove
 
 Use action-based names for skills that set `disable-model-invocation: true`.
 
-## Internal Skill Names
-
-Use unprefixed names for project-authored internal skills unless the repository bundles third-party skills. When it does, prefix project-authored internal skill names with the project name and preserve third-party names. Globally available skills outside the repository don’t count as bundled third-party skills.
-
 ## Category Changes
 
 Before moving content in a promotion that retains an overlay or another source owner, classify every existing rule and reference as promoted, retained under a named owner, or removed.

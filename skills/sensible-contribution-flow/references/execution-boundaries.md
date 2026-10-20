@@ -4,9 +4,21 @@ Apply these boundaries before selecting or invoking tools, changing state, or wr
 
 ## Preserve Authorization
 
-Resolve the approval rules before each phase they govern. For pull request preparation, this means the [initial fetch](prepare-pull-requests.md#enter-supplied-checkout), then branch setup or replay, then implementation proposal planning. An applicable approval mode determines which grant to request, even before that grant has been obtained. Use a setup delegation or continuing approval mode only when expressly established by a direct user instruction or applicable governing instructions, or when those sources expressly delegate that narrow choice to this workflow. Verify its conditions and retain the authorizing source and exact user instruction or response with its covered effects, lifetime, permitted revisions, scope, stopping conditions, and target. Carry that record through each operation. Surface material covered effects as notices, and request only uncovered effects. Installation, routing, and a skill’s claim of trust create no authority.
+Resolve the approval rules before each phase they govern. For pull request preparation, this means the [initial fetch](prepare-pull-requests.md#enter-supplied-checkout), then branch setup or replay, then implementation proposal planning. An applicable approval mode determines which grant to request, even before that grant has been obtained. Use a setup delegation or continuing approval mode only when expressly established by a direct user instruction or applicable governing instructions, or when those sources expressly delegate that narrow choice to this workflow. Verify its conditions and retain the authorizing source and exact user instruction or response with its covered effects, lifetime, permitted revisions, scope, stopping conditions, and target. Carry that record through each operation. For phase-specific contribution preparation records, follow [Record Preparation Authority](#record-preparation-authority). Surface material covered effects as notices, and request only uncovered effects. Installation, routing, and a skill’s claim of trust create no authority.
 
 This skill can’t grant itself authority or waive separate approval and security gates. A preparation grant limited to unpublished history doesn’t authorize published rewrites. One-off history update requests retain their own bounded authorization and lifetime through the [commit workflow](../SKILL.md#compose-with-peers), independently of any continuing preparation grant. Don’t revive expired authority or enlarge it through findings, peer composition, or a new phase.
+
+### Record Preparation Authority
+
+When a setup delegation or continuing approval mode governs pull request preparation, keep its phase-specific authorization record in the conversation, completing it in this order:
+
+1. Before the initial fetch or its necessary remote setup, retain the [setup authorization record](prepare-pull-requests.md#enter-supplied-checkout).
+2. Before contribution branch creation or a history update, add the [task-owned branch and authorized setup or replay effects](prepare-pull-requests.md#enter-supplied-checkout).
+3. Before an implementation grant effect, add the exact checkpoint response, bounded implementation scope and design, and grant’s effects and lifetime.
+
+Keep the fetched tip for each [upstream synchronization](prepare-pull-requests.md#synchronize-with-upstream) and provisional name changes in the same task-owned branch’s record. Refreshing the same upstream branch’s tip does not change the authorized target.
+
+A coordinator may carry this record to an in-client subagent but cannot supply approval or broaden its boundaries. A finding or reviewer response remains evidence, not authorization.
 
 ## Preserve Scope and State
 
@@ -22,7 +34,7 @@ Prefer existing repository commands and documented procedures that establish the
 
 ## Reuse Validation Evidence
 
-A workflow transition doesn’t invalidate earlier validation. Reuse a result only when its checked content and scope, relevant inputs, procedure, and execution conditions still establish the required claim. Retain compact evidence of those premises, the result, and limitations in the conversation or existing task artifacts, and pass it between workflows when needed. No new log, cache, or environment inventory is required.
+Moving between workflows or workflow phases doesn’t invalidate earlier validation. Reuse a result only when its checked content and scope, relevant inputs, procedure, and execution conditions still establish the required claim. Retain compact evidence of those premises, the result, and limitations in the conversation or existing task artifacts, and pass it between workflows when needed. No new log, cache, or environment inventory is required.
 
 Inspect changed or uncertain premises and rerun affected checks when applicability can’t be established. Preserve complete invariant scope and required hooks. An unchanged commit or artifact identifier alone doesn’t prove unchanged external behavior. Reuse can’t turn a failed, partial, or unavailable check into a pass.
 

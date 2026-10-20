@@ -53,12 +53,12 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 | Claude project skills | `.agents/skills/` | [`.claude/skills`](../.claude/skills) | Tracked directory symlink |
 | Claude settings | [`home/.claude/settings.json`](../home/.claude/settings.json) | `~/.claude/settings.json` | Synchronization symlink |
 | Codex global instructions | `.agents/GLOBAL.md` | `~/.codex/AGENTS.md` | Synchronization symlink |
-| Globally exposed skills | [Globally exposed categories](../AGENTS.md#skills) under `skills/` | `~/.agents/skills/<skill-name>` and `~/.claude/skills/<skill-name>` | Synchronization symlinks using installed names |
+| Globally exposed skills | [Globally exposed categories](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#classify-skills) under `skills/` | `~/.agents/skills/<skill-name>` and `~/.claude/skills/<skill-name>` | Synchronization symlinks using installed names |
 | Zed global instructions | `.agents/GLOBAL.md` | `~/.config/zed/AGENTS.md` | Tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge through the managed `~/.config` link |
 
 None of the `skills/` source namespaces is a project-local discovery surface. Project discovery remains backed by `.agents/skills/*`. Hidden source directories keep global skills, including personal overlays, out of `gh skill`’s default repository discovery. Client-specific roots and differing source and installed names motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
 
-[`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup rather than compatibility aliases so future synchronization leaves each logical skill discoverable once. Equivalent cross-client behavior remains a compatibility goal, not a guarantee of the [**Global redundancy baseline**](../AGENTS.md#general).
+[`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup rather than compatibility aliases so future synchronization leaves each logical skill discoverable once. Equivalent cross-client behavior remains a compatibility goal, not a guarantee of the [global redundancy baseline](../skills/.domfiles-agent-documentation/references/compose-documentation.md#apply-zeds-redundancy-baseline).
 
 ### Checkout Workflow
 
@@ -92,10 +92,6 @@ The explicit [writing composition route](../skills/.domfiles-agent-documentation
 
 [`agent-task-relay`](../skills/agent-task-relay/SKILL.md) is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task. Reaching it through the parent skill would load both for work that needs only the relay workflow.
 
-### Claude Subagent Launch
-
-The [Claude launch procedure’s startup stdin assumption](../skills/.domfiles-cli-subagent/references/claude-cli.md#launch-a-fresh-conversation) remains unverified because a probe in an untrusted directory could itself trust that directory.
-
 ### CLI Subagent Monitor Portability
 
 [`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent-signal.ts) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. These limitations are accepted while `cli-subagent` serves only domfiles-managed installations. Promotion to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor. Public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
@@ -128,14 +124,14 @@ This non-exhaustive index supplements each skill’s peer declarations and the [
 
 | Canonical Contract | Related Guidance | Relationship |
 | --- | --- | --- |
-| Adjacent opportunity handling under [**Findings**](GLOBAL.md#documentation) and [review completion](../skills/subagent-review-flow/SKILL.md#complete-the-review) | [`agent-task-relay`](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone guidance |
-| Commit authority under [**Commit gate**](GLOBAL.md#conduct) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review) | Standalone guidance |
+| Adjacent opportunity handling under [**Findings**](GLOBAL.md#findings) and [review completion](../skills/subagent-review-flow/SKILL.md#complete-the-review) | [`agent-task-relay`](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone guidance |
+| Commit authority under [**Commit gate**](GLOBAL.md#git-changes) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review) | Standalone guidance |
 | Contribution review checkpoints, criteria, and readiness in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md) coordination | Independent requirements, not mirrors |
 | Dependency choice in [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [Contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) | Standalone fallback |
 | [Human review marker preservation](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [Contribution marker preservation](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) | Semantic mirror |
 | [Independent review context](../skills/subagent-review-flow/SKILL.md#prepare-the-review) and [decision conflicts](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) | [Outgoing prompts](../skills/agent-task-relay/references/outgoing-prompts.md#independent-review-context), [inbound findings](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts), and [`verify-findings`](../skills/verify-findings/SKILL.md#verify-evidence) for decision conflicts | Standalone guidance |
-| Instruction source requirements under **Instruction provenance** and **Approval provenance** in [Authorization](GLOBAL.md#authorization) | [Relay fix authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [alternative commit approvals](../skills/sensible-commit-flow/references/alternative-approval-modes.md), and [contribution fix authority](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) | Standalone guidance |
-| Review reporting and delegation under [**Findings**](GLOBAL.md#documentation) and [**Prompt contract**](GLOBAL.md#collaboration) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
+| Instruction source requirements under **Instruction provenance** and **Approval provenance** in [Instruction Authority](GLOBAL.md#instruction-authority) | [Relay fix authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [alternative commit approvals](../skills/sensible-commit-flow/references/alternative-approval-modes.md), and [contribution fix authority](../skills/sensible-contribution-flow/references/review-findings.md#preserve-independently-governed-authority) | Standalone guidance |
+| Review reporting and delegation under [**Findings**](GLOBAL.md#findings) and [**Prompt contract**](GLOBAL.md#collaboration) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
 | [Terminal presentation compatibility in POSIX](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) | [Fish wrapper selection](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) | Paragraph mirror required for standalone installation |
 | [Updating commit history](../skills/sensible-commit-flow/references/update-commit-history.md) | [Updating contribution history](../skills/sensible-contribution-flow/references/update-commit-history.md) | Semantic mirror |
 

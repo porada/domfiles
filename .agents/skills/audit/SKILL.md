@@ -60,7 +60,7 @@ Before reporting a finding, check `.agents/PROJECT.md` for project rationale tha
 
 Continue until the entire scope has been reviewed, then report all findings together.
 
-Follow the global [communication](../../GLOBAL.md#communication) and [**Findings**](../../GLOBAL.md#documentation) requirements, then:
+Follow the global [communication](../../GLOBAL.md#communication) and [**Findings**](../../GLOBAL.md#findings) requirements, then:
 
 1. Lead with the findings. If there are none, state that the audit found no reportable issues.
 2. State the resolved reportable scope.

@@ -25,5 +25,8 @@
 	"spinnerTipsEnabled": false,
 	"terminalProgressBarEnabled": true,
 	"theme": "auto",
-	"workflowKeywordTriggerEnabled": false
+	"workflowKeywordTriggerEnabled": false,
+	"worktree": {
+		"bgIsolation": "none"
+	}
 }
