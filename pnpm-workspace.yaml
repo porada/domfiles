@@ -21,8 +21,6 @@ engineStrict: true
 lockfile:
   includeResolutionSettings: true
 
-minimumReleaseAge: 960
-
 minimumReleaseAgeExclude:
   - '@standard-config/*'
 
