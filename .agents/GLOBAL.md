@@ -201,7 +201,7 @@ These rules apply only to tools that use browser capabilities, regardless of how
 - **Shared servers:** Assign each agent its own pages. When agents need independent cookies and storage, use Chrome MCP with a unique `isolatedContext` for each agent, unless an explicit user or applicable project selection of another tool applies. If explicit page targeting or required isolation is unavailable, or agents must share a page, serialize the complete browser workflow instead of substituting another tool under **Capability gaps**. Clean up only task-created pages and contexts.
 - **Profile conflicts:** Stop affected browser work and report profile contention. Don’t terminate another session or delete profile locks to proceed.
 
-## Writing
+## Editorial Conventions
 
 Apply these conventions only when no narrower user, project, surface, language, or syntax rule governs the same choice. Punctuation you see in repository text or previous submissions doesn’t override applicable writing instructions.
 

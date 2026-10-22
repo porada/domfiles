@@ -1,6 +1,6 @@
 # Commit Execution
 
-By default, continue from the selected route’s preparation through **Confirm Commits**, **Create Approved Commits**, and **Report Results**, in that order. Apply explicit procedural or evidence check waivers under [Instruction Authority](../SKILL.md#instruction-authority) without treating them as commit authorization.
+By default, continue from the selected route’s preparation through **Confirm Commits**, **Create Approved Commits**, and **Report Results**, in that order. Apply explicit procedural or evidence check waivers under [Agent Conduct](../SKILL.md#agent-conduct) without treating them as commit authorization.
 
 ## Inspect Commit-Writing Scripts and Tests
 

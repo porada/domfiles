@@ -52,4 +52,4 @@ When documentation review exposes an unnecessarily long internal name, report th
 
 ## Validation
 
-Apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries). When propagating a comment, change its wrapping only as required by each destination’s project policy, formatter, indentation, or available width. After project-required formatting, review the complete comment family again because line wrapping and adjacency affect the final result.
+When propagating a comment, change its wrapping only as required by each destination’s project policy, formatter, indentation, or available width. After project-required formatting, review the complete comment family again because line wrapping and adjacency affect the final result.

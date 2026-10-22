@@ -1,6 +1,6 @@
 # Prepare Pull Requests
 
-Use these checkpoints by default in the entrypoint’s [selected workflow](../SKILL.md#select-workflow). Apply explicit task-scoped procedural and evidence check waivers under [Instruction Authority](../SKILL.md#instruction-authority) before planning the affected phase. A waiver does not supply missing evidence, authorize another effect, or complete a human-only checkpoint.
+Use these checkpoints by default in the entrypoint’s [selected workflow](../SKILL.md#select-workflow). Apply explicit task-scoped procedural and evidence check waivers under [Agent Conduct](../SKILL.md#agent-conduct) before planning the affected phase. A waiver does not supply missing evidence, authorize another effect, or complete a human-only checkpoint.
 
 ## Enter Supplied Checkout
 

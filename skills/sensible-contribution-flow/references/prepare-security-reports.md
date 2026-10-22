@@ -1,41 +1,21 @@
 # Prepare Security Reports
 
-Use this security-specific drafting procedure when the entrypoint’s existing [peer choice](../SKILL.md#compose-with-peers) selects the local fallback for `human-facing-writing`. Do not rediscover the peer or substitute this procedure for its required stop. The shared [post content workflow](prepare-post-content.md) owns checklists, common prose, templates, and title/body delivery. Apply the [execution boundaries](execution-boundaries.md) to evidence gathering and any reproduction.
+Use this drafting fallback only when the entrypoint’s [peer choice](../SKILL.md#compose-with-peers) leaves `human-facing-writing` unavailable. Don’t rediscover the peer or bypass its required stop. Follow the shared [security assessment boundaries](../SKILL.md#assess-contribution-fit), [execution boundaries](execution-boundaries.md), and [post content workflow](prepare-post-content.md) for evidence, templates, checklists, and delivery.
 
-## Establish Private Boundaries
+## Establish Evidence
 
-Identify the affected project and its designated private reporting channel from the available security policy or verified platform guidance. Establish the receiving template and supported submission route. Apply the [private reporting boundary](../SKILL.md#assess-contribution-fit).
+Identify the affected revision or version, relevant configuration, attacker-controlled input, crossed security boundary, and demonstrated consequence. Distinguish observations from inference and untested possibilities. Replace a disproved theory with the verified mechanism, and don’t infer a broader affected version range from one tested configuration. State material evidence gaps rather than claiming readiness.
 
-Keep undisclosed details out of public queries, public repository artifacts, and unrelated services. Use only legitimately available evidence within its disclosure boundary. Don’t request access to private report history merely for writing examples. A drafting request doesn’t authorize testing against a third party or transmitting the report. Submission requires the entrypoint’s [explicit authorization](../SKILL.md#hand-off-contributions).
-
-## Establish Verified Mechanisms
-
-Identify the affected revision or version and relevant configuration, the intended security decision, and the boundary the observed behavior crosses. Trace what an attacker controls through the causal steps to the demonstrated consequence. Preserve only the source identifiers needed to locate important transitions. If investigation disproves the original theory, replace it with the verified mechanism rather than retaining it behind a caveat.
-
-Separate direct observations from source-based inference and untested possibilities. Don’t generalize a tested configuration into an unsupported affected-version range. State missing evidence and its effect on confidence. If a necessary claim can’t be verified safely, limit the draft to what is established and identify the required evidence before claiming readiness.
-
-## Prepare Safe Reproductions
-
-Describe a complete, repeatable, minimally hazardous reproduction using an authorized isolated environment and synthetic data. Preserve the structural setup, relevant configuration, control cases, and expected and actual behavior. Make the attacker’s prerequisites explicit, including required access and control over the input. Distinguish steps actually exercised from steps proposed for the recipient to verify.
-
-Use clearly named placeholders such as `<test-account>` or `<test-token>` instead of private values or real secrets. Preserve only the format constraints necessary to reproduce the issue. Never inspect, reproduce, or request a real secret for the report, even at the user’s direction. Don’t place live credentials in artifacts, commands, or examples.
-
-Prefer a harmless demonstration of the boundary failure over unnecessary exploitation. Don’t access real user data, run destructive tests, or test an external target merely to strengthen the narrative. If safe repetition depends on an unsuitable environment or requires authority that hasn’t been granted, stop that execution and report the limitation rather than claiming successful reproduction.
+Describe a complete, repeatable, minimally hazardous reproduction. Include the setup, configuration, attacker prerequisites, controls, and expected and actual behavior. Distinguish exercised steps from proposed verification. Use named placeholders for private values, preserving only necessary format constraints.
 
 ## Draft Security Content
 
-Follow the receiving template’s structure. When it separates these roles, give each fact one primary home without removing unique evidence:
+Follow the receiving template. Where it separates these roles, give each fact one primary home:
 
-- **Title:** Pair a familiar mechanism with a concrete security consequence. Keep low-level terminology in the details unless needed for accuracy or distinction.
-- **Summary:** State the verified mechanism, affected security boundary, and representative impact. Retain any prerequisite or limitation necessary to avoid overstating exploitability.
-- **Details:** Explain the verified causal sequence and the evidence locating its important transitions.
-- **Proof of concept:** Supply the safe reproduction, including its controls and observed result.
-- **Impact:** Identify affected users, attacker prerequisites, consequences supported by the evidence, and limits imposed by independent security boundaries. An independent limit on harm doesn’t restore the security decision that was bypassed.
+- **Title:** Name the mechanism and concrete security consequence.
+- **Summary:** State the verified mechanism, affected boundary, and representative impact without overstating exploitability.
+- **Details:** Explain the causal sequence and evidence locating its important transitions.
+- **Proof of concept:** Supply the safe reproduction, its controls, and observed result.
+- **Impact:** Identify affected users, attacker prerequisites, supported consequences, and independent limits on harm. Those limits don’t restore the bypassed security decision.
 
-Include remediation or mitigation only when evidence supports it. Explain what it would address and any remaining limitation. Don’t invent a fix, promise that an untested measure resolves the issue, or treat report drafting as authorization to change the affected project.
-
-## Separate Reports From CVE Requests
-
-Establish whether the user is preparing a vulnerability report or a CVE request, and use only verified requirements for that receiving process. Don’t infer eligibility or invent an identifier. A request isn’t an assignment. If eligibility or assignment can’t be established, leave it explicitly unverified.
-
-Return the draft through [content finalization](prepare-post-content.md#finalize-content), preserving the private destination in the [handoff](../SKILL.md#hand-off-contributions). Leave required personal attestations or fields the agent can’t supply for the user. Don’t guess their values. Pause readiness for an unmet requirement or unsuitable channel. Leave submission to the user unless a direct, scoped command authorizes agent submission through the designated private channel. Preserve every personal attestation, disclosure boundary, and separate access requirement.
+Include mitigation only when supported, explaining any remaining limitation without promising an untested fix. Return the draft through [content finalization](prepare-post-content.md#finalize-content) and the [contribution handoff](../SKILL.md#hand-off-contributions), retaining the designated private destination and any unmet requirements.

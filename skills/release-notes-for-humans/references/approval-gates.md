@@ -2,7 +2,7 @@
 
 These gates protect the user’s authorship when a release note draft already exists. Apply them only to text the user supplied or previously approved. Preserve its wording, bullet order, headings, and structure outside the requested revision.
 
-An explicit request authorizes the revisions it covers, including consolidation or restructuring, under [Instruction Authority](../SKILL.md#instruction-authority). A newly inferred draft has no preserved authorial baseline, so organize and consolidate it directly when the evidence supports the result.
+An explicit request authorizes the revisions it covers, including consolidation or restructuring, under [Agent Conduct](../SKILL.md#agent-conduct). A newly inferred draft has no preserved authorial baseline, so organize and consolidate it directly when the evidence supports the result.
 
 ## Approval Requirement
 

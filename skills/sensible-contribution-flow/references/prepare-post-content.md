@@ -2,7 +2,7 @@
 
 ## Gather Writing Context
 
-By default, gather this context through the entrypoint’s resolved [evidence and writing workflows](../SKILL.md#compose-with-peers) before authoring a contribution body. Apply explicit evidence check waivers under [Instruction Authority](../SKILL.md#instruction-authority), reporting material gaps. Use the existing peer choices rather than resolving them again:
+By default, gather this context through the entrypoint’s resolved [evidence and writing workflows](../SKILL.md#compose-with-peers) before authoring a contribution body. Apply explicit evidence check waivers under [Agent Conduct](../SKILL.md#agent-conduct), reporting material gaps. Use the existing peer choices rather than resolving them again:
 
 1. Identify the required repository template or form for the selected pull request, issue, discussion, or private security report. Resolve a materially ambiguous template choice rather than inventing a requirement.
 2. Look for a bounded, relevant sample of the user’s previous submissions of the same type in that repository. Use ordinary non-disclosing author filter operations or a public author identifier established by the user or obtained through a task-required query permitted by [Secrets and Authentication](../SKILL.md#secrets-and-authentication). If no safe author selection is available, state the limitation rather than retrieving private account data. Don’t search other repositories for writing examples.
@@ -32,7 +32,7 @@ Use supplied examples of the user’s previous GitHub submissions to identify th
 
 Preserve the template’s checklist statements, field and section order, headings, and separators unless the user or template authorizes a change. Fill placeholders and remove authoring instructions rather than submitting them as prose. Omit optional sections only when permitted and appropriate. Checklist applicability determines completion under [finalization](#finalize-content), not permission to paraphrase the item.
 
-Normalize the template’s ordinary prose under the applicable [typography conventions](typography.md). Preserve code, exact required wording, machine-readable markers, and other literal syntax wherever their spelling is part of the contract.
+Normalize the template’s ordinary prose under the applicable [editorial conventions](editorial-conventions.md). Preserve code, exact required wording, machine-readable markers, and other literal syntax wherever their spelling is part of the contract.
 
 Write for a maintainer scanning with limited attention. Keep the body as short as it can be while satisfying the template and making the purpose, relevant context, and material limitations clear. Keep validation evidence accessible in the agent thread, including tool results, with task artifacts for supplementary detail or long logs. Don’t reproduce that execution record in the pull request. Remove repetition and unnecessary explanation, not required reproduction details or decisive evidence.
 

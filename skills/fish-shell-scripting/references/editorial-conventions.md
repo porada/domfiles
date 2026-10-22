@@ -1,4 +1,4 @@
-# Typography
+# Editorial Conventions
 
 Apply these conventions only when no narrower user, project, surface, language, or syntax rule governs the same choice. Punctuation you see in repository text or previous submissions doesn’t override applicable writing instructions.
 

@@ -1,6 +1,6 @@
 # Technical Copy
 
-Build on [Writing Principles](../SKILL.md#writing-principles) to keep technical facts, reader-facing terminology, constraints, and observable behavior exact. In review-only work, report only evidence-backed problems with factual accuracy, clarity, consistency, or the established voice.
+Build on [Writing Principles](../SKILL.md#writing-principles) to keep technical facts, reader-facing terminology, constraints, and observable behavior exact. In review-only work, report only concrete, evidence-backed problems within the authorized writing unit.
 
 ## Workflow
 
@@ -20,6 +20,8 @@ Lead with the answer, action, identity, failure, or observable behavior. Put the
 
 Preserve exact literal tokens. Don’t retain a category term solely because a parser, grammar, protocol, implementation, standard, or upstream tool treats it as canonical. When direct wording preserves the complete meaning and scope, name what the reader supplies, sees, or does.
 
+Apply the [code token convention](../SKILL.md#technical-text) only when the prose refers to a value as a path, identifier, option, format, or another code token. A word that matches a symbol name does not require identifier formatting for that reason alone.
+
 Prefer concise wording that readers can understand directly. When a compact label hides who acts, what happens, or how its parts relate, express that meaning with a verb or clause. Keep established technical terms when they aid understanding or preserve a necessary distinction.
 
 Preserve causal framing, technical relationships, and the established tone. Instead of asserting importance, quality, or magnitude, state the mechanism, failure mode, boundary, or observable consequence that earns the claim. Ground claims about quality, maintenance, compatibility, performance, and testing in concrete evidence or careful qualifiers. Never overpromise.
@@ -36,9 +38,9 @@ When behavior changes, revise the complete affected passage or workflow into a c
 
 ### Validation
 
-Validate the final copy against the evidence, nearby family, complete rendered output, and project formatting constraints. Search the authorized writing unit for stale wording variants, and review every project-authored human-facing string, including failure-only test diagnostics.
+Validate the final copy against the evidence, nearby family, complete rendered output, and project formatting constraints. Search the authorized writing unit for stale wording variants, and review every project-authored human-facing string in that unit, including failure-only test diagnostics.
 
-Apply the [typography and technical token conventions](typography.md). Distinguish prose from machine syntax, fixture payloads, and preserved upstream text so exact data remains unchanged.
+Apply the [editorial conventions](../SKILL.md#editorial-conventions). Distinguish prose from machine syntax, fixture payloads, and preserved upstream text so exact data remains unchanged.
 
 ## Surface Conventions
 

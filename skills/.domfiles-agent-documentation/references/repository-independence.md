@@ -18,7 +18,7 @@ Give each selected requirement one normative owner within the destination. Put r
 
 A required standalone copy in another independently used repository isn’t accidental duplication. Don’t remove it in favor of the maintainer’s global instructions or a link to the baseline. Hoist a shared requirement into a shared instruction layer only when every supported destination consumer is guaranteed to load that layer with the necessary authority, including consumers without the maintainer’s setup. The repository containing that layer must be authorized for mutation. Obtain explicit approval before hoisting, and preserve any local context needed for the remaining source section to make sense. Otherwise, preserve local ownership and align the copies at authoring time.
 
-Keep the actual rule meanings with their existing semantic owners. For example, domfiles’ global Writing rules remain their source rather than moving into a second universal policy catalog. A destination’s selected rules and deliberate exceptions are authoritative there.
+Keep the actual rule meanings with their existing semantic owners. For example, domfiles’ global Editorial Conventions remain their source rather than moving into a second universal policy catalog. A destination’s selected rules and deliberate exceptions are authoritative there.
 
 ## Align Shared Wording
 

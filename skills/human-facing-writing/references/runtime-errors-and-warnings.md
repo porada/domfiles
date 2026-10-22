@@ -22,8 +22,6 @@ Don’t hedge a known condition, list speculative causes, repeat the headline, o
 
 Include the consumer-facing source file path when it identifies the failing input, especially in multi-file operations. Keep the path in the headline, preserve it exactly, and do not substitute a synthetic internal path.
 
-Apply the [code token convention](typography.md) only when the prose refers to a value as a path, identifier, option, format, or another code token. A word that matches a symbol name does not require identifier formatting for that reason alone.
-
 Include the exact case, expected or received values, or a reason only when the detail helps the intended reader act and is appropriate to expose on that surface. When the audience or exposure boundary is unclear, omit exact values rather than assuming they are safe to reveal.
 
 For a known contract incompatibility, name the unsupported property. Present expected values before the received value, adapting the wording when several values are accepted.

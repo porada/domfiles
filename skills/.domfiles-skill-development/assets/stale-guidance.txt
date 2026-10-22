@@ -1,3 +1,0 @@
-### Stale Guidance
-
-If the affected workflow defines a failure procedure, follow it. Otherwise, load the [guidance recovery procedure](references/guidance-recovery.md) before attempting recovery when guidance is unavailable, conflicts with verified behavior, or retrieval fails. Never invent missing guidance or bypass access controls. If that reference is unavailable, report the limitation and continue only independent authorized work.

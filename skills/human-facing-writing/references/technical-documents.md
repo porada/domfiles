@@ -24,14 +24,14 @@ Don’t propose a standalone FAQ with only one question. If another grouping wou
 
 ## Document Types
 
-Before drafting or revising an issue or pull request body for a specific repository, check the supplied context or accessible repository for an applicable template. Use the template when available and the document type defaults below when none applies. If you don’t know whether a template applies, you can still draft from the available context, but don’t claim template compliance. Ask only when a known required template is unavailable or a material ambiguity prevents a useful draft.
+Before drafting or revising an issue, pull request, or discussion title or body for a specific repository, check the supplied context or accessible repository for an applicable template. Use the template when available and the document type defaults below when none applies. If you don’t know whether a template applies, you can still draft from the available context, but don’t claim template compliance. Ask only when a known required template is unavailable or a material ambiguity prevents a useful draft.
 
 For any security report, whether standalone or submitted through an issue or pull request form, also follow the [security report workflow](security-reports.md).
 
 | Document Type | Default |
 | --- | --- |
 | Comment, reply, or code review | Lead with the answer, finding, or required action. Include only the thread context needed to support it, and distinguish required changes from optional suggestions. |
-| Issue, pull request, or discussion title and body | Follow any applicable repository template. Make the problem, outcome, or scope recognizable immediately. Without a template, a small change, narrow report, or focused question may need only a sentence or two. Develop the body with evidence, impact, changes, validation, or next actions as needed for the reader to judge or act on it, not as a checklist of sections. |
+| Issue, pull request, or discussion title and body | Make the problem, outcome, or scope recognizable immediately. Without a template, a small change, narrow report, or focused question may need only a sentence or two. Develop the body with evidence, impact, changes, validation, or next actions as needed for the reader to judge or act on it, not as a checklist of sections. |
 | Other technical document | Follow the established document hierarchy. Lead with the document’s purpose, decision, or required action, and include only the context needed to understand it. |
 | README | Open with a compact project or package identity and practical value. Move through the first useful demonstration, installation, setup, and core usage before optional configuration or questions, as applicable. Keep related projects, provenance, and license information near the end when established. Preserve intentional hero artwork, badges, and layout. |
 
