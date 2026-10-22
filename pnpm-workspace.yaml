@@ -37,6 +37,7 @@ permissions:
 peerDependencyRules:
   allowAny:
     - typescript
+    - vite
   ignoreMissing:
     - eslint
     - vitest
