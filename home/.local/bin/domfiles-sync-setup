@@ -28,7 +28,7 @@ for source in \
   .dom-sensible-contribution-flow \
   .domfiles-agent-documentation \
   .domfiles-cli-subagent \
-  .domfiles-diagnose \
+  .domfiles-examine-workflow \
   .domfiles-skill-development \
   agent-task-directories \
   agent-task-relay \

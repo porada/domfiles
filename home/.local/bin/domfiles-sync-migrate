@@ -3,8 +3,8 @@
 # shellcheck source=../share/domlib
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
-# Migrate agent instructions
-outdated_agent_instructions=false
+# Migrate agent skills
+outdated_agent_skills=false
 
 for skill in \
   awesome-vitest-entry \
@@ -13,6 +13,7 @@ for skill in \
   commit \
   commit-flow \
   contribution-flow \
+  diagnose \
   git-worktrees \
   github-cli \
   harmonize \
@@ -26,9 +27,9 @@ for skill in \
   verify; do
   for path in "$HOME/.agents/skills/$skill" "$HOME/.claude/skills/$skill"; do
     if [ -L "$path" ]; then
-      if [ "$outdated_agent_instructions" = false ]; then
-        __print_heading_dimmed 'Cleaning up outdated agent instructions'
-        outdated_agent_instructions=true
+      if [ "$outdated_agent_skills" = false ]; then
+        __print_heading_dimmed 'Cleaning up outdated agent skills'
+        outdated_agent_skills=true
       fi
 
       __ rm -f "$path"
