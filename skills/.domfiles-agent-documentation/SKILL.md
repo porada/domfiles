@@ -3,21 +3,13 @@ name: agent-documentation
 description: |-
     Use for creating, editing, reviewing, auditing, or maintaining project-authored agent documentation, including `AGENTS.md`, `.agents/PROJECT.md`, skill documentation, reusable handoff and decision capture prompts, templates, canonical public-surface assets, and public skill READMEs. Also use for project agent documentation setup, repository independence, cross-repository alignment, documentation authority, ownership, composition, routing, redundancy, and token efficiency.
 
-    Use for mechanical checks of any documentation, including manual checks and commit reviews, or delegation that may include them. Exclude formatter-only and generic patch hygiene checks from this trigger.
-
-    Defer agent documentation maintenance to a more specific project workflow when one exists. Outside mechanical check collection, exclude ordinary source, script-only work without documentation changes, other consumer documentation, public API documentation, release notes, and source comments alone.
+    Defer agent documentation maintenance to a more specific project workflow when one exists. Exclude ordinary source, script-only work without documentation changes, other consumer documentation, public API documentation, release notes, and source comments alone.
 
 metadata:
     internal: true
 ---
 
 # Project Agent Documentation
-
-## Select Route
-
-When performing or delegating mechanical documentation validation, follow [Collect Documentation Checks](references/collect-documentation-checks.md), including when another workflow owns the task. When collection is the only applicable route, follow that reference and return to the owning workflow without applying the maintenance requirements below or composing their peers.
-
-For project-authored agent documentation work, continue below. The maintenance workflow also uses the collection route for its mechanical checks.
 
 ## Apply Documentation Principles
 

@@ -10,7 +10,6 @@ for source in \
   .config \
   .curlrc \
   .local/bin \
-  .local/state/domfiles \
   .vimrc; do
   __symlink "$DOMFILES_HOME_DIR/$source" "$HOME/$source"
 done
