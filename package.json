@@ -15,7 +15,7 @@
 	"packageManager": "pnpm@12.15.0",
 	"dependencies": {
 		"skills": "^1.7.4",
-		"vercel": "^65.1.0"
+		"vercel": "^65.2.0"
 	},
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.10.1",
