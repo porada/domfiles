@@ -14,6 +14,7 @@
 	},
 	"packageManager": "pnpm@12.15.0",
 	"dependencies": {
+		"doclint": "workspace:*",
 		"skills": "^1.7.4",
 		"vercel": "^65.2.0"
 	},
@@ -35,6 +36,8 @@
 		"format:check": "prettier --check --ignore-unknown .",
 		"lint:fish": "home/.local/bin/domfiles-dev-lint-fish",
 		"lint:json": "home/.local/bin/domfiles-dev-lint-json",
+		"lint:md": "doclint --fix",
+		"lint:md:check": "doclint --max-warnings 0",
 		"lint:sh": "home/.local/bin/domfiles-dev-lint-sh",
 		"lint:ts": "vp lint --fix",
 		"lint:ts:check": "vp lint --deny-warnings --type-check",

@@ -55,7 +55,7 @@ Before editing, follow [Compose Documentation](references/compose-documentation.
 
 ## Validate Documentation
 
-Use [Select Validation Scope](references/validate-documentation-changes.md#select-validation-scope) before loading detailed checks. Apply the global **Invariant scope** policy.
+Use [Select Validation Scope](references/validate-documentation-changes.md#select-validation-scope) before loading detailed checks. Apply the global **Invariant scope** policy. When Markdown linting is permitted, follow [Check Markdown](references/check-markdown.md).
 
 ### Run Complete-Scope Checks
 

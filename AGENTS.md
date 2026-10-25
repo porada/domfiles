@@ -45,6 +45,8 @@ If a guard stops a check, diagnose the prerequisite failure and apply the global
 
 For changed JSON files, run `pnpm run lint:json <changed-json-files>` with that prefix. Pass paths explicitly unless repository-wide validation is intended.
 
+For Markdown validation, follow [Check Markdown](skills/.domfiles-agent-documentation/references/check-markdown.md).
+
 ## Scope
 
 - **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/audit/SKILL.md#resolve-audit-scope) excludes it.

@@ -28,6 +28,7 @@ export default defineConfig({
 		],
 		'*.fish': 'pnpm lint:fish',
 		'*.json': 'pnpm lint:json',
+		'*.md': 'pnpm lint:md:check --no-warn-ignored',
 		'*.sh': 'pnpm lint:sh',
 		'*.ts': [
 			/* prettier-ignore */

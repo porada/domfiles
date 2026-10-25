@@ -302,7 +302,9 @@ The [repository validation policy](../AGENTS.md#validation) separates agent chec
 
 ### Repository-Scoped Commands
 
-`skills` and `vercel` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
+`doclint`, `skills`, and `vercel` intentionally remain in the root `dependencies`. They provide agent-facing or user-facing commands used outside repository development workflows and are therefore runtime dependencies rather than `devDependencies`.
+
+`doclint` is an ESLint-backed Markdown CLI implemented in [`packages/doclint`](../packages/doclint), not a skill-owned portable script. It uses the domfiles Node.js and pnpm installation rather than dependencies in the repository being checked. Native ESLint configuration and plugins provide its extension mechanism rather than a custom rule runner. Its [usage and coverage](../skills/.domfiles-agent-documentation/references/check-markdown.md) belong to the `agent-documentation` skill.
 
 The corresponding scripts in `home/.local/bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
 
