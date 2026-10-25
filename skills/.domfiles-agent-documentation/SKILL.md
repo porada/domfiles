@@ -74,6 +74,8 @@ For changes, complete [Validate Documentation Changes](references/validate-docum
 
 ## Report Results
 
-- For a change, identify the canonical owner and any redundant definitions removed or replaced with links. Follow the applicable communication policy for validation reporting.
+Apply the global **Validation reporting** policy.
+
+- For a change, identify the canonical owner and any redundant definitions removed or replaced with links.
 - For a review or audit, lead with concrete findings, their evidence, the canonical owner, and the suggested fix.
 - Report any ownership decision that remains unresolved instead of distributing the detail across multiple documents.

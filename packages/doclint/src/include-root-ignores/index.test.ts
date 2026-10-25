@@ -12,7 +12,7 @@ import { dirname, join, relative } from 'node:path';
 import { expect, onTestFinished, test, vi } from 'vite-plus/test';
 import includeRootIgnores from './index.ts';
 
-const TEST_MARKDOWN = '# Test\n';
+const TEST_MARKDOWN = '# Foo\n';
 
 function createFixture(files: Record<string, string>): string {
 	const root = mkdtempSync(join(tmpdir(), 'doclint-'));
@@ -44,16 +44,13 @@ async function loadConfig(
 	params: string[] = []
 ): Promise<Linter.Config[]> {
 	setParams(params);
-	vi.spyOn(process, 'cwd').mockReturnValue(cwd);
+	using spy = vi.spyOn(process, 'cwd');
+	spy.mockReturnValue(cwd);
 	vi.resetModules();
 
-	try {
-		const { default: config } = await import('../../eslint.config.ts');
+	const { default: config } = await import('../../eslint.config.ts');
 
-		return config;
-	} finally {
-		vi.restoreAllMocks();
-	}
+	return config;
 }
 
 async function lint(cwd: string): Promise<string[]> {

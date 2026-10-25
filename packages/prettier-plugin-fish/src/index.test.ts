@@ -1,9 +1,22 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import type { Plugin } from 'prettier';
+import { mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { format, formatWithCursor, getFileInfo } from 'prettier';
-import { expect, test, vi } from 'vite-plus/test';
+import { expect, expectTypeOf, test, vi } from 'vite-plus/test';
 import * as pluginFish from './index.ts';
+
+test('exposes correct public API', () => {
+	expectTypeOf(pluginFish).toExtend<Plugin>();
+
+	expect(pluginFish).toHaveProperty('languages');
+
+	expect(pluginFish).toHaveProperty('parsers');
+	expect(pluginFish.parsers).toHaveProperty('fish');
+
+	expect(pluginFish).toHaveProperty('printers');
+	expect(pluginFish.printers).toHaveProperty('fish-text');
+});
 
 const TEST_FISH = `
 set name ""
@@ -32,37 +45,32 @@ test('formats Fish files', async () => {
 });
 
 test('infers Fish from the hashbang', async () => {
-	const directory = await mkdtemp(join(tmpdir(), 'prettier-plugin-fish-'));
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'prettier-plugin-fish-')
+	);
 
-	const scriptPath = join(directory, 'script');
-	const plainTextPath = join(directory, 'plain-text');
+	const scriptPath = join(directory.path, 'foo');
+	const plainTextPath = join(directory.path, 'bar');
 
 	const options = { plugins: [pluginFish] };
 
-	try {
-		await Promise.all([
-			writeFile(scriptPath, '#!/usr/bin/env fish\n'),
-			writeFile(plainTextPath, 'not Fish\n'),
-		]);
+	await Promise.all([
+		writeFile(scriptPath, '#!/usr/bin/env fish\n'),
+		writeFile(plainTextPath, 'not Fish\n'),
+	]);
 
-		await expect(getFileInfo(scriptPath, options)).resolves.toMatchObject({
-			inferredParser: 'fish',
-		});
-		await expect(
-			getFileInfo(plainTextPath, options)
-		).resolves.not.toMatchObject({
-			inferredParser: 'fish',
-		});
-	} finally {
-		await rm(directory, {
-			force: true,
-			recursive: true,
-		});
-	}
+	await expect(getFileInfo(scriptPath, options)).resolves.toMatchObject({
+		inferredParser: 'fish',
+	});
+	await expect(
+		getFileInfo(plainTextPath, options)
+	).resolves.not.toMatchObject({
+		inferredParser: 'fish',
+	});
 });
 
 test('preserves escaped trailing whitespace from `fish_indent`', async () => {
-	const input = "printf '<%s>\\n' test\\ \n";
+	const input = "printf '<%s>\\n' foo\\ \n";
 
 	const output = await format(input, {
 		parser: 'fish',
@@ -76,16 +84,18 @@ test('preserves native formatter output with `tabWidth` and `useTabs`', async ()
 	const options = {
 		parser: 'fish' as const,
 		plugins: [pluginFish],
-	};
-
-	const expectedOutput = await format(TEST_FISH, options);
-	const output = await format(TEST_FISH, {
-		...options,
 		tabWidth: 8,
 		useTabs: true,
+	};
+
+	const expectedOutput = await format(TEST_FISH, {
+		parser: 'fish',
+		plugins: [pluginFish],
 	});
+	const output = await format(TEST_FISH, options);
 
 	expect(output).toBe(expectedOutput);
+	await expect(format(output, options)).resolves.toBe(output);
 });
 
 test.each([
@@ -105,36 +115,45 @@ test.each([
 });
 
 test('formats without a pragma when `requirePragma` is enabled', async () => {
-	const output = await format('echo    foo\n', {
-		parser: 'fish',
+	const options = {
+		parser: 'fish' as const,
 		plugins: [pluginFish],
 		requirePragma: true,
-	});
+	};
+
+	const output = await format('echo    foo\n', options);
 
 	expect(output).toBe('echo foo\n');
+	await expect(format(output, options)).resolves.toBe(output);
 });
 
 test.each(['@noformat', '@noprettier'])(
 	'formats despite `%s` when `checkIgnorePragma` is enabled',
 	async (pragma) => {
-		const output = await format(`# ${pragma}\necho    foo\n`, {
+		const options = {
 			checkIgnorePragma: true,
-			parser: 'fish',
+			parser: 'fish' as const,
 			plugins: [pluginFish],
-		});
+		};
+
+		const output = await format(`# ${pragma}\necho    foo\n`, options);
 
 		expect(output).toBe(`# ${pragma}\necho foo\n`);
+		await expect(format(output, options)).resolves.toBe(output);
 	}
 );
 
 test('formats without adding a pragma when `insertPragma` is enabled', async () => {
-	const output = await format('echo    foo\n', {
+	const options = {
 		insertPragma: true,
-		parser: 'fish',
+		parser: 'fish' as const,
 		plugins: [pluginFish],
-	});
+	};
+
+	const output = await format('echo    foo\n', options);
 
 	expect(output).toBe('echo foo\n');
+	await expect(format(output, options)).resolves.toBe(output);
 });
 
 test('respects `cursorOffset` at the end of the input', async () => {
@@ -158,55 +177,62 @@ test('respects `embeddedLanguageFormatting`', async () => {
 echo    foo
 \`\`\`
 `;
+	const options = {
+		embeddedLanguageFormatting: 'auto' as const,
+		parser: 'markdown' as const,
+		plugins: [pluginFish],
+	};
 
-	const outputs: string[] = [];
-
-	for (const embeddedLanguageFormatting of ['auto', 'off'] as const) {
-		outputs.push(
-			await format(input, {
-				embeddedLanguageFormatting,
-				parser: 'markdown',
-				plugins: [pluginFish],
-			})
-		);
-	}
+	const outputs = {
+		auto: await format(input, options),
+		off: await format(input, {
+			...options,
+			embeddedLanguageFormatting: 'off',
+		}),
+	};
 
 	expect(outputs).toMatchInlineSnapshot(`
-		[
-		  "\`\`\`fish
+		{
+		  "auto": "\`\`\`fish
 		echo foo
 		\`\`\`
 		",
-		  "\`\`\`fish
+		  "off": "\`\`\`fish
 		echo    foo
 		\`\`\`
 		",
-		]
+		}
 	`);
+	await expect(format(outputs.auto, options)).resolves.toBe(outputs.auto);
 });
 
 test('respects `filepath`', async () => {
+	const options = {
+		filepath: 'foo.fish',
+		plugins: [pluginFish],
+	};
+
 	const expectedOutput = await format(TEST_FISH, {
 		parser: 'fish',
 		plugins: [pluginFish],
 	});
-	const output = await format(TEST_FISH, {
-		filepath: 'test.fish',
-		plugins: [pluginFish],
-	});
+	const output = await format(TEST_FISH, options);
 
 	expect(output).toBe(expectedOutput);
+	await expect(format(output, options)).resolves.toBe(output);
 });
 
 test('handles empty files', async () => {
 	const input = '\n';
-
-	const output = await format(input, {
-		parser: 'fish',
+	const options = {
+		parser: 'fish' as const,
 		plugins: [pluginFish],
-	});
+	};
+
+	const output = await format(input, options);
 
 	expect(output).toBe('');
+	await expect(format(output, options)).resolves.toBe(output);
 });
 
 test('preserves comment-only files', async () => {
@@ -238,19 +264,15 @@ test('reports formatting errors', async () => {
 			(error: unknown) => error
 		)) as Error;
 
-		const [errorMessageWithSource] = errorWithSource.message.split('\n');
-		const [errorMessageWithoutSource] =
-			errorWithoutSource.message.split('\n');
-
 		expect(errorWithSource).toBeInstanceOf(Error);
 		expect(errorWithSource.cause).toBeInstanceOf(Error);
-		expect(errorMessageWithSource).toMatchInlineSnapshot(
+		expect(errorWithSource.message.split('\n')[0]).toMatchInlineSnapshot(
 			`"[prettier-plugin-fish] Failed to format \`foo/bar.fish\`:"`
 		);
 
 		expect(errorWithoutSource).toBeInstanceOf(Error);
 		expect(errorWithoutSource.cause).toBeInstanceOf(Error);
-		expect(errorMessageWithoutSource).toMatchInlineSnapshot(
+		expect(errorWithoutSource.message.split('\n')[0]).toMatchInlineSnapshot(
 			`"[prettier-plugin-fish] Failed to format:"`
 		);
 		expect(errorWithoutSource.message).toContain('\n\n');

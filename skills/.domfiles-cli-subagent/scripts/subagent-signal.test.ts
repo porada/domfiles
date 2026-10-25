@@ -59,10 +59,8 @@ const field = (value: unknown, ...keys: Array<number | string>): unknown => {
 	return current;
 };
 
-const withWait = (arguments_: ReadonlyArray<string>): string[] =>
-	arguments_.includes('--wait')
-		? [...arguments_]
-		: [...arguments_, '--wait', '0'];
+const withWait = (params: ReadonlyArray<string>): string[] =>
+	params.includes('--wait') ? [...params] : [...params, '--wait', '0'];
 
 const collect = async (
 	child: ChildProcessWithoutNullStreams
@@ -108,26 +106,22 @@ const createFixture = (context: TestContext) => {
 	// Every run starts outside the repository, so no result depends on the
 	// caller’s directory
 	const start = (
-		arguments_: ReadonlyArray<string>
+		params: ReadonlyArray<string>
 	): ChildProcessWithoutNullStreams =>
-		spawn(process.execPath, [SCRIPT, ...arguments_], {
+		spawn(process.execPath, [SCRIPT, ...params], {
 			cwd: root,
 			env: environment,
 		});
 
-	const run = async (arguments_: ReadonlyArray<string>): Promise<Result> =>
-		collect(start(arguments_));
+	const run = async (params: ReadonlyArray<string>): Promise<Result> =>
+		collect(start(params));
 
 	const checkObservation = (
-		arguments_: ReadonlyArray<string>,
+		params: ReadonlyArray<string>,
 		result: Result
 	): string => {
-		assert.equal(
-			result.status,
-			0,
-			`${arguments_.join(' ')}: ${result.stderr}`
-		);
-		assert.equal(result.stderr, '', arguments_.join(' '));
+		assert.equal(result.status, 0, `${params.join(' ')}: ${result.stderr}`);
+		assert.equal(result.stderr, '', params.join(' '));
 		assert.ok(
 			result.stdout.endsWith('\n') &&
 				result.stdout.split('\n').length === 2,
@@ -138,10 +132,9 @@ const createFixture = (context: TestContext) => {
 	};
 
 	// Every observation defaults to `--wait 0` and prints exactly one JSON line
-	const observeArguments = async (
-		arguments_: ReadonlyArray<string>
-	): Promise<string> =>
-		checkObservation(arguments_, await run(withWait(arguments_)));
+	const observeParams = async (
+		params: ReadonlyArray<string>
+	): Promise<string> => checkObservation(params, await run(withWait(params)));
 
 	const parse = (stdout: string): Output => {
 		const output = JSON.parse(stdout) as Output;
@@ -151,7 +144,7 @@ const createFixture = (context: TestContext) => {
 		return output;
 	};
 
-	const sessionArguments = (sessions: Sessions): string[] =>
+	const sessionParams = (sessions: Sessions): string[] =>
 		sessions.flatMap(([uuid, since]) => [
 			'--claude',
 			`${String(since)}:${uuid}`,
@@ -168,8 +161,7 @@ const createFixture = (context: TestContext) => {
 	const observeRaw = async (
 		sessions: Sessions,
 		extra: ReadonlyArray<string> = []
-	): Promise<string> =>
-		observeArguments([...sessionArguments(sessions), ...extra]);
+	): Promise<string> => observeParams([...sessionParams(sessions), ...extra]);
 
 	const observeAll = async (
 		sessions: Sessions,
@@ -202,8 +194,8 @@ const createFixture = (context: TestContext) => {
 		bin,
 		calls,
 		home,
-		listing: (rows: unknown): void => {
-			writeFileSync(join(bin, 'listing.json'), JSON.stringify(rows));
+		listing: (content: unknown): void => {
+			writeFileSync(join(bin, 'listing.json'), JSON.stringify(content));
 		},
 		observe: async (
 			since: number,
@@ -220,20 +212,19 @@ const createFixture = (context: TestContext) => {
 			return entry[key];
 		},
 		observeRaw,
-		observeWith: async (
-			arguments_: ReadonlyArray<string>
-		): Promise<Output> => parse(await observeArguments(arguments_)),
+		observeWith: async (params: ReadonlyArray<string>): Promise<Output> =>
+			parse(await observeParams(params)),
 		project,
-		refuse: async (arguments_: ReadonlyArray<string>): Promise<string> => {
-			const { status, stderr, stdout } = await run(arguments_);
+		refuse: async (params: ReadonlyArray<string>): Promise<string> => {
+			const { status, stderr, stdout } = await run(params);
 
-			assert.equal(status, 2, `${arguments_.join(' ')}: ${stderr}`);
-			assert.equal(stdout, '', arguments_.join(' '));
+			assert.equal(status, 2, `${params.join(' ')}: ${stderr}`);
+			assert.equal(stdout, '', params.join(' '));
 			assert.ok(
 				stderr.startsWith(`${NAME}: `) &&
 					stderr.endsWith('\n') &&
 					stderr.split('\n').length === 2,
-				`${arguments_.join(' ')}: ${stderr}`
+				`${params.join(' ')}: ${stderr}`
 			);
 
 			return stderr;
@@ -343,7 +334,7 @@ const synthetic = (text: string, error: string | null, second: number) => ({
 	timestamp: at(second),
 });
 
-const call = (id: string, input: unknown, second: number) => ({
+const toolCall = (id: string, input: unknown, second: number) => ({
 	type: 'assistant',
 	message: {
 		id: `message-${id}`,
@@ -354,7 +345,7 @@ const call = (id: string, input: unknown, second: number) => ({
 	timestamp: at(second),
 });
 
-const result = (id: string, isError: boolean, second: number) => ({
+const toolResult = (id: string, isError: boolean, second: number) => ({
 	type: 'user',
 	message: {
 		role: 'user',
@@ -399,7 +390,7 @@ const row = (
 	waitingFor: string | null
 ) => ({ id: uuid.slice(0, 8), sessionId: uuid, state, status, waitingFor });
 
-const session = (
+const rows = (
 	state: string,
 	status: string | null,
 	waitingFor: string | null
@@ -411,8 +402,8 @@ const session = (
 const completedTurn = (): Array<Record<string, unknown>> => [
 	bookkeeping(),
 	prompt(1),
-	call('call', { command: 'git diff' }, 2),
-	result('call', false, 3),
+	toolCall('call', { command: 'git diff' }, 2),
+	toolResult('call', false, 3),
 	thinking('final', 4),
 	reply('final', 'No findings', 'end_turn', 5),
 	turnEnd(6),
@@ -582,15 +573,15 @@ void describe(NAME, { concurrency: true }, () => {
 			]),
 		];
 		const refusals = await Promise.all(
-			cases.map(async ([arguments_]) => fixture.refuse(arguments_))
+			cases.map(async ([params]) => fixture.refuse(params))
 		);
 
-		for (const [index, [arguments_, diagnostic]] of cases.entries()) {
+		for (const [index, [params, diagnostic]] of cases.entries()) {
 			const stderr = refusals[index] ?? '';
 
 			assert.ok(
 				stderr.includes(diagnostic),
-				`${arguments_.join(' ')}: ${stderr}`
+				`${params.join(' ')}: ${stderr}`
 			);
 		}
 
@@ -620,7 +611,7 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('accepts the documented maximum wait and rejects larger values', async (context) => {
+	void test('accepts the documented maximum `--wait` and rejects larger values', async (context) => {
 		const fixture = createFixture(context);
 		const { stdout: help } = await fixture.run(['--help']);
 		const line =
@@ -636,7 +627,7 @@ void describe(NAME, { concurrency: true }, () => {
 		assert.ok(help.includes(`Defaults to \`${String(maximum)}\``));
 
 		fixture.write(UUID, completedTurn());
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 		assert.equal(
 			await fixture.observeKey('state', 0, ['--wait', String(maximum)]),
 			'ready'
@@ -698,7 +689,7 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('reports a missing transcript as working', async (context) => {
+	void test('reports a missing transcript as `working`', async (context) => {
 		const fixture = createFixture(context);
 
 		const raw = await fixture.observeRaw([[UUID, 0]]);
@@ -772,7 +763,7 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [prompt(1)]);
 		writeFileSync(join(fixture.home, '.claude/projects/.DS_Store'), '');
-		fixture.listing(session('working', 'busy', null));
+		fixture.listing(rows('working', 'busy', null));
 		assert.equal(await fixture.observeKey('state', 0), 'working');
 	});
 
@@ -808,7 +799,7 @@ void describe(NAME, { concurrency: true }, () => {
 			`${JSON.stringify(prompt(1))}\n{"type":"assist`
 		);
 		setModified(transcript, 1000);
-		fixture.listing(session('working', 'busy', null));
+		fixture.listing(rows('working', 'busy', null));
 		assert.deepEqual(await fixture.observe(0), {
 			session: UUID,
 			state: 'working',
@@ -817,7 +808,7 @@ void describe(NAME, { concurrency: true }, () => {
 		});
 	});
 
-	void test('reports working before the prompt without a lookup', async (context) => {
+	void test('reports `working` before the prompt without a lookup', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, [
@@ -845,7 +836,7 @@ void describe(NAME, { concurrency: true }, () => {
 			prompt(5),
 		]);
 		setModified(fixture.transcript(UUID), 5000);
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 		assert.deepEqual(await fixture.observe(3), {
 			session: UUID,
 			state: 'working',
@@ -859,8 +850,8 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', background, 2),
-			result('a', false, 3),
+			toolCall('a', background, 2),
+			toolResult('a', false, 3),
 			compaction(4),
 			{
 				type: 'user',
@@ -882,7 +873,7 @@ void describe(NAME, { concurrency: true }, () => {
 			reply('b', 'Started the tests', 'end_turn', 7),
 			turnEnd(8),
 		]);
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 
 		const output = await fixture.observe(0);
 
@@ -894,9 +885,9 @@ void describe(NAME, { concurrency: true }, () => {
 		const fixture = createFixture(context);
 		const transcript = fixture.transcript(UUID);
 
-		fixture.write(UUID, [prompt(10), call('a', { command: 'ls' }, 11)]);
+		fixture.write(UUID, [prompt(10), toolCall('a', { command: 'ls' }, 11)]);
 		setModified(transcript, 20_000);
-		fixture.listing(session('working', 'busy', null));
+		fixture.listing(rows('working', 'busy', null));
 		assert.equal(await fixture.observeKey('progressAt', 0), 20_000);
 
 		const earlier = fixture.subagent(UUID, 'agent-earlier.jsonl', '{}\n');
@@ -927,14 +918,14 @@ void describe(NAME, { concurrency: true }, () => {
 		assert.equal(await fixture.observeKey('progressAt', 0), 35_000);
 	});
 
-	void test('reports the final reply when ready', async (context) => {
+	void test('reports the final reply when `ready`', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, completedTurn());
 
 		const before = readFileSync(fixture.transcript(UUID));
 
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
 
 		const output = await fixture.observeRaw([[UUID, 0]]);
 
@@ -963,12 +954,12 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('waits for a session that is not busy', async (context) => {
+	void test('waits for a session that is not `busy`', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, completedTurn());
 		setModified(fixture.transcript(UUID), 5000);
-		fixture.listing(session('working', 'busy', null));
+		fixture.listing(rows('working', 'busy', null));
 		assert.deepEqual(await fixture.observe(0), {
 			session: UUID,
 			state: 'working',
@@ -976,7 +967,7 @@ void describe(NAME, { concurrency: true }, () => {
 			progressAt: 5000,
 		});
 
-		fixture.listing(session('working', 'idle', null));
+		fixture.listing(rows('working', 'idle', null));
 		assert.equal(await fixture.observeKey('state', 0), 'ready');
 	});
 
@@ -989,7 +980,7 @@ void describe(NAME, { concurrency: true }, () => {
 			compaction(0),
 			...completedTurn(),
 		]);
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
 		assert.equal(await fixture.observeKey('compactedAt', 0), 3);
 	});
 
@@ -1005,7 +996,7 @@ void describe(NAME, { concurrency: true }, () => {
 			),
 			turnEnd(3),
 		]);
-		fixture.listing(session('blocked', 'idle', null));
+		fixture.listing(rows('blocked', 'idle', null));
 		assert.deepEqual(await fixture.observe(0), {
 			session: UUID,
 			state: 'attention',
@@ -1025,7 +1016,7 @@ void describe(NAME, { concurrency: true }, () => {
 			reply('a', 'é'.repeat(520), 'max_tokens', 2),
 			turnEnd(3),
 		]);
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
 
 		const output = await fixture.observe(0);
 
@@ -1035,19 +1026,19 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', { command: 'ls' }, 2),
+			toolCall('a', { command: 'ls' }, 2),
 			turnEnd(3),
 		]);
 		assert.equal(await fixture.observeKey('reason', 0), 'noReply');
 	});
 
-	void test('reports blocked sessions with the pending tool', async (context) => {
+	void test('reports `blocked` sessions with the pending tool', async (context) => {
 		const fixture = createFixture(context);
 		const input = { command: 'y'.repeat(600) };
 		const serialized = JSON.stringify(input);
 
-		fixture.write(UUID, [prompt(1), call('a', input, 2)]);
-		fixture.listing(session('working', 'waiting', 'permission prompt'));
+		fixture.write(UUID, [prompt(1), toolCall('a', input, 2)]);
+		fixture.listing(rows('working', 'waiting', 'permission prompt'));
 		assert.deepEqual(await fixture.observe(0), {
 			session: UUID,
 			state: 'attention',
@@ -1065,31 +1056,31 @@ void describe(NAME, { concurrency: true }, () => {
 
 		// A `blocked` session state without an open prompt is not a pending
 		// approval
-		fixture.listing(session('blocked', 'idle', null));
+		fixture.listing(rows('blocked', 'idle', null));
 		assert.equal(await fixture.observeKey('state', 0), 'working');
 	});
 
-	void test('waits for background work despite a blocked session state', async (context) => {
+	void test('waits for background work despite a `blocked` session state', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', background, 2),
-			result('a', false, 3),
+			toolCall('a', background, 2),
+			toolResult('a', false, 3),
 			reply('b', 'Should I also run lint?', 'end_turn', 4),
 			turnEnd(5),
 		]);
-		fixture.listing(session('blocked', 'idle', null));
+		fixture.listing(rows('blocked', 'idle', null));
 		assert.equal(await fixture.observeKey('state', 0), 'working');
 	});
 
-	void test('reports a finished reply despite a blocked session state', async (context) => {
+	void test('reports a finished reply despite a `blocked` session state', async (context) => {
 		await Promise.all(
 			['idle', null].map(async (status) => {
 				const fixture = createFixture(context);
 
 				fixture.write(UUID, completedTurn());
-				fixture.listing(session('blocked', status, null));
+				fixture.listing(rows('blocked', status, null));
 				assert.deepEqual(
 					await fixture.observeKey('replies', 0),
 					['No findings'],
@@ -1099,16 +1090,16 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('reports failed and stopped turns', async (context) => {
+	void test('reports `failed` and `stopped` turns', async (context) => {
 		await Promise.all(
 			['failed', 'stopped'].map(async (state) => {
 				const fixture = createFixture(context);
 
 				fixture.write(UUID, [
 					prompt(1),
-					call('a', { command: 'ls' }, 2),
+					toolCall('a', { command: 'ls' }, 2),
 				]);
-				fixture.listing(session(state, null, null));
+				fixture.listing(rows(state, null, null));
 				assert.deepEqual(await fixture.observe(0), {
 					session: UUID,
 					state: 'attention',
@@ -1119,11 +1110,11 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('reports open prompts after a reply as blocked', async (context) => {
+	void test('reports open prompts after a reply as `blocked`', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, completedTurn());
-		fixture.listing(session('working', 'waiting', null));
+		fixture.listing(rows('working', 'waiting', null));
 		assert.deepEqual(await fixture.observe(0), {
 			session: UUID,
 			state: 'attention',
@@ -1132,8 +1123,8 @@ void describe(NAME, { concurrency: true }, () => {
 			detail: { tool: null, waitingFor: null },
 		});
 
-		fixture.write(UUID, [prompt(1), call('a', { command: 'ls' }, 2)]);
-		fixture.listing(session('working', 'busy', 'dialog open'));
+		fixture.write(UUID, [prompt(1), toolCall('a', { command: 'ls' }, 2)]);
+		fixture.listing(rows('working', 'busy', 'dialog open'));
 		assert.equal(
 			field(await fixture.observe(0), 'detail', 'waitingFor'),
 			'dialog open'
@@ -1142,26 +1133,41 @@ void describe(NAME, { concurrency: true }, () => {
 
 	void test('waits for pending agents and workflows', async (context) => {
 		await Promise.all(
-			(
-				[
-					['pendingBackgroundAgentCount', 1, 'working'],
-					['pendingWorkflowCount', 1, 'working'],
-					['pendingBackgroundAgentCount', 0, 'ready'],
-					['pendingWorkflowCount', 0, 'ready'],
-				] as const
-			).map(async ([name, count, state]) => {
-				const fixture = createFixture(context);
-				const records = completedTurn();
+			['pendingBackgroundAgentCount', 'pendingWorkflowCount'].map(
+				async (name) => {
+					const fixture = createFixture(context);
+					const records = completedTurn();
 
-				records[6] = { ...turnEnd(6), [name]: count };
-				fixture.listing(session('done', null, null));
-				fixture.write(UUID, records);
-				assert.equal(
-					await fixture.observeKey('state', 0),
-					state,
-					`${name}: ${String(count)}`
-				);
-			})
+					records[6] = { ...turnEnd(6), [name]: 1 };
+					fixture.listing(rows('done', null, null));
+					fixture.write(UUID, records);
+					assert.equal(
+						await fixture.observeKey('state', 0),
+						'working',
+						name
+					);
+				}
+			)
+		);
+	});
+
+	void test('reports `ready` without pending agents or workflows', async (context) => {
+		await Promise.all(
+			['pendingBackgroundAgentCount', 'pendingWorkflowCount'].map(
+				async (name) => {
+					const fixture = createFixture(context);
+					const records = completedTurn();
+
+					records[6] = { ...turnEnd(6), [name]: 0 };
+					fixture.listing(rows('done', null, null));
+					fixture.write(UUID, records);
+					assert.equal(
+						await fixture.observeKey('state', 0),
+						'ready',
+						name
+					);
+				}
+			)
 		);
 	});
 
@@ -1170,22 +1176,22 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', background, 2),
-			result('a', false, 3),
+			toolCall('a', background, 2),
+			toolResult('a', false, 3),
 			synthetic('API Error: 500', 'server_error', 4),
 			turnEnd(5),
 		]);
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
 		assert.equal(await fixture.observeKey('reason', 0), 'noReply');
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', background, 2),
-			result('a', false, 3),
+			toolCall('a', background, 2),
+			toolResult('a', false, 3),
 			reply('b', 'Started the tests', 'end_turn', 4),
 			turnEnd(5),
 		]);
-		fixture.listing(session('stopped', null, null));
+		fixture.listing(rows('stopped', null, null));
 		assert.equal(await fixture.observeKey('reason', 0), 'stopped');
 	});
 
@@ -1194,13 +1200,13 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', { command: 'ls' }, 2),
+			toolCall('a', { command: 'ls' }, 2),
 			sidechain(reply('s', 'Sidechain finding', 'end_turn', 4)),
-			sidechain(result('s', false, 5)),
+			sidechain(toolResult('s', false, 5)),
 			sidechain(turnEnd(6)),
 			sidechain(prompt(7)),
 		]);
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 
 		const output = await fixture.observe(0);
 
@@ -1212,14 +1218,14 @@ void describe(NAME, { concurrency: true }, () => {
 		const fixture = createFixture(context);
 		const records: unknown[] = [
 			prompt(1),
-			call('a', background, 2),
-			result('a', false, 3),
+			toolCall('a', background, 2),
+			toolResult('a', false, 3),
 			reply('b', 'Started the tests', 'end_turn', 4),
 			turnEnd(5),
 		];
 
 		fixture.write(UUID, records);
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 		assert.equal(await fixture.observeKey('state', 0), 'working');
 
 		// Claude answers a notification recorded after its turn ended, even
@@ -1237,8 +1243,8 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', background, 2),
-			result('a', true, 3),
+			toolCall('a', background, 2),
+			toolResult('a', true, 3),
 			reply('b', 'The tests could not start', 'end_turn', 4),
 			turnEnd(5),
 		]);
@@ -1256,7 +1262,7 @@ void describe(NAME, { concurrency: true }, () => {
 			reply('b', 'Second', 'end_turn', 5),
 			turnEnd(6),
 		]);
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
 		assert.deepEqual(await fixture.observeKey('replies', 0), [
 			'First',
 			'Second',
@@ -1283,9 +1289,12 @@ void describe(NAME, { concurrency: true }, () => {
 		};
 
 		const listing =
-			(rows: unknown) =>
+			(content: unknown) =>
 			(bin: string): void => {
-				writeFileSync(join(bin, 'listing.json'), JSON.stringify(rows));
+				writeFileSync(
+					join(bin, 'listing.json'),
+					JSON.stringify(content)
+				);
 			};
 
 		await Promise.all([
@@ -1320,7 +1329,8 @@ void describe(NAME, { concurrency: true }, () => {
 		fixture.write(UUID, completedTurn());
 		fixture.write(OTHER_UUID, [prompt(1)]);
 		setModified(fixture.transcript(OTHER_UUID), 7000);
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
+
 		const { sessions } = await fixture.observeAll([
 			[OTHER_UUID, 0],
 			[UUID, 0],
@@ -1374,7 +1384,7 @@ void describe(NAME, { concurrency: true }, () => {
 		});
 	});
 
-	void test('returns as soon as any session leaves working', async (context) => {
+	void test('returns as soon as any session leaves `working`', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, [prompt(1)]);
@@ -1448,35 +1458,44 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('waits until ready or the deadline', async (context) => {
+	void test('stops waiting once the session is `ready`', async (context) => {
 		const fixture = createFixture(context);
-		let started = performance.now();
 
 		fixture.write(UUID, completedTurn());
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
+
+		const started = performance.now();
+
 		assert.equal(
 			await fixture.observeKey('state', 0, ['--wait', '60']),
 			'ready'
 		);
 		assert.ok(performance.now() - started < 10_000);
+		assert.equal(fixture.calls(), 1);
+	});
+
+	void test('waits until the deadline while the session is `working`', async (context) => {
+		const fixture = createFixture(context);
 
 		fixture.write(UUID, [prompt(1)]);
-		fixture.listing(session('working', 'busy', null));
-		started = performance.now();
+		fixture.listing(rows('working', 'busy', null));
+
+		const started = performance.now();
+
 		assert.equal(
 			await fixture.observeKey('state', 0, ['--wait', '1']),
 			'working'
 		);
 		assert.ok(performance.now() - started >= 1000);
 		assert.ok(performance.now() - started < 10_000);
-		assert.equal(fixture.calls(), 2);
+		assert.equal(fixture.calls(), 1);
 	});
 
 	void test('waits for readiness by default', async (context) => {
 		const fixture = createFixture(context);
 
 		fixture.write(UUID, [prompt(1)]);
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 
 		const observation = fixture.run(['--claude', `0:${UUID}`]);
 
@@ -1498,12 +1517,12 @@ void describe(NAME, { concurrency: true }, () => {
 
 		fixture.write(UUID, [
 			prompt(1),
-			call('a', background, 2),
-			result('a', false, 3),
+			toolCall('a', background, 2),
+			toolResult('a', false, 3),
 			reply('b', 'Started the tests', 'end_turn', 4),
 			turnEnd(5),
 		]);
-		fixture.listing(session('done', 'idle', null));
+		fixture.listing(rows('done', 'idle', null));
 		assert.equal(
 			await fixture.observeKey('state', 0, ['--wait', '2']),
 			'working'
@@ -1577,7 +1596,7 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('reports Codex working before the turn starts', async (context) => {
+	void test('reports Codex sessions as `working` before the turn starts', async (context) => {
 		const fixture = createFixture(context);
 		const value = `0:${UUID}`;
 
@@ -1834,7 +1853,8 @@ void describe(NAME, { concurrency: true }, () => {
 
 		setModified(root, 4000);
 		fixture.write(UUID, completedTurn());
-		fixture.listing(session('done', null, null));
+		fixture.listing(rows('done', null, null));
+
 		const { sessions } = await fixture.observeWith([
 			'--codex',
 			`0:${OTHER_UUID}`,

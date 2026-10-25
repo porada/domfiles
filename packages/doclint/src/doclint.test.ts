@@ -33,30 +33,27 @@ test.each([
 	{ params: ['--config', 'doclint.config.ts', '--', 'foo bar.md'] },
 	{ params: ['--no-ignore', '--', 'foo.md'] },
 	{ params: ['foo.md', '--format', 'json'] },
-])(
-	'launches bundled ESLint with the default configuration',
-	async ({ params }) => {
-		process.argv.push(...params);
+])('forwards arguments to bundled ESLint', async ({ params }) => {
+	process.argv.push(...params);
 
-		await import('./doclint.ts');
+	await import('./doclint.ts');
 
-		expect(spawnSync).toHaveBeenCalledExactlyOnceWith(
-			process.execPath,
-			[
-				resolvePath(
-					eslint.bin.eslint,
-					import.meta.resolve('eslint/package.json')
-				),
-				'--config',
-				resolvePath('../eslint.config.ts', import.meta.url),
-				'--flag',
-				'unstable_native_nodejs_ts_config',
-				...params,
-			],
-			{ stdio: 'inherit' }
-		);
-	}
-);
+	expect(spawnSync).toHaveBeenCalledExactlyOnceWith(
+		process.execPath,
+		[
+			resolvePath(
+				eslint.bin.eslint,
+				import.meta.resolve('eslint/package.json')
+			),
+			'--config',
+			resolvePath('../eslint.config.ts', import.meta.url),
+			'--flag',
+			'unstable_native_nodejs_ts_config',
+			...params,
+		],
+		{ stdio: 'inherit' }
+	);
+});
 
 test.each([0, 1, 2, 3, null])('propagates child status', async (status) => {
 	vi.mocked(spawnSync).mockReturnValue({

@@ -24,7 +24,6 @@
 		"@standard-config/prettier": "^1.22.0",
 		"@standard-config/tsconfig": "catalog:",
 		"@types/node": "catalog:",
-		"@vitest/coverage-v8": "catalog:",
 		"prettier": "catalog:",
 		"prettier-plugin-fish": "workspace:*",
 		"typescript": "catalog:",

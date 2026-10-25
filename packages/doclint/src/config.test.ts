@@ -15,10 +15,10 @@ test('exposes correct public API', () => {
 	`);
 });
 
-test('defines a valid config', () => {
-	const config = exports.defineConfig();
+test('defines the default config', () => {
+	const config = exports
+		.defineConfig()
+		.map(({ plugins: _plugins, ...entry }) => entry);
 
-	for (const { plugins: _plugins, ...entry } of config) {
-		expect(entry).toMatchSnapshot();
-	}
+	expect(config).toMatchSnapshot();
 });

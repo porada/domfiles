@@ -29,6 +29,7 @@ for source in \
   .domfiles-cli-subagent \
   .domfiles-examine-workflow \
   .domfiles-skill-development \
+  .domfiles-vitest-conventions \
   agent-task-directories \
   agent-task-relay \
   fish-shell-scripting \
