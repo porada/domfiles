@@ -13,16 +13,9 @@ Load `sensible-contribution-flow` and apply these personal contribution defaults
 
 ## Implementation Review
 
-For the coordinator’s implementation review, use two independent reviewers against the same baseline:
+Use `full-review` for the coordinator’s implementation review of initial contributions and implementation revisions, including documentation changes. Pass the base workflow’s review scope and established authority to it. Leave the base’s quick design review and standalone read-only review routes unchanged.
 
-- One fresh native subagent, without specifying a model.
-- One fresh Claude CLI session through `cli-subagent`, using that skill’s runtime defaults. Resume its readiness-only exchange if already established.
-
-Use these reviewers for initial contributions and implementation revisions, including documentation changes. Leave the base’s quick design review and standalone read-only review routes unchanged. Each reviewer evaluates its assigned scope rather than starting another pair of reviewers.
-
-Use `subagent-review-flow` for prompt context, consolidated findings, fixes and disputes, same-session follow-ups, and completion. `cli-subagent` owns CLI session mechanics. If either required reviewer is unavailable, report the limitation and ask how to proceed rather than substituting another reviewer or self-review.
-
-Under **External services**, include the Claude review exchange and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers that exchange. When no checkpoint is otherwise needed, resolve only the uncovered Claude authorization before implementation. Loading this overlay doesn’t authorize disclosure.
+Under **External services**, include `full-review`’s selected CLI review exchange, replacement sessions with the same participant, and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered CLI authorization before implementation. Loading this overlay doesn’t authorize disclosure.
 
 ## Adjacent Opportunities
 

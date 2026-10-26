@@ -1,7 +1,7 @@
 ---
 name: vitest-conventions
 description: |-
-    Use when writing, refactoring, reviewing, or auditing JavaScript or TypeScript package tests with any test runner. This includes fixtures, assertions, snapshots, mocks, and cleanup.
+    Use when writing, refactoring, reviewing, or auditing JavaScript or TypeScript tests that use Vitest, including through Vite+ and `vite-plus/test`. This includes fixtures, assertions, snapshots, mocks, and cleanup.
 
     Don’t use merely to run existing tests or for tasks limited to configuring the test runner.
 
@@ -12,8 +12,6 @@ metadata:
 # Vitest Conventions
 
 ## Convention Scope
-
-Some guidance is written with Vitest in mind. When working with another test runner, use supported equivalent APIs and techniques that preserve the intended test behavior.
 
 Preserve the project’s runner, test API import source, meaningful test distinctions, and explicitly chosen conventions. Project policies, including intentional import forms and intentionally shared global or mock state, take precedence over these defaults. Don’t change tooling or configuration to satisfy these conventions.
 
@@ -34,8 +32,6 @@ Test package-owned behavior and integration choices rather than unchanged upstre
 ## Parameterized Cases
 
 Use `test.each` when a case needs setup, several assertions, or separate row-level diagnosis. Otherwise, prefer consecutive assertions for a few one-line examples of one behavior, and a loop for a larger uniform set whose iterations each contain one assertion. Choose scalar arrays, tuples, or object rows for the varying inputs rather than imposing one schema on every matrix.
-
-When the runner has no parameterization API and lint rejects generated tests, run rows inside one test with independent fixtures and row-identifying assertion messages.
 
 Phrase titles so inserted values read naturally instead of appending a generic “with X %s”. Rows may share a title when they don’t fit a natural distinguishing one. Give independent cases their own tests or rows rather than repeatedly assigning to one `let`. Reassignment remains appropriate for genuine state transitions.
 
@@ -76,7 +72,7 @@ Keep short pure calls inline in `expect()` when one assertion makes their purpos
 
 Choose the assertion by the behavior being tested:
 
-- **Propagation:** Create a sentinel `error` and assert `.rejects.toBe(error)`. For synchronous capture, assign the caught value to `result`, and compare `result` with the sentinel `error`. With `node:assert`, pass an identity validation function such as `(caughtError) => caughtError === error`. Passing an error instance compares properties, not identity.
+- **Propagation:** Create a sentinel `error` and assert `.rejects.toBe(error)`. For synchronous capture, assign the caught value to `result`, and compare `result` with the sentinel `error`.
 - **Messages:** Use `toThrowErrorMatchingInlineSnapshot` when the message is the contract. Defer a throwing synchronous operation in a callback.
 - **Fields or recovery:** Capture errors manually when inspecting fields, `cause`, or subsequent recovery. Verify the instance type before reading fields.
 

@@ -30,7 +30,7 @@ Require reviewers to report all evidence-backed in-scope findings with their loc
 
 ## Consolidate Each Round
 
-Include every original reviewer in the initial round. Collect every participating reviewer’s report for each round, then reconcile and validate the combined findings in one coordinator pass before applying a fix batch or starting the next review round. Merge duplicates without losing the originating reviewer threads or distinct issues. Don’t run separate validation and fix cycles as individual reports arrive.
+Include every selected reviewer in the initial round. Collect every participating reviewer’s report for each round, then reconcile and validate the combined findings in one coordinator pass before applying a fix batch or starting the next review round. Merge duplicates without losing the originating reviewer threads or distinct issues. Don’t run separate validation and fix cycles as individual reports arrive.
 
 ## Resolve Disagreements
 
@@ -38,27 +38,35 @@ Validate returned findings against current evidence before adopting them. When c
 
 The coordinator weighs evidence, not reviewer counts, and uses the smallest decisive inspection or check within the existing scope and limits. Don’t recruit additional reviewers merely to obtain agreement. If evidence remains insufficient, report the verification gap rather than forcing a verdict. Ask the user only for a material choice that the evidence and existing authority can’t settle, or a separately required approval.
 
-Record the decisive reason with each finding’s classification. Return each dispute only to the reviewer thread or threads that raised that finding rather than closing it through the coordinator’s judgment alone.
+Record the decisive reason with each finding’s classification. Return each dispute only to the reviewer thread or threads that raised that finding, or their recorded replacements, rather than closing it through the coordinator’s judgment alone.
 
 ## Coordinate Fixes and Re-Review
 
 For a review-only task, [resolve disputes](#resolve-disagreements) and report any validated findings that need separately authorized changes as standing. When fixes are authorized, consolidate required corrections from the combined pass into one complete batch, apply the fixes, and run relevant checks before the follow-up round. Ask for clarification before a fix only when available evidence can’t settle something needed for a safe fix. Continue independent fixes. Leave commit and publication decisions to the calling workflow rather than treating fix authority as permission for them.
 
-A no-standing-findings result applies only to the state that reviewer examined. While findings remain standing, select reviewers whose findings need a response to dispute evidence or verification of applied fixes. By default, defer original reviewers whose no-standing-findings results predate an edit within the reviewed scope. After applying and validating a fix batch, the coordinator may include those deferred reviewers in the same follow-up round if it reasonably expects no further fixes.
+A no-standing-findings result applies only to the state that reviewer examined. While findings remain standing, select reviewers whose findings need a response to dispute evidence or verification of applied fixes. By default, defer reviewers whose no-standing-findings results predate an edit within the reviewed scope. After applying and validating a fix batch, the coordinator may include those deferred reviewers in the same follow-up round if it reasonably expects no further fixes.
 
-Once no findings remain standing, resume together any original reviewers whose no-standing-findings results still predate an edit within the reviewed scope. If new findings emerge, repeat this cycle. Resolving a dispute without edits doesn’t invalidate results for that unchanged state.
+Once no findings remain standing, resume together any reviewers whose no-standing-findings results still predate an edit within the reviewed scope. If new findings emerge, repeat this cycle. Resolving a dispute without edits doesn’t invalidate results for that unchanged state.
 
 Resume each selected reviewer in the same session. When no edit within the reviewed scope has occurred since that reviewer’s last review, limit the reassessment to their disputed findings and the relevant decisions, evidence, and rationale. Otherwise, give them the complete current edited scope and affected integration boundaries, together with their relevant prior findings and the relevant decisions, evidence, and rationale for their disputed findings. Don’t limit re-review after edits to their own findings or resulting fixes. Keep the review within its established scope, exclusions, and access boundaries.
 
-If an original reviewer session can’t continue, report the affected thread and review limitation, and ask how to proceed. Don’t substitute local verification or a replacement reviewer for that thread’s completion without user direction.
+If a reviewer session can’t continue, follow [Recover Reviewer Continuity](#recover-reviewer-continuity).
 
 Prefer convergence over a fixed total round cap. Keep optional hygiene changes out of the required fix batch. If re-review finds another issue in the same construct after two completed fix rounds that changed it, stop extending that construct. Narrow, replace, or remove it within the existing authority, or ask the user to choose among materially different options.
 
+## Recover Reviewer Continuity
+
+Use the execution interface’s applicable recovery procedure first. If it establishes that a reviewer session can’t be recovered or resumed, replace only that reviewer without another confirmation when the existing review authority covers replacement and the user or calling workflow hasn’t prohibited it. Preserve the required interface, reviewer selection constraints, and lifecycle procedures. Don’t use replacement to escape disagreement or bypass an access, quota, approval, or security boundary. When replacement can’t proceed within those limits, report the limitation and ask how to proceed.
+
+Record the original session, replacement session, and reason in the shared review record. Give the replacement an independent first pass over the complete current scope, then have it explicitly reassess the predecessor’s standing findings. Their absence from its first report doesn’t resolve them. The replacement takes the original reviewer’s place in subsequent rounds and assumes its remaining resolution and completion obligations.
+
 ## Complete the Review
 
-Resolution is complete only when every original reviewer thread reports no standing findings for the same final edited state and no required verification remains. Each thread must reach that status through verified corrections or disputes the reviewer accepts as resolving its findings. The coordinator’s disposition or another reviewer’s clean report can’t substitute for it.
+Resolution is complete only when every originally selected reviewer, or its recorded replacement, reports no standing findings for the same final edited state and no required verification remains. Each reviewer must reach that status through verified corrections or disputes it accepts as resolving its findings. The coordinator’s disposition or another reviewer’s clean report can’t substitute for it.
 
-If every original reviewer reports no standing findings in the initial round and no edits follow, no follow-up is needed. Once every thread has reached that status for the final state, no further reassurance or acknowledgment is required.
+If every reviewer reports no standing findings in the initial round and no edits follow, no follow-up is needed. Once every thread has reached that status for the final state, no further reassurance or acknowledgment is required.
+
+In the final report, disclose any reviewer replacements and briefly state why each was needed.
 
 Before concluding, deliver the reported optional improvement opportunities. They aren’t standing findings. Finishing the review doesn’t require implementing them, another review round, or user acknowledgment or explicit deferral.
 

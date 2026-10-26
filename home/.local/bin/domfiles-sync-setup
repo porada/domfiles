@@ -28,6 +28,7 @@ for source in \
   .domfiles-agent-documentation \
   .domfiles-cli-subagent \
   .domfiles-examine-workflow \
+  .domfiles-full-review \
   .domfiles-skill-development \
   .domfiles-vitest-conventions \
   agent-task-directories \
