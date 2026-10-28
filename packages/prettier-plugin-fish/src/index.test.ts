@@ -98,20 +98,22 @@ test('preserves native formatter output with `tabWidth` and `useTabs`', async ()
 	await expect(format(output, options)).resolves.toBe(output);
 });
 
-test.each([
-	{ rangeEnd: 12 },
-	{ rangeEnd: 24, rangeStart: 12 },
-	{ rangeStart: 12 },
-])('leaves input unchanged for partial ranges %j', async (range) => {
+test('leaves input unchanged for partial ranges', async () => {
 	const input = 'echo    foo\necho    bar\necho    baz\n';
-
-	const output = await format(input, {
-		...range,
-		parser: 'fish',
+	const options = {
+		parser: 'fish' as const,
 		plugins: [pluginFish],
-	});
+	};
 
-	expect(output).toBe(input);
+	await expect(format(input, { ...options, rangeEnd: 12 })).resolves.toBe(
+		input
+	);
+	await expect(
+		format(input, { ...options, rangeEnd: 24, rangeStart: 12 })
+	).resolves.toBe(input);
+	await expect(format(input, { ...options, rangeStart: 12 })).resolves.toBe(
+		input
+	);
 });
 
 test('formats without a pragma when `requirePragma` is enabled', async () => {
@@ -222,7 +224,7 @@ test('respects `filepath`', async () => {
 	await expect(format(output, options)).resolves.toBe(output);
 });
 
-test('handles empty files', async () => {
+test('formats newline-only files as empty', async () => {
 	const input = '\n';
 	const options = {
 		parser: 'fish' as const,

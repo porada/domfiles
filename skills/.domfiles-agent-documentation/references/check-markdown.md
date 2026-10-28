@@ -31,6 +31,7 @@ The default configuration supports GitHub Flavored Markdown and YAML frontmatter
 - Missing image alt text, except in `README.md` files.
 - Missing spaces after heading markers, spaces inside emphasis markers, and table cells that exceed the header’s column count.
 - Trailing heading punctuation such as periods and colons. Question marks are allowed.
+- Unused disable directives and unused inline configurations, both reported as errors.
 
 Verify external URLs, path capitalization, symlinked paths, renderer-specific anchors, prose conventions, list spacing, and other documentation requirements manually. Line number fragments aren’t range-checked. A clean result establishes only the configured checks, not that every link is correct.
 

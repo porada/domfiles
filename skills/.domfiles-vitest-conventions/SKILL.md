@@ -3,7 +3,9 @@ name: vitest-conventions
 description: |-
     Use when writing, refactoring, reviewing, or auditing JavaScript or TypeScript tests that use Vitest, including through Vite+ and `vite-plus/test`. This includes fixtures, assertions, snapshots, mocks, and cleanup.
 
-    Don’t use merely to run existing tests or for tasks limited to configuring the test runner.
+    Also use for Vitest configuration work involving setup files, `setupFiles`, their TypeScript type inclusion, automatic state resets, snapshot serializers, or lint overrides for test subjects and fixtures.
+
+    Don’t use merely to run existing tests or for configuration outside those conventions.
 
 metadata:
     internal: true
@@ -13,27 +15,39 @@ metadata:
 
 ## Convention Scope
 
-Preserve the project’s runner, test API import source, meaningful test distinctions, and explicitly chosen conventions. Project policies, including intentional import forms and intentionally shared global or mock state, take precedence over these defaults. Don’t change tooling or configuration to satisfy these conventions.
+Preserve the project’s runner, test API import source, meaningful test distinctions, and explicitly chosen conventions. Project policies, including intentional import forms and intentionally shared global or mock state, take precedence over these defaults. Don’t change tooling or configuration without the user’s explicit authorization for that change. For authorized configuration changes, follow [Configuration Conventions](#configuration-conventions).
 
-An explicit change takes precedence when the request also uses review or audit language. For changes, apply the conventions within the authorized test scope. For standalone reviews and audits, assess them without editing. Use `human-facing-writing` for test title wording. Leave mechanical matcher and test API choices to the project’s lint rules.
+An explicit change takes precedence when the request also uses review or audit language. For changes, apply the conventions within the authorized scope. Standalone audits remain read-only. Standalone reviews remain read-only apart from corrections covered by the global **Test defect corrections** policy. For defects found while writing, refactoring, or reviewing tests, follow [Small Source Defects](references/small-source-defects.md). Use `human-facing-writing` for test title wording. Leave mechanical matcher and test API choices to the project’s lint rules.
+
+When a lint rule conflicts with a test’s subject or fixture, such as a thenable fixture or a deprecated API under test, write the natural code and add a narrow next-line suppression in the project’s syntax. Don’t use indirection or hand-built framework internals to evade the rule. When the same conflict recurs across tests, propose an override for test files in the shared lint configuration rather than repeating suppressions. Add it only with the user’s explicit authorization. The **Async stubs** guidance under [Assertions](#assertions) takes precedence over this suppression and override policy.
 
 For Vitest API and execution details, use the `vitest` skill when available. Otherwise, consult the project’s test setup and documentation matching its installed Vitest version.
 
-Test package-owned behavior and integration choices rather than unchanged upstream features or individual vendored rules. An integration check may exercise upstream behavior to establish that the package works with that mode. Select cases from the package’s contracts rather than a fixed upstream option checklist. Explicit minimum-test policies take precedence, including policies satisfied by small type tests.
+Test package-owned behavior and integration choices rather than unchanged upstream features or individual vendored rules. An integration check may exercise upstream behavior to establish that the package works with that mode. Select cases from the package’s contracts rather than a fixed upstream option checklist. Choose cases so removing the behavior each covers would change its result. When different inputs independently enable the same effect, cover each with the other absent. When several conditions must all hold, make each rejected case fail only one condition. Add cases only where existing ones can’t detect removed behavior, without requiring every combination or mutation testing. Explicit minimum-test policies take precedence, including policies satisfied by small type tests.
+
+## Configuration Conventions
+
+For setup files, `setupFiles` entries, and their TypeScript type inclusion, follow [Setup Files](references/configuration-conventions.md#setup-files). For mock, environment, or global state reset calls in hooks, follow [State Resets](references/configuration-conventions.md#state-resets). React serializer registration follows [Registration](references/component-tests.md#registration). The lint-override conventions remain in [Convention Scope](#convention-scope).
 
 ## Test Structure
+
+For JSX fixtures or React component tests, follow [Component Tests](references/component-tests.md).
 
 - **File layout:** Put runtime module tests in `src/<module>/index.test.ts` and entrypoint tests in `src/index.test.ts`, adapting the extension for JSX where needed. Colocate separate type contracts as `index.test-d.ts` beside the tested module, including `src/types/index.test-d.ts` for the `types` module. Put integration tests spanning several packages in a private workspace test package. Import the tested runtime module from `./index.ts`, or `./index.tsx` for JSX modules.
 - **File-wide setup:** Declare file-wide constants and helpers at the top of the file, after imports and before tests. A self-contained public API test may come first.
 - **Local helpers:** Keep helpers and fake factories in their consuming test file, even when another file duplicates them. Reserve shared mocks directories or packages for independently reusable mocks, such as modules that install a `vi.mock` on import. Create fresh functions or objects when fixtures need distinct identities, even if their behavior is identical.
-- **Grouping:** Default to flat tests. Multi-parser plugins may use the grouping exception in [Prettier Plugins](references/prettier-plugins.md). Flatten other multi-dimensional matrices into `test.each` rows instead of nested `describe.each` groups or nested loops.
+- **Grouping:** Default to flat tests. When several tests run against each of a few interchangeable implementations, such as a plugin’s parsers or components that share a contract, group them per implementation with `describe.each`. Implementation-specific tests may be registered conditionally inside the group to keep a consistent test order. When a matrix needs `test.each` under [Parameterized Cases](#parameterized-cases), flatten it into rows instead of nested `describe.each` groups.
 - **Phases:** Separate meaningful setup, action, and assertion phases with blank lines without mechanical phase comments or forcing tiny tests into three sections. State transition tests may alternate actions and assertions.
 
 ## Parameterized Cases
 
-Use `test.each` when a case needs setup, several assertions, or separate row-level diagnosis. Otherwise, prefer consecutive assertions for a few one-line examples of one behavior, and a loop for a larger uniform set whose iterations each contain one assertion. Choose scalar arrays, tuples, or object rows for the varying inputs rather than imposing one schema on every matrix.
+Apply the `test.each` criteria below only to cases with the same observations, following **Separate observations** under [Assertions](#assertions). For snapshots of one input’s outputs under several option values, follow the `outputs` snapshot rule in [Snapshots and Public API](#snapshots-and-public-api) instead.
 
-Phrase titles so inserted values read naturally instead of appending a generic “with X %s”. Rows may share a title when they don’t fit a natural distinguishing one. Give independent cases their own tests or rows rather than repeatedly assigning to one `let`. Reassignment remains appropriate for genuine state transitions.
+Keep a single case as an explicit test. Use `test.each` for two or more cases that would otherwise duplicate a flow that isn’t straightforward, such as multi-step setup, a comparison with a reference run, or a state transition. Also use it for two or more cases that each bind a result and make several assertions about it, and for two or more rows that each produce their own external snapshot, even with only one snapshot assertion per row. Choose scalar arrays, tuples, or object rows for the varying inputs rather than imposing one schema on every matrix.
+
+Otherwise, keep straightforward cases as explicit calls and assertions regardless of their number, including when each case makes several one-line assertions with their own calls. Don’t rewrite listed test cases as loops or introduce abstractions merely to reduce repetition. This rule doesn’t govern loops over runtime collections.
+
+Phrase titles so inserted values read naturally instead of appending a generic “with X %s”. Rows may share a title when they don’t fit a natural distinguishing one. When explicit cases share a test, use separate bindings rather than repeatedly assigning to one `let`. Reassignment remains appropriate for genuine state transitions.
 
 Preserve order where it carries meaning, including CLI parameter sequences, plugin precedence, and ignore negations.
 
@@ -50,6 +64,7 @@ For every semantically shared test, keep titles and inputs identical across rela
 Keep fixtures small and close to their tests. Name shared sample documents by format, such as `TEST_JSON` or `TEST_MARKDOWN`. Extract a shared constant when tests reuse an input, not merely because a literal can be extracted.
 
 - **Incidental values:** Use `foo`, `bar`, `baz`, `qux`, `quux`, `corge`, `grault`, `garply`, `waldo`, `fred`, `plugh`, `xyzzy`, and `thud`, in that order. This includes incidental filenames such as `foo.md` and `foo bar.md`.
+- **Enumeration scope:** Restart the applicable incidental sequence in each test or parameterized table. Advance past the first value only when the test needs several distinct incidental values. Shared fixtures have their own sequence, and tests referencing them preserve their identifiers. Choose unused sequence values when local values must differ from shared fixture values.
 - **Sorting:** Use Greek names only when sort order is under test. Use `foo-2` and `foo-10` when numeric and lexical ordering differ.
 - **Meaningful values:** Keep realistic type-constrained values, subjects of tests, values in configuration fields (including plugin aliases), domain data, and descriptive keys that distinguish behavior. Don’t replace meaningful globs, markup, numbers, or component fixtures merely to use incidental vocabulary.
 - **Markers:** Reserve `Before` and `After` for positions the test checks. Prefer `|` for cursor positions. For comment placement, use `Comment` for a single comment and `Comment 1`, `Comment 2`, and so on for two or more.
@@ -63,10 +78,10 @@ Keep short pure calls inline in `expect()` when one assertion makes their purpos
 
 - **Observation scope:** Assert complete structures when the complete result is the contract. Use partial assertions only for deliberately partial observations, such as a path whose machine-dependent prefix isn’t part of the contract.
 - **Identity:** Use `toBe` when reference identity matters, including for a value inside an otherwise partial observation.
-- **Separate observations:** Capture distinct observed values and assert them separately. When rows require different matchers or observations, split them into separate tests or tables by expected behavior. Selecting a row’s assertion subject or expected value is fine when every row uses the same matcher, negation, and `.resolves` or `.rejects` modifier. Don’t reduce observations to a row-dependent boolean.
+- **Separate observations:** Capture distinct observed values and assert them separately. Keep cases with different observations explicit. This includes differences in matcher or negation, or in whether and how cases use snapshot assertions or reference runs. They may share one test when they share setup. Selecting a row’s assertion subject or expected value is fine when every row uses the same matcher, negation, and `.resolves` or `.rejects` modifier. Changing only row data for the same external snapshot assertion or reference comparison doesn’t change the observations. Don’t reduce observations to a row-dependent boolean.
 - **Invocation behavior:** Use `vi.fn` when asserting call counts or arguments. Use a plain counter only when it drives the fake’s behavior, such as a recursion guard, and name it `…CallCount`. Clear setup calls before measuring later invocations.
 - **Callback assertions:** Assertions inside a callback can observe temporary state. Make the callback a `vi.fn` and assert its call count so a callback that never runs can’t produce a false pass.
-- **Async stubs:** Keep `vi.fn().mockResolvedValue(undefined)` when plain function alternatives conflict with the project’s async lint rules.
+- **Async stubs:** Keep idiomatic forms such as `vi.fn().mockResolvedValue(undefined)`. When an async function or stub has nothing else to await, use `await Promise.resolve();` before its result rather than suppressing `typescript/require-await`.
 
 ### Error Contracts
 
@@ -75,6 +90,8 @@ Choose the assertion by the behavior being tested:
 - **Propagation:** Create a sentinel `error` and assert `.rejects.toBe(error)`. For synchronous capture, assign the caught value to `result`, and compare `result` with the sentinel `error`.
 - **Messages:** Use `toThrowErrorMatchingInlineSnapshot` when the message is the contract. Defer a throwing synchronous operation in a callback.
 - **Fields or recovery:** Capture errors manually when inspecting fields, `cause`, or subsequent recovery. Verify the instance type before reading fields.
+
+For manual captures, name the `catch` binding `error`, using `caughtError` only when the test already uses `error`, such as for a sentinel.
 
 ## Transformation and Parity Checks
 
@@ -89,12 +106,14 @@ Apply these checks where the package owns a transformation, such as a formatter,
 
 Choose snapshot storage by what the snapshot represents, not its length:
 
-- **External:** Outputs from shared `TEST_<format>` documents and complete generated artifacts, such as configurations, compiled stylesheets, and rendered components.
-- **Inline:** Outputs from a test’s own input and diagnostics, however long.
+- **External:** Outputs from shared `TEST_<format>` documents and complete generated artifacts, such as configurations, compiled stylesheets, and rendered components in application or component library tests.
+- **Inline:** Outputs from a test’s own input and diagnostics, however long. When testing a serializer or formatter itself, keep its output inline beside that input.
 
 Keep a parameterized test’s snapshot external when its rows produce different outputs at the same snapshot call, because they share one inline snapshot location.
 
-A snapshot can be sufficient for its contract. Don’t require additional effect assertions beside it. When one input is transformed under several option values, snapshot a single object named `outputs`, keyed by those values.
+Don’t pass snapshot names or hints to `toMatchSnapshot()`. Each snapshot takes its key from its test or `test.each` row title.
+
+A snapshot can be sufficient for its contract. Don’t require additional effect assertions beside it. When snapshotting one input’s outputs under several option values, use a single object named `outputs`, keyed by those values.
 
 For public API tests, use an inline snapshot of `{ ...exports }` by default. Use `toStrictEqual` with `expect.any(…)` only when the snapshot would expose more than the public contract needs. Prettier plugins use the specialized API checks in their dedicated guidance.
 
@@ -110,7 +129,9 @@ When an API allows several runtime forms, validate the form a test needs before 
 
 ## Cleanup
 
-Register restoration immediately after each mutation with `onTestFinished`, using a block body. An existing `try`/`finally` established immediately after the mutation remains valid.
+In tests and `beforeEach`, register restoration immediately after each mutation with `onTestFinished`, using a block body. Register each restoration separately rather than waiting until a hook’s final mutation. `beforeEach` runs in the test’s context. For concurrent tests, use `onTestFinished` from that context rather than the global helper. An existing `try`/`finally` established immediately after the mutation remains valid.
+
+Pair mutations in `beforeAll` with restoration in `afterAll`. `onTestFinished` isn’t available for suite-level setup. For any reset call in a hook, follow [State Resets](references/configuration-conventions.md#state-resets).
 
 Prefer `using` or `await using` for self-disposing resources, such as spies and disposable temporary directories, where the project’s runtime and types support disposal. Don’t use `using` inside hooks. Configure a disposable spy on the next line so the binding is used:
 
@@ -123,4 +144,4 @@ Pair `vi.doMock` with `vi.doUnmock` unless every test in the file explicitly est
 
 ## Prettier Plugins
 
-For Prettier plugin tests, also follow [Prettier Plugins](references/prettier-plugins.md) for the ecosystem-specific API checks, parser grouping exception, and application of the general transformation checks.
+For Prettier plugin tests, also follow [Prettier Plugins](references/prettier-plugins.md) for the ecosystem-specific API checks, parser matrices, and application of the general transformation checks.

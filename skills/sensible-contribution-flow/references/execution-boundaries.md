@@ -74,7 +74,7 @@ After an ordinary technical retrieval failure, correct a demonstrated path or in
 
 ## Preserve Git Transport
 
-For agent-run operations, remote setup, and user-run commands, honor the Git transport selected by applicable instructions and existing configuration. Verify the destination’s effective fetch or push transport before using it or providing its command, without exposing embedded credentials. If it conflicts with the selected transport, stop the affected operation or command handoff and report the mismatch. Changing an existing remote or substituting a one-off URL requires explicit authorization. If access is unavailable, report the requirement rather than silently switching transports. This boundary concerns Git repository transport, not GitHub API or web access.
+For agent-run operations, remote setup, and user-run commands, honor the Git transport selected by applicable instructions and existing configuration. Verify the destination’s effective fetch or push transport before using it or providing its command, without exposing embedded credentials. If it conflicts with the selected transport, stop the affected operation or command handoff and report the mismatch. Changing an existing remote or substituting a one-off URL requires explicit authorization. If access is unavailable, report the requirement rather than silently switching transports. This boundary governs Git commands and repository remotes, not dependency specifiers, package manager fetching, or GitHub API or web access.
 
 ## Deliver Commands
 

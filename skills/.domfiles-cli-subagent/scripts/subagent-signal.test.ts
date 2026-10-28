@@ -1074,40 +1074,50 @@ void describe(NAME, { concurrency: true }, () => {
 		assert.equal(await fixture.observeKey('state', 0), 'working');
 	});
 
-	void test('reports a finished reply despite a `blocked` session state', async (context) => {
-		await Promise.all(
-			['idle', null].map(async (status) => {
-				const fixture = createFixture(context);
+	void test('reports a finished reply despite a `blocked` session state with an `idle` status', async (context) => {
+		const fixture = createFixture(context);
 
-				fixture.write(UUID, completedTurn());
-				fixture.listing(rows('blocked', status, null));
-				assert.deepEqual(
-					await fixture.observeKey('replies', 0),
-					['No findings'],
-					String(status)
-				);
-			})
-		);
+		fixture.write(UUID, completedTurn());
+		fixture.listing(rows('blocked', 'idle', null));
+		assert.deepEqual(await fixture.observeKey('replies', 0), [
+			'No findings',
+		]);
 	});
 
-	void test('reports `failed` and `stopped` turns', async (context) => {
-		await Promise.all(
-			['failed', 'stopped'].map(async (state) => {
-				const fixture = createFixture(context);
+	void test('reports a finished reply despite a `blocked` session state without a status', async (context) => {
+		const fixture = createFixture(context);
 
-				fixture.write(UUID, [
-					prompt(1),
-					toolCall('a', { command: 'ls' }, 2),
-				]);
-				fixture.listing(rows(state, null, null));
-				assert.deepEqual(await fixture.observe(0), {
-					session: UUID,
-					state: 'attention',
-					nextSince: 2,
-					reason: state,
-				});
-			})
-		);
+		fixture.write(UUID, completedTurn());
+		fixture.listing(rows('blocked', null, null));
+		assert.deepEqual(await fixture.observeKey('replies', 0), [
+			'No findings',
+		]);
+	});
+
+	void test('reports `failed` turns', async (context) => {
+		const fixture = createFixture(context);
+
+		fixture.write(UUID, [prompt(1), toolCall('a', { command: 'ls' }, 2)]);
+		fixture.listing(rows('failed', null, null));
+		assert.deepEqual(await fixture.observe(0), {
+			session: UUID,
+			state: 'attention',
+			nextSince: 2,
+			reason: 'failed',
+		});
+	});
+
+	void test('reports `stopped` turns', async (context) => {
+		const fixture = createFixture(context);
+
+		fixture.write(UUID, [prompt(1), toolCall('a', { command: 'ls' }, 2)]);
+		fixture.listing(rows('stopped', null, null));
+		assert.deepEqual(await fixture.observe(0), {
+			session: UUID,
+			state: 'attention',
+			nextSince: 2,
+			reason: 'stopped',
+		});
 	});
 
 	void test('reports open prompts after a reply as `blocked`', async (context) => {
@@ -1131,44 +1141,44 @@ void describe(NAME, { concurrency: true }, () => {
 		);
 	});
 
-	void test('waits for pending agents and workflows', async (context) => {
-		await Promise.all(
-			['pendingBackgroundAgentCount', 'pendingWorkflowCount'].map(
-				async (name) => {
-					const fixture = createFixture(context);
-					const records = completedTurn();
+	void test('waits for pending background agents', async (context) => {
+		const fixture = createFixture(context);
+		const records = completedTurn();
 
-					records[6] = { ...turnEnd(6), [name]: 1 };
-					fixture.listing(rows('done', null, null));
-					fixture.write(UUID, records);
-					assert.equal(
-						await fixture.observeKey('state', 0),
-						'working',
-						name
-					);
-				}
-			)
-		);
+		records[6] = { ...turnEnd(6), pendingBackgroundAgentCount: 1 };
+		fixture.listing(rows('done', null, null));
+		fixture.write(UUID, records);
+		assert.equal(await fixture.observeKey('state', 0), 'working');
 	});
 
-	void test('reports `ready` without pending agents or workflows', async (context) => {
-		await Promise.all(
-			['pendingBackgroundAgentCount', 'pendingWorkflowCount'].map(
-				async (name) => {
-					const fixture = createFixture(context);
-					const records = completedTurn();
+	void test('waits for pending workflows', async (context) => {
+		const fixture = createFixture(context);
+		const records = completedTurn();
 
-					records[6] = { ...turnEnd(6), [name]: 0 };
-					fixture.listing(rows('done', null, null));
-					fixture.write(UUID, records);
-					assert.equal(
-						await fixture.observeKey('state', 0),
-						'ready',
-						name
-					);
-				}
-			)
-		);
+		records[6] = { ...turnEnd(6), pendingWorkflowCount: 1 };
+		fixture.listing(rows('done', null, null));
+		fixture.write(UUID, records);
+		assert.equal(await fixture.observeKey('state', 0), 'working');
+	});
+
+	void test('reports `ready` without pending background agents', async (context) => {
+		const fixture = createFixture(context);
+		const records = completedTurn();
+
+		records[6] = { ...turnEnd(6), pendingBackgroundAgentCount: 0 };
+		fixture.listing(rows('done', null, null));
+		fixture.write(UUID, records);
+		assert.equal(await fixture.observeKey('state', 0), 'ready');
+	});
+
+	void test('reports `ready` without pending workflows', async (context) => {
+		const fixture = createFixture(context);
+		const records = completedTurn();
+
+		records[6] = { ...turnEnd(6), pendingWorkflowCount: 0 };
+		fixture.listing(rows('done', null, null));
+		fixture.write(UUID, records);
+		assert.equal(await fixture.observeKey('state', 0), 'ready');
 	});
 
 	void test('reports failed replies despite pending background work', async (context) => {
@@ -1540,22 +1550,20 @@ void describe(NAME, { concurrency: true }, () => {
 			...codexTurn('Second', 10),
 		]);
 
-		const outputs = await Promise.all(
-			[0, 5].map(async (since) =>
-				fixture.observeWith(['--codex', `${String(since)}:${UUID}`])
-			)
-		);
+		const [startOutput, laterOutput] = await Promise.all([
+			fixture.observeWith(['--codex', `0:${UUID}`]),
+			fixture.observeWith(['--codex', `5:${UUID}`]),
+		]);
+		const expectedSession = {
+			session: UUID,
+			state: 'ready',
+			nextSince: 8,
+			replies: ['Second'],
+			compactedAt: 2,
+		};
 
-		for (const output of outputs) {
-			assert.deepEqual(fixture.session(output), {
-				session: UUID,
-				state: 'ready',
-				nextSince: 8,
-				replies: ['Second'],
-				compactedAt: 2,
-			});
-		}
-
+		assert.deepEqual(fixture.session(startOutput), expectedSession);
+		assert.deepEqual(fixture.session(laterOutput), expectedSession);
 		assert.equal(fixture.calls(), 0);
 	});
 

@@ -1,6 +1,6 @@
 import eslint from 'eslint/package.json' with { type: 'json' };
 import { spawnSync } from 'node:child_process';
-import { beforeEach, expect, test, vi } from 'vite-plus/test';
+import { beforeEach, expect, onTestFinished, test, vi } from 'vite-plus/test';
 import resolvePath from './resolve-path/index.ts';
 
 vi.mock(import('node:child_process'));
@@ -18,14 +18,16 @@ beforeEach(() => {
 	const { argv, exitCode } = process;
 	process.argv = ['node', resolvePath('doclint.ts', import.meta.url)];
 
+	onTestFinished(() => {
+		process.argv = argv;
+	});
+
+	onTestFinished(() => {
+		process.exitCode = exitCode;
+	});
+
 	vi.resetModules();
 	vi.mocked(spawnSync).mockReturnValue(SPAWN_RESULT);
-
-	return () => {
-		process.argv = argv;
-		process.exitCode = exitCode;
-		vi.clearAllMocks();
-	};
 });
 
 test.each([

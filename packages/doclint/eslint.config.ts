@@ -21,6 +21,12 @@ export default defineConfig([
 		],
 	},
 	{
+		linterOptions: {
+			reportUnusedDisableDirectives: 'error',
+			reportUnusedInlineConfigs: 'error',
+		},
+	},
+	{
 		files: [
 			/* prettier-ignore */
 			'**/*.md',

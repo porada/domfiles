@@ -22,7 +22,9 @@ Classify every project-authored skill by canonical source and supported installa
 
 ## Synchronize Skill Links
 
-When task-authorized changes under `skills/` alter the exposed skill set, logical names, or source-to-install mapping, update the applicable provisioning and retired-name mappings, then reconcile the affected links in `~/.agents/skills/` and `~/.claude/skills/` before completing the task. Reconcile those links directly rather than asking the user to run `domfiles sync`, running full synchronization, or adding a separate synchronization command. Content-only edits to sources already linked require no link update.
+When task-authorized changes under `skills/` alter the exposed skill set, logical names, or source-to-install mapping, update the [maintained skill inventory](maintained-skills.md) and the applicable provisioning and retired-name mappings, then reconcile the affected links in `~/.agents/skills/` and `~/.claude/skills/` before completing the task. Reconcile those links directly rather than asking the user to run `domfiles sync`, running full synchronization, or adding a separate synchronization command. Content-only edits to sources already linked require no link update.
+
+Keep the inventory complete, with names alone for model-invocable skills and short summaries for command-only skills. Keep summaries aligned when responsibilities change, and add or remove them when invocation modes change.
 
 Identify the provisioned checkout from the installed `domfiles` command or existing managed links before choosing targets. Keep discovery pointed at that checkout, not a disposable task worktree. If the task’s changes are in another checkout or their intended source is not yet available in the provisioned checkout, leave the affected links unchanged and report that reconciliation awaits integration into that checkout.
 

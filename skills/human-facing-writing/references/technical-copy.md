@@ -50,7 +50,7 @@ Apply the [editorial conventions](../SKILL.md#editorial-conventions). Distinguis
 - **Package and repository descriptions:** Use one compact phrase without terminal punctuation. When both requested surfaces represent the same artifact, scope, and proposition, matching wording is the default.
 - **README and collaboration copy:** For README, technical document, issue, pull request, and discussion copy, including titles, bodies, and comments, follow the [technical document workflow](technical-documents.md).
 - **Runtime errors and warnings:** Follow the [runtime errors and warnings workflow](runtime-errors-and-warnings.md).
-- **Test titles:** Use a lowercase, present tense predicate that reads naturally after an implicit subject. Omit modal `should` and terminal punctuation. Include only the condition needed to distinguish the case.
+- **Test titles:** Use a lowercase, present tense predicate that reads naturally after an implicit subject. Name the outcome the test checks rather than vague claims such as “handles …”, “works with …”, or “… without issues”. For example, use “ignores blank lines” rather than “handles blank lines”. Omit modal `should` and terminal punctuation. Include only the condition needed to distinguish the case.
 
 ## Supporting Material
 

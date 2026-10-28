@@ -32,6 +32,7 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 
 - **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. The [public repository boundary](#public-repository-boundary) remains applicable.
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
+- **Command entrypoints:** Use the entrypoint documented for each task, including validation, rather than another route to the same implementation. Invoke [repository-scoped commands](.agents/PROJECT.md#repository-scoped-commands) through `PATH`, overriding global **Direct invocation** for `skills` and `vercel` in this repository. This exercises the interfaces other users and agents rely on.
 - **Navigation:** Read only the applicable section of `.agents/PROJECT.md`. Follow an existing link or locate its heading first, rather than reading the whole document.
 - **Documentation alignment:** When you change behavior, interfaces, or defaults, search tracked documentation for affected identifiers and descriptions. Update statements the change makes inaccurate, following the applicable documentation workflow and mutation requirements. Keep the search focused on the changed contract.
 - **Durable knowledge:** Add project knowledge to `.agents/PROJECT.md` only when it meets the global **Durable knowledge** threshold. Don’t record optimization recaps, routine implementation details, or workflow summaries. Prefer updating existing material over adding another explanation. If the task doesn’t permit the edit, report deferred documentation work only if it meets that threshold.
@@ -45,7 +46,7 @@ If a guard stops a check, diagnose the prerequisite failure and apply the global
 
 For changed JSON files, run `pnpm run lint:json <changed-json-files>` with that prefix. Pass paths explicitly unless repository-wide validation is intended.
 
-For Markdown validation, follow [Check Markdown](skills/.domfiles-agent-documentation/references/check-markdown.md).
+For Markdown validation, invoke `doclint` and follow [Check Markdown](skills/.domfiles-agent-documentation/references/check-markdown.md).
 
 ## Scope
 

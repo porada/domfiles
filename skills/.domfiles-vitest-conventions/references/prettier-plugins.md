@@ -14,6 +14,6 @@ Apply the general [transformation and parity checks](../SKILL.md#transformation-
 
 ## Parser Matrices and Fixtures
 
-Use `test.each(<format>_PARSER_NAMES)` for tests across parsers, with titles ending “with the `%s` parser”. Multi-parser plugins may instead group tests per parser with `describe.each` and conditionally register a parser-specific test inside the group to preserve a consistent test order. This exception doesn’t extend to other matrix dimensions.
+When tests across parsers need `test.each` under [Parameterized Cases](../SKILL.md#parameterized-cases), use `test.each(<format>_PARSER_NAMES)` with titles ending “with the `%s` parser”.
 
 For parser lifecycle fixtures, narrow parser entries to direct parser objects when that’s the form the test needs. Use `as unknown as ParserOptions` for intentionally partial parser options.

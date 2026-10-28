@@ -15,6 +15,12 @@ exports[`defines the default config 1`] = `
     ],
   },
   {
+    "linterOptions": {
+      "reportUnusedDisableDirectives": "error",
+      "reportUnusedInlineConfigs": "error",
+    },
+  },
+  {
     "files": [
       "**/*.md",
       "**/*.markdown",

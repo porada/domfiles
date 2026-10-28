@@ -40,6 +40,8 @@ Prefer applying adequate existing guidance over adding another rule. For a demon
 
 Recommend the smallest useful intervention at its canonical owner. Explain how it would change the relevant decision in the next comparable task, and check it against the observed case and a nearby legitimate case to avoid unnecessary restriction. Weigh the expected benefit against recurring token cost and procedural overhead. State material limitations rather than promising that the issue can never recur.
 
+Use available user-global and project-local knowledge of skill ownership and maintenance boundaries to identify likely owners. Don’t assume the current project owns the skills used during its tasks. Consult only guidance relevant to the evidence. Treat ownership information as a routing aid, not an audit checklist or authorization to invoke workflows or edit skills. When that knowledge is unavailable, continue from the task evidence and state any material ownership uncertainty. Global or project instructions may be the appropriate owner instead.
+
 Report the conclusion, decisive evidence, material uncertainty, and recommendation concisely. Include only the parts needed to support the decision, not a mandatory report template or an exhaustive list of possible improvements.
 
 Apply improvements only when separately authorized, using the affected domain workflow. For authorized agent documentation changes, follow `agent-documentation` to resolve ownership and validation. Use **Execution checkpoints** only for a material decision, uncovered effect, or separately required gate, not merely because examination is complete.
