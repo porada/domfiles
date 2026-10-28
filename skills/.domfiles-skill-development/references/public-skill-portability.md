@@ -52,19 +52,19 @@ Use the [general policies template](../assets/general-policies.txt) as the share
 
 Replace an existing general policies section rather than supplementing it. Copy the template verbatim except for the heading choice, eligibility omissions, and editorial inlining defined below. Use `## General Policies` when the skill’s peer H2 headings name topics and `## Apply General Policies` when they name actions. Keep this section last and preserve the template’s subsection order and hierarchy.
 
-Determine eligibility from the complete reachable workflow. Global policies retain ownership of the broader rules, and the templates own the shared standalone wording. Bundled copies must remain sufficient without another skill or the network. When a template conflicts with the required composition, update its canonical contract and every governed copy together rather than adding a skill-specific exception.
+Determine eligibility from the complete reachable workflow. Each rule’s canonical source retains ownership, and the templates supply shared standalone wording. Bundled copies must remain sufficient without another skill or the network. When a template conflicts with the required composition, update its canonical contract and every governed copy together rather than adding a skill-specific exception.
 
 ### Editorial Conventions
 
 Include editorial conventions only when creating, editing, or reviewing prose for human readers is a core advertised capability or the skill defines standards for human-facing text in authored code. Producing or transporting instructions addressed to another agent, or prose as a supporting step in another workflow, does not, by itself, establish eligibility. Otherwise, inherit applicable user and project writing instructions. Standalone completeness alone does not justify editorial defaults.
 
-For maintenance in domfiles, derive the [editorial conventions template](../assets/editorial-conventions.txt) from `.agents/GLOBAL.md`’s final `## Editorial Conventions` section through the end of the file. Reduce that heading and every descendant heading level by one, preserving all remaining content verbatim. Make shared rule changes in the global source before updating the template and its consumers.
+For maintenance in domfiles, `human-facing-writing`’s **Editorial Conventions** subsection is the canonical source. Derive the [editorial conventions template](../assets/editorial-conventions.txt) from its rule text after the introductory applicability paragraph, stopping before **Agent Conduct**. Use `# Editorial Conventions` as the template heading and reduce the rule text’s descendant heading levels by two, preserving all other content verbatim. Make shared rule changes in `human-facing-writing` before updating the template and its consumers.
 
-For eligible skills, inline the conventions when every advertised workflow requires them. Assess the complete reachable workflow, not the skill’s name or category. Don’t count supporting steps or exceptional early exits as separate advertised workflows.
+For other eligible skills, inline the conventions when every advertised workflow requires them. Assess the complete reachable workflow, not the skill’s name or category. Don’t count supporting steps or exceptional early exits as separate advertised workflows.
 
 To inline, replace the general policies template’s Editorial Conventions subsection in place. Retain its heading and introductory paragraph, changing only the linked `editorial conventions` text to plain text. Follow that paragraph with the editorial template’s body, omitting its H1 and increasing descendant heading levels by two. This preserves the applicability condition and routine-communication exclusion. Don’t retain a separate editorial reference.
 
-For other eligible skills, retain the template’s conditional route and bundle a verbatim copy of the editorial template at `references/editorial-conventions.md`. For ineligible skills, omit both the subsection and the reference. Each eligible skill must contain exactly one copy of the conventions. Apply narrower rules when the conventions permit them, without changing the shared rule text.
+For eligible skills that don’t inline the conventions, retain the template’s conditional route and bundle a verbatim copy of the editorial template at `references/editorial-conventions.md`. For ineligible skills, omit both the subsection and the reference. Each eligible skill must contain exactly one definition or copy of the conventions. Apply narrower rules when the conventions permit them, without changing the shared rule text.
 
 ### Agent Conduct
 

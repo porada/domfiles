@@ -1,12 +1,22 @@
 # Documentation Comments
 
-Use technical copy evidence and reader-facing terminology to shape declaration-level documentation, including JSDoc, language-native comments, and docstrings.
+Use technical copy evidence and reader-facing terminology to shape declaration-level documentation and choose punctuation for source comments and runtime descriptions.
 
 ## Scope
 
-Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. This reference governs their wording and editorial review. Don’t generalize family-wide coverage or JSDoc syntax from one language or project.
+Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. This reference governs declaration-level wording and editorial review, plus punctuation defaults for ordinary source comments and runtime descriptions. Don’t generalize family-wide coverage or JSDoc syntax from one language or project.
 
-Alongside the technical copy workflow’s [evidence requirements](technical-copy.md#evidence), inspect each declaration’s call sites, declared types, and surrounding comments before composing or propagating wording. For a requested module or family pass, complete the in-scope coverage before reviewing the family as a whole.
+For declaration-level documentation, follow the technical copy workflow’s [evidence requirements](technical-copy.md#evidence) and inspect each declaration’s call sites, declared types, and surrounding comments before composing or propagating wording. For a requested module or family pass, complete the in-scope coverage before reviewing the family as a whole.
+
+## Punctuation Defaults
+
+Use these defaults only when no project, language, or established local convention governs the choice.
+
+Treat a comment or docstring as formal documentation when the language or its established tooling parses it as API documentation, such as JSDoc, TSDoc, PHPDoc, Javadoc, Python docstrings, or Rust doc comments. Write formal documentation comments, including tag descriptions, with terminal punctuation, even when the text is a single sentence, a verb-first summary, or a noun phrase.
+
+Omit the final period from ordinary source comments and runtime descriptions, such as Fish `--description` text and completion labels, even when they contain several sentences. This also applies to function comments in languages without a formal documentation comment format, such as POSIX shell and Fish, unless established tooling parses them as API documentation.
+
+When a host tool displays descriptions alongside its own, such as option help in a command-line interface, match the punctuation of the host’s descriptions.
 
 ## Comment Content
 
@@ -14,7 +24,7 @@ When project policy and established language conventions leave formatting unspec
 
 For promises and analogous asynchronous results, describe settlement or completion behavior when it states the purpose more directly. State distinct outcomes in separate sentences.
 
-When no project, language, or established local convention governs callable documentation, begin with a third-person present tense verb and omit terminal punctuation from a compact summary.
+When no project, language, or established local convention governs callable documentation, begin with a third-person present tense verb.
 
 Treat the surrounding symbol, type, and nearby API as context the reader already has, especially in an editor tooltip. Avoid repeating an obvious name, host tool, artifact, parameter explanation, or return type. A comment may share a verb with the function when it still adds purpose or significance beyond the identifier.
 

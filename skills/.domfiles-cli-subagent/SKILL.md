@@ -26,7 +26,7 @@ Before composing a live assignment, load [Session Coordination](references/sessi
 
 ## Prepare the Assignment
 
-Compose assignments and follow-ups under the global **Prompt contract**, **Same-access delegation**, and **Direct exchanges** policies. Include the recursion boundary and active [progress and command limits](references/session-coordination.md#enforce-progress-and-command-limits) in the assignment. For follow-ups, apply the [retained-context checks](references/session-coordination.md#check-retained-context).
+Use `agent-task-relay` to compose assignments and follow-ups. Include the recursion boundary and active [progress and command limits](references/session-coordination.md#enforce-progress-and-command-limits) in the assignment. For follow-ups, apply the [retained-context checks](references/session-coordination.md#check-retained-context).
 
 ## Dispatch and Coordinate
 

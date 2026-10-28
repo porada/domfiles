@@ -35,6 +35,10 @@ The default configuration supports GitHub Flavored Markdown and YAML frontmatter
 
 Verify external URLs, path capitalization, symlinked paths, renderer-specific anchors, prose conventions, list spacing, and other documentation requirements manually. Line number fragments aren’t range-checked. A clean result establishes only the configured checks, not that every link is correct.
 
+## Check Changed References
+
+For in-scope heading changes or content moves, search for inbound references and include affected referencing documents in validation. Separately recheck containing-document references, directional references, and terms defined only at the original location. In change workflows, repair affected references and apply the destination’s policies in the same change.
+
 ## Interpret Results
 
 Default clean output is silent. Ignored-file warnings mean those inputs weren’t checked. `--max-warnings 0` makes warnings fail validation. Use `--format json` for per-file results, distinguishing ignored-file warnings from lint results.

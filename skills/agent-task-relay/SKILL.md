@@ -3,9 +3,9 @@ name: agent-task-relay
 description: |-
     Create, revise, review, and audit outgoing prompts for another agent or conversation. Validate incoming findings and status reports.
 
-    Use for external task delegation prompts, explicitly requested subagent prompts, transfers of established results or decisions, and pasted review, audit, or status reports, including unframed reports.
+    Use when preparing agent assignments, follow-ups, or transfers of established results or decisions, including during autonomous in-client or CLI delegation. Also use for pasted review, audit, or status reports, including unframed reports.
 
-    Don’t use merely to run or orchestrate autonomous in-client or CLI subagents. Exclude archival, explicitly deferred, illustrative, or incidental reports, and outdated reports unless the user requests reassessment.
+    Don’t use merely to select, launch, monitor, or resume agents without preparing or revising a prompt. Exclude archival, explicitly deferred, illustrative, or incidental reports, and outdated reports unless the user requests reassessment.
 ---
 
 # Agent Task Relay

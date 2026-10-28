@@ -5,16 +5,17 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `agent-documentation`
 - `agent-task-directories`
 - `agent-task-relay`
+- `browser-automation`
 - `cli-subagent`
 - `dom-release-notes-for-humans`
 - `dom-sensible-commit-flow`
 - `dom-sensible-contribution-flow`
-- `examine-workflow`: Examine task outcomes and recommend workflow improvements.
 - `fish-shell-scripting`
 - `full-review`
 - `human-facing-writing`
 - `intentional-dependency-choice`
 - `posix-shell-scripting`
+- `refine-agent-workflow`: Recommend improvements to agent instructions and workflows.
 - `release-notes-for-humans`
 - `sensible-commit-flow`
 - `sensible-contribution-flow`

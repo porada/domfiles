@@ -47,10 +47,10 @@ On `Workspace not trusted`, use the reported cause to choose recovery. Follow [E
 Don’t supply `--session-id` with `--bg`, which assigns its own session identity. Capture the returned job ID from the output file, then obtain the full session UUID from the exact matching row:
 
 ```sh
-claude agents --all --cwd '<checkout>' --json | jq -e --arg job '<job-id>' '[.[] | select(.id == $job) | {id, sessionId, state, status, waitingFor}] | if length == 1 and (.[0].sessionId | if type == "string" then test("^[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$") else false end) then .[0] else error("Expected one task-owned job with a full session UUID") end'
+claude agents --all --cwd '<checkout>' --json | jq -ce --arg job '<job-id>' '[.[] | select(.id == $job) | {id, sessionId}] | if length == 1 and (.[0].sessionId | if type == "string" then test("^[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$") else false end) then .[0] else error("Expected one task-owned job with a full session UUID") end'
 ```
 
-The listing is an array. Require exactly one match and a full `sessionId`. Don’t match optional UUID fields by prefix or emit unrelated rows or the potentially large `name` field. Inspect only the task row’s process metadata when needed.
+The listing is an array. Require exactly one match and a full `sessionId`. Don’t match optional UUID fields by prefix or emit unrelated rows or the potentially large `name` field. For lifecycle checks and diagnostics, keep the exact job filter and compact output, adding only the fields needed for that decision. Use the [shared monitor](session-coordination.md#observe-the-current-turn) for routine state polling.
 
 Retain the job ID and the explicit launch values for `--effort`, `--model`, and `--permission-mode` with the [shared session state](session-coordination.md#retain-session-state).
 

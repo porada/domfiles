@@ -66,7 +66,7 @@ Codex compresses a rollout to `.jsonl.zst` after a week without activity, and th
 | --- | --- |
 | `noReply` | The turn ended with a `task_complete` event that has no final message, such as a failed turn, or with a `turn_aborted` event. `detail` contains the abort reason as `abortReason` and the failure message as `error`, each `null` when absent, plus `errorOmitted`. |
 
-When the host reports that the current dispatch’s job exited, check that session once with `--wait 0`. If it still reports `working`, the process ended without closing the turn. Treat the turn as interrupted and diagnose it from the job’s exit status and standard error file. Ignore exit reports from earlier dispatches’ jobs.
+Use host exit notifications when available. If the host requires explicit job status queries, check the current dispatch’s job alongside turn observations rather than in a separate polling loop. When the host reports that the current dispatch’s job exited, check that session once with `--wait 0` unless that dispatch has already reported `ready` or `attention`. If it still reports `working`, the process ended without closing the turn. Treat the turn as interrupted and diagnose it from the job’s exit status and standard error file. Ignore exit reports from earlier dispatches’ jobs.
 
 ## Stop a Session
 

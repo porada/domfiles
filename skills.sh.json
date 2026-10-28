@@ -24,6 +24,7 @@
 			"skills": [
 				"agent-task-directories",
 				"agent-task-relay",
+				"refine-agent-workflow",
 				"subagent-review-flow",
 				"verify-findings"
 			]

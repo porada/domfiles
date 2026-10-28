@@ -20,7 +20,11 @@ Await a usable reply through the normal monitor, then apply the participant’s 
 
 Write each assignment, including every follow-up, to a file in the task directory and pass it on stdin, so commands never carry assignment text. Keep these files while the exchange may continue, and clean them up with the task directory.
 
-The command shapes in this skill assume POSIX `sh`, not the default interactive shell. They’re schematic, not raw substitution templates. Pass each placeholder as one literal argument, using a host interface that accepts an argument array when available. With an argument array, apply the command’s redirections, such as the assignment file or output files, through the host’s stream settings rather than passing them as arguments. If neither invocation form can preserve the arguments and connect the streams, stop and report the capability limitation. For POSIX `sh` command strings, surround each value with single quotes and replace every embedded `'` with `'\''`. Don’t apply that encoding in another shell or use shell interpolation or command substitution to insert values. Write each command with literal values because some hosts reject shell variable expansion and command substitution in agent commands. Run launch and resumption commands from the supplied checkout, using the host’s working directory parameter.
+The command shapes use POSIX shell syntax compatible with `sh`, Bash, and Zsh. They’re schematic, not raw substitution templates. Pass each placeholder as one literal argument, using a host interface that accepts an argument array when available. With an argument array, apply the command’s redirections, such as the assignment file or output files, through the host’s stream settings rather than passing them as arguments. If neither invocation form can preserve the arguments and connect the streams, stop and report the capability limitation.
+
+For command strings in these shells, surround each value with single quotes and replace every embedded `'` with `'\''`. Don’t apply that encoding in shells with different quoting rules or use shell interpolation or command substitution to insert values. Write each command with literal values because some hosts reject shell variable expansion and command substitution in agent commands.
+
+Run launch and resumption commands from the supplied checkout. Use the host’s working directory parameter when available. Otherwise, verify that commands run from that checkout or reuse applicable evidence establishing their working directory.
 
 ## Retain Session State
 
@@ -64,6 +68,8 @@ node '<skill-directory>/scripts/subagent-signal.ts' --wait 0 --claude '<since>:<
 
 Omit `--wait` to use the command’s default bounded wait, which returns as soon as any session becomes `ready`, needs `attention`, or reports an `error`. Use that [waiting form](#inactivity) when CLI sessions are the last outstanding dependencies. The wait is not a hard process deadline: a blocking Claude session lookup can extend the invocation. Give the host invocation a finite timeout of at least 120 seconds. `--help` reports the default and override bounds and must be used alone.
 
+If the host returns while a monitor invocation is still running, retain its invocation ID and continue independent work when available. When no independent work is available, await that invocation until it completes or the next required user update, observation of another session, or deadline, within the host’s limits. Avoid repeated short waits for empty output and overlapping monitor invocations for the same sessions.
+
 A successful observation prints one JSON line with `observedAt`, the observation time in Unix milliseconds, and `sessions`, one entry per session argument in the given order. Each entry has `session` and `state`, which describes the requested turn, not a state reported by the participant’s CLI. Every state except `error` adds `nextSince`, the current complete-line count for the next dispatch, not a read cursor. The command anchors on the latest turn start after `<since>`, as the participant reference defines it. Until that start is recorded, it reports `working` with `progressAt: null`. That includes a fresh launch whose transcript doesn’t exist yet, but a follow-up whose transcript is missing reports an `error` unless the participant reference describes an exception.
 
 | Turn State | Additional Fields | Coordinator Action |
@@ -75,7 +81,7 @@ A successful observation prints one JSON line with `observedAt`, the observation
 
 The participant reference defines what `ready` requires and which attention reasons its sessions report. A `ready` result doesn’t prove that the assigned task succeeded. Tool input, reply text, and Codex error messages in attention details are limited to 500 characters each, with exact omitted-character counts. Retrieve only the bounded additional evidence needed when truncation prevents a decision.
 
-If the host cuts off the output, run the same call again with `--wait 0` and standard output redirected to a task file, then read that file. A finished turn reports the same result on every check.
+Keep the monitor’s output as compact JSON without pretty-printing it or appending other status output. If the host cuts off the output, run the same call again with `--wait 0` and standard output redirected to a task file, then read that file. Read complete replies and any actionable details before proceeding. A finished turn reports the same result on every check.
 
 The command consumes newline-terminated JSON records and leaves an unfinished final record for a later check. Transcript structure remains an internal, version-sensitive interface. Don’t replace a monitor failure with an ad hoc reader, raw transcript dump, or CLI log stream. Don’t emit thinking blocks, unrelated sessions, authentication data, or global debug logs.
 

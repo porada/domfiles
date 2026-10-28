@@ -26,8 +26,8 @@ for source in \
   .dom-sensible-commit-flow \
   .dom-sensible-contribution-flow \
   .domfiles-agent-documentation \
+  .domfiles-browser-automation \
   .domfiles-cli-subagent \
-  .domfiles-examine-workflow \
   .domfiles-full-review \
   .domfiles-skill-development \
   .domfiles-vitest-conventions \
@@ -37,6 +37,7 @@ for source in \
   human-facing-writing \
   intentional-dependency-choice \
   posix-shell-scripting \
+  refine-agent-workflow \
   release-notes-for-humans \
   sensible-commit-flow \
   sensible-contribution-flow \

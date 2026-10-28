@@ -14,6 +14,7 @@ for skill in \
   commit-flow \
   contribution-flow \
   diagnose \
+  examine-workflow \
   git-worktrees \
   github-cli \
   harmonize \

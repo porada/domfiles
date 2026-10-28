@@ -3,7 +3,6 @@
 ## Overview
 
 - **Repository:** Contains all actively used dotfiles and is also called domfiles.
-- **Disclosure:** The repository is public and open source.
 
 ## Public Repository Boundary
 
@@ -23,7 +22,7 @@
 | --- | --- |
 | `.agents/GLOBAL.md` | Defines global user defaults. |
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
-| Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. Distribution follows the [skill classification](skills/.domfiles-skill-development/references/domfiles-skill-policy.md#classify-skills). |
+| Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. |
 | `.agents/PROJECT.md` | Records constraints, durable facts, maintenance decisions, and rationale. It doesn’t override agent instructions. |
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, refer to `.agents/GLOBAL.md`.
