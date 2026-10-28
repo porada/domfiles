@@ -208,11 +208,11 @@ importers:
         version: 65.4.0(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(supports-color@9.4.0)
     devDependencies:
       '@standard-config/oxlint':
-        specifier: ^2.10.1
-        version: 2.10.1(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))
+        specifier: ^2.11.0
+        version: 2.11.0(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))
       '@standard-config/oxlint-stylistic':
         specifier: ^2.11.0
-        version: 2.11.0(@standard-config/oxlint@2.10.1)(eslint@10.13.0(supports-color@9.4.0))(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(supports-color@9.4.0)(typescript@7.0.2)
+        version: 2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.13.0(supports-color@9.4.0))(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(supports-color@9.4.0)(typescript@7.0.2)
       '@standard-config/prettier':
         specifier: ^1.22.0
         version: 1.22.0(prettier@3.9.10)
@@ -1410,13 +1410,13 @@ packages:
       '@standard-config/oxlint':
         optional: true
 
-  '@standard-config/oxlint@2.10.1':
-    resolution: {integrity: sha512-F4qUQyM2ceI/XDtUMGozeBLir6mKILDtd0uXWCpXpzzgQto4aIhtsfIPuBmq6tJICK7TJUKf48AsmOwtOOuRiw==}
+  '@standard-config/oxlint@2.11.0':
+    resolution: {integrity: sha512-TiJ0OIZv7eeW3c4GXgnBn2PDpsPXMe3I3d2tXpnrkQZ4yU0MYehL2ezvrCE8bF0BO/kDpimNqCLRheootSeSXg==}
     engines: {node: '>=22'}
     peerDependencies:
       '@standard-config/oxlint-react': ^2.0.1
       '@standard-config/oxlint-stylistic': ^2.0.1
-      oxlint: ^1.86.0
+      oxlint: ^1.90.0
     peerDependenciesMeta:
       '@standard-config/oxlint-react':
         optional: true
@@ -4438,23 +4438,23 @@ snapshots:
 
   '@sinclair/typebox@0.25.24': {}
 
-  '@standard-config/oxlint-stylistic@2.11.0(@standard-config/oxlint@2.10.1)(eslint@10.13.0(supports-color@9.4.0))(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(supports-color@9.4.0)(typescript@7.0.2)':
+  '@standard-config/oxlint-stylistic@2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.13.0(supports-color@9.4.0))(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(supports-color@9.4.0)(typescript@7.0.2)':
     dependencies:
       '@stylistic/eslint-plugin': 5.10.0(eslint@10.13.0(supports-color@9.4.0))
       eslint-plugin-perfectionist: 5.13.0(eslint@10.13.0(supports-color@9.4.0))(supports-color@9.4.0)(typescript@7.0.2)
       oxlint: 1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1))
     optionalDependencies:
-      '@standard-config/oxlint': 2.10.1(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))
+      '@standard-config/oxlint': 2.11.0(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))
     transitivePeerDependencies:
       - eslint
       - supports-color
       - typescript
 
-  '@standard-config/oxlint@2.10.1(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))':
+  '@standard-config/oxlint@2.11.0(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))':
     dependencies:
       oxlint: 1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1))
     optionalDependencies:
-      '@standard-config/oxlint-stylistic': 2.11.0(@standard-config/oxlint@2.10.1)(eslint@10.13.0(supports-color@9.4.0))(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(supports-color@9.4.0)(typescript@7.0.2)
+      '@standard-config/oxlint-stylistic': 2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.13.0(supports-color@9.4.0))(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/coverage-v8@5.0.5)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(supports-color@9.4.0)(typescript@7.0.2)
 
   '@standard-config/prettier@1.22.0(prettier@3.9.10)':
     dependencies:
