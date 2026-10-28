@@ -189,6 +189,7 @@
 	},
 	"ui_font_family": ".SystemUIFont",
 	"ui_font_size": 15,
+	"use_display_p3": true,
 	"whitespace_map": {
 		"tab": " "
 	},
@@ -211,13 +212,13 @@
 			{
 				"model": "claude-fable-5-1",
 				"provider": "anthropic",
-				"effort": "high",
+				"effort": "xhigh",
 				"enable_thinking": true
 			},
 			{
 				"model": "claude-opus-5-5",
 				"provider": "anthropic",
-				"effort": "high",
+				"effort": "xhigh",
 				"enable_thinking": true
 			},
 			{
