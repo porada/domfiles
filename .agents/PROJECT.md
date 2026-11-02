@@ -8,8 +8,6 @@ This document records constraints, durable facts, maintenance decisions, and rat
 
 The root `engines.node` range intentionally declares the minimum supported Node.js major without mirroring narrower patch-level constraints from individual tools. pnpm and the invoked tools are expected to report when the installed Node.js release does not satisfy a tool’s more specific engine range.
 
-Project code assumes the latest Node.js 24 release or newer.
-
 ### Supported Environment
 
 Domfiles targets macOS 27 or newer on Apple Silicon and headless Ubuntu LTS with glibc on ARM64 and x86_64. The Ubuntu scope does not extend to other Linux distributions, musl-based environments, or a Mac-equivalent desktop setup. ARM64 is the first Ubuntu acceptance target. Tested support for each architecture requires its own validation.

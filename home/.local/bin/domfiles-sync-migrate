@@ -37,3 +37,9 @@ for skill in \
     fi
   done
 done
+
+# Uninstall `node@24`
+if __is_brew_installed node@24; then
+  __print_heading_dimmed 'Uninstalling `node@24`'
+  __ brew uninstall node@24
+fi

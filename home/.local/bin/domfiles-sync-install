@@ -55,7 +55,7 @@ install() (
 )
 
 # Install primary dependencies
-for formula in fish fisher git node@24 pnpm; do
+for formula in fish fisher git node pnpm; do
   install "$formula"
 done
 

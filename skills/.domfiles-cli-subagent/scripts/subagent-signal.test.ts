@@ -505,7 +505,7 @@ void describe(NAME, { concurrency: true }, () => {
 			assert.equal(
 				fixture.session(output).state,
 				'working',
-				documented[index]
+				documented[index] ?? ''
 			);
 		}
 	});

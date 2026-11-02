@@ -10,13 +10,13 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": ">=24"
+		"node": ">=26"
 	},
 	"packageManager": "pnpm@12.16.1",
 	"dependencies": {
 		"doclint": "workspace:*",
 		"skills": "^1.7.4",
-		"vercel": "^65.7.0"
+		"vercel": "^65.9.0"
 	},
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.11.0",

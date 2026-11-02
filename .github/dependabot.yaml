@@ -17,7 +17,3 @@ updates:
       default-days: 1
       exclude:
         - '@standard-config/*'
-    ignore:
-      - dependency-name: '@types/node'
-        update-types:
-          - version-update:semver-major
