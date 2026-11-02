@@ -183,7 +183,7 @@ Synchronization links the repository’s `home/.local/bin` directory to `~/.loca
 
 Accepted shell-specific contract differences between paired `domlib` and Fish helpers are recorded here with their rationale:
 
-- **Command routing:** POSIX `__` routes `brew` and `pnpm` through `domlib` wrappers that add fallback or search paths, environment overrides, and custom missing-command diagnostics. Fish `__domfiles_print_and_run` invokes the requested external command directly. Fish startup establishes the supported command paths, and the generic wrapper intentionally adds no per-command routing, environment, or diagnostics.
+- **Command routing:** POSIX `__` routes `brew` through its `domlib` wrapper for fallback discovery, environment overrides, and a custom missing-command diagnostic. Other commands run directly, as they do through Fish `__domfiles_print_and_run`.
 - **Failure handling:** Argument validation failures in POSIX `__`, `__confirm`, `__continue_on_macos`, and `__is_boolean` terminate the running shell. Their Fish peers report the error and return status 1 because terminating from an autoloaded function would close the interactive shell.
 - **Platform guards:** Outside macOS, POSIX `__continue_on_macos` prints a command-specific notice and exits successfully. Fish `__domfiles_continue_on_macos` prints the same notice and returns status 1, leaving the caller to return rather than closing the interactive shell.
 - **Quoting:** POSIX `__print_command` uses `__quote_params` to match Python’s `shlex.quote` output. Fish `__domfiles_print_command` uses `string escape`. Each renders syntax for its own shell, so equivalent commands may be displayed differently.

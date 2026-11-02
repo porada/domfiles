@@ -31,9 +31,6 @@ __() {
   if [ "$1" = 'brew' ]; then
     shift
     brew "$@"
-  elif [ "$1" = 'pnpm' ]; then
-    shift
-    pnpm "$@"
   else
     command "$@"
   fi
@@ -1030,15 +1027,6 @@ brew() (
 
   HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
 )
-
-# Runs `pnpm` with domfiles’ defaults
-pnpm() {
-  if ! __is_callable pnpm; then
-    __print_error_and_exit '`pnpm` is missing'
-  fi
-
-  PATH="$HOME/Library/pnpm/bin:$PATH" command pnpm "$@"
-}
 
 # Initialize helper variables
 DOMFILES_DEFAULT_IFS="$IFS"

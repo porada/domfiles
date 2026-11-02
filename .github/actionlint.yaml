@@ -1,4 +1,4 @@
-paths:
-  '**':
-    ignore:
-      - ^label ".+" is unknown\.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04-arm
+    - xcode-27

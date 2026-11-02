@@ -91,8 +91,16 @@ fi
 
 # Configure `pnpm`
 if __is_callable node && __is_callable pnpm; then
+  __print_heading_dimmed 'Configuring `pnpm`'
+
+  # Install `pnpm` completions
+  if __is_callable fish; then
+    __mkdir "$DOMFILES_CONFIG_DIR/fish/completions"
+    __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_CONFIG_DIR/fish/completions/pnpm.fish"
+  fi
+
+  # Exclude `pnpm` directories from Time Machine backups
   if __is_macos; then
-    __print_heading_dimmed 'Configuring `pnpm`'
     __ pnpm config set --global macosBackup --json '{
   "excludeModulesDir": true,
   "excludeStoreDir": true
@@ -101,18 +109,11 @@ if __is_callable node && __is_callable pnpm; then
 
   # Install project dependencies
   __print_heading_dimmed 'Installing `pnpm` dependencies'
-  __mkdir "$HOME/Library/pnpm/bin"
 
   if __domfiles_is_clean; then
     __ pnpm --dir "$DOMFILES" --loglevel=error install --frozen-lockfile
   else
     __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
-  fi
-
-  # Install `pnpm` completions
-  if __is_callable fish; then
-    __mkdir "$DOMFILES_CONFIG_DIR/fish/completions"
-    __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_CONFIG_DIR/fish/completions/pnpm.fish"
   fi
 fi
 

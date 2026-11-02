@@ -4,5 +4,5 @@
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Print Homebrew’s executable directories
-brew_dir="$(brew --prefix)"
-printf '%s\n' "$brew_dir/sbin" "$brew_dir/bin"
+brew_path="$(brew --prefix)"
+printf '%s\n' "$brew_path/sbin" "$brew_path/bin"
