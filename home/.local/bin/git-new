@@ -12,7 +12,7 @@ branch="$(git check-ref-format --branch "$1")" || exit $?
 
 if git show-ref --verify --quiet "refs/heads/$branch"; then
   if ! __confirm "Overwrite branch \`$branch\`?"; then
-    exit 0
+    exit
   fi
 else
   status="$?"

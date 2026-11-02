@@ -14,5 +14,6 @@ home/.config/git/allowed_signers
 home/.config/npm/user.npmrc
 home/.config/zed/prompts
 home/.config/zed/themes
+home/.local/bin/git-diff-highlight
 node_modules
 tsconfig.tsbuildinfo

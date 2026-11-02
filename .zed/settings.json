@@ -3,7 +3,6 @@
 		".claude/skills",
 		"home/.config/zed/AGENTS.md",
 		"home/.config/zed/prompts",
-		"home/.local/bin/git-diff-highlight",
 		"..."
 	],
 	"file_types": {

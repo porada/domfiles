@@ -26,6 +26,7 @@ For every non-Fish shell target and whenever the task touches `domlib`, a Fish `
 
 - Evaluate every in-scope domfiles shell script’s interpreter, external commands, options, `PATH`, architecture, and default-shell assumptions against the [supported environment](../../PROJECT.md#supported-environment).
 - Judge each requirement at its intended lifecycle stage—fresh bootstrap, synchronization, post-sync runtime, or development—and account for prerequisites that `domfiles sync` provisioned earlier.
+- Place `__is_ci` and `__domfiles_is_ci` checks, including negations, last among predicates in compound conditions so CI detection doesn’t short-circuit the other checks. Preserve boolean grouping and keep CI-guarded actions conditional.
 - Treat `domfiles dependencies` as the user-facing readiness check defined by [dependency status labels](../../PROJECT.md#dependency-status-labels). Add a row only for an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone doesn’t qualify a dependency.
 
 ## Apply Domfiles Shell Wording Constraints
@@ -61,8 +62,6 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 - Report `find` commands that place `-maxdepth` anywhere other than immediately after the search path.
 
 ## Validate Changes
-
-When changes to `home/.config/fish/config.fish` alter machine-local sourcing, keep [Fish local configuration](../../PROJECT.md#fish-local-configuration) aligned.
 
 After editing, apply the [repository validation policy](../../../AGENTS.md#validation), then follow [Validate Shell Changes](references/validate-shell-changes.md) for lint and formatting commands and complete invariant checks.
 

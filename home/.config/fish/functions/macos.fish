@@ -1,4 +1,6 @@
 function macos --description 'Configure macOS properties'
+    __domfiles_continue_on_macos (status function); or return
+
     argparse --min-args=1 --max-args=2 -- $argv
     or return
 

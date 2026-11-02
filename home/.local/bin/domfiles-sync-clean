@@ -5,11 +5,8 @@
 
 __print_heading_dimmed 'Cleaning up'
 
-__ rm -f "$HOME/.bash_history"
 __ rm -f "$HOME/.lesshst"
-__ rm -rf "$HOME/.local/state/domfiles"
 __ rm -f "$HOME/.npmrc"
 __ rm -f "$HOME/.ssh/known_hosts.old"
 __ rm -f "$HOME/.vim/autoload/plug.vim.old"
 __ rm -f "$HOME/.viminfo"
-__ rm -f "$HOME/.zsh_history"

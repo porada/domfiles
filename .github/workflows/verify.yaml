@@ -13,11 +13,12 @@ permissions:
 
 jobs:
   format:
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: brew install fish
       - uses: pnpm/setup@v3.1.2
         with:
@@ -27,21 +28,23 @@ jobs:
 
   lint-fish:
     name: lint / fish
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: brew install fish
       - run: home/.local/bin/domfiles-dev-lint-fish
 
   lint-json:
     name: lint / json
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: brew install jq
       - run: home/.local/bin/domfiles-dev-lint-json
 
@@ -52,6 +55,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - uses: pnpm/setup@v3.1.2
         with:
           cache: true
@@ -60,11 +64,12 @@ jobs:
 
   lint-sh:
     name: lint / sh
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: brew install shellcheck
       - run: home/.local/bin/domfiles-dev-lint-sh
 
@@ -75,6 +80,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - uses: pnpm/setup@v3.1.2
         with:
           cache: true
@@ -87,6 +93,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - uses: pnpm/setup@v3.1.2
         with:
           cache: true

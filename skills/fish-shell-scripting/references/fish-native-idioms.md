@@ -89,6 +89,8 @@ Fish has no direct equivalent of `set -euo pipefail`. Don’t add that option se
 
 Use `return` from a function and `exit` from a script. Preserve a failing status deliberately instead of allowing a logging or cleanup command to overwrite it. Treat standard output as returned data and standard error as diagnostics unless the receiving interface defines another contract. An `argparse` validator is an exception because it writes its diagnostic fragment to standard output for `argparse` to consume.
 
+Prefer bare `return` and `exit` when they preserve the intended exit status. Use `return 0` or `exit 0` only when explicitly converting a potentially unsuccessful status to success. Matching a `switch` case alone doesn’t establish a successful prior status.
+
 Capture one command substitution’s output and status together when both matter:
 
 ```fish

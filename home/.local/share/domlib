@@ -31,9 +31,6 @@ __() {
   if [ "$1" = 'brew' ]; then
     shift
     brew "$@"
-  elif [ "$1" = 'pnpm' ]; then
-    shift
-    pnpm "$@"
   else
     command "$@"
   fi
@@ -75,7 +72,7 @@ __confirm() {
 
       case "$response" in
         y | Y)
-          return 0
+          return
           ;;
         n | N)
           return 1
@@ -83,6 +80,19 @@ __confirm() {
       esac
     done
   )
+}
+
+# Exits successfully outside macOS after printing a macOS-only notice for
+# command `$1`
+__continue_on_macos() {
+  if [ $# -ne 1 ] || [ -z "$1" ]; then
+    __print_error_and_exit '`__continue_on_macos` requires one command name'
+  fi
+
+  if ! __is_macos; then
+    __continue_on_macos_command="$(basename -- "$1")" || exit
+    __print_info_and_exit "\`$__continue_on_macos_command\` is a macOS-only command"
+  fi
 }
 
 # Runs `domfiles` command `$1`
@@ -402,7 +412,7 @@ __git_diff_page() (
 # Returns success when `$1` resolves to a commit
 __git_is_commit_reference() {
   if git rev-parse --verify "$1^{commit}" > /dev/null 2>&1; then
-    return 0
+    return
   else
     return 1
   fi
@@ -442,12 +452,12 @@ __git_skipped_files() (
 # Runs `grep` without failing on no matches
 __grep() (
   if grep "$@"; then
-    return 0
+    return
   else
     status="$?"
   fi
 
-  [ "$status" -eq 1 ] && return 0
+  [ "$status" -eq 1 ] && return
   return "$status"
 )
 
@@ -495,11 +505,6 @@ __is_ci() {
   [ -n "${CI-}" ] || [ -n "${GITHUB_ACTIONS-}" ]
 }
 
-# Returns success when Fish is the login shell
-__is_fish() {
-  __is_shell "$(brew --prefix)/bin/fish"
-}
-
 # Returns success when Fisher is installed
 __is_fisher_installed() {
   fish --command 'fisher --version' > /dev/null 2>&1
@@ -510,10 +515,11 @@ __is_macos() {
   [ "$(uname -s)" = 'Darwin' ]
 }
 
-# Returns success when `$1` is the login shell
-__is_shell() {
-  [ "${1-}" = "$SHELL" ]
-}
+# Returns success when `$1` names the login shell recorded in `$SHELL`
+__is_shell() (
+  shell="${SHELL-}"
+  [ -n "${1-}" ] && [ "${shell##*/}" = "$1" ]
+)
 
 # Returns success when the SSH key pair is configured
 __is_ssh_configured() {
@@ -553,6 +559,20 @@ __is_xcode_installed() {
   xcodebuild -version > /dev/null 2>&1 \
     && xcodebuild -checkFirstLaunchStatus > /dev/null 2>&1
 }
+
+# Prints the current user’s login shell from the account database. Unlike
+# `$SHELL`, reflects changes made after the session started
+__login_shell() (
+  user="$(id -un)" || return
+
+  if __is_callable getent; then
+    entry="$(getent passwd "$user")" || return
+  else
+    entry="$(id -P "$user")" || return
+  fi
+
+  printf '%s\n' "${entry##*:}"
+)
 
 # Creates directory `$1` with standard permissions, creating any missing
 # parents as needed
@@ -617,7 +637,7 @@ __page_input() (
 # Prints `$@` as a shell-quoted command
 __print_command() {
   if [ "$DOMFILES_SUPPRESSED" = true ] && ! __is_ci; then
-    return 0
+    return
   fi
 
   __print_info "\$ $(__quote_params "$@")" >&2
@@ -657,7 +677,7 @@ __print_info() {
 # Prints the given text as informational output and exits
 __print_info_and_exit() {
   __print_info -- "$*"
-  exit 0
+  exit
 }
 
 # Prints text with format `$2`. Applies style `$1` only to terminal
@@ -665,7 +685,7 @@ __print_info_and_exit() {
 # instead of a newline
 __print_styled() (
   if [ $# -eq 0 ]; then
-    return 0
+    return
   fi
 
   if [ $# -lt 2 ]; then
@@ -687,7 +707,7 @@ __print_styled() (
   fi
 
   if [ -z "$format" ]; then
-    return 0
+    return
   fi
 
   # Preserve trailing newlines through command substitution
@@ -726,12 +746,29 @@ __print_warning() {
 }
 
 # Prints parameters as shell-quoted values separated by spaces
-__quote_params() {
-  python3 -c '
-import shlex, sys
-params = (shlex.quote(param) for param in sys.argv[1:])
-sys.stdout.write(" ".join(params))' "$@"
-}
+__quote_params() (
+  separator=''
+
+  for param; do
+    printf '%s' "$separator" || return
+    separator=' '
+
+    # Spell out ASCII letters as locale collation can widen ranges
+    case "$param" in
+      '')
+        printf "''" || return
+        ;;
+      *[!%+,./0123456789:=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-]*)
+        printf "'" || return
+        __string_replace "$param" "'" "'\"'\"'" || return
+        printf "'" || return
+        ;;
+      *)
+        printf '%s' "$param" || return
+        ;;
+    esac
+  done
+)
 
 # Prints a normalized boolean from environment variable `$1`. Uses `$2` when
 # unset or empty
@@ -754,7 +791,7 @@ __read_boolean_from_env() (
 
   if [ -z "$value" ]; then
     printf '%s\n' "$2"
-    return 0
+    return
   fi
 
   if ! __normalize_boolean "$value"; then
@@ -795,7 +832,7 @@ __ssh_add() {
   __print_command 'ssh-add' "$@"
 
   if ssh-add "$@" > /dev/null 2>&1; then
-    return 0
+    return
   else
     __print_error 'Failed to add the SSH key'
     return 1
@@ -825,15 +862,16 @@ __string_replace() {
     __print_error_and_exit '`__string_replace` requires a non-empty pattern'
   fi
 
-  if ! __string_contains "$1" "$2"; then
-    printf '%s' "$1"
-    return 0
-  fi
+  (
+    subject="$1"
 
-  python3 -c '
-import sys
-subject, pattern, replacement = sys.argv[1:4]
-sys.stdout.write(subject.replace(pattern, replacement))' "$@"
+    while __string_contains "$subject" "$2"; do
+      printf '%s%s' "${subject%%"$2"*}" "$3" || return
+      subject="${subject#*"$2"}"
+    done
+
+    printf '%s' "$subject"
+  )
 }
 
 # Runs `$@`, suppressing `__print_command` output
@@ -977,20 +1015,18 @@ brew() (
 
   if ! __is_callable "$command"; then
     command='/opt/homebrew/bin/brew'
-    [ -x "$command" ] || __print_error_and_exit '`brew` is missing'
+
+    if [ ! -x "$command" ]; then
+      command='/home/linuxbrew/.linuxbrew/bin/brew'
+    fi
+
+    if [ ! -x "$command" ]; then
+      __print_error_and_exit '`brew` is missing'
+    fi
   fi
 
   HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
 )
-
-# Runs `pnpm` with domfiles’ defaults
-pnpm() {
-  if ! __is_callable pnpm; then
-    __print_error_and_exit '`pnpm` is missing'
-  fi
-
-  PATH="$HOME/Library/pnpm/bin:$PATH" command pnpm "$@"
-}
 
 # Initialize helper variables
 DOMFILES_DEFAULT_IFS="$IFS"

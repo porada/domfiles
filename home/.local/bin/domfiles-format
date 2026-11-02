@@ -75,7 +75,7 @@ else
 fi
 
 if ! __confirm "$question"; then
-  exit 0
+  exit
 fi
 
 echo

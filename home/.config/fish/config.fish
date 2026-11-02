@@ -1,8 +1,8 @@
-# Resolve domfiles’ paths
-set --global DOMFILES \
-    (path dirname (path dirname (path dirname (path dirname (path resolve (status filename))))))
+# Resolve current configuration path
+set --local config (status dirname)
 
-# Resolve common paths
+# Resolve domfiles’ paths
+set --global DOMFILES (path dirname (path dirname (path dirname (path resolve "$config"))))
 set --global DOMFILES_PROJECTS_DIR "$HOME/Projects"
 
 # Set the default editor
@@ -28,9 +28,6 @@ set --global --export NODE_REPL_HISTORY "$HOME/.node-history"
 # Set `npm` config paths
 set --global --export npm_config_globalconfig "$HOME/.config/npm/global.npmrc"
 set --global --export npm_config_userconfig "$HOME/.config/npm/user.npmrc"
-
-# Set `pnpm` config paths
-set --global --export PNPM_HOME "$HOME/Library/pnpm"
 set --global --export pnpm_config_npmrc_auth_file "$npm_config_userconfig"
 
 # Set `zizmor` config path
@@ -44,15 +41,9 @@ set --global --export HOMEBREW_NO_ANALYTICS 1
 set --global --export VERCEL_TELEMETRY_DISABLED 1
 
 # Set `$PATH`
-fish_add_path --path --move /opt/homebrew/sbin
-fish_add_path --path --move /opt/homebrew/bin
-fish_add_path --path --move "$PNPM_HOME/bin"
-fish_add_path --path --move "$HOME/.cargo/bin"
-fish_add_path --path --move "$HOME/.local/bin"
+source "$config/path.fish"
 
 # Load interactive configuration
-set --local config (status dirname)
-
 if status is-interactive
     source "$config/aliases.fish"
     source "$config/colors.fish"

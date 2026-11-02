@@ -16,10 +16,10 @@ The table lists higher-precedence rules first. Apply publication audit scope whe
 
 | Priority | Rule |
 | --- | --- |
-| Security exclusions | Preserve credential protection, access controls, and higher-priority read restrictions. Explicit scope doesn’t bypass these boundaries. |
+| Security exclusions | Preserve credential protection, access controls, and higher-priority read restrictions, including the [exclusion of `home/.config/fish/local.fish`](../../../AGENTS.md#scope). Explicit scope doesn’t bypass these boundaries. |
 | Explicit scope | Override only the corresponding publication audit or default scope rules. Interpret the request through [Audit Path Selection](references/audit-path-selection.md). |
-| Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from the tree’s regular files rather than the active checkout, and exclude every untracked or ignored path, including `home/.config/fish/local.fish`. Apply the [publication audit requirements](#inspect-publication-audit-trees). |
-| Default scope | Start with Git-tracked regular files, exclude symbolic links and untracked or ignored paths except `home/.config/fish/local.fish` when repository scope rules include it, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
+| Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from the tree’s regular files rather than the active checkout, and exclude every untracked or ignored path. Apply the [publication audit requirements](#inspect-publication-audit-trees). |
+| Default scope | Start with Git-tracked regular files, exclude symbolic links and untracked or ignored paths, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
 1. Read every applicable `AGENTS.md` file before reviewing any other repository content.
 2. Apply the precedence table above to resolve the reportable scope.

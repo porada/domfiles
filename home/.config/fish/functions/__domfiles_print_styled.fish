@@ -3,7 +3,7 @@
 # instead of a newline
 function __domfiles_print_styled
     if not set --query argv[1]
-        return 0
+        return
     end
 
     if not set --query argv[2]
@@ -25,7 +25,7 @@ function __domfiles_print_styled
     end
 
     if test -z "$format"
-        return 0
+        return
     end
 
     set --local text "$argv"

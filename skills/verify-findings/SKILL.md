@@ -48,6 +48,10 @@ A proposed fix or changed file alone doesn’t establish resolution. Don’t cla
 
 Report findings classified as **Requires change** or **Unverified**, retaining their identifiers. For each finding requiring a change, give the current evidence, its consequence, and the needed correction. For each unverified item, state the verification limit and the smallest action needed to establish the result. For a retrieval failure, identify the resource, attempted methods, and exact error without exposing sensitive values.
 
+Make each reported finding understandable without rereading the earlier report. Pair its identifier with a descriptive title naming the concrete issue. Briefly explain the affected behavior, the current evidence or verification limit, and the smallest correction, check, or decision still needed. Include earlier decisions only when they materially explain the current state.
+
+Default to one compact paragraph per finding, normally two to four sentences. Use the decisive evidence rather than replaying the investigation, logs, or rejected alternatives. Link supporting detail where useful, and present an actionable command separately when needed. Expand only when a material distinction would otherwise be lost or the user requests more detail. An identifier and status alone are insufficient.
+
 Don’t repeat findings classified as **Intentional**, **Not supported**, or **Resolved**. When no findings require a change or remain unverified, state the resulting status directly. Preserve mandatory reporting requirements from applicable instructions, including any pending human-only review step. Stop after reporting unless the user has separately authorized continuation through another workflow.
 
 ## Apply General Policies

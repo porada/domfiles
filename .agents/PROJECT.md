@@ -12,19 +12,23 @@ Project code assumes the latest Node.js 24 release or newer.
 
 ### Supported Environment
 
-Domfiles actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
+Domfiles targets macOS 27 or newer on Apple Silicon and headless Ubuntu LTS with glibc on ARM64 and x86_64. The Ubuntu scope does not extend to other Linux distributions, musl-based environments, or a Mac-equivalent desktop setup. ARM64 is the first Ubuntu acceptance target. Tested support for each architecture requires its own validation.
 
-[`home/README.md`](../home/README.md) documents the owner’s configuration workflow, not general onboarding or the complete bootstrap prerequisites. Other users may install domfiles without a compatibility or support commitment. Command Line Tools provide Git for the initial clone before synchronization installs the managed version.
+For the Home Assistant deployment, Ubuntu runs inside the app container. Home Assistant OS remains the host and is not provisioned by domfiles. Ubuntu uses the normal `domfiles sync` workflow and shared home and agent configuration, not a reduced agent-only profile.
 
-The fallback to Homebrew’s canonical Apple Silicon location is only a convenience for invoking `brew` itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
+Bootstrap requires Git, Homebrew, and `jq` to be installed and available through `PATH`. macOS also requires Command Line Tools, which provide Git for the initial clone. Ubuntu needs Git provisioned separately before synchronization installs the managed version.
 
-`fish` is the default interactive shell on every managed machine. Shell behavior and setup logic must not assume that Bash or Zsh is the user’s default shell.
+The fallback to Homebrew’s canonical Apple Silicon or Linux location is only a convenience for invoking `brew` itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
+
+`fish` is the intended default interactive shell on managed machines. Bootstrap and non-interactive agent processes may use another shell, without Fish startup configuration or a defined `SHELL` variable.
+
+[`home/README.md`](../home/README.md) documents the owner’s configuration workflow, not general onboarding or the complete bootstrap prerequisites. Other users may install domfiles without a compatibility or support commitment.
 
 ## Security
 
 ### Dependency Installation Policy
 
-[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids running scripts during installation without disabling esbuild’s runtime build API. It forgoes the script’s binary version check, fallback download, and launcher optimization. Optional dependencies therefore remain required by this installation model.
+[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt optional binary package matching the operating system and architecture on the [supported machines](#supported-environment). This avoids running scripts during installation without disabling esbuild’s runtime build API. It forgoes the script’s binary version check, fallback download, and launcher optimization. Optional dependencies therefore remain required by this installation model.
 
 `trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` stops that comparison from blocking releases older than 30 days. This cutoff applies across the workspace, not only to Vercel packages, and is not a minimum release age.
 
@@ -179,9 +183,10 @@ Synchronization links the repository’s `home/.local/bin` directory to `~/.loca
 
 Accepted shell-specific contract differences between paired `domlib` and Fish helpers are recorded here with their rationale:
 
-- **Command routing:** POSIX `__` routes `brew` and `pnpm` through `domlib` wrappers that add fallback or search paths, environment overrides, and custom missing-command diagnostics. Fish `__domfiles_print_and_run` invokes the requested external command directly. Fish startup establishes the supported command paths, and the generic wrapper intentionally adds no per-command routing, environment, or diagnostics.
-- **Failure handling:** Argument validation failures in POSIX `__`, `__confirm`, and `__is_boolean` terminate the running shell. Their Fish peers report the error and return status 1 because terminating from an autoloaded function would close the interactive shell.
-- **Quoting:** POSIX `__print_command` renders arguments with Python `shlex.quote`, while Fish `__domfiles_print_command` uses `string escape`. Each produces syntax for its own shell, so equivalent commands do not require byte-identical display text.
+- **Command routing:** POSIX `__` routes `brew` through its `domlib` wrapper for fallback discovery, environment overrides, and a custom missing-command diagnostic. Other commands run directly, as they do through Fish `__domfiles_print_and_run`.
+- **Failure handling:** Argument validation failures in POSIX `__`, `__confirm`, `__continue_on_macos`, and `__is_boolean` terminate the running shell. Their Fish peers report the error and return status 1 because terminating from an autoloaded function would close the interactive shell.
+- **Platform guards:** Outside macOS, POSIX `__continue_on_macos` prints a command-specific notice and exits successfully. Fish `__domfiles_continue_on_macos` prints the same notice and returns status 1, leaving the caller to return rather than closing the interactive shell.
+- **Quoting:** POSIX `__print_command` uses `__quote_params` to match Python’s `shlex.quote` output. Fish `__domfiles_print_command` uses `string escape`. Each renders syntax for its own shell, so equivalent commands may be displayed differently.
 - **Suppression lifecycle:** `domlib` normalizes `DOMFILES_SUPPRESSED` once when loaded. Fish `__domfiles_print_command` reads and validates the current value for every command because `home/.config/fish/config.fish` intentionally [does not initialize it](#suppressed-command-output). An unsupported value therefore fails when `domlib` loads or when Fish attempts to print a command. Fish has no `__suppress` peer because a single-command variable override can limit suppression to one function invocation.
 
 ### Dependency Status Labels

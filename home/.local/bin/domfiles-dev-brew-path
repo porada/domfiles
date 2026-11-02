@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# shellcheck source=../share/domlib
+. "$(dirname "$(realpath "$0")")/../share/domlib"
+
+# Print Homebrew’s executable directories
+brew_path="$(brew --prefix)"
+printf '%s\n' "$brew_path/sbin" "$brew_path/bin"

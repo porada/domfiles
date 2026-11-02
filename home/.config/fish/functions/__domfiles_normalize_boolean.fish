@@ -9,14 +9,14 @@ function __domfiles_normalize_boolean
     for accepted in 1 on true yes
         if string match --quiet --ignore-case -- "$accepted" "$argv[1]"
             echo true
-            return 0
+            return
         end
     end
 
     for accepted in 0 false no off
         if string match --quiet --ignore-case -- "$accepted" "$argv[1]"
             echo false
-            return 0
+            return
         end
     end
 

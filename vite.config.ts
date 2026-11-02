@@ -36,7 +36,7 @@ export default defineConfig({
 			() => 'pnpm test',
 		],
 		'.github/workflows/*.yaml': 'actionlint',
-		'home/.local/bin/!(git-diff-highlight)': [
+		'home/.local/bin/*': [
 			/* prettier-ignore */
 			'chmod +x',
 			'pnpm lint:sh',

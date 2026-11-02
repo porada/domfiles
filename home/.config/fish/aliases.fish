@@ -7,9 +7,12 @@ abbr --add c cargo
 abbr --add g git
 abbr --add k killall
 abbr --add n npm
-abbr --add o open
 abbr --add p pnpm
 abbr --add y yarn
+
+if __domfiles_is_macos
+    abbr --add o open
+end
 
 # Show hidden files by default when using `ls`
 alias ls 'ls -A'
