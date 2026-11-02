@@ -209,8 +209,6 @@ Formatting policy comes from domfiles, not target-side Prettier configuration, `
 
 `__is_brew_installed` intentionally combines the no-argument Homebrew installation check and the optional package check in one helper rather than separate predicates. Its adjacent source comment owns both contracts.
 
-The `__git_diff_list_changed_excluded_paths` comment intentionally uses `--commit` and `--worktree` to name their complete modes, leaving the commit reference implicit in `--commit`.
-
 The `__print_heading_dimmed` comment intentionally uses “heading, dimmed” to keep the same base description as `__print_heading`.
 
 The `__symlink` comment intentionally omits rejection of a destination that equals or contains the source. It describes the normal replacement contract, not the safety preconditions for performing it.

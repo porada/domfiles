@@ -116,7 +116,7 @@ fi
 
 if [ "$explicit_fixup" = true ] || [ "$option_operand" = true ]; then
   __ git commit "$@"
-  exit $?
+  exit
 fi
 
 if [ "$target_count" -gt 1 ]; then

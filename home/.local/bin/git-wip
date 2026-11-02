@@ -4,8 +4,6 @@
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
 # Create a new branch based on the name of the current one
-__git_cd_root
-
 if branch="$(git symbolic-ref --quiet --short HEAD)"; then
   __ git checkout -b "wip/$branch"
 else

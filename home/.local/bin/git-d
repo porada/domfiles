@@ -6,30 +6,34 @@
 # Show formatted `git diff` output
 if [ $# -eq 0 ]; then
   __git_cd_root
-  excluded_paths="$(__git_diff_list_changed_excluded_paths --worktree)"
 
-  if [ -n "$excluded_paths" ]; then
+  if __git_diff_with_excluded_paths git diff --quiet; then
+    has_lockfile_changes=false
+  else
+    status="$?"
+    [ "$status" -eq 1 ] || exit "$status"
+    has_lockfile_changes=true
+  fi
+
+  if [ "$has_lockfile_changes" = true ]; then
     color_mode=never
     __is_stdout_tty && color_mode=always
-    exclude_params="$(__git_diff_format_exclude_params "$excluded_paths")"
-    excluded_paths="$(__git_diff_list_changed_excluded_paths --worktree --related)"
 
-    # shellcheck disable=SC2086
-    if git diff --quiet -- . $exclude_params; then
-      git diff -- $excluded_paths
-      exit $?
+    if __git_diff_with_excluded_paths --others git diff --quiet; then
+      __git_diff_with_excluded_paths --related git diff
+      exit
     else
       status="$?"
       [ "$status" -eq 1 ] || exit "$status"
     fi
 
-    # shellcheck disable=SC2086
-    stat_output="$(git diff --stat --color="$color_mode" -- $excluded_paths)" || exit $?
-    # shellcheck disable=SC2086
-    patch_output="$(git diff --patch --color="$color_mode" -- . $exclude_params)" || exit $?
+    stat_output="$(__git_diff_with_excluded_paths --related git diff --stat --color="$color_mode")" \
+      || exit
+    patch_output="$(__git_diff_with_excluded_paths --others git diff --patch --color="$color_mode")" \
+      || exit
 
     __git_diff_page --leading-newline diff "$stat_output" "$patch_output"
-    exit $?
+    exit
   fi
 fi
 

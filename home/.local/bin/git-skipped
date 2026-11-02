@@ -10,7 +10,7 @@ else
   is_tty=false
 fi
 
-color="$(git config --get-colorbool color.status "$is_tty")" || exit $?
+color="$(git config --get-colorbool color.status "$is_tty")" || exit
 unset is_tty
 
 # Show skipped files marked `--assume-unchanged`

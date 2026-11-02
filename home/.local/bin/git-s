@@ -6,5 +6,5 @@
 # Show short `git status` output including skipped files
 [ "${1-}" = '--' ] && shift
 
-git -c status.relativePaths=false status --short -- "$@" || exit $?
+git -c status.relativePaths=false status --short -- "$@" || exit
 __domfiles_bin git-skipped "$@"

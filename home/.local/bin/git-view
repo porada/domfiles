@@ -10,39 +10,39 @@ fi
 
 if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
   __git_cd_root
-  excluded_paths="$(__git_diff_list_changed_excluded_paths --commit "$1")"
 
-  if [ -n "$excluded_paths" ]; then
+  # Use changed names because `--quiet` with `-m` can miss merge changes
+  changed_lockfiles="$(__git_diff_with_excluded_paths \
+    git diff-tree --no-commit-id --name-only --root -m -r "$1")"
+  has_lockfile_changes=false
+  [ -z "$changed_lockfiles" ] || has_lockfile_changes=true
+
+  if [ "$has_lockfile_changes" = true ]; then
     if __git_is_commit_reference "$1^2"; then
       # Preserve Git’s parent-qualified merge sections instead of splitting lockfile output
       git show --show-signature -m "$1"
-      exit $?
+      exit
     fi
 
     color_mode=never
     __is_stdout_tty && color_mode=always
-    exclude_params="$(__git_diff_format_exclude_params "$excluded_paths")"
-    excluded_paths="$(__git_diff_list_changed_excluded_paths --commit "$1" --related)"
 
-    # shellcheck disable=SC2086
-    if git diff-tree --quiet --root "$1" -- . $exclude_params > /dev/null; then
-      git show --show-signature "$1" -- $excluded_paths
-      exit $?
+    if __git_diff_with_excluded_paths --others git diff-tree --quiet --root "$1" > /dev/null; then
+      __git_diff_with_excluded_paths --related git show --show-signature "$1"
+      exit
     else
       status="$?"
       [ "$status" -eq 1 ] || exit "$status"
     fi
 
-    # shellcheck disable=SC2086
-    stat_output="$(git show --show-signature --stat --color="$color_mode" "$1" -- $excluded_paths)" \
-      || exit $?
+    stat_output="$(__git_diff_with_excluded_paths --related \
+      git show --show-signature --stat --color="$color_mode" "$1")" || exit
 
-    # shellcheck disable=SC2086
-    patch_output="$(git show --pretty=format: --color="$color_mode" "$1^{commit}" -- . $exclude_params)" \
-      || exit $?
+    patch_output="$(__git_diff_with_excluded_paths --others \
+      git show --pretty=format: --color="$color_mode" "$1^{commit}")" || exit
 
     __git_diff_page show "$stat_output" "$patch_output"
-    exit $?
+    exit
   fi
 fi
 

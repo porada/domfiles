@@ -29,7 +29,7 @@ install() (
     fi
   done
 
-  formula_info="$(brew info "$1" --json=v2)" || return 2
+  formula_info="$(brew info "$1" --json=v2)" || return
 
   # Treat only an explicit `false` receipt flag as needing protection
   # from `brew autoremove`
@@ -67,7 +67,7 @@ fi
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in actionlint ast-grep fd gh jq just pandoc ripgrep rust shellcheck vim yarn yq zizmor; do
+  for formula in actionlint fd gh jq just pandoc ripgrep rust shellcheck vim yarn yq zizmor; do
     install "$formula"
   done
 

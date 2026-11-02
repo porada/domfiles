@@ -38,8 +38,10 @@ for skill in \
   done
 done
 
-# Uninstall `node@24`
-if __is_brew_installed node@24; then
-  __print_heading_dimmed 'Uninstalling `node@24`'
-  __ brew uninstall node@24
-fi
+# Uninstall legacy commands
+for formula in ast-grep node@24; do
+  if __is_brew_installed "$formula"; then
+    __print_heading_dimmed "Uninstalling \`$formula\`"
+    __ brew uninstall "$formula"
+  fi
+done

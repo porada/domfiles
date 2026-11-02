@@ -23,7 +23,7 @@ if [ $# -gt 0 ]; then
     --decorate-refs-exclude='*' \
     --decorate-refs-exclude=HEAD)"
 
-  matches="$(printf '%s\n' "$log" | __grep --color="$color_mode" -i -- "$*")" || exit $?
+  matches="$(printf '%s\n' "$log" | __grep --color="$color_mode" -i -- "$*")" || exit
   [ -z "$matches" ] || printf '%s\n' "$matches" | __page_input log
 elif [ "$show_all" = true ]; then
   log="$(print_log --color="$color_mode")"

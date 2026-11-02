@@ -157,7 +157,7 @@ __domfiles_dev_lint() (
   shift
 
   if [ $# -eq 0 ]; then
-    files="$(lint_default_files)" || exit $?
+    files="$(lint_default_files)" || return
 
     if [ -n "$files" ]; then
       while IFS= read -r file; do
@@ -194,7 +194,7 @@ EOF
     lint_files "$@"
   else
     for file in "$@"; do
-      lint_file "$file" || exit $?
+      lint_file "$file" || return
     done
   fi
 )
@@ -280,7 +280,7 @@ __domfiles_revision() {
 
 # Changes the current directory to the current repository root
 __git_cd_root() {
-  __domfiles_git_root="$(git rev-parse --show-toplevel)" || return $?
+  __domfiles_git_root="$(git rev-parse --show-toplevel)" || return
 
   cd "$__domfiles_git_root" \
     || __print_error_and_exit "Failed to change directory to \`$__domfiles_git_root\`"
@@ -304,76 +304,6 @@ __git_default_commit_count() (
 
   printf '%s\n' "$((count < default ? count : default))"
 )
-
-# Prints exclusion parameters for the paths in `$@`
-__git_diff_format_exclude_params() {
-  if [ $# -eq 0 ]; then
-    __print_error_and_exit '`__git_diff_format_exclude_params` requires at least one argument'
-  fi
-
-  printf '%s\n' "$@" \
-    | while IFS= read -r path; do
-      printf ':(exclude)%s\n' "$path"
-    done
-}
-
-# Prints excluded paths changed in a given `--commit` or `--worktree`. Includes
-# related manifests with `--related`
-__git_diff_list_changed_excluded_paths() (
-  if [ $# -eq 0 ]; then
-    __print_error_and_exit '`__git_diff_list_changed_excluded_paths` requires at least one argument'
-  fi
-
-  mode="$1"
-  shift
-
-  if [ "$mode" = '--commit' ]; then
-    if [ $# -eq 0 ]; then
-      __print_error_and_exit '`__git_diff_list_changed_excluded_paths --commit` requires a reference'
-    fi
-
-    reference="$1"
-    shift
-  elif [ "$mode" != '--worktree' ]; then
-    __print_error_and_exit '`__git_diff_list_changed_excluded_paths` received an invalid mode'
-  fi
-
-  files="$(__git_diff_list_excluded_files "$@")"
-  __ifs_set
-
-  # shellcheck disable=SC2086
-  for file in $files; do
-    if [ "$mode" = '--commit' ]; then
-      if __git_is_path_changed_in_commit "$reference" "$file"; then
-        printf '%s\n' "$file"
-      else
-        status="$?"
-        [ "$status" -eq 1 ] || return "$status"
-      fi
-    elif git diff --quiet -- "$file"; then
-      continue
-    else
-      status="$?"
-
-      if [ "$status" -eq 1 ]; then
-        printf '%s\n' "$file"
-      else
-        return "$status"
-      fi
-    fi
-  done
-
-  __ifs_restore
-)
-
-# Prints excluded lockfiles. Includes related manifests with `--related`
-__git_diff_list_excluded_files() {
-  if [ "${1-}" = '--related' ]; then
-    printf '%s\n' 'Cargo.toml' 'package.json'
-  fi
-
-  printf '%s\n' 'Cargo.lock' 'package-lock.json' 'pnpm-lock.yaml' 'yarn.lock'
-}
 
 # Pages two sections for Git command `$1`. Adds a leading newline with
 # `--leading-newline`
@@ -409,6 +339,52 @@ __git_diff_page() (
   } | __page_input "$git_command"
 )
 
+# Runs the given command with pathspecs for excluded lockfiles. Includes
+# related manifests with `--related` or selects every other path with
+# `--others`
+__git_diff_with_excluded_paths() (
+  mode=lockfiles
+
+  case "${1-}" in
+    --others)
+      mode=others
+      shift
+      ;;
+    --related)
+      mode=related
+      shift
+      ;;
+    --*)
+      __print_error_and_exit '`__git_diff_with_excluded_paths` received an invalid option'
+      ;;
+  esac
+
+  if [ $# -eq 0 ]; then
+    __print_error_and_exit '`__git_diff_with_excluded_paths` requires a command'
+  fi
+
+  set -- "$@" --
+
+  case "$mode" in
+    others)
+      set -- "$@" .
+      ;;
+    related)
+      set -- "$@" Cargo.toml package.json
+      ;;
+  esac
+
+  for file in Cargo.lock package-lock.json pnpm-lock.yaml yarn.lock; do
+    if [ "$mode" = others ]; then
+      set -- "$@" ":(exclude)$file"
+    else
+      set -- "$@" "$file"
+    fi
+  done
+
+  "$@"
+)
+
 # Returns success when `$1` resolves to a commit
 __git_is_commit_reference() {
   if git rev-parse --verify "$1^{commit}" > /dev/null 2>&1; then
@@ -417,18 +393,6 @@ __git_is_commit_reference() {
     return 1
   fi
 }
-
-# Returns success when `$2` changed in commit `$1`
-__git_is_path_changed_in_commit() (
-  if [ $# -ne 2 ]; then
-    __print_error_and_exit '`__git_is_path_changed_in_commit` requires two arguments'
-  fi
-
-  changed_files="$(git diff-tree --no-commit-id --name-only --root -m -r "$1" -- "$2")" \
-    || return $?
-
-  [ -n "$changed_files" ]
-)
 
 # Prints tagged `git ls-files -v` entries for skipped files in repository `$1`.
 # Applies any remaining arguments as filters relative to that location. Callers
@@ -442,10 +406,10 @@ __git_skipped_files() (
   shift
 
   if [ $# -eq 0 ]; then
-    repository="$(git -C "$repository" rev-parse --show-toplevel)" || return $?
+    repository="$(git -C "$repository" rev-parse --show-toplevel)" || return
   fi
 
-  files="$(git -C "$repository" ls-files -v --full-name -- "$@")" || return $?
+  files="$(git -C "$repository" ls-files -v --full-name -- "$@")" || return
   printf '%s\n' "$files" | __grep '^[a-z]'
 )
 
@@ -489,7 +453,7 @@ __is_boolean() {
 # success when the package is installed through Homebrew
 __is_brew_installed() {
   if [ $# -eq 0 ]; then
-    (brew --version) > /dev/null 2>&1
+    brew --version > /dev/null 2>&1
   else
     brew list 2> /dev/null | grep -q "^$1\$"
   fi
@@ -711,7 +675,7 @@ __print_styled() (
   fi
 
   # Preserve trailing newlines through command substitution
-  text="$(__string_replace "$*" "$HOME" '~' && printf .)" || return $?
+  text="$(__string_replace "$*" "$HOME" '~' && printf .)" || return
   text="${text%?}"
 
   if ! __is_stdout_tty; then
@@ -719,11 +683,11 @@ __print_styled() (
   fi
 
   if [ -n "$style" ]; then
-    printf '\033[%sm' "$style" || return $?
+    printf '\033[%sm' "$style" || return
   fi
 
   # shellcheck disable=SC2059
-  printf "$format" "$text" || return $?
+  printf "$format" "$text" || return
 
   if [ -n "$style" ]; then
     printf '\033[0m'
@@ -983,7 +947,7 @@ __terminal_get_available_size() (
   reserved_rows="${reserved_rows#"${reserved_rows%%[!0]*}"}"
   reserved_rows="${reserved_rows:-0}"
 
-  size="$(stty size 2> /dev/null)" || return $?
+  size="$(stty size 2> /dev/null)" || return
   rows="${size%% *}"
   columns="${size##* }"
 

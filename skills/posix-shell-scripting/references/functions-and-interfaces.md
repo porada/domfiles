@@ -55,9 +55,11 @@ Treat standard output, standard error, and exit status as separate interfaces un
 | Standard error  | Diagnostics        |
 | Exit status     | Success or failure |
 
-A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow using templates such as `if <command>` or `<command> || <fallback>`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from every function, including a subshell-bodied function, and `exit` from an executed script. Leave `$?` unquoted when passing it directly to `exit`.
+A value-producing function writes only its value to standard output. When only success or failure matters, prefer direct status control flow using templates such as `if <command>` or `<command> || <fallback>`. Capture a numeric status before logging, cleanup, or another command overwrites it. Use `return` from every function, including a subshell-bodied function, and `exit` from an executed script.
 
 Prefer bare `return` and `exit` when they preserve the intended exit status. Use `return 0` or `exit 0` only when explicitly converting a potentially unsuccessful status to success. Matching a `case` pattern alone doesn’t establish a successful prior status.
+
+When `return` or `exit` ends a trap action, pass the intended status explicitly because shell implementations differ in how the bare forms choose it. To preserve the status from before the trap action, capture `$?` as the action’s first command and pass the saved value. To use the last command’s status instead, pass `$?` directly, unquoted.
 
 When a function’s contract requires a failed prerequisite to stop later work, handle that failure explicitly rather than relying on `set -e`. Validate a direct call first, then repeat in conditional contexts: an `if` condition, negation with `!`, and non-final positions in `&&` or `||` lists. Inject the failure before a later side effect, and verify both the absence of that effect and the required status after accounting for any caller-side inversion.
 

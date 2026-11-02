@@ -28,7 +28,7 @@ for param; do
   fi
 
   # Preserve trailing newlines in symlink destinations until validation
-  file="$(realpath -- "$param" && printf .)" || exit $?
+  file="$(realpath -- "$param" && printf .)" || exit
   file="${file%?}"
   file="${file%?}"
 
