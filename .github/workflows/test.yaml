@@ -20,20 +20,23 @@ jobs:
       matrix:
         os:
           - ubuntu-26.04-arm
+          - ubuntu-latest
           - xcode-27
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: home/.local/bin/domfiles-sync
       - run: fish --command 'domfiles sync'
 
   test:
-    runs-on: macos-26
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+      - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: brew install fish
       - uses: pnpm/setup@v3.1.2
         with:
