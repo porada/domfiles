@@ -49,10 +49,7 @@ For Markdown validation, invoke `doclint` and follow [Check Markdown](skills/.do
 
 ## Scope
 
-- **Fish:** When Fish configuration or runtime behavior is in scope and [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) exists, include it in applicable analysis, execution, and validation unless the [publication audit mode](.agents/skills/audit/SKILL.md#resolve-audit-scope) excludes it.
-    - Don’t report that `.gitignore` lists `local.fish`.
-    - Don’t suggest further documentation for `local.fish`.
-    - Don’t report its [documented sourcing behavior](.agents/PROJECT.md#fish-local-configuration) as hidden diagnostics.
+- **Fish:** Treat [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) as secret-bearing machine-local configuration. Exclude its contents from analysis, execution, and validation, including indirect sourcing through Fish startup.
 - **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because its target is outside the repository. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
 - **Secret-bearing local files:** Don’t read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 

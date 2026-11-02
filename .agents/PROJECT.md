@@ -12,19 +12,23 @@ Project code assumes the latest Node.js 24 release or newer.
 
 ### Supported Environment
 
-Domfiles actively targets multiple Apple Silicon–based Macs. Bootstrap and synchronization must work on a fresh installation of macOS 26 or newer with Command Line Tools and Homebrew already installed and available through `PATH`.
+Domfiles targets macOS 27 or newer on Apple Silicon and headless Ubuntu LTS with glibc on ARM64 and x86_64. The Ubuntu scope does not extend to other Linux distributions, musl-based environments, or a Mac-equivalent desktop setup. ARM64 is the first Ubuntu acceptance target. Tested support for each architecture requires its own validation.
 
-[`home/README.md`](../home/README.md) documents the owner’s configuration workflow, not general onboarding or the complete bootstrap prerequisites. Other users may install domfiles without a compatibility or support commitment. Command Line Tools provide Git for the initial clone before synchronization installs the managed version.
+For the Home Assistant deployment, Ubuntu runs inside the app container. Home Assistant OS remains the host and is not provisioned by domfiles. Ubuntu uses the normal `domfiles sync` workflow and shared home and agent configuration, not a reduced agent-only profile.
+
+Bootstrap requires Git, Homebrew, and `jq` to be installed and available through `PATH`. macOS also requires Command Line Tools, which provide Git for the initial clone. Ubuntu needs Git provisioned separately before synchronization installs the managed version.
 
 The fallback to Homebrew’s canonical Apple Silicon or Linux location is only a convenience for invoking `brew` itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
 
-`fish` is the default interactive shell on every managed machine. Shell behavior and setup logic must not assume that Bash or Zsh is the user’s default shell.
+`fish` is the intended default interactive shell on managed machines. Bootstrap and non-interactive agent processes may use another shell, without Fish startup configuration or a defined `SHELL` variable.
+
+[`home/README.md`](../home/README.md) documents the owner’s configuration workflow, not general onboarding or the complete bootstrap prerequisites. Other users may install domfiles without a compatibility or support commitment.
 
 ## Security
 
 ### Dependency Installation Policy
 
-[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt `@esbuild/darwin-arm64` optional dependency on the [supported machines](#supported-environment). This avoids running scripts during installation without disabling esbuild’s runtime build API. It forgoes the script’s binary version check, fallback download, and launcher optimization. Optional dependencies therefore remain required by this installation model.
+[`pnpm-workspace.yaml`](../pnpm-workspace.yaml) keeps installation build approval separate from publication trust. `esbuild` is explicitly denied installation build scripts because its runtime can use the prebuilt optional binary package matching the operating system and architecture on the [supported machines](#supported-environment). This avoids running scripts during installation without disabling esbuild’s runtime build API. It forgoes the script’s binary version check, fallback download, and launcher optimization. Optional dependencies therefore remain required by this installation model.
 
 `trustPolicy: no-downgrade` checks for weaker publishing evidence than earlier releases provided. The `vercel` and `@vercel/*` exclusions allow matching packages to install despite such downgrades rather than disabling the policy for every package. `trustPolicyIgnoreAfter` stops that comparison from blocking releases older than 30 days. This cutoff applies across the workspace, not only to Vercel packages, and is not a minimum release age.
 
