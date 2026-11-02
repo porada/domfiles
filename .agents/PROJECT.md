@@ -16,7 +16,7 @@ Domfiles actively targets multiple Apple Silicon–based Macs. Bootstrap and syn
 
 [`home/README.md`](../home/README.md) documents the owner’s configuration workflow, not general onboarding or the complete bootstrap prerequisites. Other users may install domfiles without a compatibility or support commitment. Command Line Tools provide Git for the initial clone before synchronization installs the managed version.
 
-The fallback to Homebrew’s canonical Apple Silicon location is only a convenience for invoking `brew` itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
+The fallback to Homebrew’s canonical Apple Silicon or Linux location is only a convenience for invoking `brew` itself. It does not relax the `PATH` prerequisite for commands installed through Homebrew.
 
 `fish` is the default interactive shell on every managed machine. Shell behavior and setup logic must not assume that Bash or Zsh is the user’s default shell.
 

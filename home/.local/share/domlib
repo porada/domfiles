@@ -977,7 +977,14 @@ brew() (
 
   if ! __is_callable "$command"; then
     command='/opt/homebrew/bin/brew'
-    [ -x "$command" ] || __print_error_and_exit '`brew` is missing'
+
+    if [ ! -x "$command" ]; then
+      command='/home/linuxbrew/.linuxbrew/bin/brew'
+    fi
+
+    if [ ! -x "$command" ]; then
+      __print_error_and_exit '`brew` is missing'
+    fi
   fi
 
   HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
