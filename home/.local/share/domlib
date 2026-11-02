@@ -508,11 +508,6 @@ __is_ci() {
   [ -n "${CI-}" ] || [ -n "${GITHUB_ACTIONS-}" ]
 }
 
-# Returns success when Fish is the login shell
-__is_fish() {
-  __is_shell "$(brew --prefix)/bin/fish"
-}
-
 # Returns success when Fisher is installed
 __is_fisher_installed() {
   fish --command 'fisher --version' > /dev/null 2>&1
@@ -523,10 +518,11 @@ __is_macos() {
   [ "$(uname -s)" = 'Darwin' ]
 }
 
-# Returns success when `$1` is the login shell
-__is_shell() {
-  [ "${1-}" = "$SHELL" ]
-}
+# Returns success when `$1` names the login shell recorded in `$SHELL`
+__is_shell() (
+  shell="${SHELL-}"
+  [ -n "${1-}" ] && [ "${shell##*/}" = "$1" ]
+)
 
 # Returns success when the SSH key pair is configured
 __is_ssh_configured() {
@@ -566,6 +562,20 @@ __is_xcode_installed() {
   xcodebuild -version > /dev/null 2>&1 \
     && xcodebuild -checkFirstLaunchStatus > /dev/null 2>&1
 }
+
+# Prints the current user’s login shell from the account database. Unlike
+# `$SHELL`, reflects changes made after the session started
+__login_shell() (
+  user="$(id -un)" || return
+
+  if __is_callable getent; then
+    entry="$(getent passwd "$user")" || return
+  else
+    entry="$(id -P "$user")" || return
+  fi
+
+  printf '%s\n' "${entry##*:}"
+)
 
 # Creates directory `$1` with standard permissions, creating any missing
 # parents as needed
@@ -739,12 +749,29 @@ __print_warning() {
 }
 
 # Prints parameters as shell-quoted values separated by spaces
-__quote_params() {
-  python3 -c '
-import shlex, sys
-params = (shlex.quote(param) for param in sys.argv[1:])
-sys.stdout.write(" ".join(params))' "$@"
-}
+__quote_params() (
+  separator=''
+
+  for param; do
+    printf '%s' "$separator" || return
+    separator=' '
+
+    # Spell out ASCII letters as locale collation can widen ranges
+    case "$param" in
+      '')
+        printf "''" || return
+        ;;
+      *[!%+,./0123456789:=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-]*)
+        printf "'" || return
+        __string_replace "$param" "'" "'\"'\"'" || return
+        printf "'" || return
+        ;;
+      *)
+        printf '%s' "$param" || return
+        ;;
+    esac
+  done
+)
 
 # Prints a normalized boolean from environment variable `$1`. Uses `$2` when
 # unset or empty
@@ -838,15 +865,16 @@ __string_replace() {
     __print_error_and_exit '`__string_replace` requires a non-empty pattern'
   fi
 
-  if ! __string_contains "$1" "$2"; then
-    printf '%s' "$1"
-    return
-  fi
+  (
+    subject="$1"
 
-  python3 -c '
-import sys
-subject, pattern, replacement = sys.argv[1:4]
-sys.stdout.write(subject.replace(pattern, replacement))' "$@"
+    while __string_contains "$subject" "$2"; do
+      printf '%s%s' "${subject%%"$2"*}" "$3" || return
+      subject="${subject#*"$2"}"
+    done
+
+    printf '%s' "$subject"
+  )
 }
 
 # Runs `$@`, suppressing `__print_command` output

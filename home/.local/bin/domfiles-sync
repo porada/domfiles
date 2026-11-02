@@ -159,4 +159,4 @@ __domfiles sync-clean
 # Finish with dependency status
 __print_heading 'Sync complete'
 __domfiles dependencies || true
-__is_fish || echo
+__is_shell fish || echo

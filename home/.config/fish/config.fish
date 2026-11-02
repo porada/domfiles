@@ -44,8 +44,14 @@ set --global --export HOMEBREW_NO_ANALYTICS 1
 set --global --export VERCEL_TELEMETRY_DISABLED 1
 
 # Set `$PATH`
-fish_add_path --path --move /opt/homebrew/sbin
-fish_add_path --path --move /opt/homebrew/bin
+set --local BREW_HOME /opt/homebrew
+
+if ! __domfiles_is_macos
+    set BREW_HOME /home/linuxbrew/.linuxbrew
+end
+
+fish_add_path --path --move "$BREW_HOME/sbin"
+fish_add_path --path --move "$BREW_HOME/bin"
 fish_add_path --path --move "$PNPM_HOME/bin"
 fish_add_path --path --move "$HOME/.cargo/bin"
 fish_add_path --path --move "$HOME/.local/bin"

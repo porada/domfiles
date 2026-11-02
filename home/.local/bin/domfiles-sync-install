@@ -81,6 +81,14 @@ if ! __is_ci; then
   __ brew cleanup --prune=all > /dev/null
 fi
 
+# Link Homebrew-installed tools
+if __is_callable git; then
+  __print_heading_dimmed 'Linking Homebrew-installed tools'
+  __symlink \
+    "$(brew --prefix git)/share/git-core/contrib/diff-highlight/diff-highlight" \
+    "$HOME/.local/bin/git-diff-highlight"
+fi
+
 # Configure `pnpm`
 if __is_callable node && __is_callable pnpm; then
   if __is_macos; then
@@ -144,12 +152,7 @@ fi
 # Set `fish` as the default shell
 fish="$(brew --prefix)/bin/fish"
 
-# Read the account record because `$SHELL` keeps its value until the next login
-account_entry="$(id -P)"
-login_shell="${account_entry##*:}"
-[ "$login_shell" = "$fish" ] && exit
-
-if __is_ci; then
+if [ "$(__login_shell)" = "$fish" ] || __is_ci; then
   exit
 fi
 

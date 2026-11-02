@@ -6,7 +6,7 @@ function __domfiles_continue_on_macos
         return 1
     end
 
-    if test (uname -s) = Darwin
+    if __domfiles_is_macos
         return
     end
 
