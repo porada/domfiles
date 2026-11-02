@@ -4,7 +4,7 @@ function __domfiles_print_command
     or return
 
     if test "$suppressed" = true; and not __domfiles_is_ci
-        return 0
+        return
     end
 
     set --local printed_command (string join ' ' -- (string escape -- $argv))

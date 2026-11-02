@@ -75,7 +75,7 @@ __confirm() {
 
       case "$response" in
         y | Y)
-          return 0
+          return
           ;;
         n | N)
           return 1
@@ -83,6 +83,19 @@ __confirm() {
       esac
     done
   )
+}
+
+# Exits successfully outside macOS after printing a macOS-only notice for
+# command `$1`
+__continue_on_macos() {
+  if [ $# -ne 1 ] || [ -z "$1" ]; then
+    __print_error_and_exit '`__continue_on_macos` requires one command name'
+  fi
+
+  if ! __is_macos; then
+    __continue_on_macos_command="$(basename -- "$1")" || exit
+    __print_info_and_exit "\`$__continue_on_macos_command\` is a macOS-only command"
+  fi
 }
 
 # Runs `domfiles` command `$1`
@@ -402,7 +415,7 @@ __git_diff_page() (
 # Returns success when `$1` resolves to a commit
 __git_is_commit_reference() {
   if git rev-parse --verify "$1^{commit}" > /dev/null 2>&1; then
-    return 0
+    return
   else
     return 1
   fi
@@ -442,12 +455,12 @@ __git_skipped_files() (
 # Runs `grep` without failing on no matches
 __grep() (
   if grep "$@"; then
-    return 0
+    return
   else
     status="$?"
   fi
 
-  [ "$status" -eq 1 ] && return 0
+  [ "$status" -eq 1 ] && return
   return "$status"
 )
 
@@ -617,7 +630,7 @@ __page_input() (
 # Prints `$@` as a shell-quoted command
 __print_command() {
   if [ "$DOMFILES_SUPPRESSED" = true ] && ! __is_ci; then
-    return 0
+    return
   fi
 
   __print_info "\$ $(__quote_params "$@")" >&2
@@ -657,7 +670,7 @@ __print_info() {
 # Prints the given text as informational output and exits
 __print_info_and_exit() {
   __print_info -- "$*"
-  exit 0
+  exit
 }
 
 # Prints text with format `$2`. Applies style `$1` only to terminal
@@ -665,7 +678,7 @@ __print_info_and_exit() {
 # instead of a newline
 __print_styled() (
   if [ $# -eq 0 ]; then
-    return 0
+    return
   fi
 
   if [ $# -lt 2 ]; then
@@ -687,7 +700,7 @@ __print_styled() (
   fi
 
   if [ -z "$format" ]; then
-    return 0
+    return
   fi
 
   # Preserve trailing newlines through command substitution
@@ -754,7 +767,7 @@ __read_boolean_from_env() (
 
   if [ -z "$value" ]; then
     printf '%s\n' "$2"
-    return 0
+    return
   fi
 
   if ! __normalize_boolean "$value"; then
@@ -795,7 +808,7 @@ __ssh_add() {
   __print_command 'ssh-add' "$@"
 
   if ssh-add "$@" > /dev/null 2>&1; then
-    return 0
+    return
   else
     __print_error 'Failed to add the SSH key'
     return 1
@@ -827,7 +840,7 @@ __string_replace() {
 
   if ! __string_contains "$1" "$2"; then
     printf '%s' "$1"
-    return 0
+    return
   fi
 
   python3 -c '

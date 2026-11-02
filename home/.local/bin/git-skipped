@@ -23,7 +23,7 @@ print_skipped() {
 }
 
 files="$(__git_skipped_files . "$@")"
-[ -z "$files" ] && exit 0
+[ -z "$files" ] && exit
 
 printf '%s\n' "$files" \
   | while IFS= read -r file; do

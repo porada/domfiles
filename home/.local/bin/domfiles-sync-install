@@ -25,47 +25,49 @@ install() (
   # Cask-installed apps don’t need any additional treatment
   for param; do
     if [ "$param" = '--cask' ]; then
-      return 0
+      return
     fi
   done
 
-  info="$(brew info "$1" --json=v2)" || return 2
-  is_keg_only="$(printf '%s\n' "$info" | jq '.formulae[0].keg_only == true')" || return
-  is_linked="$(printf '%s\n' "$info" | jq '(.formulae[0].linked_keg // "") != ""')" || return
+  formula_info="$(brew info "$1" --json=v2)" || return 2
 
   # Treat only an explicit `false` receipt flag as needing protection
   # from `brew autoremove`
-  is_requested="$(
-    printf '%s\n' "$info" \
-      | jq 'all(.formulae[0].installed[]?; .installed_on_request != false)'
-  )" || return
+  formula_is_requested="$(printf '%s\n' "$formula_info" \
+    | jq 'all(.formulae[0].installed[]?; .installed_on_request != false)')" || return
 
-  if [ "$is_requested" = false ] && ! __is_ci; then
+  if [ "$formula_is_requested" = false ] && ! __is_ci; then
+    __print_heading_dimmed "Marking \`$1\` as installed on request"
     __ brew tab --formula --installed-on-request "$1" > /dev/null
   fi
 
-  if [ "$is_keg_only" = true ] && [ "$is_linked" = false ]; then
+  # Ensure keg-only formulas are linked
+  formula_is_keg_only="$(printf '%s\n' "$formula_info" \
+    | jq '.formulae[0].keg_only == true')" || return
+
+  formula_is_linked="$(printf '%s\n' "$formula_info" \
+    | jq '(.formulae[0].linked_keg // "") != ""')" || return
+
+  if [ "$formula_is_keg_only" = true ] && [ "$formula_is_linked" = false ]; then
     __print_heading_dimmed "Linking \`$1\`"
     __ brew link --quiet --overwrite --force "$1"
   fi
 )
 
 # Install primary dependencies
-for formula in fish fisher git node@24 pnpm vim; do
+for formula in fish fisher git node@24 pnpm; do
   install "$formula"
 done
 
-# Install apps
-if ! __is_ci; then
-  # shellcheck disable=SC2043
-  for formula in zed; do
-    install "$formula" --adopt --cask
-  done
+# Install macOS apps
+if __is_macos && ! __is_ci; then
+  install mole
+  install zed --adopt --cask
 fi
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in actionlint ast-grep fd gh jq just mole pandoc ripgrep rust shellcheck yarn yq zizmor; do
+  for formula in actionlint ast-grep fd gh jq just pandoc ripgrep rust shellcheck vim yarn yq zizmor; do
     install "$formula"
   done
 
@@ -81,11 +83,13 @@ fi
 
 # Configure `pnpm`
 if __is_callable node && __is_callable pnpm; then
-  __print_heading_dimmed 'Configuring `pnpm`'
-  __ pnpm config set --global macosBackup --json '{
+  if __is_macos; then
+    __print_heading_dimmed 'Configuring `pnpm`'
+    __ pnpm config set --global macosBackup --json '{
   "excludeModulesDir": true,
   "excludeStoreDir": true
 }'
+  fi
 
   # Install project dependencies
   __print_heading_dimmed 'Installing `pnpm` dependencies'
@@ -105,7 +109,7 @@ if __is_callable node && __is_callable pnpm; then
 fi
 
 # Install `vim-plug`
-if __is_callable vim && ! __is_vim_plug_installed; then
+if __is_callable vim && ! __is_vim_plug_installed && ! __is_ci; then
   __print_heading 'Installing `vim-plug`'
 
   url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
@@ -121,7 +125,7 @@ if __is_callable vim && ! __is_vim_plug_installed; then
 fi
 
 # Install Xcode components
-if __is_macos && ! __is_ci && __is_xcode_installed; then
+if __is_macos && __is_xcode_installed && ! __is_ci; then
   __print_heading_dimmed 'Installing Xcode components'
 
   if xcrun --sdk macosx metal --version > /dev/null 2>&1; then
@@ -130,8 +134,7 @@ if __is_macos && ! __is_ci && __is_xcode_installed; then
     if __ xcrun --sdk macosx metal --version; then
       __print_confirmation 'Metal Toolchain'
     else
-      __print_error \
-        'Failed to verify the Metal compiler after downloading. Check component settings in Xcode'
+      __print_error 'Failed to verify the Metal Toolchain after downloading'
     fi
   else
     __print_error 'Failed to download the Metal Toolchain'
@@ -144,15 +147,15 @@ fish="$(brew --prefix)/bin/fish"
 # Read the account record because `$SHELL` keeps its value until the next login
 account_entry="$(id -P)"
 login_shell="${account_entry##*:}"
-[ "$login_shell" = "$fish" ] && exit 0
+[ "$login_shell" = "$fish" ] && exit
 
 if __is_ci; then
-  exit 0
+  exit
 fi
 
 if ! __is_stdin_tty; then
   __print_warning 'Setting `fish` as the default shell requires an interactive terminal'
-  exit 0
+  exit
 fi
 
 if ! grep -qFx -- "$fish" /etc/shells; then

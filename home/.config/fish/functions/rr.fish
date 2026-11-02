@@ -5,7 +5,7 @@ function rr --description 'Recursively remove files or directories that match th
     end
 
     if not __domfiles_confirm "Remove all instances of `$argv[1]`?"
-        return 0
+        return
     end
 
     __domfiles_print_and_run find . -mindepth 1 -name "$argv[1]" -prune \

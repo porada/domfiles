@@ -22,7 +22,7 @@ function __domfiles_read_boolean_from_env
 
     if test -z "$value"
         echo "$argv[2]"
-        return 0
+        return
     end
 
     if not __domfiles_normalize_boolean "$value"

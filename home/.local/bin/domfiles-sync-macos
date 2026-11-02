@@ -4,10 +4,7 @@
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
 __print_heading 'Configuring macOS'
-
-if ! __is_macos; then
-  __print_info_and_exit 'Skipping in a non-macOS environment'
-fi
+__continue_on_macos "$0"
 
 # Enable full keyboard access for all controls
 __ defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
