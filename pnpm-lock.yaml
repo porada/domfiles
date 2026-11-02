@@ -212,7 +212,7 @@ importers:
         version: 2.11.0(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))
       '@standard-config/oxlint-stylistic':
         specifier: ^2.11.0
-        version: 2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.13.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(typescript@7.0.2)
+        version: 2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.14.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(typescript@7.0.2)
       '@standard-config/prettier':
         specifier: ^1.22.0
         version: 1.22.0(prettier@3.9.10)
@@ -241,14 +241,14 @@ importers:
         specifier: ^8.0.3
         version: 8.0.3
       eslint:
-        specifier: ^10.13.0
-        version: 10.13.0
+        specifier: ^10.14.0
+        version: 10.14.0
       eslint-plugin-markdown-links:
         specifier: ^0.9.1
-        version: 0.9.1(@eslint/markdown@8.0.3)(eslint@10.13.0)
+        version: 0.9.1(@eslint/markdown@8.0.3)(eslint@10.14.0)
       eslint-plugin-markdown-preferences:
         specifier: ^0.42.0
-        version: 0.42.0(@eslint/markdown@8.0.3)(eslint@10.13.0)
+        version: 0.42.0(@eslint/markdown@8.0.3)(eslint@10.14.0)
     devDependencies:
       '@standard-config/tsconfig':
         specifier: 'catalog:'
@@ -2388,8 +2388,8 @@ packages:
     resolution: {integrity: sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  eslint@10.13.0:
-    resolution: {integrity: sha512-UohDjD4zSzEwhf58M3O7vc/ycc8O1I7dNlhtD0WxE8Px8EHNJKtUwzBqrzeGhisRuv2ag4sAYswszCJRgKXYUg==}
+  eslint@10.14.0:
+    resolution: {integrity: sha512-T0pNsxkb9IKmtQjhpK3d7nWOpFv+YHuMbTJnSVMoQblF0onvXfErrtp4V1jHtsQPan7dKaGVD0q1WCXnzMF31A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -3834,9 +3834,9 @@ snapshots:
   '@esbuild/win32-x64@0.27.0':
     optional: true
 
-  '@eslint-community/eslint-utils@4.10.1(eslint@10.13.0)':
+  '@eslint-community/eslint-utils@4.10.1(eslint@10.14.0)':
     dependencies:
-      eslint: 10.13.0
+      eslint: 10.14.0
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
@@ -4378,10 +4378,10 @@ snapshots:
 
   '@sinclair/typebox@0.25.24': {}
 
-  '@standard-config/oxlint-stylistic@2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.13.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(typescript@7.0.2)':
+  '@standard-config/oxlint-stylistic@2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.14.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(typescript@7.0.2)':
     dependencies:
-      '@stylistic/eslint-plugin': 5.10.0(eslint@10.13.0)
-      eslint-plugin-perfectionist: 5.13.0(eslint@10.13.0)(typescript@7.0.2)
+      '@stylistic/eslint-plugin': 5.10.0(eslint@10.14.0)
+      eslint-plugin-perfectionist: 5.13.0(eslint@10.14.0)(typescript@7.0.2)
       oxlint: 1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1))
     optionalDependencies:
       '@standard-config/oxlint': 2.11.0(@standard-config/oxlint-stylistic@2.11.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))
@@ -4394,7 +4394,7 @@ snapshots:
     dependencies:
       oxlint: 1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1))
     optionalDependencies:
-      '@standard-config/oxlint-stylistic': 2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.13.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(typescript@7.0.2)
+      '@standard-config/oxlint-stylistic': 2.11.0(@standard-config/oxlint@2.11.0)(eslint@10.14.0)(oxlint@1.90.0(oxlint-tsgolint@7.0.2005)(vite-plus@1.4.0(@edge-runtime/vm@3.2.0)(@types/node@24.19.2)(@vitest/ui@5.0.5)(esbuild@0.27.0)(tsx@4.21.0)(typescript@7.0.2)(yaml@2.9.1)))(typescript@7.0.2)
 
   '@standard-config/prettier@1.22.0(prettier@3.9.10)':
     dependencies:
@@ -4411,11 +4411,11 @@ snapshots:
     optionalDependencies:
       typescript: 7.0.2
 
-  '@stylistic/eslint-plugin@5.10.0(eslint@10.13.0)':
+  '@stylistic/eslint-plugin@5.10.0(eslint@10.14.0)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.13.0)
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.14.0)
       '@typescript-eslint/types': 8.72.1
-      eslint: 10.13.0
+      eslint: 10.14.0
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
       estraverse: 5.3.0
@@ -4535,13 +4535,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.72.1(eslint@10.13.0)(typescript@7.0.2)':
+  '@typescript-eslint/utils@8.72.1(eslint@10.14.0)(typescript@7.0.2)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.13.0)
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.14.0)
       '@typescript-eslint/scope-manager': 8.72.1
       '@typescript-eslint/types': 8.72.1
       '@typescript-eslint/typescript-estree': 8.72.1(typescript@7.0.2)
-      eslint: 10.13.0
+      eslint: 10.14.0
       typescript: 7.0.2
     transitivePeerDependencies:
       - supports-color
@@ -5506,24 +5506,24 @@ snapshots:
 
   escape-string-regexp@5.0.0: {}
 
-  eslint-plugin-markdown-links@0.9.1(@eslint/markdown@8.0.3)(eslint@10.13.0):
+  eslint-plugin-markdown-links@0.9.1(@eslint/markdown@8.0.3)(eslint@10.14.0):
     dependencies:
       '@eslint/markdown': 8.0.3
       '@mdit-vue/shared': 3.0.2
       entities: 8.1.0
-      eslint: 10.13.0
+      eslint: 10.14.0
       fast-content-type-parse: 3.0.0
       github-slugger: 2.0.0
       sdbm: 3.0.0
       synckit: 0.11.13
       undici: 7.30.1
 
-  eslint-plugin-markdown-preferences@0.42.0(@eslint/markdown@8.0.3)(eslint@10.13.0):
+  eslint-plugin-markdown-preferences@0.42.0(@eslint/markdown@8.0.3)(eslint@10.14.0):
     dependencies:
       '@eslint/markdown': 8.0.3
       diff-sequences: 29.6.3
       emoji-regex-xs: 2.0.1
-      eslint: 10.13.0
+      eslint: 10.14.0
       mdast-util-from-markdown: 2.1.0
       mdast-util-frontmatter: 2.0.1
       mdast-util-gfm: 3.1.0
@@ -5539,13 +5539,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-perfectionist@5.13.0(eslint@10.13.0)(typescript@7.0.2):
+  eslint-plugin-perfectionist@5.13.0(eslint@10.14.0)(typescript@7.0.2):
     dependencies:
       '@typescript-eslint/types': 8.72.1
-      '@typescript-eslint/utils': 8.72.1(eslint@10.13.0)(typescript@7.0.2)
+      '@typescript-eslint/utils': 8.72.1(eslint@10.14.0)(typescript@7.0.2)
       natural-orderby: 5.0.0
     optionalDependencies:
-      eslint: 10.13.0
+      eslint: 10.14.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -5563,9 +5563,9 @@ snapshots:
 
   eslint-visitor-keys@5.0.1: {}
 
-  eslint@10.13.0:
+  eslint@10.14.0:
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.13.0)
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.14.0)
       '@eslint-community/regexpp': 4.12.2
       '@eslint/config-array': 0.23.5
       '@eslint/config-helpers': 0.7.0
