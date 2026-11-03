@@ -62,7 +62,8 @@ __confirm() {
       response=''
       IFS= read -r response || read_status=$?
 
-      # Accept a final response without a newline, matching Fish
+      # Accept an explicit unterminated answer, matching Fish. Status 1
+      # cannot distinguish EOF from an input error
       if [ "$read_status" -gt 1 ] || { [ "$read_status" -eq 1 ] && [ -z "$response" ]; }; then
         return 1
       fi
@@ -924,8 +925,14 @@ __terminal_count_text_rows() (
     __print_error_and_exit '`__terminal_count_text_rows` requires a positive column count'
   fi
 
+  expand='expand'
+  fold='fold'
+
+  command -v gexpand > /dev/null 2>&1 && expand='gexpand'
+  command -v gfold > /dev/null 2>&1 && fold='gfold'
+
   columns="$1"
-  rows="$(printf '%s\n' "$2" | expand | fold -w "$columns" | wc -l)"
+  rows="$(printf '%s\n' "$2" | "$expand" | "$fold" -w "$columns" | wc -l)"
 
   printf '%s\n' "$((rows))"
 )

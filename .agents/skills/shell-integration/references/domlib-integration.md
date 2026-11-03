@@ -11,6 +11,10 @@ When `domlib` or `home/.config/fish/config.fish` is relevant, inspect both files
 
 ## Maintain `domlib`
 
+Implement `domlib` helpers in POSIX `sh` and established command-line utilities. Don’t embed another shell or general-purpose language to implement helper algorithms. POSIX `sh -c` snippets and ordinary `awk` and `sed` programs are permitted as shell composition.
+
+Minimal runtime-specific code is allowed when an operation inherently concerns a tool available through that runtime, such as querying Fisher through Fish. Limit that code to invoking the tool’s interface and conveying arguments, results, and exit status. Keep surrounding orchestration and unrelated computation in POSIX shell.
+
 - Keep all functions defined in `domlib` alphabetized in natural order.
 - When a `domlib` function changes, keep its adjacent contract comment aligned with the resulting behavior.
 - Whenever a reusable `domlib` helper or its Fish counterpart is in scope, follow [Shared Helper Design](shared-helper-design.md).

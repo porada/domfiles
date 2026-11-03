@@ -79,14 +79,14 @@ Don’t add `--dry-run`, a machine-readable `--contract` operation, standalone d
 
 For JavaScript and TypeScript script tests, apply each convention from `vitest-conventions` when its intended test behavior can be preserved with the script runner’s supported APIs. Preserve the script’s required runner, file layout, concurrency model, and dependency constraints. Translate Vitest-specific examples where needed, and skip conventions that conflict with those constraints.
 
-When the runner has no parameterization API and lint rejects generated tests, run independent rows concurrently inside one test with independent fixtures and row-identifying assertion messages.
+When the runner has no parameterization API and lint rejects generated tests, group independent rows inside one test with independent fixtures and row-identifying assertion messages.
 
 When checking error propagation with `node:assert`, pass an identity validation function such as `(caughtError) => caughtError === error` to `assert.rejects` or `assert.throws`, where `error` is the sentinel. Passing an error instance compares properties, not identity.
 
 - Cover every distinct externally observable refusal and every routine that authorizes a mutation on a correctness claim, such as an accounting, containment, or equivalence proof. For a refusal shared by multiple external routes, keep the detailed refusal cases on the shared path and add one lightweight wiring assertion for each route proving that it reaches that path. Add route-specific detailed cases only when the route changes behavior or a caller relies on that distinction. Assert the refusal a caller would rely on, not just that the operation failed.
 - Test each operation’s output and failure behavior, plus destination handling, overwrite policy, and cleanup for any writes.
 - Keep durable repository-owned fixture inputs narrow and deterministic under `<skill>/scripts`. Create runtime fixture outputs, disposable repositories, and scratch state in temporary storage outside the repository, and keep the repository’s own Git metadata read-only. Tests that create commits, including fixture commits, still require explicit user authorization under the global **Commit gate**.
-- Give each test its own fixtures and run independent tests concurrently, so the suite takes about as long as its slowest test. Launch processes asynchronously because a blocking launch serializes concurrent tests.
+- Give each test its own fixtures and run independent tests concurrently. Bound concurrency, including subprocess batches within a test, so startup contention doesn’t consume behavioral deadlines. Small row groups may run sequentially. Launch processes asynchronously because a blocking launch serializes concurrent tests.
 - Run focused tests during implementation and after each behaviorally relevant correction. Run the repository’s root static validation once after the consolidated change batch, then rerun it only when a later correction changes an input or configuration that it covers. Direct execution and focused tests don’t replace root typechecking or compilation.
 
 Script tests are agent-owned. Document focused script and test commands in the owning skill or its repair reference, and keep test runs out of the repository’s default test command and commit hooks. CI may run them.

@@ -113,7 +113,7 @@ Before rewriting a delegated command’s arguments, establish which input forms 
 
 ## Line-Oriented Input
 
-Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. Status `1` indicates EOF, and a greater status indicates an error. Clear `line` before each call so an unsuccessful `read` can’t reuse the previous record. Accept a non-empty value returned with status `1` only when a final unterminated line is valid input.
+Read line-oriented text into `line` with `IFS= read -r line`, and capture its status immediately. A non-zero status can mean EOF or an input error. Don’t infer EOF from status `1`: shells can return it for either condition. Clear `line` before each call so an unsuccessful `read` can’t reuse the previous record. Accept a non-empty value after an unsuccessful read only when the input contract permits a final unterminated line and the operation can tolerate the ambiguity. When distinguishing EOF from an input error is required, use an established reader that exposes that distinction rather than claiming portable `read` status handling can provide it.
 
 Keep the loop body short enough that the read boundary remains visible. Move longer processing into a named helper.
 

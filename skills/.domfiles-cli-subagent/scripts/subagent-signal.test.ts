@@ -13,7 +13,7 @@ import {
 	utimesSync,
 	writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { availableParallelism, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { describe, test } from 'node:test';
@@ -32,6 +32,7 @@ const CLAUDE_STUB = [
 	'exit "$status"',
 	'',
 ].join('\n');
+const CONCURRENCY = Math.min(4, availableParallelism());
 const NAME = 'subagent-signal';
 const OTHER_UUID = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 const SCRIPT = join(import.meta.dirname, 'subagent-signal.ts');
@@ -458,7 +459,7 @@ const codexTurn = (text: string, start: number) => [
 
 const background = { command: 'pnpm test', run_in_background: true };
 
-void describe(NAME, { concurrency: true }, () => {
+void describe(NAME, { concurrency: CONCURRENCY }, () => {
 	void test('prints help alone', async (context) => {
 		const { status, stderr, stdout } = await createFixture(context).run([
 			'--help',
@@ -491,22 +492,14 @@ void describe(NAME, { concurrency: true }, () => {
 		assert.deepEqual(documented, usageOptions);
 		assert.deepEqual(documented, [...OPTIONS]);
 
-		const outputs = await Promise.all(
-			documented.map(async (option) =>
-				fixture.observeWith(
-					option === '--wait'
-						? ['--claude', value, '--wait', '0']
-						: [option, value, '--wait', '0']
-				)
-			)
-		);
-
-		for (const [index, output] of outputs.entries()) {
-			assert.equal(
-				fixture.session(output).state,
-				'working',
-				documented[index] ?? ''
+		for (const option of documented) {
+			const output = await fixture.observeWith(
+				option === '--wait'
+					? ['--claude', value, '--wait', '0']
+					: [option, value, '--wait', '0']
 			);
+
+			assert.equal(fixture.session(output).state, 'working', option);
 		}
 	});
 
@@ -572,9 +565,17 @@ void describe(NAME, { concurrency: true }, () => {
 				nonInteger,
 			]),
 		];
-		const refusals = await Promise.all(
-			cases.map(async ([params]) => fixture.refuse(params))
-		);
+		const refusals: string[] = [];
+
+		for (let index = 0; index < cases.length; index += CONCURRENCY) {
+			refusals.push(
+				...(await Promise.all(
+					cases
+						.slice(index, index + CONCURRENCY)
+						.map(async ([params]) => fixture.refuse(params))
+				))
+			);
+		}
 
 		for (const [index, [params, diagnostic]] of cases.entries()) {
 			const stderr = refusals[index] ?? '';
@@ -1307,30 +1308,28 @@ void describe(NAME, { concurrency: true }, () => {
 				);
 			};
 
-		await Promise.all([
-			lookup(() => undefined, '`claude agents` failed with'),
-			lookup(
-				listing([row(OTHER_UUID, 'done', null, null)]),
-				'Expected one `claude agents` row for the session, found 0'
-			),
-			lookup(
-				listing([
-					row(UUID, 'done', null, null),
-					row(UUID, 'done', null, null),
-				]),
-				'Expected one `claude agents` row for the session, found 2'
-			),
-			lookup(
-				listing(row(UUID, 'done', null, null)),
-				'`claude agents` did not print a JSON array'
-			),
-			lookup((bin) => {
-				writeFileSync(join(bin, 'listing.json'), 'not json');
-			}, '`claude agents` printed invalid JSON'),
-			lookup((bin) => {
-				rmSync(join(bin, 'claude'));
-			}, 'Failed to run `claude agents`:\n\n'),
-		]);
+		await lookup(() => undefined, '`claude agents` failed with');
+		await lookup(
+			listing([row(OTHER_UUID, 'done', null, null)]),
+			'Expected one `claude agents` row for the session, found 0'
+		);
+		await lookup(
+			listing([
+				row(UUID, 'done', null, null),
+				row(UUID, 'done', null, null),
+			]),
+			'Expected one `claude agents` row for the session, found 2'
+		);
+		await lookup(
+			listing(row(UUID, 'done', null, null)),
+			'`claude agents` did not print a JSON array'
+		);
+		await lookup((bin) => {
+			writeFileSync(join(bin, 'listing.json'), 'not json');
+		}, '`claude agents` printed invalid JSON');
+		await lookup((bin) => {
+			rmSync(join(bin, 'claude'));
+		}, 'Failed to run `claude agents`:\n\n');
 	});
 
 	void test('observes several sessions in argument order', async (context) => {
@@ -1550,10 +1549,8 @@ void describe(NAME, { concurrency: true }, () => {
 			...codexTurn('Second', 10),
 		]);
 
-		const [startOutput, laterOutput] = await Promise.all([
-			fixture.observeWith(['--codex', `0:${UUID}`]),
-			fixture.observeWith(['--codex', `5:${UUID}`]),
-		]);
+		const startOutput = await fixture.observeWith(['--codex', `0:${UUID}`]);
+		const laterOutput = await fixture.observeWith(['--codex', `5:${UUID}`]);
 		const expectedSession = {
 			session: UUID,
 			state: 'ready',
