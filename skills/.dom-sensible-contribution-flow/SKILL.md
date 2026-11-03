@@ -15,7 +15,7 @@ Load `sensible-contribution-flow` and apply these personal contribution defaults
 
 Use `full-review` for the coordinator’s implementation review of initial contributions and implementation revisions, including documentation changes. Pass the base workflow’s review scope and established authority to it. Leave the base’s quick design review and standalone read-only review routes unchanged.
 
-Under **External services**, include `full-review`’s selected CLI review exchange, replacement sessions with the same participant, and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered CLI authorization before implementation. Loading this overlay doesn’t authorize disclosure.
+Under **External services**, include `full-review`’s selected provider review exchange through the interface selected by `cli-subagent`, follow-up exchanges in the same reviewer conversations and replacement sessions preserving its required interfaces and reviewer selection constraints, and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered provider exchange authorization before implementation. Loading this overlay doesn’t authorize disclosure.
 
 ## Adjacent Opportunities
 

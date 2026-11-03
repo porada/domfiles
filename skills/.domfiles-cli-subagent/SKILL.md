@@ -11,14 +11,24 @@ metadata:
 
 # CLI Subagent
 
-Coordinate Claude or Codex as a subagent under the global **Collaboration** policies. The CLI interface adds session mechanics, not a separate conduct policy.
+Coordinate Claude or Codex as a subagent under the global **Collaboration** policies. Resolve the execution interface before starting CLI readiness.
+
+## Select Execution Interface
+
+Include the calling workflow’s requirements for session continuity and retained context when deciding whether either a host delegate or CLI fallback is eligible. For iterative reviews, apply `subagent-review-flow`’s requirements before selection.
+
+When a task requests a Claude Code or Codex CLI agent, prefer a host-managed delegate of that provider when the host’s documented interface supports the requested model and explicit reasoning effort selection. A delegate using the same model in the host’s own agent harness does not qualify. Establish the provider, resolved model, and effort match without guessing aliases, defaults, or inheritance. For omitted model or effort settings, use only the model and effort defaults in [Claude CLI](references/claude-cli.md#apply-runtime-configuration) or [Codex CLI](references/codex-cli.md#apply-runtime-configuration). Their execution requirements apply only after selecting CLI execution.
+
+A CLI name alone identifies the requested provider. Keep the CLI interface when the user expressly requires it or the task tests or debugs the CLI. Otherwise, when no eligible host delegate is available, use the CLI workflow where permitted. If the host prohibits that fallback, report the limitation rather than substituting another provider or settings. Interface selection doesn’t expand authorization or change the authorized disclosure destination, account, or permission boundaries.
+
+Apply [Bound the Exchange](#bound-the-exchange) to either interface. For an eligible host delegate, use `agent-task-relay` for assignments, `subagent-review-flow` for reviews, and the host’s dispatch, monitoring, continuation, and permission procedures. The remaining sections govern actual CLI exchanges only.
 
 ## Bound the Exchange
 
 - **Authority:** An explicit collaboration request authorizes only the covered exchange with the requested participant. Loading this skill doesn’t authorize additional disclosure. Preserve all governing scope, approval, and security gates in the coordinator’s thread.
-- **New user input:** Treat new user questions and notes as addressed to the coordinator by default. An active CLI exchange doesn’t authorize forwarding them. Share only information needed for the existing assignment, or additions the user explicitly asks to involve the participant in.
-- **Recursion:** A participant launched through this workflow, and every delegate beneath it, must not start or resume another CLI subagent through `claude`, `codex`, or any other agent CLI, directly or indirectly. Ordinary native subagent delegation remains permitted on both sides within the inherited assignment boundaries.
-- **One unit per session:** Assign work to a CLI session as you would to a native subagent, under the same inherited boundaries. The participant owns its native subagents and background commands, so during normal operation the coordinator neither tracks nor cancels them individually.
+- **New user input:** Treat new user questions and notes as addressed to the coordinator by default. An active exchange doesn’t authorize forwarding them. Share only information needed for the existing assignment, or additions the user explicitly asks to involve the participant in.
+- **Recursion:** A participant launched through this workflow, and every delegate beneath it, must not start or resume another CLI subagent through `claude`, `codex`, or any other agent CLI, directly or indirectly, or use host-managed substitution to start another provider exchange. Ordinary native subagent delegation remains permitted on both sides within the inherited assignment boundaries. Carry this boundary into either interface’s assignment.
+- **One unit per session:** Assign work to one provider session as you would to a native subagent, under the same inherited boundaries. The participant owns its native subagents and background commands, so during normal operation the coordinator neither tracks nor cancels them individually.
 
 ## Establish Readiness
 

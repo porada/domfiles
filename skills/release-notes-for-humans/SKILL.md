@@ -41,7 +41,7 @@ Treat an outcome as material when it changes what consumers can do, how they con
 
 A release unit is one independently released package or one set of packages that must release together. Its evidence scope is the complete set of changes evaluated for it. It may be ref-backed, such as a commit or range, or direct, such as a supplied or working tree diff. Resolve scope in this order:
 
-1. Identify the release version or unreleased state. Don’t invent a version. Use an explicit `Unreleased` label when the next version hasn’t been chosen. Resolve the repository and refs only when the selected evidence scope requires them. If you can’t resolve a required repository or ref from the request or available context, stop and ask for direction.
+1. Identify the release version or unreleased state. Don’t invent a version. Resolve the repository and refs only when the selected evidence scope requires them. If you can’t resolve a required repository or ref from the request or available context, stop and ask for direction.
 2. Resolve the target publishable packages and their release grouping from repository metadata when available, otherwise from supplied context. For ambiguous ownership or grouping, multiple packages, or an unspecified package target, follow [Release Units](references/release-units.md) before selecting boundaries or mapping evidence.
 3. Select evidence for each release unit using the first applicable case:
     - **Initial release:** When the user identifies the release unit as initial, stop inspecting its change history and source. Resolve only the package and structure needed to use the exact [initial release status item](references/release-structures.md#status-items).
@@ -100,6 +100,8 @@ Keep separate bullets when consolidation would hide a distinct consumer decision
 ## Release Structure
 
 Choose the smallest structure that communicates each material consumer decision. Use a flat bullet list when every change belongs to one package and no thematic section improves comprehension.
+
+Start standalone release note bodies and changelog entries directly with bullets or level 3 package or thematic sections. Include a release-level heading such as `## Unreleased` or `## <version>` only when explicitly requested or when the working draft or requested output is an [aggregate release note document](references/release-structures.md#aggregate-release-note-files), whether supplied as text or a file.
 
 Read applicable sections of [Release Structures](references/release-structures.md) for initial releases or package sections, aggregate files, themes, migration context or repeated guidance, substantial related changes, nested hierarchy, or synchronized multi-package releases. For hosted release bodies, follow [Hosted Release Bodies](references/release-structures.md#hosted-release-bodies).
 

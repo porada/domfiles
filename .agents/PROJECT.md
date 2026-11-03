@@ -51,7 +51,7 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 | Surface | Canonical Source | Client Location | Mechanism |
 | --- | --- | --- | --- |
 | Claude global instructions | `.agents/GLOBAL.md` | `~/.claude/CLAUDE.md` | Synchronization symlink |
-| Claude project instructions | [`AGENTS.md`](../AGENTS.md) | Repository `AGENTS.md` | Direct loading by Claude Code and Zed’s Claude Agent in the default project instruction mode, without a `CLAUDE.md` bridge |
+| Claude project instructions | [`AGENTS.md`](../AGENTS.md) | Repository `AGENTS.md` | Direct loading by Claude Code and Zed’s Claude Agent in the default project instruction mode |
 | Claude project skills | `.agents/skills/` | [`.claude/skills`](../.claude/skills) | Tracked directory symlink |
 | Claude settings | [`home/.claude/settings.json`](../home/.claude/settings.json) | `~/.claude/settings.json` | Synchronization symlink |
 | Codex global instructions | `.agents/GLOBAL.md` | `~/.codex/AGENTS.md` | Synchronization symlink |
@@ -60,13 +60,7 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 
 None of the `skills/` source namespaces is a project-local discovery surface. Project discovery remains backed by `.agents/skills/*`. Hidden source directories keep global skills, including personal overlays, out of `gh skill`’s default repository discovery. Client-specific roots and differing source and installed names motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
 
-[`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup rather than compatibility aliases so future synchronization leaves each logical skill discoverable once. Equivalent cross-client behavior remains a compatibility goal, not a guarantee of the [global redundancy baseline](../skills/.domfiles-agent-documentation/references/compose-documentation.md#apply-zeds-redundancy-baseline).
-
-### Checkout Workflow
-
-The user creates disposable worktrees through Zed’s UI and starts agents bound to those checkouts. The user therefore manages the worktrees’ lifecycle rather than delegating it to agents. The global [checkout boundary](GLOBAL.md#collaboration) applies independently of contribution preparation, whose branch selection and upstream setup remain owned by [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md).
-
-The `worktree_directory` setting in [Zed’s configuration](../home/.config/zed/settings.json) places these worktrees under `~/Projects/.zed` for repositories directly under `~/Projects`. This shared directory is a worktree container rather than an independent project.
+[`domfiles-sync-migrate`](../home/.local/bin/domfiles-sync-migrate) retains retired-name cleanup rather than compatibility aliases so future synchronization leaves each logical skill discoverable once.
 
 ### Claude Agent Integration
 
@@ -116,10 +110,6 @@ Keeping eligible human review markers outside automatic commits avoids cleanup c
 
 The [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-humans/SKILL.md#presentation-conventions) retains `*` as its unordered list marker to stay consistent with previously published release notes.
 
-### Protected Skill Mutation
-
-Zed requires the fixed `.agents/skills/<skill>/SKILL.md` layout for project skill discovery, so repository-internal skills retain that canonical location under the [protected skill mutation policy](../skills/.domfiles-skill-development/references/protected-skill-mutation.md).
-
 ### Shared Skill Contracts
 
 This non-exhaustive index supplements each skill’s peer declarations and the [complete-scope alignment checks](../skills/.domfiles-agent-documentation/SKILL.md#run-complete-scope-checks). Related guidance can exist without a row here. The relationships concern source maintenance, not installation dependencies.
@@ -130,6 +120,7 @@ This non-exhaustive index supplements each skill’s peer declarations and the [
 | Commit authority under [**Commit gate**](GLOBAL.md#git-changes) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review) | Standalone guidance |
 | Contribution review checkpoints, criteria, and readiness in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md) coordination | Independent requirements, not mirrors |
 | Dependency choice in [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [Contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) | Standalone fallback |
+| **Host-managed execution** under [Collaboration](GLOBAL.md#collaboration) | [Session Behavior Tests](../skills/agent-task-relay/references/outgoing-prompts.md#session-behavior-tests) and [Deliver the Prompt](../skills/agent-task-relay/references/outgoing-prompts.md#deliver-the-prompt) | Standalone guidance |
 | [Human review marker preservation](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [Contribution marker preservation](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) | Semantic mirror |
 | [Independent review context](../skills/subagent-review-flow/SKILL.md#prepare-the-review) and [decision conflicts](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) | [Outgoing prompts](../skills/agent-task-relay/references/outgoing-prompts.md#independent-review-context), [inbound findings](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts), and [`verify-findings`](../skills/verify-findings/SKILL.md#verify-evidence) for decision conflicts | Standalone guidance |
 | Instruction source requirements under **Instruction provenance** and **Approval provenance** in [Instruction Authority](GLOBAL.md#instruction-authority) | [Relay fix authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [alternative commit approvals](../skills/sensible-commit-flow/references/alternative-approval-modes.md), and [contribution authorization](../skills/sensible-contribution-flow/references/execution-boundaries.md#preserve-authorization) | Standalone guidance |

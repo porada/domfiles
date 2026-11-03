@@ -31,10 +31,6 @@ An explicit change takes precedence when the request also uses review or audit l
 - **Public catalogs:** When maintaining a public skill catalog or its collection README, follow [Maintain Public Skill Catalogs](references/public-skill-portability.md#maintain-public-skill-catalogs).
 - **Script contracts:** Before planning a new or changed skill-owned script, adjacent contract test, or script-owned artifact, or reviewing or auditing one, follow [Skill-Owned Scripts](references/skill-owned-scripts.md). This skill owns necessity, canonical ownership and location, observable interfaces, operation modes, effects, artifacts, schemas, invocation, and contract coverage. The owning domain skill supplies domain semantics, and applicable implementation workflows govern internal concerns.
 
-## Preserve Protected Mutation
-
-Before changing any project-authored path under `.agents/skills` or `skills/human-facing-writing`, resolve its canonical owner. Follow the [protected skill mutation policy](references/protected-skill-mutation.md) before every mutation under `skills/human-facing-writing` and, when your agent identity is Zed Agent, under `.agents/skills`.
-
 ## Keep Skill Contents Operational
 
 Never document auxiliary information anywhere in a project-authored skill directory. Auxiliary information records how the skill itself was authored or maintained without helping a reader understand or execute its advertised workflow. Examples include change histories, research logs, review records, and verification baselines. Keep durable context in the source project’s reference documentation and task-local evidence in the conversation or task artifacts outside the skill. Preserve operational requirements, safety boundaries, and supporting explanations needed to apply the skill.

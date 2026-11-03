@@ -22,8 +22,6 @@ Write each assignment, including every follow-up, to a file in the task director
 
 The command shapes use POSIX shell syntax compatible with `sh`, Bash, and Zsh. They’re schematic, not raw substitution templates. Pass each placeholder as one literal argument, using a host interface that accepts an argument array when available. With an argument array, apply the command’s redirections, such as the assignment file or output files, through the host’s stream settings rather than passing them as arguments. If neither invocation form can preserve the arguments and connect the streams, stop and report the capability limitation.
 
-For command strings in these shells, surround each value with single quotes and replace every embedded `'` with `'\''`. Don’t apply that encoding in shells with different quoting rules or use shell interpolation or command substitution to insert values. Write each command with literal values because some hosts reject shell variable expansion and command substitution in agent commands.
-
 Run launch and resumption commands from the supplied checkout. Use the host’s working directory parameter when available. Otherwise, verify that commands run from that checkout or reuse applicable evidence establishing their working directory.
 
 ## Retain Session State

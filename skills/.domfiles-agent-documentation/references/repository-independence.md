@@ -34,6 +34,6 @@ Start with the intended agent tasks, supported clients, and existing project-aut
 
 Create only the surfaces needed to carry the selected contract. A compact `AGENTS.md` can be sufficient. Add skills for bounded workflows and project reference documentation for durable facts only when they have content to own. Apply `skill-development` to skill naming and invocation rather than copying its authoring policy into the destination. Don’t add a maintenance framework, authority inventory, or empty scaffolding merely for completeness.
 
-Expose the canonical project instructions through the supported clients’ entrypoints. Prefer minimal bridges with no independent policy, and preserve explicit permission requirements for creating or editing `CLAUDE.md`. A setup request doesn’t waive client configuration, installation, or other security boundaries.
+Expose the canonical project instructions through the supported clients’ entrypoints. Prefer minimal bridges with no independent policy. A setup request doesn’t waive client configuration, installation, or other security boundaries.
 
 Keep the authoring relationship to the baseline separate from runtime imports, cross-repository symlinks, or a requirement to run the maintainer’s synchronization tools.

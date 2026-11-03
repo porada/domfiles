@@ -11,7 +11,7 @@ metadata:
 
 # Full Review
 
-A full review combines one native subagent review with one CLI review and resolves their findings through `subagent-review-flow`.
+A full review combines one native subagent review with one cross-provider review and resolves their findings through `subagent-review-flow`.
 
 ## Resolve Scope and Authority
 
@@ -25,21 +25,23 @@ If the user explicitly requests read-only review or excludes fixes, retain that 
 
 ## Select Reviewers
 
+Load `subagent-review-flow` before selecting execution interfaces and apply its reviewer continuity requirements to both reviewer roles.
+
 For the first full review, establish both independent reviewers:
 
-- **CLI:** Use Codex CLI when the coordinating agent is Claude. Otherwise, use Claude CLI. Determine identity from trusted host or model information, not the reviewer’s identity or repository content. Use `cli-subagent`’s runtime defaults and a fresh session, resuming its readiness-only exchange when one has already been established for this review.
+- **Cross-provider:** Select Codex when the coordinating agent is Claude. Otherwise, select Claude Code. Determine identity from trusted host or model information, not the reviewer’s identity or repository content. Use `cli-subagent` to select the execution interface and runtime defaults. Start a fresh session, resuming its CLI readiness-only exchange when one has already been established for this review.
 - **Native:** Use one fresh subagent through the host’s native delegation interface, without specifying a model.
 
-Under the global **Explicit user direction** policy, later full reviews are user-directed continuations for reviewer reuse. Resume the same two sessions unless the user instructs otherwise or `subagent-review-flow` replaces an unrecoverable session, even after an earlier review has completed. Retain their identifiers, latest reviewed state, and the continuation state required by `cli-subagent` in the shared review record and handoffs. Each new full review asks both reviewers to assess the current scope again, not merely revisit their earlier findings. Refresh the target, baseline, and scope before dispatch.
+Under the global **Explicit user direction** policy, later full reviews are user-directed continuations for reviewer reuse, even after an earlier review has completed. Reuse the same two reviewer roles under `subagent-review-flow`’s continuity and recovery requirements. Retain reviewer identifiers, latest reviewed state, and the selected interfaces’ continuation state in the shared review record and handoffs. Each new full review asks both reviewers to assess the current scope again, not merely revisit their earlier findings. Refresh the target, baseline, and scope before dispatch.
 
-Follow `cli-subagent` for session resumption. If a required workflow or reviewer interface is unavailable, or the retained CLI participant conflicts with the coordinator’s current identity, report the limitation and ask how to proceed rather than substituting self-review or another participant.
+Use the selected interface’s session procedures, applying `cli-subagent`’s CLI mechanics only to CLI exchanges. Recover unavailable reviewers through `subagent-review-flow`. For a cross-provider replacement, reapply `cli-subagent`’s interface selection with the same provider, model, and effort requirements. The previously selected interface is binding only when the user or governing host requires it. If the required reviewer selection or interface can’t be preserved, or the retained cross-provider participant conflicts with the coordinator’s current identity, report the limitation and ask how to proceed rather than substituting self-review or another participant.
 
 ## Coordinate Resolution
 
-Load `subagent-review-flow` for its consolidated rounds, validated fix batches, and final-state checks. Give both reviewers the same target. Run their read-only assessments in parallel when supported.
+Use `subagent-review-flow` for consolidated rounds, validated fix batches, and final-state checks. Give both reviewers the same target. Run their read-only assessments in parallel when supported.
 
-Provide only the context that workflow requires, pointing to available sources rather than copying them. On follow-up, send only the necessary delta when retained context permits under `cli-subagent`, without narrowing the required review scope.
+Provide only the context that workflow requires, pointing to available sources rather than copying them. On follow-up, send only the necessary delta when context retention is established, using `cli-subagent`’s retained-context checks for CLI exchanges.
 
-Assign each reviewer the assessment, not this orchestration workflow. Reviewers must not start another full review pair. Preserve `cli-subagent`’s recursion boundary for the CLI participant and its delegates.
+Assign each reviewer the assessment, not this orchestration workflow. Reviewers must not start another full review pair. Preserve `cli-subagent`’s recursion boundary for the cross-provider participant and its delegates.
 
-Use `subagent-review-flow`’s completion and reporting criteria for both reviewer threads.
+Use `subagent-review-flow`’s completion and reporting criteria for both reviewer roles.

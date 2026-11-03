@@ -18,11 +18,17 @@ The calling workflow determines whether a review is required, what it examines, 
 
 The coordinator owns the shared review record, findings validation, and integration. A review-only task remains read-only. During authorized implementation, continue through resolution only for corrections covered by the existing task authority.
 
-When acting as a reviewer, evaluate the assigned target independently and follow the [reporting requirements](#prepare-the-review). On follow-up, assess the [selected follow-up scope](#coordinate-fixes-and-re-review) using the evidence criteria in [Resolve Disagreements](#resolve-disagreements). Explain whether each finding under reassessment remains standing and why. You own that status in your reviewer thread. Leave coordination to the coordinator.
+When acting as a reviewer, evaluate the assigned target independently and follow the [reporting requirements](#prepare-the-review). On follow-up, assess the [selected follow-up scope](#coordinate-fixes-and-re-review) using the evidence criteria in [Resolve Disagreements](#resolve-disagreements). Explain whether each finding under reassessment remains standing and why. You own that status for your reviewer role. Leave coordination to the coordinator.
+
+## Establish Reviewer Continuity
+
+Before selecting a reviewer’s execution interface, establish that it permits and supports resuming the same conversation with the reviewer’s prior findings, reported rationale, objections, dispositions, and relevant evidence available. Iterative review requires this continuity. Use documented capabilities and evidence from retained sessions rather than inferring continuity from a matching provider, model, or session identifier. A fresh agent supplied with a summary does not satisfy this requirement.
+
+If no permitted interface meets this requirement while preserving reviewer selection constraints, report the limitation before dispatch. An otherwise authorized initial pass may still run, but that interface is ineligible for follow-up. Don’t plan a chain of fresh agents as an iterative review. The [completion criteria](#complete-the-review) determine whether the initial pass is sufficient.
 
 ## Prepare the Review
 
-Keep one conversation-local review record: baseline first, then scope and exclusions, settled decisions, and current finding classifications. For each reviewer, track the session, latest reviewed state, and standing findings. Use a shared starting baseline for a group of reviewers.
+Keep one conversation-local review record: baseline first, then scope and exclusions, settled decisions, and current finding classifications. Track each reviewer role independently of its conversation identifiers, recording its session history, latest reviewed state, and standing findings. Use a shared starting baseline for a group of reviewers.
 
 Give a first-pass reviewer the minimum neutral context needed to evaluate the target: baseline, scope and exclusions, intended behavior, applicable instructions, execution boundaries, and material evidence limitations. Don’t front-load coordinator conclusions, self-assessment, anticipated findings, implementation defenses, or decision history unless needed to establish a governing requirement or the expressly requested review subject. Don’t withhold safety or authority requirements, the actual requested subject, or evidence needed to evaluate it. Keep other decision history with the coordinator rather than forwarding it automatically.
 
@@ -30,7 +36,7 @@ Require reviewers to report all evidence-backed in-scope findings with their loc
 
 ## Consolidate Each Round
 
-Include every selected reviewer in the initial round. Collect every participating reviewer’s report for each round, then reconcile and validate the combined findings in one coordinator pass before applying a fix batch or starting the next review round. Merge duplicates without losing the originating reviewer threads or distinct issues. Don’t run separate validation and fix cycles as individual reports arrive.
+Include every selected reviewer in the initial round. Collect every participating reviewer’s report for each round, then reconcile and validate the combined findings in one coordinator pass before applying a fix batch or starting the next review round. Merge duplicates without losing the originating reviewer roles or distinct issues. Don’t run separate validation and fix cycles as individual reports arrive.
 
 ## Resolve Disagreements
 
@@ -38,7 +44,7 @@ Validate returned findings against current evidence before adopting them. When c
 
 The coordinator weighs evidence, not reviewer counts, and uses the smallest decisive inspection or check within the existing scope and limits. Don’t recruit additional reviewers merely to obtain agreement. If evidence remains insufficient, report the verification gap rather than forcing a verdict. Ask the user only for a material choice that the evidence and existing authority can’t settle, or a separately required approval.
 
-Record the decisive reason with each finding’s classification. Return each dispute only to the reviewer thread or threads that raised that finding, or their recorded replacements, rather than closing it through the coordinator’s judgment alone.
+Record the decisive reason with each finding’s classification. Return each dispute only to the reviewer or reviewers that raised that finding, or their recorded replacements, rather than closing it through the coordinator’s judgment alone.
 
 ## Coordinate Fixes and Re-Review
 
@@ -46,31 +52,31 @@ For a review-only task, [resolve disputes](#resolve-disagreements) and report an
 
 A no-standing-findings result applies only to the state that reviewer examined. While findings remain standing, select reviewers whose findings need a response to dispute evidence or verification of applied fixes. By default, defer reviewers whose no-standing-findings results predate an edit within the reviewed scope. After applying and validating a fix batch, the coordinator may include those deferred reviewers in the same follow-up round if it reasonably expects no further fixes.
 
-Once no findings remain standing, resume together any reviewers whose no-standing-findings results still predate an edit within the reviewed scope. If new findings emerge, repeat this cycle. Resolving a dispute without edits doesn’t invalidate results for that unchanged state.
+Once no findings remain standing, reconvene together any reviewers whose no-standing-findings results still predate an edit within the reviewed scope. If new findings emerge, repeat this cycle. Resolving a dispute without edits doesn’t invalidate results for that unchanged state.
 
-Resume each selected reviewer in the same session. When no edit within the reviewed scope has occurred since that reviewer’s last review, limit the reassessment to their disputed findings and the relevant decisions, evidence, and rationale. Otherwise, give them the complete current edited scope and affected integration boundaries, together with their relevant prior findings and the relevant decisions, evidence, and rationale for their disputed findings. Don’t limit re-review after edits to their own findings or resulting fixes. Keep the review within its established scope, exclusions, and access boundaries.
+Resume each selected reviewer in the same conversation with the required review context available. If a session-specific failure or restriction prevents resumption, or required review context can’t be reconstructed, follow [Recover Reviewer Continuity](#recover-reviewer-continuity). A new host task identifier alone doesn’t require a new reviewer conversation. When no edit within the reviewed scope has occurred since that reviewer’s last review, limit the reassessment to their disputed findings and the relevant decisions, evidence, and rationale. Otherwise, give them the complete current edited scope and affected integration boundaries, together with their relevant prior findings and the relevant decisions, evidence, and rationale for their disputed findings. Don’t limit re-review after edits to their own findings or resulting fixes. Keep the review within its established scope, exclusions, and access boundaries.
 
-If a reviewer session can’t continue, follow [Recover Reviewer Continuity](#recover-reviewer-continuity).
+If the host requires fresh conversations or its interface cannot resume them, report the follow-up limitation. Don’t substitute a fresh agent or use the replacement procedure to bypass that limitation.
 
 Prefer convergence over a fixed total round cap. Keep optional hygiene changes out of the required fix batch. If re-review finds another issue in the same construct after two completed fix rounds that changed it, stop extending that construct. Narrow, replace, or remove it within the existing authority, or ask the user to choose among materially different options.
 
 ## Recover Reviewer Continuity
 
-Use the execution interface’s applicable recovery procedure first. If it establishes that a reviewer session can’t be recovered or resumed, replace only that reviewer without another confirmation when the existing review authority covers replacement and the user or calling workflow hasn’t prohibited it. Preserve the required interface, reviewer selection constraints, and lifecycle procedures. Don’t use replacement to escape disagreement or bypass an access, quota, approval, or security boundary. When replacement can’t proceed within those limits, report the limitation and ask how to proceed.
+Use the execution interface’s applicable recovery procedure first. Replace a reviewer only when that procedure can’t recover the existing session or rules out resuming it, or required review context still can’t be reconstructed. Proceed without another confirmation when the existing review authority covers replacement and the user or calling workflow hasn’t prohibited it. Preserve the required interface, reviewer selection constraints, and lifecycle procedures. The replacement’s interface must meet the [continuity requirements](#establish-reviewer-continuity). Don’t use replacement to escape disagreement or bypass an access, quota, approval, or security boundary, including a host prohibition on further delegation. When replacement can’t proceed within those limits, report the limitation and ask how to proceed.
 
-Record the original session, replacement session, and reason in the shared review record. Give the replacement an independent first pass over the complete current scope, then have it explicitly reassess the predecessor’s standing findings. Their absence from its first report doesn’t resolve them. The replacement takes the original reviewer’s place in subsequent rounds and assumes its remaining resolution and completion obligations.
+Record the original session, replacement session, and reason in the shared review record. Give the replacement the [neutral first-pass context](#prepare-the-review) and require an independent assessment of the complete current scope. After receiving its independent report, provide the predecessor’s findings, objections, dispositions, and relevant evidence, and require explicit reassessment of the predecessor’s standing findings. Their absence from its first report doesn’t resolve them. The replacement takes the original reviewer’s place in subsequent rounds and assumes its remaining resolution and completion obligations.
 
 ## Complete the Review
 
-Resolution is complete only when every originally selected reviewer, or its recorded replacement, reports no standing findings for the same final edited state and no required verification remains. Each reviewer must reach that status through verified corrections or disputes it accepts as resolving its findings. The coordinator’s disposition or another reviewer’s clean report can’t substitute for it.
+Resolution is complete only when every originally selected reviewer role, or its recorded replacement, reports no standing findings for the same final edited state and no required verification remains. Each reviewer must reach that status through verified corrections or disputes it accepts as resolving its findings. The coordinator’s disposition or another reviewer’s clean report can’t substitute for it. A fresh independent assessment doesn’t discharge an earlier reviewer’s follow-up obligations unless it is an eligible replacement under [Recover Reviewer Continuity](#recover-reviewer-continuity).
 
-If every reviewer reports no standing findings in the initial round and no edits follow, no follow-up is needed. Once every thread has reached that status for the final state, no further reassurance or acknowledgment is required.
+If every reviewer reports no standing findings in the initial round and no edits follow, no follow-up is needed. Once every reviewer role has reached that status for the final state, no further reassurance or acknowledgment is required.
 
 In the final report, disclose any reviewer replacements and briefly state why each was needed.
 
 Before concluding, deliver the reported optional improvement opportunities. They aren’t standing findings. Finishing the review doesn’t require implementing them, another review round, or user acknowledgment or explicit deferral.
 
-If a stopping boundary or insufficient evidence prevents resolution, report the remaining findings and limitation without claiming completion.
+If a stopping boundary or insufficient evidence prevents resolution, report the remaining findings and limitation without claiming completion. When required follow-up cannot run under these rules, distinguish coordinator-validated corrections from independently reviewed changes and identify the final-state clearance still required. Don’t invoke a fresh conversation or replacement to bypass applicable host restrictions or the continuity requirements.
 
 ## Apply General Policies
 

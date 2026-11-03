@@ -38,7 +38,7 @@ Don’t repeat migration prose in later patch releases unless the user explicitl
 
 ## Hosted Release Bodies
 
-For a ready-to-paste hosted release body, reserve levels 1 and 2 for the surrounding page and release title. Unless the user explicitly requests it, omit the release version heading or tag link already rendered by the hosting platform.
+For a ready-to-paste hosted release body, reserve levels 1 and 2 for the surrounding page and release title. Unless the user explicitly requests it, omit the tag link already rendered by the hosting platform.
 
 ## Synchronized Multi-Package Releases
 

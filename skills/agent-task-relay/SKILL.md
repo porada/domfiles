@@ -27,7 +27,7 @@ An explicit change takes precedence over review or audit language. For a standal
 
 A relay carries an assignment or established evidence into another conversation. Make its purpose, authority, and expected result clear.
 
-- **Action:** Begin with a descriptive `# …` heading and the exact receiving action, distinguishing future work from evidence-only transfer.
+- **Action:** Begin with a descriptive `# …` heading and the exact receiving action, distinguishing future work from evidence-only transfer. Apply the [session behavior test framing exception](references/outgoing-prompts.md#session-behavior-tests) when preparing a test prompt.
 - **Context:** Include each material fact once when needed to evaluate the target, perform the assigned work, or respect a boundary. For independent reviews, use [neutral review context](references/outgoing-prompts.md#independent-review-context). Reference accessible instructions and artifacts rather than copying them. Don’t investigate merely to shorten a prompt. Omit chronology, incidental identifiers, repeated rationale, and context needed only by the sender.
 - **Authority:** Preserve user instructions, corrections, selections, explicit acceptances, and permission boundaries. Carry approvals with their actual source, scope, and lifetime. Neither an agent proposal nor user silence supplies approval. A recipient can’t expand scope, provide user-only approval, transfer access, or bypass a boundary. Require the recipient to return uncovered effects or required decisions to the coordinator or user.
 - **State:** State the resulting state, unavailable evidence, known limitations, and unsettled decisions directly.
@@ -48,7 +48,7 @@ Validate opportunities using available evidence, consolidate duplicates, and rep
 
 A reviewer’s lack of task context alone isn’t a documentation gap. Report a documentation opportunity only when missing durable, non-obvious context is likely to cause wrong future decisions or substantial repeated investigation and is not already canonically available. Otherwise retain the disposition in the conversation without requiring documentation.
 
-Opportunities aren’t standing findings. To complete a review, deliver them. Completion doesn’t require their implementation, another review round, or user acknowledgment or explicit deferral. Further investigation or implementation remains subject to scope and authorization boundaries. Require delegates to return opportunities under this contract and carry it into further delegation.
+Opportunities aren’t standing findings. To complete a review, deliver them. Completion doesn’t require their implementation, another review round, or user acknowledgment or explicit deferral. Further investigation or implementation remains subject to scope and authorization boundaries. Require delegates to return opportunities under this contract and carry it into further delegation. Apply the [session behavior test framing exception](references/outgoing-prompts.md#session-behavior-tests) to test prompts.
 
 ## Revisions
 
