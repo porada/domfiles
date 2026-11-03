@@ -158,7 +158,7 @@
 					]
 				}
 			],
-			"username": "root"
+			"username": "dom"
 		}
 	],
 	"tab_bar": {
@@ -189,7 +189,6 @@
 	},
 	"ui_font_family": ".SystemUIFont",
 	"ui_font_size": 15,
-	"use_display_p3": true,
 	"whitespace_map": {
 		"tab": " "
 	},
