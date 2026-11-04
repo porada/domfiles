@@ -15,12 +15,12 @@
 	"packageManager": "pnpm@12.16.1",
 	"dependencies": {
 		"doclint": "workspace:*",
-		"skills": "^1.7.4",
-		"vercel": "^65.9.0"
+		"skills": "^1.7.6",
+		"vercel": "^65.10.0"
 	},
 	"devDependencies": {
-		"@standard-config/oxlint": "^2.11.0",
-		"@standard-config/oxlint-stylistic": "^2.11.0",
+		"@standard-config/oxlint": "^2.11.1",
+		"@standard-config/oxlint-stylistic": "^2.11.1",
 		"@standard-config/prettier": "^1.22.0",
 		"@standard-config/tsconfig": "catalog:",
 		"@types/node": "catalog:",
