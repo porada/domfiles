@@ -15,7 +15,7 @@ For a file that covers one package, use `# <package> Release Notes` as the top-l
 
 For a new aggregate file shared by a synchronized package set, use a title established by the supplied context or repository metadata instead of selecting one package name. When package identity and scope are settled but no title is established, use `# Release Notes`. Preserve supplied or approved titles, and ask only when uncertainty concerns material identity or scope.
 
-Apply the [approval gates](approval-gates.md) before normalizing the delimiters in a supplied or previously approved aggregate file.
+Keep delimiter normalization in a supplied or previously approved aggregate file within the [authorized revision scope](approval-gates.md#approval-requirement).
 
 ## Structured Releases
 

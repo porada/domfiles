@@ -22,7 +22,7 @@ Don’t import a setup package for its runtime side effects in the config to pre
 
 Before keeping a mock, environment, or global state reset call in a hook, check the effective configuration, shared presets, and installed Vitest defaults. Remove hook reset calls that duplicate resets the effective configuration already performs, provided their timing serves no separate cleanup requirement.
 
-When several test files repeat required reset calls that the configuration doesn’t perform, propose the matching configuration options:
+When several test files repeat required reset calls that the configuration doesn’t perform, use the matching configuration options under [Convention Scope](../SKILL.md#convention-scope):
 
 - **`clearMocks`:** Clears mock call history while preserving implementations. Vitest 5 enables it by default.
 - **`mockReset`:** Performs `vi.resetAllMocks()`, restoring mock implementations to their initial behavior and clearing call history and queued one-time implementations. A mock created with `vi.fn(impl)` returns to `impl`, while one created with `vi.fn()` returns to an empty function that returns `undefined`. Disabled by default.
@@ -30,6 +30,4 @@ When several test files repeat required reset calls that the configuration doesn
 - **`unstubEnvs`:** Restores environment values changed through `vi.stubEnv`.
 - **`unstubGlobals`:** Restores globals changed through `vi.stubGlobal`.
 
-These options run before each test attempt, before `beforeEach`, rather than at teardown. Don’t replace required [cleanup](../SKILL.md#cleanup) merely because an option is enabled. Check suite-owned state before proposing restoration or unstubbing, because those options can undo `beforeAll` setup before the first test. Keep resets between phases of a test when they isolate later observations.
-
-Add configuration options only after the user authorizes the change under [Convention Scope](../SKILL.md#convention-scope).
+These options run before each test attempt, before `beforeEach`, rather than at teardown. Don’t replace required [cleanup](../SKILL.md#cleanup) merely because an option is enabled. Check suite-owned state before configuring restoration or unstubbing, because those options can undo `beforeAll` setup before the first test. Keep resets between phases of a test when they isolate later observations.

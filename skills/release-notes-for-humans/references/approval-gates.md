@@ -1,18 +1,11 @@
 # Approval Gates
 
-These gates protect the user’s authorship when a release note draft already exists. Apply them only to text the user supplied or previously approved. Preserve its wording, bullet order, headings, and structure outside the requested revision.
+These boundaries protect the user’s authorship when a release note draft already exists. Apply them only to text the user supplied or previously approved. Preserve its wording, bullet order, headings, and structure outside the requested revision.
 
-An explicit request authorizes the revisions it covers, including consolidation or restructuring, under [Agent Conduct](../SKILL.md#agent-conduct). A newly inferred draft has no preserved authorial baseline, so organize and consolidate it directly when the evidence supports the result.
+An authorized substantive editing request covers evidence-backed editorial revisions within its scope, including consolidation or restructuring when the request includes them. Proceed under [Agent Conduct](../SKILL.md#agent-conduct) without separate change-by-change approval. A newly inferred draft has no preserved authorial baseline, so organize and consolidate it directly when the evidence supports the result.
 
 ## Approval Requirement
 
-For consolidation or any listed change that isn’t already authorized, show the exact before and after, explain the supporting evidence or material effect, and ask whether to apply it. Approval covers only the proposed change. Without that approval, retain the affected supplied text.
+Ask only when a revision exceeds the authorized scope, depends on an unsettled decision about meaning, or conflicts with wording or structure the user expressly asked to preserve. Explain the specific decision rather than requiring an exact before-and-after proposal for routine authorized edits. Until that decision is resolved, retain the affected supplied text and continue independent authorized work.
 
-- Removing or reclassifying a supplied release note item, including treating a supplied refactor as internal-only.
-- Removing a supplied rationale or exact dependency version.
-- Adding, removing, or materially changing a consumer warning or evidence link.
-- Strengthening or weakening a supplied technical claim or qualifier.
-- Converting bullets to prose or prose to bullets.
-- Introducing a named release theme.
-- Creating, renaming, removing, or materially reorganizing a heading or package section.
-- Moving a change into or out of `All Packages`.
+Permission to edit doesn’t relax the workflow’s evidence, consumer outcome, or presentation requirements.

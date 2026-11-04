@@ -18,7 +18,7 @@ This skill keeps the evidence maintainers need separate from the notes readers s
 
 Choose the route that matches the requested result. An explicit change takes precedence when the request also uses review language.
 
-- **Existing draft:** Treat supplied text or a supplied file as the working draft. Apply the [approval gates](references/approval-gates.md) to a user-supplied or previously approved draft.
+- **Existing draft:** Treat supplied text or a supplied file as the working draft. Apply the [revision scope and approval boundaries](references/approval-gates.md) to a user-supplied or previously approved draft.
 - **Inferred draft:** Honor the user’s explicit evidence scope, then edit the supplied note target or return a new draft after completing the shared scope and evidence workflow below.
 - **Review:** Keep the task read-only. Report evidence-backed omissions and concrete consistency problems without rewriting the notes, and distinguish defects from intentional or harmless variations.
 
@@ -93,7 +93,7 @@ Look for bullets that verified source evidence or user-provided context shows ar
 
 Treat exact rule identifiers as material outcomes. Keep distinct rules in separate, sortable bullets rather than replacing them with a category summary. Multiple changes to the same rule may share one bullet when they form one coherent change and splitting them would obscure the relationship.
 
-For supplied or previously approved text, apply the [approval requirement](references/approval-gates.md#approval-requirement) before consolidation.
+For supplied or previously approved text, keep consolidation within the [authorized revision scope](references/approval-gates.md#approval-requirement).
 
 Keep separate bullets when consolidation would hide a distinct consumer decision, downgrade a breaking change, combine unrelated package scopes, or make the resulting sentence harder to scan. When there isn’t enough context, improve scanability by reordering the separate bullets rather than merging them.
 

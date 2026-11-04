@@ -24,7 +24,7 @@ The domfiles-managed Claude user settings disable [background worktree isolation
 
 ## Limit Command Runtime
 
-Apply the [shared command limits](session-coordination.md#commands) with the Bash tool’s native `timeout`, using `300000` milliseconds by default. A [foreground command can move to the background at its timeout](https://code.claude.com/docs/en/tools-reference#foreground-commands-that-move-to-the-background), so a hard-termination guarantee isn’t a prerequisite for running it.
+Apply the [chosen command limit](session-coordination.md#commands) with the Bash tool’s native `timeout` in milliseconds. The default five-minute bound is `300000`, and any longer bound requires the coordinator’s prior approval within host limits. A [foreground command can move to the background at its timeout](https://code.claude.com/docs/en/tools-reference#foreground-commands-that-move-to-the-background), so a hard-termination guarantee isn’t a prerequisite for running it.
 
 If a command remains running when its timeout expires, stop that task immediately through the native `TaskStop` tool and confirm termination. This also applies when the timeout moves the command to the background. Don’t reset the deadline or treat backgrounding as permission to continue. Stopping may occur after the deadline, so don’t describe this as an exact execution cap. If stopping fails or can’t be confirmed, report the command as possibly still running under [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop).
 
@@ -91,7 +91,7 @@ For each `--claude` session, `subagent-signal` reads the `<uuid>.jsonl` transcri
 
 Queries in a host context that restricts filesystem reads or process queries can report `failed` while the worker remains active. If this failure signal conflicts with an increase in the monitor’s `nextSince` across observations or comes from a context with narrower access to filesystem reads or process queries than launch, recheck the same session using access established to read its session and job data and query live process state before stopping or replacing it. This read-only recheck does not require permission to terminate the worker. Use the prescribed monitor with the same UUID and fixed `<since>` value. If that access or reliable observation is unavailable, report the monitoring limitation and follow [Handle Errors and Stop](session-coordination.md#handle-errors-and-stop) rather than infer worker failure or inactivity.
 
-A `blocked` signal doesn’t authorize answering a user-only prompt or establish which approval is needed. Ask the user to resolve the approval or clarify an unclear requirement.
+A `blocked` signal doesn’t authorize answering a user-only prompt or establish which approval is needed. Resolve coordinator-owned decisions within existing authority. Ask the user only for a required approval, necessary information, or a material decision that the coordinator can’t make.
 
 ## Stop a Session
 

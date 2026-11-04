@@ -78,11 +78,15 @@ The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::Send
 
 ## User Approval Checkpoints
 
-The global [**Execution checkpoints** policy](GLOBAL.md#execution-checkpoints) owns checkpoint placement and the preference for uninterrupted execution between necessary user decisions.
+This non-exhaustive index records intentionally retained user approval checkpoints and their rationale. The global [**Execution checkpoints** policy](GLOBAL.md#execution-checkpoints) owns checkpoint placement.
 
 ### Contribution Publication
 
 The contribution workflow owns [final publication approval](../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-the-approved-pull-request). The final checkpoint preserves the user’s control over what is submitted on their behalf.
+
+### Harmonization Destinations
+
+The harmonization workflow owns [repository and role selection](skills/harmonize/SKILL.md#resolve-repositories). This initial checkpoint preserves the user’s control over which repositories may receive changes, rather than letting discovery alone select write destinations.
 
 ## Skill Maintenance
 
@@ -102,7 +106,7 @@ The explicit [writing composition route](../skills/.domfiles-agent-documentation
 
 ### Codex Subagent Approvals
 
-It remains unverified whether [Codex’s automatic review](../skills/.domfiles-cli-subagent/references/codex-cli.md#apply-runtime-configuration) resolves sandbox escalation requests unattended or leaves the turn waiting, and whether `--approve-for-me` applies after `resume`. A silent waiting turn ends under the [inactivity procedure](../skills/.domfiles-cli-subagent/references/session-coordination.md#inactivity) or the host timeout for [foreground execution](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs).
+With Codex CLI `0.166.0`, explicit sandbox escalation requests for a fixed-output probe completed in both fresh and resumed turns under [the prescribed automatic-review mode](../skills/.domfiles-cli-subagent/references/codex-cli.md#apply-runtime-configuration), and the user observed no approval prompt. This establishes completion for that command without a human prompt, not which approval path allowed it or how other security obstacles are handled. A silent waiting turn ends under the [inactivity procedure](../skills/.domfiles-cli-subagent/references/session-coordination.md#inactivity) or the host timeout for [foreground execution](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs).
 
 ### Contribution Flow
 

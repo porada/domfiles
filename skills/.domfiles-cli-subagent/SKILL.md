@@ -15,7 +15,7 @@ Coordinate Claude or Codex as a subagent under the global **Collaboration** poli
 
 ## Select Execution Interface
 
-Include the calling workflow’s requirements for session continuity and retained context when deciding whether either a host delegate or CLI fallback is eligible. For iterative reviews, apply `subagent-review-flow`’s requirements before selection.
+Include the calling workflow’s session lifecycle and retained-context requirements when deciding whether either a host delegate or CLI fallback is eligible. For iterative reviews, apply `subagent-review-flow`’s continuity and recorded reviewer-role transfer requirements before selection. Fresh-session-only support is a capability limit, not permission to change mandated reviewer selection or interfaces.
 
 When a task requests a Claude Code or Codex CLI agent, prefer a host-managed delegate of that provider when the host’s documented interface supports the requested model and explicit reasoning effort selection. A delegate using the same model in the host’s own agent harness does not qualify. Establish the provider, resolved model, and effort match without guessing aliases, defaults, or inheritance. For omitted model or effort settings, use only the model and effort defaults in [Claude CLI](references/claude-cli.md#apply-runtime-configuration) or [Codex CLI](references/codex-cli.md#apply-runtime-configuration). Their execution requirements apply only after selecting CLI execution.
 
@@ -32,7 +32,7 @@ Apply [Bound the Exchange](#bound-the-exchange) to either interface. For an elig
 
 ## Establish Readiness
 
-Before composing a live assignment, load [Session Coordination](references/session-coordination.md) for readiness, resumption, monitoring, and limits, together with the participant’s reference for runtime defaults and its launch, resume, and stop procedures: [Claude CLI](references/claude-cli.md) or [Codex CLI](references/codex-cli.md). The shared readiness procedure determines whether to send the substantive assignment or a readiness-only exchange.
+Under the global **CLI subagent readiness** policy, load [Session Coordination](references/session-coordination.md) for lifecycle evidence reuse, resumption, monitoring, and task-specific limits, together with the participant’s reference for runtime defaults and launch, resume, and stop procedures: [Claude CLI](references/claude-cli.md) or [Codex CLI](references/codex-cli.md). The shared readiness procedure determines whether applicable evidence suffices or a substantive or readiness-only exchange is needed.
 
 ## Prepare the Assignment
 

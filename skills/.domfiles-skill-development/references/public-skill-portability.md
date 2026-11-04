@@ -42,7 +42,7 @@ Treat a public skill catalog and its collection README as consumer-facing docume
 
 When `skills.sh.json` and a collection README present the same catalog, use the JSON file as the canonical source for group descriptions, group order, group titles, skill membership, and skill order. Mirror those values exactly in the README’s catalog section, linking each skill identifier to its public directory. Keep the README’s other content independent.
 
-Within catalog work, propose improvements to the canonical groupings when useful, but apply grouping changes only with explicit user approval. A direct request specifying the grouping change supplies that approval. General maintenance or synchronization permission doesn’t approve regrouping.
+Within catalog work, apply improvements to the canonical groupings within the requested scope and preserve explicit grouping constraints. Synchronization-only work aligns existing groupings rather than redesigning them.
 
 When authorized shared catalog content changes, update both surfaces together. Validate the complete correspondence, not just changed entries, alongside JSON syntax, public skill identifiers, and schema constraints.
 

@@ -20,7 +20,7 @@ Treat a serializer formatting failure as a possible markup defect. Inspect the r
 
 If a project relies heavily on snapshots in other tests, such as unit tests, but doesn’t use `vitest-react-serializer`, recommend installing it and using it for React component tests. The component tests need not already use snapshots.
 
-Adding the package or registering it requires the user’s authorization under [Convention Scope](../SKILL.md#convention-scope) and applicable dependency policy. Once authorized, register it through the config’s `snapshotSerializers`, not per-test `expect.addSnapshotSerializer` calls. The serializer’s own tests may register it directly to exercise its API.
+Adding the package remains subject to applicable dependency policy. For registration covered by [Convention Scope](../SKILL.md#convention-scope), use the config’s `snapshotSerializers`, not per-test `expect.addSnapshotSerializer` calls. The serializer’s own tests may register it directly to exercise its API.
 
 ### Cleanup
 
