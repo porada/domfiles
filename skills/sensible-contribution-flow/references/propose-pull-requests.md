@@ -8,6 +8,8 @@ When applicable governing instructions expressly delegate a continuing approval 
 
 Without that governing delegation, request only implementation authority not already supplied by the user rather than offering a new broad continuing grant. Let the resolved commit workflow establish execution authorization for commits and history updates, including any applicable one-off request.
 
+During the initial scope discussion or proposal update, briefly identify the [selected publication handoff](hand-off-contributions.md#preserve-remote-authorization). If it requires final publication approval, tell the user that publication will wait for approval of the finished package. This notice creates no additional approval step and doesn’t request publication authority early.
+
 When approval is needed, briefly reiterate the verified target, intended behavior, exclusions, proposed actions, and handoff, then explicitly ask to execute the uncovered effects. Wait for the response and retain its record before carrying out those effects. Approval of a draft or plan alone never substitutes for execution authorization. Proceed through already covered work without requiring another recap or approval. For later discoveries, ask only about the new decision or uncovered effect.
 
 ## Prepare Proposals

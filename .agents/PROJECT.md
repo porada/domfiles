@@ -76,6 +76,14 @@ The [global system-available tooling list](GLOBAL.md#system-available-tooling) n
 
 The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::SendKeystrokes` because Zed exposes separate actions for creating an agent thread and adding the active selection, but no single action that combines them. The `cmd-? cmd-n cmd-? cmd->` sequence is intentional: it focuses the agent panel, creates a new thread, returns focus to the selected editor text, then invokes `agent::AddSelectionToThread`, which refocuses the panel and inserts the reference. The focus round-trip preserves the source context and adds dispatch yields around asynchronous thread creation.
 
+## User Approval Checkpoints
+
+The global [**Execution checkpoints** policy](GLOBAL.md#execution-checkpoints) owns checkpoint placement and the preference for uninterrupted execution between necessary user decisions.
+
+### Contribution Publication
+
+The contribution workflow owns [final publication approval](../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-the-approved-pull-request). The final checkpoint preserves the user’s control over what is submitted on their behalf.
+
 ## Skill Maintenance
 
 ### Agent Documentation Composition

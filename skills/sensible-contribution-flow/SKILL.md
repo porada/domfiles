@@ -30,7 +30,8 @@ For initial pull request preparation, use these default stages in execution orde
 2. [Assess upstream fit and contribution scope](#assess-contribution-fit).
 3. [Resolve execution authority, then prepare the early pull request draft and design review](references/propose-pull-requests.md).
 4. [Implement, validate, and review](references/prepare-pull-requests.md#implement-and-review).
-5. [Prepare commits](references/prepare-pull-requests.md#prepare-commits), [finalize the pull request](references/prepare-pull-requests.md#finalize-pull-requests), and [hand off the contribution](#hand-off-contributions).
+5. [Prepare commits](references/prepare-pull-requests.md#prepare-commits) and [finalize the pull request](references/prepare-pull-requests.md#finalize-pull-requests).
+6. [Present the completed contribution at its selected publication handoff](references/hand-off-contributions.md#preserve-remote-authorization).
 
 For other contribution outcomes, follow [contribution assessment](#assess-contribution-fit) and its selected preparation path.
 
@@ -86,7 +87,7 @@ For maintainer feedback or other user-supplied findings, follow [Incorporate Fee
 
 ## Hand Off Contributions
 
-For final delivery or any remote mutation, follow [Hand Off Contributions](references/hand-off-contributions.md). Preparation and local Git authorization don’t authorize publication or submission. Keep unrequested remote effects user-run, preserve human-only checkpoints, and stop at the scoped handoff rather than monitoring afterward.
+For final delivery or any remote mutation, follow [Hand Off Contributions](references/hand-off-contributions.md). It owns initial pull request publication approval, authorization for other submissions and revisions, and explicitly user-run or working-tree-only endpoints. Preserve human-only checkpoints and stop at the scoped handoff rather than monitoring afterward.
 
 ## Apply General Policies
 

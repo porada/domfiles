@@ -68,13 +68,15 @@ Use established secure machine-local authentication under [Secrets and Authentic
 
 Send only task-required data to the selected service within its disclosure boundary. Network access authorizes a connection, not disclosure. Don’t expose private material through public searches or repository artifacts. Don’t upload repository content, diagnostics, or generated artifacts to optional processing services, enable optional AI features, or switch authentication sources or providers without an explicit user request covering that boundary. Authentication setup remains user-run.
 
-Remote mutations require an unambiguous target and explicit authorization for their effects under [Hand Off Contributions](../SKILL.md#hand-off-contributions). A direct, scoped user command may supply that authorization without another workflow confirmation.
+Remote mutations require an unambiguous target and explicit authorization for their effects under [Preserve Remote Authorization](hand-off-contributions.md#preserve-remote-authorization).
 
 After an ordinary technical retrieval failure, correct a demonstrated path or invocation mistake, retry within bounds, or use an equivalent method. Keep the target, authorized effects, authentication, and disclosure boundaries unchanged. Verify replacement guidance against authoritative evidence, and ask before changing an explicitly selected version or another material task assumption. Don’t use another agent, browser, proxy, or tool to evade denied access, authentication requirements, or a security control. Use the supported grant or correction process instead. If recovery is unsuccessful, report the resource, attempted methods, exact error with necessary secret redaction, and smallest corrective action. Continue independent authorized work without claiming the affected step succeeded. New dependencies, destinations, or broader effects retain their own approval requirements.
 
-## Preserve Git Transport
+## Configure Git Remotes
 
-For agent-run operations, remote setup, and user-run commands, honor the Git transport selected by applicable instructions and existing configuration. Verify the destination’s effective fetch or push transport before using it or providing its command, without exposing embedded credentials. If it conflicts with the selected transport, stop the affected operation or command handoff and report the mismatch. Changing an existing remote or substituting a one-off URL requires explicit authorization. If access is unavailable, report the requirement rather than silently switching transports. This boundary governs Git commands and repository remotes, not dependency specifiers, package manager fetching, or GitHub API or web access.
+Use established Git configuration and remotes. Local setup or updates needed for authorized contribution work don’t require separate approval when they preserve the intended upstream project, including transport changes and switching to a verified fork. Verify repository identity and fork relationships without exposing credentials. Preserve unrelated configuration and existing contribution relationships, adding a remote instead when replacement would disturb them. Local configuration doesn’t authorize hosted fork creation, pushing, or submission.
+
+Apply personal transport preferences to local Git operations, not consumer documentation, reusable instructions, repository scripts, or dependency declarations. Don’t require a transport-only preflight, stop solely because an existing URL uses HTTPS, or normalize remotes merely for consistency. Diagnose actual access failures under [Limit Data and Service Access](#limit-data-and-service-access), preserving authentication and security boundaries.
 
 ## Deliver Commands
 

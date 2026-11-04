@@ -44,7 +44,7 @@ When `skills.sh.json` and a collection README present the same catalog, use the 
 
 Within catalog work, propose improvements to the canonical groupings when useful, but apply grouping changes only with explicit user approval. A direct request specifying the grouping change supplies that approval. General maintenance or synchronization permission doesn’t approve regrouping.
 
-When authorized shared catalog content changes, update both surfaces together. Obtain any required README edit permission before changing either. Validate the complete correspondence, not just changed entries, alongside JSON syntax, public skill identifiers, and schema constraints.
+When authorized shared catalog content changes, update both surfaces together. Validate the complete correspondence, not just changed entries, alongside JSON syntax, public skill identifiers, and schema constraints.
 
 ## Include Shared Public Policies
 
