@@ -11,7 +11,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `dom-sensible-commit-flow`
 - `dom-sensible-contribution-flow`
 - `fish-shell-scripting`
-- `full-review`
+- `full-review`: Run two independent reviews and resolve validated findings.
 - `human-facing-writing`
 - `intentional-dependency-choice`
 - `posix-shell-scripting`
