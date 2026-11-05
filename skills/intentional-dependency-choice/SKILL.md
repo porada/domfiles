@@ -63,7 +63,7 @@ When the current toolchain supports shared dependency specifications and using t
 
 Preserve the selected dependency requirements and consumer-specific settings. Do not introduce or extend a sharing mechanism when project policy prohibits it, requires another declaration form, or limits its use to other consumers or dependency categories. When no applicable sharing mechanism is supported or permitted, retain the project’s declaration form. This rule doesn’t change dependency selection or approval requirements.
 
-That workflow owns separately authorized declarations, lockfile updates, acquisition, and validation. A recommendation isn’t approval, and choice approval doesn’t authorize unrelated effects or waive installation, lifecycle script, publication, or security requirements. If implementation needs features, a source, or a version outside the approval, return to the decision rather than silently substituting them. Preserve unrelated work and approval covering unchanged effects.
+The implementation workflow handles declarations, lockfile updates, acquisition, and validation under the existing task and choice authority, without a fresh installation approval. A recommendation isn’t approval. Ask only for a choice or effect outside that authority, preserving unrelated work and applicable project, publication, and security requirements.
 
 ## Apply General Policies
 

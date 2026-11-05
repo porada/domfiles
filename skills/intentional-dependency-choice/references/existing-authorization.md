@@ -8,9 +8,7 @@ Apply the [declaration convention](../SKILL.md#return-to-implementation) before 
 
 ## Prescribed Acquisition
 
-Authorization to run an established project workflow includes obtaining the dependencies and tools it already prescribes through configuration, lockfiles, manifests, or scripts, using its normal acquisition mechanism. Don’t request separate dependency approval solely because those dependencies and tools are absent locally or downloaded on demand. An agent can’t create this authorization by adding its own declaration or acquisition step. Explicit task restrictions and applicable execution, lifecycle script, permission, and trust boundaries remain in force.
-
-When those conditions are satisfied and no new choice is needed, return to the owning workflow without a selection exercise.
+An authorized task covers installing, restoring, and reconciling project-prescribed dependencies, tools, and package manager versions through the established workflow, including its configured lifecycle steps. Missing installations and on-demand downloads don’t require another approval or a selection exercise. Preserve explicit task restrictions and native build approvals, integrity checks, and trust controls. Return acquisition to the owning workflow, where it may run as part of validation. An agent-created declaration doesn’t authorize a new choice.
 
 ## History Integration
 

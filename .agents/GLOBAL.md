@@ -54,10 +54,9 @@ An **effect** is an action’s consequence, such as editing files, creating a co
 
 ### Dependencies
 
-- **Approval gate:** Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without existing approval, stop before dependency-premised implementation, mutation, installation, or mutating delegation and ask the user directly. Only an explicit user response grants approval.
-- **Prescribed acquisition:** Authorization to run an established project workflow covers its normal acquisition of dependencies and tools already prescribed by configuration, lockfiles, manifests, or scripts. Local absence or on-demand downloads alone don’t require separate dependency approval. Agents can’t manufacture this authorization by adding a dependency declaration or acquisition step. Explicit task restrictions and applicable execution, lifecycle script, permission, and trust boundaries still apply.
+- **Prescribed acquisition:** An authorized task includes installing, restoring, and reconciling the dependencies, tools, and package manager versions prescribed by the project. Proceed without asking, including on-demand downloads, configured lifecycle steps, and normal dependency or lockfile reconciliation by shared tools in their own checkout. This also applies when that checkout has development changes or the tool is invoked from another project. Follow established commands and native build approvals, integrity checks, and trust controls, preserving unrelated work and explicit task restrictions. Installation need not be separate from validation.
+- **Approval gate:** Ask before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version, including temporary package runner acquisitions. Obtain approval before dependent implementation, installation, or mutating delegation. Reuse existing approval without repeating the selection process. Adding a declaration yourself doesn’t make the choice prescribed.
 - **History integration:** An authorized Git history operation may incorporate its selected upstream’s existing dependency declarations and lockfile changes without separate dependency change approval. New choices, including those introduced by conflict resolution, remain gated. Integration alone doesn’t authorize installation or execution, but a separately authorized workflow can cover prescribed acquisition. Sandbox and security requirements still apply.
-- **Lifecycle scripts:** Add `--ignore-scripts` to `npm install`, `pnpm install`, and `yarn install` by default. Run an install without it only when lifecycle scripts are necessary for the task, and state the reason first.
 
 ### Protected Documentation
 
@@ -149,7 +148,7 @@ At handoff, report remaining actionable opportunities separately from required f
 ## Documentation
 
 - **Artifact prose:** Apply `human-facing-writing` and its editorial conventions to prose in artifacts, whether written to a file or delivered in a response. Ordinary agent communication is exempt.
-- **Consumer documentation:** Treat consumer-facing documentation as material for its readers, without imposing agent execution or repository maintenance conventions. Apply a convention to its commands, presentation, structure, or terminology only when the rule explicitly governs consumer documentation.
+- **Consumer documentation:** Document the project’s supported workflow without imposing agent execution or repository maintenance conventions on its readers. Apply a convention to commands, presentation, structure, or terminology only when it explicitly governs consumer documentation.
 - **Skill maintenance:** After using a skill, suggest a concrete edit only when execution reveals missing guidance, ambiguity, an outdated assumption, or avoidable friction. Use `references/maintained-skills.md` in the installed `skill-development` directory to identify domfiles-maintained skills.
 - **Markdown integrity:** For audits, changes, and reviews of mutable project-authored Markdown, follow `agent-documentation`’s Check Markdown guidance.
 - **Documentation alignment:** When you change behavior, interfaces, or defaults, search tracked documentation for affected identifiers and descriptions. Update statements the change makes inaccurate, following the applicable documentation workflow and mutation requirements. Keep the search focused on the changed contract.
@@ -171,7 +170,7 @@ At handoff, report remaining actionable opportunities separately from required f
 - **Availability:** On macOS and Linux, assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `doclint`, `fd`, `fish`, `gh`, `jq`, `node`, `pandoc`, `pnpm`, `rg`, `shellcheck`, `skills`, `vercel`, `yarn`, `yq`, and `zizmor`. On macOS, also assume `cargo`, `just`, and `rustc` are available.
 - **Usage:** Default to `fish --no-config` when using Fish as a non-interactive interpreter unless Fish startup configuration or configured runtime behavior is in scope. Use `pandoc --sandbox` for document parsing and conversion when the reader and writer need access only to files supplied on the command line. Treat `--sandbox` as a reader and writer boundary only. It doesn’t constrain filters or PDF engines. Always pass `--no-config` to `rg`.
 - **Direct invocation:** For `skills` and `vercel`, invoke project-local commands through the project’s package manager. If the project doesn’t provide the command, invoke the system-available command directly, not through `npx` or `pnpm dlx`.
-- **Scope:** Command guidance applies to agent invocations and command examples, not repository scripts, workflows, or configuration.
+- **Scope:** These command defaults govern agent execution, not consumer documentation, repository scripts, workflows, or configuration.
 
 ### Tool Use
 

@@ -16,7 +16,7 @@ When approval is needed, briefly reiterate the verified target, intended behavio
 
 Identify the contribution’s central claim and the most direct appropriate validation. A regression test should distinguish the defect from the intended behavior, while a documentation correction may require checking the description against current behavior. Use the repository’s checks and the resolved commit workflow’s validation checkpoints to establish that claim rather than creating a parallel validation procedure.
 
-Before implementation, inspect the repository’s validation commands, tool versions, and acquisition path. Establish whether validation uses available tooling, may acquire already prescribed dependencies or tools, or requires a new dependency choice. A `PATH` check alone doesn’t settle package runner availability or download needs. Don’t download tools merely to investigate availability. Resolve any newly uncovered approval before its dependent work, without reopening covered effects.
+Use the repository’s validation workflow and prescribed setup. Resolve any new dependency choice through the [dependency boundary](execution-boundaries.md#handle-dependencies-and-protected-content) before dependent work, without reopening covered installation authority.
 
 Ask the resolved commit workflow for a read-only, prospective breakdown based on the intended scope. Supply the [contribution’s packaging constraints](prepare-pull-requests.md#plan-and-implement-commits), then retain only a provisional plan until the actual diff exists.
 

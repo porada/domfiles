@@ -50,15 +50,15 @@ Use supported permission mechanisms. Request the narrowest necessary grant, and 
 
 ## Handle Dependencies and Protected Content
 
-Require explicit user approval before introducing agent-selected dependencies or tools or changing their prescribed features, source, or version, including temporary acquisitions and package runners. Without it, stop before dependent implementation, mutation, installation, or mutating delegation, even when no repository file changes. An agent or reviewer can’t supply approval.
+Authorized contribution work includes installing and reconciling project-prescribed dependencies, tools, and package manager versions through the established workflow, including configured lifecycle steps and setup performed by validation commands. Proceed without asking again for downloads or missing installations, preserving explicit task restrictions and native build approvals, integrity checks, and trust controls.
+
+Require explicit user approval for new dependency or tool choices and changes to prescribed features, sources, or versions, including temporary package runner acquisitions. Obtain it before dependent implementation, installation, or mutating delegation. An agent-created declaration doesn’t supply approval.
 
 For new choices, approved dependency declarations, or declarations of an existing dependency for an additional workspace consumer, use the resolved [dependency workflow](../SKILL.md#compose-with-peers) when available. Reuse its evidence, decisions, and approval without repeating selection or asking again for covered effects. Prescribed acquisition, inherited declarations, merely carrying an existing approval, and reuse without adding or changing a declaration don’t invoke dependency selection.
 
 When the peer is unavailable, check whether existing capabilities suffice. For a necessary addition or change, verify project compatibility and explain the exact choice, intended use, justification, and material consequences before requesting approval. Preserve approved choices, follow project declaration conventions, and disclose evidence gaps.
 
-Authorization to run an established project workflow covers its normal acquisition of dependencies and tools already prescribed by configuration, lockfiles, manifests, or scripts. This includes on-demand downloads. Authorized history integration covers dependency declarations and lockfile changes already present in its selected upstream history, not installation or execution. Neither covers a new choice introduced by the agent. Don’t manufacture coverage by adding declarations or acquisition steps. Preserve task restrictions and separate execution, lifecycle script, permission, and trust requirements.
-
-Suppress package lifecycle scripts by default, including `--ignore-scripts` for npm, pnpm, or Yarn installs. Run them only when necessary for the task and explain why beforehand. This doesn’t permit bypassing integrity or trust checks.
+Authorized history integration covers existing upstream dependency declarations and lockfile changes. Installation follows the authorized task’s workflow. New choices introduced during integration retain the approval requirement above.
 
 Preserve protected content and human-only review requirements imposed by the consuming project. An implementation grant doesn’t complete a required human action.
 

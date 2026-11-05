@@ -38,11 +38,7 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 
 ## Validation
 
-Prefix every agent-selected pnpm-backed validation command with `env PNPM_CONFIG_FROZEN_LOCKFILE=true PNPM_CONFIG_PM_ON_FAIL=error PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN=error`, including checks selected through domain skills. Keep validation separate from package manager and dependency reconciliation.
-
-If a guard stops a check, diagnose the prerequisite failure and apply the global **Dependencies** policy. Complete authorized acquisition or reconciliation separately, including obtaining or selecting the package manager version prescribed by the project. Then rerun the check with all guards intact. Report a limitation only when recovery can’t proceed within applicable boundaries. See [pnpm Execution and Lockfile Behavior](.agents/PROJECT.md#pnpm-execution-and-lockfile-behavior) for the overrides’ effects.
-
-For changed JSON files, run `pnpm run lint:json <changed-json-files>` with that prefix. Pass paths explicitly unless repository-wide validation is intended.
+For changed JSON files, run `pnpm run lint:json <changed-json-files>`. Pass paths explicitly unless repository-wide validation is intended.
 
 For Markdown validation, invoke `doclint` and follow [Check Markdown](skills/.domfiles-agent-documentation/references/check-markdown.md).
 
