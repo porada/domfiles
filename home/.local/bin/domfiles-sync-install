@@ -4,15 +4,13 @@
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
 __print_heading 'Installing dependencies'
-__is_ci && __ brew --version
 __ brew analytics off
-
-__print_heading_dimmed 'Ensuring `brew` is up to date'
-__ brew update --quiet
 
 if __is_ci; then
   __ brew --version
 else
+  __print_heading_dimmed 'Ensuring `brew` is up to date'
+  __ brew update --quiet
   __ brew upgrade --overwrite || true
 fi
 
@@ -55,30 +53,35 @@ install() (
 )
 
 # Install primary dependencies
-for formula in fish fisher git node pnpm; do
-  install "$formula"
-done
-
-# Install macOS apps
-if __is_macos && ! __is_ci; then
-  install mole
-  install zed --adopt --cask
-fi
+install fish
+install fisher
+install git
+install node
+install pnpm
 
 # Install development dependencies
 if ! __is_ci; then
-  for formula in actionlint coreutils fd gh jq just pandoc ripgrep rust shellcheck vim yarn yq zizmor; do
-    install "$formula"
-  done
+  install actionlint
+  install claude-code --cask
+  install codex --cask
+  install coreutils
+  install fd
+  install gh
+  install jq
+  install pandoc
+  install ripgrep
+  install shellcheck
+  install vim
+  install yarn
+  install yq
+  install zizmor
 
-  for formula in claude-code codex; do
-    install "$formula" --cask
-  done
-fi
-
-# Clean up `brew`
-if ! __is_ci; then
-  __ brew cleanup --prune=all > /dev/null
+  if __is_macos; then
+    install just
+    install mole
+    install rust
+    install zed --adopt --cask
+  fi
 fi
 
 # Link Homebrew-installed tools

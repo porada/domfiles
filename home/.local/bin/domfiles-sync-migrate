@@ -45,3 +45,13 @@ for formula in ast-grep node@24; do
     __ brew uninstall "$formula"
   fi
 done
+
+# Uninstall commands that aren’t used on Linux
+if ! __is_macos; then
+  for formula in just rust; do
+    if __is_brew_installed "$formula"; then
+      __print_heading_dimmed "Uninstalling \`$formula\`"
+      __ brew uninstall "$formula"
+    fi
+  done
+fi
