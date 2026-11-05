@@ -44,11 +44,11 @@ For relays and replies, include validation evidence only when it settles a claim
 
 Keep required findings separate from optional adjacent improvement opportunities noticed during authorized work. Preserve concrete opportunities without expanding investigation to discover or develop them. Don’t demote required task corrections or discard an opportunity merely because it falls outside the current fix scope.
 
-Validate opportunities using available evidence, consolidate duplicates, and report each distinct opportunity separately from required findings with its observed basis, expected benefit, and material uncertainty. You don’t need a fully researched implementation. Surface opportunities at a natural handoff or review conclusion, not immediately on discovery. Once opportunities have been reported, surface only new or materially changed ones.
+Assess opportunities using available evidence and the task’s authorization. Handle small, low-risk improvements directly when that authority covers them, preserving read-only assignments. At handoff, report remaining actionable opportunities separately from required findings, with their observed basis, expected benefit, and material uncertainty. Consolidate duplicates, omit completed improvements, and surface only new or materially changed opportunities after the first report.
 
 A reviewer’s lack of task context alone isn’t a documentation gap. Report a documentation opportunity only when missing durable, non-obvious context is likely to cause wrong future decisions or substantial repeated investigation and is not already canonically available. Otherwise retain the disposition in the conversation without requiring documentation.
 
-Opportunities aren’t standing findings. To complete a review, deliver them. Completion doesn’t require their implementation, another review round, or user acknowledgment or explicit deferral. Further investigation or implementation remains subject to scope and authorization boundaries. Require delegates to return opportunities under this contract and carry it into further delegation. Apply the [session behavior test framing exception](references/outgoing-prompts.md#session-behavior-tests) to test prompts.
+Unaccepted opportunities aren’t standing findings and don’t require implementation, another review round, or user acknowledgment or explicit deferral. Accepted work needs the applicable validation and review coverage. Further investigation or implementation remains subject to scope and authorization boundaries. Carry this contract into delegated assignments, subject to the [session behavior test framing exception](references/outgoing-prompts.md#session-behavior-tests).
 
 ## Revisions
 

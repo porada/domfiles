@@ -88,7 +88,7 @@ Full independent clearance requires a no-standing-findings result from every ori
 
 If all required clearance remains valid, no further review, reassurance, or acknowledgment is needed. Report any reused clearance with its basis, and disclose reviewer-role transfers and why they were needed.
 
-Before concluding, deliver the reported optional improvement opportunities. They aren’t standing findings. Finishing the review doesn’t require implementing them, another review round, or user acknowledgment or explicit deferral.
+Before concluding, deliver remaining actionable opportunities under the calling workflow’s reporting requirements, omitting completed improvements. Unaccepted opportunities aren’t standing findings and require neither implementation nor user acknowledgment or explicit deferral. Accepted work follows the applicable validation and review requirements.
 
 When [bounded recovery and permitted role transfer](#recover-reviewer-continuity) can’t restore a required reviewer, a stopping boundary is reached, or bounded disagreement handling leaves a dispute, conclude with a limited review. Identify participation and coverage gaps, standing findings, coordinator dispositions and their evidence, and any remaining verification. Distinguish coordinator-validated corrections from independent clearance and identify affected scope that still needs review. Don’t claim full clearance or silently drop findings. Continue independent authorized work, preserving any calling-workflow gate that requires clearance. Ask only when the user has necessary information or authority, or must make a material decision, not merely because the review has reached this endpoint.
 
