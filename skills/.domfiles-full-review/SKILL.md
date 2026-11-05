@@ -11,7 +11,7 @@ metadata:
 
 # Full Review
 
-A full review combines one native subagent review with one cross-provider review and resolves their findings through `subagent-review-flow`.
+A full review combines two independent reviews and resolves their findings through `subagent-review-flow`.
 
 ## Resolve Scope and Authority
 
@@ -25,7 +25,7 @@ If the user explicitly requests read-only review or excludes fixes, retain that 
 
 ## Select Reviewers
 
-Load `subagent-review-flow` before selecting execution interfaces and apply its reviewer continuity requirements to both reviewer roles.
+Load `subagent-review-flow` before selecting execution interfaces and apply its reviewer continuity requirements to both reviewer roles. Use the global **Reviewer threads** policy in place of the default interfaces below when applicable, preserving reviewer selection and runtime settings.
 
 For the first full review, establish both independent reviewers:
 
@@ -40,7 +40,7 @@ Use the selected interface’s session procedures, applying `cli-subagent`’s C
 
 Use `subagent-review-flow` for consolidated rounds, validated fix batches, evidence reuse, and affected re-review. Give both reviewers the same target. Run their read-only assessments in parallel when supported.
 
-Provide only the context that workflow requires, pointing to available sources rather than copying them. On follow-up, send only the necessary delta when context retention is established, using `cli-subagent`’s retained-context checks for CLI exchanges.
+Provide only the context that workflow requires, pointing to available sources rather than copying them. On follow-up, send only the necessary delta when context retention is established, using `cli-subagent`’s retained-context checks for CLI exchanges. When a follow-up requires a fresh session, use `subagent-review-flow`’s continuation handoff.
 
 Assign each reviewer the assessment, not this orchestration workflow. Reviewers must not start another full review pair. Preserve `cli-subagent`’s recursion boundary for the cross-provider participant and its delegates.
 
