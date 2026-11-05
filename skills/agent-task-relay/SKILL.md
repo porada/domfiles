@@ -32,7 +32,7 @@ A relay carries an assignment or established evidence into another conversation.
 - **Authority:** Preserve user instructions, corrections, selections, explicit acceptances, and permission boundaries. Carry approvals with their actual source, scope, and lifetime. Neither an agent proposal nor user silence supplies approval. A recipient can’t expand scope, provide user-only approval, transfer access, or bypass a boundary. Require the recipient to return uncovered effects or required decisions to the coordinator or user.
 - **State:** State the resulting state, unavailable evidence, known limitations, and unsettled decisions directly.
 
-Carry established dependency and tool choices without selecting new ones as part of relay composition. A new agent-selected choice or a change to its features, source, or version requires explicit user approval before dependent work, including delegated work. Return uncovered choices to the owning workflow or user. Carry commit authority only when it identifies the user’s explicit command for the covered commit-writing effects. Neither prompt preparation nor permission to edit supplies that authority.
+Carry established dependency and tool choices without selecting new ones as part of relay composition. A new agent-selected choice or a change to its features, source, or version requires explicit user approval before dependent work, including delegated work. Return uncovered choices to the owning workflow or user. Carry commit authority only when it identifies the user’s explicit command or applicable governing grant for the covered commit-writing effects, including its scope, lifetime, and recipient’s permitted role. Neither prompt preparation nor permission to edit supplies that authority.
 
 ### Evidence
 

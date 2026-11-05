@@ -15,6 +15,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `human-facing-writing`
 - `intentional-dependency-choice`
 - `posix-shell-scripting`
+- `prepush`: Prepare commits for publication.
 - `refine-agent-workflow`: Recommend improvements to agent instructions and workflows.
 - `release-notes-for-humans`
 - `sensible-commit-flow`

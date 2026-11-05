@@ -7,7 +7,7 @@ Use this decision order for each group:
 1. Identify the dominant intended change, using verified task context rather than patch mechanics alone. Distinguish the actual change from capabilities that can merely be inferred from it.
 2. Choose the narrowest durable repository concept that captures that intent. Name a concrete artifact or surface when sufficient. Move up to a capability, maintenance class, or subsystem only when the narrower objects are supporting details. Reuse established compact vocabulary such as `config` and `README` when it fits.
 3. Choose a semantic verb. Added lines don’t necessarily mean `Add`, and deleted lines don’t necessarily mean `Remove`. Use the role guide below as a vocabulary aid, not an exhaustive list or a rigid taxonomy.
-4. Add a qualifier only when it distinguishes a material condition, mechanism, purpose, or scope. Describe the delta rather than inventorying the resulting state. A conjunction may join objects under one action, but should not combine unrelated changes.
+4. Add a qualifier only when it distinguishes a material condition, mechanism, purpose, or scope. Describe the delta rather than inventorying the resulting state. When related edits serve one purpose, name that purpose rather than joining the edits into a checklist. A conjunction may join objects under one action, but should not combine unrelated changes. A list-like title alone is not a reason to split an otherwise coherent commit.
 5. Apply the [message form](#message-form), then use the entrypoint’s [writing composition](../SKILL.md#compose-prose) with the established intent and constraints. Check that the subject covers its assigned hunks and the complete message claims no unverified motivation or outcome.
 
 The role guide is alphabetized by editorial role:
@@ -23,7 +23,7 @@ The role guide is alphabetized by editorial role:
 ## Message Form
 
 - **Conventions:** Apply repository message requirements and supplied wording under the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints), including explicit task-scoped overrides. Use explicit user or authorized calling workflow preferences before conventions found in relevant history. Conventional Commit prefixes and scopes are permitted when the selected convention calls for them, not required by this skill.
-- **Grammar:** Without a narrower convention, write one compact, sentence case imperative clause, normally `<verb> <object>`, without terminal punctuation. Omit articles that add no meaning. Preserve necessary precision rather than imposing a fixed word or character limit.
+- **Grammar:** Without a narrower convention, write one compact, sentence case imperative clause, normally `<verb> <object>`, without terminal punctuation. Preserve necessary precision rather than imposing a fixed word or character limit.
 - **Literal names:** Put exact searchable tokens in backticks, including commands, configuration keys, domains, file labels, package selectors, paths, and rule IDs. Leave conceptual categories and canonically styled product names in prose. For example, `typescript@7` is a literal selector, while TypeScript is a product name.
 - **Bodies:** Use the subject alone unless a short body adds verified motivation, constraints, or consequences that the subject cannot adequately convey. Do not restate the subject, narrate the patch, or add a routine testing checklist. Preserve bodies and trailers required by the selected message constraints, but do not invent issue references, attribution, or boilerplate.
 

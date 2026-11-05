@@ -9,7 +9,13 @@ metadata:
 
 # Commit Flow
 
-Load `sensible-commit-flow` and apply these personal conventions as defaults for newly authored messages under the global **Explicit user direction** policy. The public skill owns the workflow, supplied-message safeguards, confirmation, execution, and verification. These defaults take precedence over optional conventions inferred from repository history. Preserve repository requirements and exact supplied wording unless an explicit, task-scoped instruction overrides the applicable convention or authorizes a wording change.
+Load `sensible-commit-flow` and apply these personal defaults under the global **Commit gate** and **Explicit user direction** policies. The public skill owns inspection, grouping, message safeguards, execution, and verification. These preferences take precedence over optional conventions inferred from history, not repository requirements or explicit exact-message constraints.
+
+## Record Task Work
+
+Resolve the operation through the global **Automatic commits**, **HEAD amendments**, **Rewrite eligibility**, and **Commit offers** policies. For an automatic handoff, pass the governing grant, task scope, applicable review evidence or reviewed findings and their bounded corrections, and current target into the base’s **Alternative Approval Modes** route. Include any separate **Checkpoint quality** permission and its remaining hard gates. This overlay supplies neither authorization nor a review result.
+
+Use the base’s history route for an eligible amendment, including its publication evidence and old-to-new commit mapping. Establish the user’s authorship from task-confirmed author identity or reliable repository evidence, not the commit’s committer field or an assumed email alias. Identify upstream or vendor imports from their provenance, not just their paths. When eligibility cannot be established, preserve the commit and select the permitted new-commit or offer path.
 
 ## Contribution Preparation Authorization
 
@@ -19,7 +25,7 @@ For each call, supply the verified target, actual change scope, and requested op
 
 ## Message Form
 
-- **Subject:** Use the public skill’s default grammar, except for the recurring subjects below. Omit colons, Conventional Commit prefixes, and scope labels.
+- **Subject:** Prefer the shortest clear statement of the shared purpose, using the public skill’s grammar except for the recurring subjects below. Omit colons, Conventional Commit prefixes, and scope labels. Do not use `a`, `an`, or `the` as articles in newly authored subjects. Rephrase to preserve meaning without articles rather than retaining them for fluency. Preserve exact names and code tokens.
 - **Body:** Use the subject as the complete newly authored message by default. Add an explanatory body, issue reference paragraphs, testing checklists, or trailers only when explicitly requested or required by the applicable message constraints. Route a remaining conflict with supplied attribution or another required message element through the public skill’s message safeguards rather than discarding it.
 
 ## Recurring Subjects

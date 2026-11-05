@@ -10,7 +10,7 @@ When a direct user request already authorizes the clear, bounded handoff and tas
 
 Confirmation authorizes only the stated handoff. It satisfies the entrypoint’s [Remote Changes](../SKILL.md#remote-changes) gate only when the user explicitly authorizes creating the agent task against the named target.
 
-Handoff confirmation alone doesn’t grant commit authorization. When the receiving task needs it, carry an explicit user command to commit, whether supplied in the same response or separately. Don’t infer permission for unstated remote submissions, publication, secret access, dependency changes, or scope expansion.
+Handoff confirmation alone doesn’t grant commit authorization. When the receiving task needs it, carry the explicit user command or applicable governing grant covering that recipient’s commit-writing effects and lifetime. Don’t infer permission for unstated remote submissions, publication, secret access, dependency changes, or scope expansion.
 
 Carry existing approvals with their exact user source and scope. Require the receiving agent to follow applicable project policies and request any required approval not already covered by the assignment.
 
@@ -20,7 +20,7 @@ After establishing authorization, compose a task description with a descriptive 
 
 Preserve the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent can’t expand scope, provide user-only approval, transfer access, or circumvent a boundary, and that it must return any boundary request to the user rather than crossing it.
 
-Authorize an operation that writes a commit in any repository, directly or indirectly, only when the task description identifies the user’s explicit command to commit. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit authorize working tree changes only.
+Authorize an operation that writes a commit in any repository, directly or indirectly, only when the task description identifies an explicit user command or applicable governing grant covering the receiving agent, target, effects, and lifetime. Completed work, staged changes, passing validation, a confirmed flow, an approved plan, and permission to edit do not independently grant that authority.
 
 Don’t include credentials, tokens, private keys, secret values, secret-bearing URLs, or other private material. Rely only on access already available in the receiving environment.
 

@@ -29,6 +29,7 @@ for source in \
   .domfiles-browser-automation \
   .domfiles-cli-subagent \
   .domfiles-full-review \
+  .domfiles-prepush \
   .domfiles-skill-development \
   .domfiles-vitest-conventions \
   agent-task-directories \

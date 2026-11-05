@@ -88,6 +88,10 @@ The contribution workflow owns [final publication approval](../skills/sensible-c
 
 The harmonization workflow owns [repository and role selection](skills/harmonize/SKILL.md#resolve-repositories). This initial checkpoint preserves the user’s control over which repositories may receive changes, rather than letting discovery alone select write destinations.
 
+### Prepush History Plan
+
+The [`prepush` workflow](../skills/.domfiles-prepush/SKILL.md#obtain-proposal-approval) deliberately retains approval of its proposed commit series before mutation. The checkpoint lets the user judge grouping, messages, and the placement of pending changes before history is rewritten. Standing commit authority does not replace this review of the concrete proposal. Publication remains a separate decision.
+
 ## Skill Maintenance
 
 ### Agent Documentation Composition
@@ -129,7 +133,7 @@ This non-exhaustive index supplements each skill’s peer declarations and the [
 | Canonical Contract | Related Guidance | Relationship |
 | --- | --- | --- |
 | Adjacent opportunity handling under [**Findings**](GLOBAL.md#findings) and [review completion](../skills/subagent-review-flow/SKILL.md#complete-the-review) | [`agent-task-relay`](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone guidance |
-| Commit authority under [**Commit gate**](GLOBAL.md#git-changes) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review) | Standalone guidance |
+| Commit authority under [**Commit gate**](GLOBAL.md#git-changes) | [Commit approval modes](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [relay authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [review coordination](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review), and [GitHub agent tasks](../skills/simple-github-cli/references/agent-task-creation.md) | Standalone guidance |
 | Contribution review checkpoints, criteria, and readiness in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md) coordination | Independent requirements, not mirrors |
 | Dependency choice in [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [Contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) | Standalone fallback |
 | **Host-managed execution** under [Collaboration](GLOBAL.md#collaboration) | [Session Behavior Tests](../skills/agent-task-relay/references/outgoing-prompts.md#session-behavior-tests) and [Deliver the Prompt](../skills/agent-task-relay/references/outgoing-prompts.md#deliver-the-prompt) | Standalone guidance |

@@ -10,7 +10,7 @@ Resolve the selected branch, starting `HEAD`, old boundary, and intended new bas
 
 ## Establish Update Authorization
 
-An explicit user request or active scoped approval for a history-replacing branch update supplies execution authorization for its necessary local commit rewrites. This includes affected published commits. A request such as “Rebase this submitted pull request onto upstream” authorizes the required local replay without separate force-push wording or a second approval of the same effects. A continuing user authorization that already covers the requested amendment or rebase also suffices. Establish permission from the sources allowed by [Agent Conduct](../SKILL.md#agent-conduct), not technical force-push capability, an existing pull request, review text, or a caller’s choice of route.
+An explicit user request or active scoped approval for a history-replacing branch update supplies execution authorization for its necessary local commit rewrites. This includes affected published commits. A request such as “Rebase this submitted pull request onto upstream” authorizes the required local replay without separate force-push wording or a second approval of the same effects. A continuing user authorization also suffices for an amendment or rebase within its scope. Establish permission from the sources allowed by [Agent Conduct](../SKILL.md#agent-conduct), not technical force-push capability, an existing pull request, review text, or a caller’s choice of route.
 
 Where a calling workflow requires a single commit’s complete message to match the pull request title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
 
@@ -26,11 +26,13 @@ Distinguish the upstream base from the publication destination. Before the updat
 
 Identify destinations from task context and non-secret metadata. Refresh only the remote information required for scope, eligibility, and the intended base, under the shared [execution boundaries](../SKILL.md#preserve-execution-boundaries). A current update request or continuing grant that covers those scoped reads and ref refreshes is sufficient without another workflow approval. Obtain any separately required tool grant. Unavailable evidence stops the affected rewrite, not unrelated local planning.
 
+Apply governing restrictions on authorship, vendor provenance, and merge commits to every commit in the affected range. Distinguish permission to reshape a commit from permission to replay it unchanged. Record protected commits and preserve their individual changes, complete messages, authorship, and merge structure and resolutions even when replay changes their object IDs. Do not squash, split, reword, or absorb new hunks into protected commits. Uncertain eligibility stops that substantive rewrite, not otherwise authorized new commits.
+
 ## Prepare Update Details
 
 Apply [Group Hunks](../SKILL.md#group-hunks) to map each pending change to its appropriate original commit or to an independently useful new commit. Keep changes separate when they express a distinct decision rather than repairing an earlier one. Do not manufacture content changes for a base-only or message-only update.
 
-Preserve each existing commit’s complete message unless a message change is requested. Use [Compose Messages](compose-messages.md) for ordinary new commits and newly requested wording, not for inherited messages or Git’s temporary fixup messages. Treat a supplied exact replacement as a constraint, retaining the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints).
+Preserve each existing commit’s complete message unless the selected request or governing grant authorizes its revision. Use [Compose Messages](compose-messages.md) for ordinary new commits and newly requested wording, not for inherited messages or Git’s temporary fixup messages. Treat a supplied exact replacement as a constraint, retaining the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints).
 
 Add these details to the [execution baseline](commit-execution.md#confirm-commits). Shared confirmation determines whether to present them:
 
@@ -42,6 +44,8 @@ Replay requires a clean index and tracked working tree, with ignored and untrack
 
 A pending [human review marker](preserve-human-review-markers.md) may prevent clean replay. In that case, pause for the user’s required action instead of committing or temporarily hiding it.
 
+For an unchanged-base rewrite incorporating pending changes, record the expected final tree as the original tip plus exactly those selected changes. When a base update is authorized, derive the expected result from the selected new base, the changes of every retained commit in the rewritten series, and approved pending changes, accounting for authorized conflict resolution. Keep exclusions and their index and working tree states in the preservation baseline. Include any temporary isolation and restoration in the proposal when approval is required. Do not stage, commit, discard, or hide exclusions merely to make replay possible. Use explicitly authorized, exactly restorable isolation only when it preserves applicable marker rules and concurrent work.
+
 ## Execute History Updates
 
 During [Create Approved Commits](commit-execution.md#create-approved-commits), choose the smallest native operation that implements the approved transformation while preserving topology, hooks, signing, authorship, and message constraints:
@@ -50,14 +54,15 @@ During [Create Approved Commits](commit-execution.md#create-approved-commits), c
 - **Current-tip repairs:** When only the current tip needs replacement and no base or series change requires replay, amend directly. Use `git commit --amend --no-edit` for content-only repairs, or `git commit --amend` with the exact replacement message when wording also changes. For a message-only amendment, use `git commit --amend --only` without pathspecs to exclude staged content. Do not stage content for that operation, and retain the shared exact unrelated-index preservation and restoration checks even though `--only` excludes it.
 - **Repairs requiring replay:** When earlier commits change or repairs accompany a base or series change, create target-linked fixups, then run an interactive autosquash rebase over the approved range onto the approved base. Use `git commit --fixup=amend:<commit-oid>` for content and message changes, `git commit --fixup=<commit-oid>` for content-only repairs, or `git commit --fixup=reword:<commit-oid>` for message-only changes. Supply the exact replacement message for amend and reword fixups. Reword fixups ignore staged content. Resolve the todo list against recorded target IDs before replay so matching subjects cannot attach a fixup to the wrong commit.
 - **Separate changes:** Create ordinary commits with their approved complete messages instead of converting them into fixups.
+- **Series reshaping:** For approved regrouping, ordering, or splitting beyond target-linked repairs, use a native interactive rebase whose todo implements the recorded series. Preserve merge topology with `--rebase-merges` where needed. Keep protected commits separate, account for every original hunk, and preserve the expected final tree. Do not perform an unapproved upstream update as part of consolidation.
 
-For every rebase, use `--no-autostash` and `--no-update-refs` so preservation and branch updates remain explicit, and preserve the selected topology and root handling. Use literal-safe, non-interactive input for approved message and todo edits.
+For every rebase, use `--no-autostash` and `--no-update-refs` so preservation and branch updates remain explicit, and preserve the selected topology and root handling. Stop rather than substantively altering a protected commit or its merge resolution to clear a conflict. Use literal-safe, non-interactive input for approved message and todo edits.
 
 For a paused operation, establish that its remaining todo list and conflict resolution still match the execution baseline before continuing through the shared lifecycle. Don’t skip a commit merely to clear a conflict or accept an unexpected empty commit as an authorized deletion.
 
 ## Verify Rewritten History
 
-At the shared verification checkpoint, compare the original series plus approved changes with the resulting series. For direct amendments, verify unchanged parents and, for message-only changes, an identical tree. For fixup replay, check that every fixup reached its intended target and no temporary fixups remain. Separate new commits must remain separate, with no change duplicated or silently dropped. Verify the selected base, parent relationships, intended order, and unchanged unrelated refs.
+At the shared verification checkpoint, compare the original series plus approved changes with the resulting series. For direct amendments, verify unchanged parents and, for message-only changes, an identical tree. For fixup replay, check that every fixup reached its intended target and no temporary fixups remain. Separate new commits must remain separate, with no change duplicated or silently dropped. Verify the selected base, parent relationships, intended order, and unchanged unrelated refs. For regrouping or pending-change integration, verify the resulting tree against the recorded expected tree, every hunk’s placement, protected commits and merge resolutions, and exact restoration of excluded index and working tree state.
 
 Assess each resulting commit’s independent coherence rather than treating a passing final checkout as proof that every commit is coherent.
 
