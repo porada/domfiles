@@ -6,8 +6,6 @@ Use the applicable project’s skill classification to resolve each skill’s ca
 
 Keep each project-authored skill’s frontmatter `name` identical to its discovery name. For internal and public skills, this is the canonical directory basename. For global skills, including overlays, use the project’s mapping from canonical source directories to installed names so the name matches every final symlink basename.
 
-Use action-based names for skills that set `disable-model-invocation: true`.
-
 ## Category Changes
 
 Before moving content in a promotion that retains an overlay or another source owner, classify every existing rule and reference as promoted, retained under a named owner, or removed.

@@ -2,11 +2,21 @@
 
 ## Entrypoints and References
 
-Keep each `SKILL.md` as an entrypoint. Keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves.
+Keep each `SKILL.md` as an entrypoint. Select its layout by [invocation mode](skill-descriptions.md#invocation-mode).
 
-During `agent-documentation`’s **Check Workflow Compatibility** pass, trace each affected skill route from its actual invocation and supported installation state. Use only instructions and prerequisites guaranteed on that route, not context acquired while maintaining other routes. Include relevant optional peer availability cases.
+For model-invocable skills, keep routing and rules needed by every invocation inline. Link a conditional reference at the decision that requires it. Keep isolated details inline when a reference would add more navigation than it saves. For command-only skills, use [Command-Only Entrypoints](#command-only-entrypoints).
+
+During `agent-documentation`’s **Check Workflow Compatibility** pass, trace each affected skill route from its actual invocation and supported installation state. Use only instructions and prerequisites guaranteed on that route, not context acquired while maintaining other routes. Include relevant optional peer availability cases. For command-only routes, include first use, repeated use with complete retained guidance, and use after that guidance changes or becomes incomplete.
 
 When maintaining `posix-shell-scripting`, keep code block examples out of its `SKILL.md` because the skill’s two-space Prettier indentation override applies only to its references and would reindent the YAML frontmatter if extended to the entrypoint. Structure the surrounding guidance as a coherent routed reference instead of moving examples alone, and retain the governing rule and the reference’s activation condition in the entrypoint.
+
+### Command-Only Entrypoints
+
+By default, limit `SKILL.md` to frontmatter, a title, route selection, and reference reuse instructions. Public skills also retain their introduction and required [inline policies](public-skill-portability.md#include-shared-public-policies). Put the full workflow in bundled references, including requirements shared by every invocation. This avoids repeating the full workflow when a client inserts the entrypoint again.
+
+Separate shared prerequisites from conditional modes, phases, or recovery paths when that lets an invocation omit irrelevant guidance. Make selection conditions and required order explicit, and route each branch through its applicable prerequisites before action. Use one cohesive reference for a linear workflow. Don’t split mechanically by section or force every command into a single-reference wrapper.
+
+Have the entrypoint require reading each selected reference before proceeding unless its complete, current guidance is already available. Reload guidance when it changes or is no longer fully available, including after context compaction. Reusing guidance doesn’t waive the workflow’s current checks or approval gates.
 
 ## Base Skills and Overlays
 

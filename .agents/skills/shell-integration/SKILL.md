@@ -67,4 +67,4 @@ After editing, apply the [repository validation policy](../../../AGENTS.md#valid
 
 ## Validate Shell Audits, Diagnoses, and Reviews
 
-Apply the [repository validation policy](../../../AGENTS.md#validation) before running the applicable language skill’s read-only validation. When invoked through `audit`, preserve its [ban on linters and formatters](../audit/SKILL.md#keep-audits-read-only) and use only the remaining permitted checks. Verify every in-scope domfiles cross-file invariant in this skill and its routed references.
+Apply the [repository validation policy](../../../AGENTS.md#validation) before running the applicable language skill’s read-only validation. When invoked through `audit`, preserve its [ban on linters and formatters](../audit/references/repository-audit.md#keep-audits-read-only) and use only the remaining permitted checks. Verify every in-scope domfiles cross-file invariant in this skill and its routed references.

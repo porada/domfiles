@@ -8,11 +8,11 @@ For every model-invocable project-authored skill, preserve complete positive and
 
 For every command-only project-authored skill, write concise human-facing UI copy instead. Lead with the action and outcome, add only task scope or exclusions that distinguish the command, and omit the invocation condition and literal slash command.
 
-When a description advertises review or audit, define an explicit read-only branch in the body that follows the shared workflow precedence in `agent-documentation`.
+When a description advertises review or audit, define an explicit read-only branch in the body or routed references that follows the shared workflow precedence in `agent-documentation`.
 
 ## Description and Body
 
-For internal and global skills, keep necessary implementation details, operational guidance, rationale, and workflows in the body, including behavioral defaults, validation, optional composition, and internal workflow. Don’t let the body merely paraphrase the description’s trigger or exclusion. For model-invocable skills in these categories, also move capability explanations, behavior, and outputs from the description to the body, and remove body text that only repeats why the skill loaded.
+For internal and global skills, keep necessary implementation details, operational guidance, rationale, and workflows in the [body or routed references](skill-authoring.md#entrypoints-and-references), including behavioral defaults, validation, optional composition, and internal workflow. Don’t let the body merely paraphrase the description’s trigger or exclusion. For model-invocable skills in these categories, also move capability explanations, behavior, and outputs from the description to the body, and remove body text that only repeats why the skill loaded.
 
 For public skills in either invocation mode, also apply the [public description additions](public-skill-portability.md#keep-public-descriptions-portable).
 
