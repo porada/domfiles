@@ -58,9 +58,13 @@ Within [Create Approved Commits](prepare-commits.md#create-approved-commits), ch
 
 For every rebase, use `--no-autostash` and `--no-update-refs` so preservation and branch updates remain explicit, and preserve the selected topology and root handling. Stop rather than substantively changing a protected commit or merge resolution to clear a conflict. Use literal-safe, non-interactive input for approved message and todo edits.
 
+Keep todo automation proportional to the selected transformation. For a bounded series, prefer supplying the explicit approved todo through a minimal editor mechanism. Check its commands and commit IDs against the execution baseline before replay. Build a general parser or transformation helper only when the operation requires one.
+
 For a paused operation, establish that its remaining todo list and conflict resolution still match the execution baseline before continuing through the shared lifecycle. Don’t skip a commit merely to clear a conflict or accept an unexpected empty commit as an authorized deletion.
 
 ## Verify Rewritten History
+
+Choose direct comparisons for the required claims before execution and collect them in one verification pass where possible. Reuse applicable evidence, and add diagnostic displays or repeat checks only when a mismatch or changed premise requires them. Consolidation must still cover every applicable invariant below and all validation and verification required by the shared commit lifecycle.
 
 At the shared verification checkpoint, compare the original series plus approved changes with the resulting series. For direct amendments, verify unchanged parents and, for message-only changes, an identical tree. For fixup replay, check that every fixup reached its intended target and no temporary fixups remain. Separate new commits must remain separate, with no change duplicated or silently dropped. Verify the selected base, parent relationships, intended order, and unchanged unrelated refs. For regrouping or pending-change integration, check the recorded expected final tree, every hunk’s placement, protected commits and merge resolutions, and exact restoration of excluded working tree and index state.
 

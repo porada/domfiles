@@ -4,11 +4,11 @@ Use `sensible-commit-flow`’s **Inspect Changes**, **Group Hunks**, **Compose M
 
 ## Recommend the Series
 
-Pending changes may become new commits or join eligible rewritten commits through `sensible-commit-flow`’s grouping and history routes. This explicit planning route can target older eligible commits without extending ordinary **HEAD amendments** authority.
+Pending changes may become new commits or join eligible rewritten commits through `sensible-commit-flow`’s grouping and history routes.
 
-Present the base and selected range, then the final series in order. For each proposed commit, show its complete message and purpose, the existing commits or hunks it incorporates, and the pending changes assigned to it. Identify new commits, unchanged or replay-only protected commits, grouping and ordering changes, and any local rewrite of published commits covered by a specific exception.
+Briefly identify the base and selected range, then show the final series in order. For each proposed commit, give its complete message and a short explanation of what it combines or changes, including assigned pending changes. Identify dropped commits and explain why they are omitted. Mark unchanged or replay-only protected commits and any authorized published rewrite. Explain hunk boundaries only when needed to make the grouping clear.
 
-Include `sensible-commit-flow`’s **Prepare Update Details** in the proposal, alongside exclusions, shared-history implications, review coverage, later review-driven corrections, and known validation or quality limitations.
+Keep `sensible-commit-flow`’s **Prepare Update Details** in the internal execution baseline. Surface necessary temporary isolation and restoration, plus exclusions, shared-history consequences, and review or validation gaps that affect approval or the claimed result. Omit routine preservation details, command recipes, verification checklists, and empty caveat sections. On revisions, show the updated series and explain only the changed decisions.
 
 ## Obtain Proposal Approval
 
