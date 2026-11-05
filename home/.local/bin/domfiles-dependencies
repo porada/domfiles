@@ -60,5 +60,6 @@ dependency_success() (
 )
 
 status=0
+cd "$HOME"
 check
 exit "$status"

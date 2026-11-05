@@ -15,8 +15,6 @@ catalog:
 
 color: always
 
-engineStrict: true
-
 lockfile:
   includeResolutionSettings: true
 
