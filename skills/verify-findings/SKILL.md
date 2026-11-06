@@ -12,7 +12,7 @@ This skill helps agents identify the findings that still need attention.
 
 ## Follow the Workflow
 
-Read this entrypoint in full, then follow [Verify Findings](references/verify-findings.md). Read the reference unless its complete, current guidance is already available.
+Read this entrypoint in full, then follow [Verify Findings](references/verify-findings.md). Read the reference before proceeding, unless you already have its complete, up-to-date guidance in context.
 
 ## Apply General Policies
 

@@ -16,7 +16,7 @@ By default, limit `SKILL.md` to frontmatter, a title, route selection, and refer
 
 Separate shared prerequisites from conditional modes, phases, or recovery paths when that lets an invocation omit irrelevant guidance. Make selection conditions and required order explicit, and route each branch through its applicable prerequisites before action. Use one cohesive reference for a linear workflow. Don’t split mechanically by section or force every command into a single-reference wrapper.
 
-Have the entrypoint require reading each selected reference before proceeding unless its complete, current guidance is already available. Reload guidance when it changes or is no longer fully available, including after context compaction. Reusing guidance doesn’t waive the workflow’s current checks or approval gates.
+Have the entrypoint require reading each selected reference before proceeding, unless the agent already has its complete, up-to-date guidance in context. Reload guidance when it changes or is no longer fully available, including after context compaction. Reusing guidance doesn’t waive the workflow’s current checks or approval gates.
 
 ## Base Skills and Overlays
 

@@ -12,4 +12,4 @@ metadata:
 
 Follow [Repository Harmonization](references/repository-harmonization.md). For a change-oriented pass, also follow [Apply Harmonization](references/apply-harmonization.md) before planning changes.
 
-Read each selected reference before proceeding unless its complete, current guidance is already available.
+Read each selected reference before proceeding, unless you already have its complete, up-to-date guidance in context.

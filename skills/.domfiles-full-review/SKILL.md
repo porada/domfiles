@@ -14,4 +14,4 @@ For `full-review` in T3 Code, I explicitly request a separate top-level thread f
 
 Follow [Full Review](references/full-review.md). For initial reviewer selection or a required replacement, also follow [Select Reviewers](references/select-reviewers.md) before choosing an execution interface.
 
-Read each selected reference before proceeding unless its complete, current guidance is already available.
+Read each selected reference before proceeding, unless you already have its complete, up-to-date guidance in context.
