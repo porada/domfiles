@@ -15,7 +15,7 @@ Load `sensible-commit-flow` and apply these personal defaults under the global *
 
 Resolve the operation through the global **Automatic commits**, **Fixup commits**, and **Commit offers** policies. For an automatic handoff, pass the governing grant, task scope, applicable review evidence or reviewed findings and their bounded corrections, and current target into the base’s **Alternative Approval Modes** route. Include any separate **Checkpoint quality** permission and its remaining hard gates. This overlay supplies neither authorization nor a review result.
 
-Prepare fixups through the base’s new-commit route. Inspect the target’s patch and complete message, apply the base’s **Establish Rewrite Eligibility** checks to that target, and confirm its ancestry before creation. Use the fixup subject under **Recurring Subjects**, then verify the recorded target and contents.
+Prepare fixups through the base’s new-commit route. Inspect the target’s patch and complete message, apply the base’s **Establish Rewrite Eligibility** checks to that target, and confirm its ancestry before creation. Use the fixup subject under **Recurring Subjects**, then verify the recorded target and contents. For subject-based fixups, use `git commit --fixup=<commit-oid>` to copy the target subject exactly.
 
 Leave target message corrections to separately authorized history updates through the base’s history route. For every **Rewrite eligibility** check, establish the user’s authorship from task-confirmed author identity or reliable repository evidence, not the committer field or an assumed email alias. Identify upstream or vendor imports from their provenance, not just their paths.
 
@@ -37,6 +37,6 @@ Apply **Fixup commits** to content corrections during contribution preparation t
 ## Recurring Subjects
 
 - **Dependencies:** Use `Update dependencies` for a dependency maintenance batch, including directly caused compatibility, configuration, or generated changes. Name one package when its update is deliberately singled out. Use `Use` when adopting a selected tool or version is the dominant decision.
-- **Fixups:** Use the exact subject `fixup! <full-commit-oid>` to distinguish repeated subjects.
+- **Fixups:** Prefer `fixup! <target-subject>`, preserving the target commit’s complete subject without applying **Message Form**’s wording rules to the copied subject. Use `fixup! <full-commit-oid>` when another ancestor of `HEAD` has the same subject. Select and record the target by its full object ID in either case.
 - **Root commits:** Use `Initial commit` for a commit with no parents.
 - **Releases:** Use a bare semantic version only for an actual release commit when that form is established in the repository.
