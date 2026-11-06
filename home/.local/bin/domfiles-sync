@@ -8,11 +8,11 @@ if ! __is_brew_installed; then
   __print_error_and_exit '`brew` needs to be installed before running `domfiles sync`'
 fi
 
+__print_heading "Syncing domfiles on $(__pretty_hostname)"
+
 sync_repository=false
 
 if __is_callable git; then
-  __print_heading 'Syncing domfiles'
-
   if branch="$(git -C "$DOMFILES" symbolic-ref --quiet --short HEAD)"; then
     case "$branch" in
       main | master)

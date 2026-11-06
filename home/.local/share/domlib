@@ -599,6 +599,15 @@ __page_input() (
   esac
 )
 
+# Prints the human-readable host name
+__pretty_hostname() {
+  if __is_macos; then
+    scutil --get ComputerName
+  else
+    uname -n
+  fi
+}
+
 # Prints `$@` as a shell-quoted command
 __print_command() {
   if [ "$DOMFILES_SUPPRESSED" = true ] && ! __is_ci; then
