@@ -12,11 +12,13 @@ Add a module name prefix only when a message may appear in a shared or ambient c
 
 ## Project-Authored Context
 
-For an operation failure, use `Failed to …`. Avoid `cannot` and `can’t`. State a concrete incompatibility directly instead of turning it into a generic failure headline.
+For an operation failure, use a `Failed to …` headline rather than `Cannot …` or `Can’t …`.
 
-Include a project-authored explanation only when it’s accurate, succinct, useful, and established by the project’s own evidence. Keep it on the same line as the headline, separated by a period.
+Include a project-authored explanation only when it’s accurate, succinct, useful, and established by the project’s own evidence. The explanation may state a specific incompatibility and its reason. Explanations may use `cannot` or `can’t` when they accurately describe a limitation. Keep the explanation on the same line as the headline, separated by a period.
 
-Don’t hedge a known condition, list speculative causes, repeat the headline, or invent an explanation for an upstream failure. Keep independently surfaced failures separate and self-contained. Unless project policy requires it, omit terminal punctuation from the final sentence.
+Match certainty to the established behavior. Distinguish an impossible operation, an unsupported case, and behavior that isn’t guaranteed. Preserve qualifications that make the explanation accurate.
+
+Don’t list speculative causes, repeat the headline, or invent an explanation for an upstream failure. Keep independently surfaced failures separate and self-contained. Unless project policy requires it, omit terminal punctuation from the final sentence.
 
 ## Actionable Detail
 
@@ -40,6 +42,6 @@ Don’t merge, normalize, improve, summarize, duplicate, or speculatively explai
 
 Adapt only destination-owned dynamic values and module attribution. Confirm that any prefix names the destination module rather than the source whose wording was consulted.
 
-Keep related failures that share an operation structurally parallel. When one uses a `Failed to …` headline, preserve that headline across the family unless a materially different failure requires another framing.
+Keep related failures that share an operation structurally parallel while preserving differences in their causes and guarantees. When one uses a `Failed to …` headline, preserve that headline across the family unless a materially different failure requires another framing.
 
 Across equivalent paths, apply the entrypoint’s [editorial boundaries](../SKILL.md#editorial-boundaries) to the selected prefix, punctuation, line breaks, code formatting, and lack of terminal punctuation. Align related test titles to the same verified behavior and terminology without copying runtime message syntax into a different surface.
