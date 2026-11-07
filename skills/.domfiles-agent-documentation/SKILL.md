@@ -17,17 +17,17 @@ metadata:
 - Apply the global **Explicit user direction** policy to this workflow’s procedural requirements and conventions, including its routed references. Preserve requested scope and every applicable approval, mutation, security, and submission boundary.
 - Before deferring a section, separate and rehome the rules that only look domain-specific. Ensure the destination skill’s description states every applicability condition supported clients must recognize, including conditions encountered during a task. Keep any prerequisite needed to recognize those conditions on the surface that always loads. Retain an explicit route only for deliberate skill composition or when the description can’t carry the required condition.
 - Give any identifier scheme referenced from code or documentation, such as numbered checks or requirement labels, one canonical definition in the same repository. Drop the identifiers when no such definition exists, because a reader can’t resolve the reference or tell which members are missing.
-- Give each proposition one canonical definition and classify every secondary occurrence as routing, surface-specific application, rationale, example, or required standalone context. Remove a secondary occurrence when it merely paraphrases the definition. Keep it only when its distinct role requires wording there, using the shortest wording that preserves that role. When a secondary occurrence contains a more complete rule than its expected owner, promote the complete rule to the canonical owner before removing or reducing the secondary copy.
+- Give each proposition one canonical definition. Secondary occurrences must serve a distinct purpose, such as routing, application, rationale, examples, or required standalone context. Remove a secondary occurrence when it merely paraphrases the definition. Keep it only when its distinct role requires wording there, using the shortest wording that preserves that role. When a secondary occurrence contains a more complete rule than its expected owner, promote the complete rule to the canonical owner before removing or reducing the secondary copy.
 - Optimize the complete context path loaded for a task rather than an individual file’s size. Treat applicable `AGENTS.md` files, skill descriptions, and `SKILL.md` entrypoints as direct-path context. Keep wording there only when most invocations need it. Move coherent conditional detail into a conditional reference in an existing skill that owns the relevant domain when the saved direct-path context exceeds the navigation cost.
+- Specify required outcomes, constraints, and decision criteria. Prescribe a method, sequence, or intermediate record only when it is necessary for correctness, a safety boundary, interoperability, or an explicitly chosen workflow. Otherwise, leave execution to the agent’s judgment. Don’t add reminders that merely restate following instructions or using available context.
 - Weigh a deferral against its own overhead. A model-invocable skill’s description adds recurring context when the client exposes it, so deferring content that doesn’t clearly exceed that overhead costs more than it saves. Move smaller conditional detail into a reference of an existing skill instead.
 - Write instructions that require no conversational context. Define non-obvious terms. Don’t make a project’s documentation depend on `agent-documentation`, `skill-development`, their canonical repository, or their installation paths merely because those tools were used to author it.
 
 ## Resolve Local Documentation Model
 
-1. Read every applicable `AGENTS.md` file before evaluating other project documentation.
-2. Identify the project’s agent documentation surfaces, authority model, project-specific documentation skills, and skill management metadata.
-3. Use a locally defined authority or ownership model when one exists. When an ownership decision is required and the project hasn’t defined a model, read the [Default Agent Documentation Authority Model](references/default-agent-documentation-authority-model.md).
-4. Treat generated, managed, third-party, or vendored skills as outside project-authored documentation unless the user explicitly includes them and applicable project instructions permit the work.
+1. Identify the project’s agent documentation surfaces, authority model, project-specific documentation skills, and skill management metadata.
+2. Use a locally defined authority or ownership model when one exists. When an ownership decision is required and the project hasn’t defined a model, read the [Default Agent Documentation Authority Model](references/default-agent-documentation-authority-model.md).
+3. Treat generated, managed, third-party, or vendored skills as outside project-authored documentation unless the user explicitly includes them and applicable project instructions permit the work.
 
 ## Choose Workflow
 
@@ -43,11 +43,7 @@ metadata:
 
 ## Resolve Canonical Owner
 
-1. State the durable detail being changed or evaluated in one sentence.
-2. Use the selected local or fallback authority model to identify its expected owner.
-3. Search applicable project-authored agent documentation for existing definitions, rationale, inventories, and links concerning that detail.
-4. Name one canonical owner and identify every other document that should link to it or remove a stale paraphrase.
-5. Don’t edit until one owner can be named. Don’t choose an owner merely because the detail already appears there.
+Use the selected local or fallback authority model to resolve ownership. Search applicable project-authored agent documentation for existing definitions, rationale, inventories, and links concerning the detail. Keep it with one canonical owner and align secondary documents with that owner. Resolve material ownership ambiguity before editing rather than choosing an owner merely because the detail already appears there.
 
 ## Compose Changes
 
@@ -61,10 +57,9 @@ Use [Select Validation Scope](references/validate-documentation-changes.md#selec
 
 For every change, review, or audit:
 
-1. Re-read every applicable `AGENTS.md` file and each in-scope documentation file that the current task has not already loaded unchanged. Use Git status and diff to identify what changed since it was loaded.
-2. For each affected proposition or shared wording contract, search the complete applicable documentation family for its distinctive wording and close semantic variants. Apply the [Documentation Boundary Checks](references/documentation-boundary-checks.md) to routed or layered surfaces. When a global instruction changes or is evaluated, identify every affected public skill mirror or standalone default, including rephrased variants, and apply `skill-development` to align each with public policy. Confirm that one normative definition remains and that every secondary occurrence has a distinct required role or links to the canonical owner.
-3. For every in-scope change to a direct-path surface, compare its before-and-after context footprint. In a review or audit, report unjustified growth without editing.
-4. When an in-scope change moved guidance from a `SKILL.md` into references, map every removed proposition to its destination and confirm that every task that previously received it still deterministically loads that destination. Treat a missing behavioral distinction, condition, exception, or route as a contract regression.
+1. For each affected proposition or shared wording contract, search the complete applicable documentation family for its distinctive wording and close semantic variants. Apply the [Documentation Boundary Checks](references/documentation-boundary-checks.md) to routed or layered surfaces. When a global instruction changes or is evaluated, identify every affected public skill mirror or standalone default, including rephrased variants, and apply `skill-development` to align each with public policy. Confirm that one normative definition remains and that every secondary occurrence has a distinct required role or links to the canonical owner.
+2. When guidance is added, expanded, or redistributed, assess its effect on the complete context loaded for affected tasks. In a review or audit, report unjustified growth without editing.
+3. When an in-scope change moved guidance from a `SKILL.md` into references, map every removed proposition to its destination and confirm that every task that previously received it still deterministically loads that destination. Treat a missing behavioral distinction, condition, exception, or route as a contract regression.
 
 For a review or audit, use only read-only diagnostics and identify anything that couldn’t be verified.
 

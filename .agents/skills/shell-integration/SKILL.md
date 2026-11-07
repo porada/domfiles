@@ -63,8 +63,8 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 
 ## Validate Changes
 
-After editing, follow [Validate Shell Changes](references/validate-shell-changes.md) for lint and formatting commands and complete invariant checks.
+After editing, follow [Validate Shell Changes](references/validate-shell-changes.md) for lint, formatting, and shell integration checks.
 
 ## Validate Shell Audits, Diagnoses, and Reviews
 
-Run the applicable language skill’s read-only validation. When invoked through `audit`, preserve its [ban on linters and formatters](../audit/references/repository-audit.md#keep-audits-read-only) and use only the remaining permitted checks. Verify every in-scope domfiles cross-file invariant in this skill and its routed references.
+Run the applicable language skill’s read-only validation and [check integration contracts](references/validate-shell-changes.md#check-integration-contracts). When invoked through `audit`, preserve its [ban on linters and formatters](../audit/references/repository-audit.md#keep-audits-read-only) and use only the remaining permitted checks.

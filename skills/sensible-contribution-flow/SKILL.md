@@ -28,7 +28,7 @@ For initial pull request preparation, use these default stages in execution orde
 
 1. [Fetch upstream, then set up and synchronize the contribution branch](references/prepare-pull-requests.md#enter-supplied-checkout).
 2. [Assess upstream fit and contribution scope](#assess-contribution-fit).
-3. [Resolve execution authority, then prepare the early pull request draft and design review](references/propose-pull-requests.md).
+3. [Resolve execution authority, then draft and assess the proposal](references/propose-pull-requests.md).
 4. [Implement, validate, and review](references/prepare-pull-requests.md#implement-and-review).
 5. [Prepare commits](references/prepare-pull-requests.md#prepare-commits) and [finalize the pull request](references/prepare-pull-requests.md#finalize-pull-requests).
 6. [Present the completed contribution at its selected publication handoff](references/hand-off-contributions.md#preserve-remote-authorization).

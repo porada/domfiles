@@ -14,7 +14,7 @@ This skill examines task outcomes and recurring friction to recommend focused ch
 
 ## Follow the Workflow
 
-Read this entrypoint in full, then follow [Refine Agent Workflow](references/refine-agent-workflow.md). Read the reference before proceeding, unless you already have its complete, up-to-date guidance in context.
+Follow [Refine Agent Workflow](references/refine-agent-workflow.md).
 
 ## Apply General Policies
 

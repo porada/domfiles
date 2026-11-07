@@ -12,11 +12,9 @@ When maintaining `posix-shell-scripting`, keep code block examples out of its `S
 
 ### Command-Only Entrypoints
 
-By default, limit `SKILL.md` to frontmatter, a title, route selection, and reference reuse instructions. Public skills also retain their introduction and required [inline policies](public-skill-portability.md#include-shared-public-policies). Put the full workflow in bundled references, including requirements shared by every invocation. This avoids repeating the full workflow when a client inserts the entrypoint again.
+By default, limit `SKILL.md` to frontmatter, a title, and route selection. Public skills also retain their introduction and required [inline policies](public-skill-portability.md#include-shared-public-policies). Put the full workflow in bundled references, including requirements shared by every invocation. This avoids repeating the full workflow when a client inserts the entrypoint again.
 
 Separate shared prerequisites from conditional modes, phases, or recovery paths when that lets an invocation omit irrelevant guidance. Make selection conditions and required order explicit, and route each branch through its applicable prerequisites before action. Use one cohesive reference for a linear workflow. Don’t split mechanically by section or force every command into a single-reference wrapper.
-
-Have the entrypoint require reading each selected reference before proceeding, unless the agent already has its complete, up-to-date guidance in context. Reload guidance when it changes or is no longer fully available, including after context compaction. Reusing guidance doesn’t waive the workflow’s current checks or approval gates.
 
 ## Base Skills and Overlays
 

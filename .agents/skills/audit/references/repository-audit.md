@@ -11,9 +11,8 @@ The table lists higher-precedence rules first. Apply publication audit scope whe
 | Publication audit | Use this mode when an audit evaluates the tracked `HEAD` tree for public disclosure. Resolve the reportable scope from the tree’s regular files rather than the active checkout, and exclude every untracked or ignored path. |
 | Default scope | Start with Git-tracked regular files, exclude symbolic links and untracked or ignored paths, and apply every other default inclusion, exclusion, and exemption from applicable `AGENTS.md` files. |
 
-1. Read every applicable `AGENTS.md` file before reviewing any other repository content.
-2. Apply the precedence table above to resolve the reportable scope.
-3. Inspect content outside the reportable scope only when needed as supporting evidence for a path in that scope. Security exclusions still apply, and supporting evidence doesn’t become reportable.
+1. Apply the precedence table above to resolve the reportable scope.
+2. Inspect content outside the reportable scope only when needed as supporting evidence for a path in that scope. Security exclusions still apply, and supporting evidence doesn’t become reportable.
 
 ## Audit Contents
 

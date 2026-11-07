@@ -28,7 +28,7 @@ Run launch and resumption commands from the supplied checkout. Use the host’s 
 
 ## Retain Session State
 
-In the coordinator’s context, retain each session’s full UUID, checkout, explicit launch values, current dispatch’s `<since>`, participant-specific values named in its reference, and the context and monitoring state defined below. Retain the access conditions and evidence used for successful launch, monitoring, stopping, and resumption, distinguishing differences between operations. Also retain the chosen inactivity, command, and applicable turn bounds and their rationale, together with active deadline evidence.
+In the coordinator’s context, retain each session’s full UUID, checkout, explicit launch values, current dispatch’s `<since>`, participant-specific values named in its reference, and the context and monitoring state defined below. Retain the access conditions and evidence used for successful launch, monitoring, stopping, and resumption, distinguishing differences between operations. Also retain the chosen inactivity, command, and applicable turn bounds, together with active deadline evidence.
 
 Session bookkeeping, launch and monitoring diagnostics, and recovered invocation errors normally stay with the coordinator. Include them in an assignment only when they affect the participant’s task or are its subject.
 

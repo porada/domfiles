@@ -6,5 +6,13 @@ After editing, use the narrowest applicable validation scope:
 2. For Fish, run `pnpm run lint:fish <changed-fish-files>`, respecting the [repository scope exclusions](../../../../AGENTS.md#scope). The wrapper already runs `fish --no-execute`, so don’t repeat that check.
 3. For POSIX shell, run `sh -n -- <file>` for each changed file and `pnpm run lint:sh <changed-posix-files>`. The wrapper supplies the complementary ShellCheck analysis. For POSIX hooks without hashbangs under `.hooks`, use `env SHELLCHECK_OPTS=--shell=sh pnpm run lint:sh <changed-hook-files>`.
 4. For changed `.fish` and `.sh` files and extensionless Fish and POSIX shell scripts with hashbangs, check formatting with `pnpm exec prettier --check <changed-shell-files>`. The configured Fish plugin infers extensionless Fish scripts from their `fish` hashbang, so don’t force `--parser fish`. For POSIX hooks without hashbangs under `.hooks`, run a separate invocation of the formatting command with `--parser sh` and only those hook paths.
-5. Verify every applicable policy invariant in this skill and its routed references, including `domlib` ordering, usage, and `$DOMFILES_*` coverage when relevant.
+5. [Check integration contracts](#check-integration-contracts).
 6. Run `git --no-pager diff --check` and, when task-owned changes are staged, `git --no-pager diff --cached --check`. Inspect task-owned untracked files directly without staging them because Git diff doesn’t include them.
+
+## Check Integration Contracts
+
+For affected shell targets, verify:
+
+- Caller migration and contract documentation when command form changes under [Command Form and Location](command-form-and-location.md).
+- Caller use of shared defaults and paired-helper alignment under [Shared Helper Design](shared-helper-design.md).
+- Entrypoint sourcing, helper placement and ordering, contract comments, repository-wide usage, and required `$DOMFILES_*` counterparts under [`domlib` Integration](domlib-integration.md).

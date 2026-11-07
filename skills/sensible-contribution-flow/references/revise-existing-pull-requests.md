@@ -6,7 +6,7 @@ Validate maintainer feedback and other supplied findings through [Incorporate Fe
 
 After authorization, use [Implement and Review](prepare-pull-requests.md#implement-and-review) for the selected revisions against the recorded baseline, carrying the selected feedback and settled decisions.
 
-Apply both [upstream synchronization checkpoints](prepare-pull-requests.md#synchronize-with-upstream) within current authorization. Route any requested commit or history update through [Prepare Commits](prepare-pull-requests.md#prepare-commits). For a working-tree-only request, report any synchronization requiring uncovered history changes rather than treating the request as authority to perform them. Complete the applicable [readiness check](prepare-pull-requests.md#check-submission-readiness) and [handoff](../SKILL.md#hand-off-contributions) for the revised result. Do not reopen settled decisions without changed relevant content or materially new evidence, or turn the round into ongoing monitoring.
+Apply the [upstream synchronization policy](prepare-pull-requests.md#synchronize-with-upstream) within current authorization. Route any requested commit or history update through [Prepare Commits](prepare-pull-requests.md#prepare-commits). For a working-tree-only request, report any synchronization requiring uncovered history changes rather than treating the request as authority to perform them. Complete the applicable [readiness check](prepare-pull-requests.md#check-submission-readiness) and [handoff](../SKILL.md#hand-off-contributions) for the revised result. Do not reopen settled decisions without changed relevant content or materially new evidence, or turn the round into ongoing monitoring.
 
 ## Preserve Shared Pull Request History
 

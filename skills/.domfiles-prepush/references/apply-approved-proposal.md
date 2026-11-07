@@ -1,6 +1,6 @@
 # Apply Approved Proposal
 
-After approval, recheck the approved proposal’s refs, selected changes, exclusions, and preservation assumptions against the execution baseline. If they materially change, [revise the affected proposal and obtain approval](prepare-commit-proposal.md) rather than applying a stale plan. Do not silently change approved messages or grouping during execution.
+If the commit workflow’s execution-baseline recheck finds material changes to the approved refs, selected changes, exclusions, or preservation assumptions, [revise the affected proposal and obtain approval](prepare-commit-proposal.md) rather than applying a stale plan. Do not silently change approved messages or grouping during execution.
 
 ## Apply and Verify
 
