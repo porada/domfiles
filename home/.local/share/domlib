@@ -475,10 +475,11 @@ __is_fisher_installed() {
   fish --command 'fisher --version' > /dev/null 2>&1
 }
 
-# Returns success on macOS
-__is_macos() {
-  [ "$(uname -s)" = 'Darwin' ]
-}
+# Returns success on macOS, status 1 elsewhere, or status 2 if detection fails
+__is_macos() (
+  platform="$(uname -s)" || return 2
+  [ "$platform" = 'Darwin' ]
+)
 
 # Returns success when `$1` names the login shell recorded in `$SHELL`
 __is_shell() (
@@ -600,13 +601,20 @@ __page_input() (
 )
 
 # Prints the human-readable host name
-__pretty_hostname() {
-  if __is_macos; then
+__pretty_hostname() (
+  is_macos=0
+  __is_macos || is_macos="$?"
+
+  if [ "$is_macos" -gt 1 ]; then
+    return "$is_macos"
+  fi
+
+  if [ "$is_macos" -eq 0 ]; then
     scutil --get ComputerName
   else
     uname -n
   fi
-}
+)
 
 # Prints `$@` as a shell-quoted command
 __print_command() {

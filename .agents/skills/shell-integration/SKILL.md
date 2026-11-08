@@ -38,6 +38,10 @@ Use the applicable language skill for semantic requirements and composition with
 - Treat standalone headings and status labels as labels rather than sentences. Allow sentence case or title case, and do not require imperative voice.
 - Use sentence case imperative voice for action and section comments.
 
+## Manage Cache Variables
+
+When a function stores a result in a global variable to avoid recomputing it on later calls, prefix the variable name with `__domfiles_cache_`. Treat that variable as private to its owning function. Callers must use the function’s output or exit status rather than read, query, or modify its cache.
+
 ## Choose Command Form and Location
 
 Don’t report an existing command solely because another supported form could express it, except when [Git helper form](references/command-form-and-location.md#choose-git-helper-form) applies.

@@ -100,6 +100,8 @@ or return
 
 Assignment-mode `set` preserves the status of its final command substitution. Copy that status immediately when logging, cleanup, or another command must run before returning it.
 
+Check [command substitution redirections](text-and-record-boundaries.md#command-substitution-redirections) when enclosing redirections must cover producer diagnostics.
+
 Put a required command directly in `if` or `while`, or use `<command>; or return` when failure should end the current function. Handle optional failure at the operation that permits it instead of suppressing a broad region of code. A failing command doesn’t stop a Fish function, so add `or true` only where that status would otherwise become the function’s result or reach a later status check.
 
 Inspect `$pipestatus` only when individual pipeline stages matter. Don’t reinterpret every non-zero upstream status as whole-pipeline failure.
