@@ -37,3 +37,13 @@ Use available user-global and project-local knowledge of skill ownership and mai
 Lead with an explicit decision on whether you recommend a policy or workflow change, then answer the examined question with the demonstrated cause or remaining uncertainty. Distinguish changes you endorse from merely possible improvements. If the evidence is insufficient to decide, identify what would resolve that uncertainty. Support the decision with decisive evidence and material limitations, without a mandatory report template or an exhaustive list of possible improvements.
 
 Apply improvements only when separately authorized, using the affected domain workflow. For authorized agent documentation changes, identify their canonical owner, preserve applicable maintenance requirements, and validate the changed guidance and affected references. Ask only when there’s a material decision, an effect outside current authorization, or a separately required approval, not merely because examination is complete.
+
+When recommending concrete changes, offer an implementation handoff unless the user has already requested implementation of those changes in the current conversation. Resolve the destination and scope before making the offer, asking the user when ownership or the destination is unclear or the changes span repositories.
+
+Check whether the host can create a new top-level thread in the owning repository before choosing the handoff to offer. When supported, offer to create that thread to implement the identified scope, and ask for acceptance of both thread creation and implementation before proceeding. Otherwise, including when there is no suitable repository, offer a ready-to-use handoff prompt instead.
+
+For both a new thread and a handoff prompt, include only the recommendations to implement, their target locations, necessary constraints and acceptance criteria, and the authorization actually granted by the user with its source and limits. Preserve separate approval requirements. Omit conversation history and the analysis behind the recommendations.
+
+If accepted thread creation becomes unavailable or fails, or delivery cannot be verified, report the resulting state, including any thread already created, and provide a ready-to-use handoff prompt. Don’t create another thread merely because delivery is uncertain.
+
+Once creation and delivery are verified, share the thread’s link. Don’t monitor progress, collect results, send follow-ups, integrate changes, or manage the new thread’s lifecycle unless the user explicitly asks. The new thread owns implementation and its handoff to the user.
