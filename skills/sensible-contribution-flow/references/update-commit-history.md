@@ -34,7 +34,7 @@ Apply governing authorship, vendor provenance, and merge restrictions to every a
 
 Apply [Group Hunks](prepare-commits.md#group-hunks) to map pending changes to their original commits or independently useful new commits. Keep distinct decisions separate instead of folding them into convenient earlier commits. Don’t manufacture content changes for base-only or message-only updates.
 
-Preserve complete inherited messages unless the selected request or governing grant authorizes revision. Apply [authored message defaults](prepare-commits.md#compose-authored-messages) only to ordinary new commits or newly requested wording, not inherited or temporary fixup messages. Retain the shared [message constraints](prepare-commits.md#preserve-message-constraints), including exact supplied replacements and human attribution. For [single-commit title alignment](prepare-pull-requests.md#align-single-commit-titles), use the adopted title as the exact complete replacement message.
+Apply [authored message defaults](prepare-commits.md#compose-authored-messages) only to ordinary new commits or newly requested wording, not inherited or temporary fixup messages. Treat a supplied exact replacement as a constraint. For [single-commit title alignment](prepare-pull-requests.md#align-single-commit-titles), use the adopted title as the exact complete replacement message.
 
 Add these details to the [execution baseline](prepare-commits.md#confirm-commits). Shared confirmation determines whether to present them:
 
@@ -42,11 +42,11 @@ Add these details to the [execution baseline](prepare-commits.md#confirm-commits
 2. Map each repair’s hunks to its original commit’s recorded object ID in the intended final series, identifying separate new commits and partial-file boundaries. Retain exact new or replacement messages and inspected sources for complete inherited messages.
 3. Select the [native operation](#execute-history-updates) and command sequence. Record any todo list changes, expected empty or already applied commits and their disposition, and resulting parent relationships. Distinguish temporary fixup messages from final messages.
 
-Replay requires a clean index and tracked working tree, with ignored and untracked content protected from overwrite. Any temporary isolation must be explicit, authorized, and exactly restorable. Don’t let implicit autostashing or automatic updates to other refs widen the operation.
+Replay requires a clean index and tracked working tree, with ignored and untracked content protected from overwrite. Use expressly authorized, exactly restorable isolation only when it preserves applicable marker rules and concurrent work. Don’t let implicit autostashing or automatic updates to other refs widen the operation.
 
-If a possible human review marker is implicated, follow [Preserve Human Review Markers](preserve-human-review-markers.md). A marker that prevents clean replay requires the human action, not a temporary removal, stash, or commit.
+When a pending marker affects replay, follow [Preserve Human Review Markers](preserve-human-review-markers.md).
 
-For unchanged-base integration of pending changes, record the expected final tree as the original tip plus exactly the selected changes. When a base update is authorized, derive the expected result from the selected new base, the changes of every retained commit in the rewritten series, and approved pending changes, accounting for authorized conflict resolution. Keep exclusions and their index and working tree states in the preservation baseline. Include any necessary isolation and restoration in the proposal when approval is required. Do not stage, commit, discard, or hide exclusions merely to enable replay. Temporary isolation must be expressly authorized, exactly restorable, and compatible with marker rules and concurrent work.
+For unchanged-base integration of pending changes, record the expected final tree as the original tip plus exactly the selected changes. When a base update is authorized, derive the expected result from the selected new base, the changes of every retained commit in the rewritten series, and approved pending changes, accounting for authorized conflict resolution. Keep exclusions and their index and working tree states in the execution baseline. Do not stage, commit, discard, or hide exclusions merely to enable replay.
 
 ## Execute History Updates
 

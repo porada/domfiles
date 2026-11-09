@@ -138,10 +138,14 @@ done
 printf '%s\n' "$file_count"
 ```
 
-Before recursive traversal, normalize a relative search root so an unqualified pathname beginning with `-`, `!`, or `(` cannot be parsed as an option or expression:
+Before recursive traversal, reject an empty search root, then normalize a relative root so an unqualified pathname beginning with `-`, `!`, or `(` cannot be parsed as an option or expression:
 
 ```sh
 case $root in
+  '')
+    printf '%s\n' 'Search root must not be empty' >&2
+    exit 2
+    ;;
   /* | ./* | ../*)
     ;;
   *)

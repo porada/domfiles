@@ -20,7 +20,7 @@ When a host tool displays descriptions alongside its own, such as option help in
 
 ## Comment Content
 
-When project policy and established language conventions leave formatting unspecified, write JSDoc comments as multi-line blocks with `/**` and `*/` on separate lines, including one-sentence comments. Across languages, begin each documentation comment or docstring with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than an implementation description. Prefer one concise sentence.
+Across languages, begin each documentation comment or docstring with a tooltip-friendly purpose, significance, compatibility boundary, or non-obvious constraint rather than an implementation description. Prefer one concise sentence.
 
 For promises and analogous asynchronous results, describe settlement or completion behavior when it states the purpose more directly. State distinct outcomes in separate sentences.
 
@@ -49,6 +49,8 @@ Use parallel grammar and abstraction for genuinely parallel helpers, changing on
 Previously acceptable local wording may require revision when it becomes inconsistent beside the propagated family. Describe each related helper’s particular role in the larger control flow rather than giving it an interchangeable purpose comment.
 
 ## Presentation
+
+When project policy and established language conventions leave formatting unspecified, write JSDoc comments as multi-line blocks with `/**` and `*/` on separate lines, including one-sentence comments.
 
 Review precise relationship words and qualifiers together with sentence flow. Resolve ambiguity without replacing a specific operation with a broader claim.
 

@@ -8,7 +8,7 @@ For upstream merges, record the destination branch, starting `HEAD`, upstream so
 
 ## Plan Before Implementation
 
-Apply [Group Hunks](#group-hunks) prospectively to the intended contribution and available repository evidence. Use the [pull request packaging constraints](prepare-pull-requests.md#plan-and-implement-commits) supplied by the caller. Identify coherent change units, their dependency order, and assumptions that could change the breakdown. Don’t invent changes or force an incoherent split to reach a requested count. Use [Compose Authored Messages](#compose-authored-messages) for any provisional wording.
+Apply [Group Hunks](#group-hunks) prospectively to the intended contribution and available repository evidence. Use the [pull request packaging constraints](prepare-pull-requests.md#plan-and-implement-contributions) supplied by the caller. Identify coherent change units, their dependency order, and assumptions that could change the breakdown. Don’t invent changes or force an incoherent split to reach a requested count. Use [Compose Authored Messages](#compose-authored-messages) for any provisional wording.
 
 Keep this pass read-only. Boundaries, counts, and messages are provisional, not a staging plan or permission to create commits. Return the breakdown to the pull request workflow. Once changes exist, inspect the actual diff rather than treating the earlier plan as a concrete execution proposal.
 

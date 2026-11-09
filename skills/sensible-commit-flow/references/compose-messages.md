@@ -1,6 +1,6 @@
 # Compose Messages
 
-Apply the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints). Only when you’re authoring wording and the available instructions and task context leave repository conventions unclear, consult a bounded sample of recent relevant local commit messages for vocabulary and conventions. Do not derive editorial rules from Git-generated messages or let repeated maintenance and release commits dominate the sample. Do not fetch remote history for this purpose or sample style for exact supplied or inherited messages.
+Only when you’re authoring wording and the available instructions and task context leave repository conventions unclear, consult a bounded sample of recent relevant local commit messages for vocabulary and conventions. Do not derive editorial rules from Git-generated messages or let repeated maintenance and release commits dominate the sample. Do not fetch remote history for this purpose or sample style for exact supplied or inherited messages.
 
 Use this decision order for each group:
 

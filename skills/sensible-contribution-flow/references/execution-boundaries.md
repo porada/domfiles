@@ -36,9 +36,7 @@ Prefer existing repository commands and documented procedures that establish the
 
 ## Reuse Validation Evidence
 
-Moving between workflows or workflow phases doesn’t invalidate earlier validation. Reuse a result only when its checked content and scope, relevant inputs, procedure, and execution conditions still establish the required claim. Retain compact evidence of those premises, the result, and limitations in the conversation or existing task artifacts, and pass it between workflows when needed. No new log, cache, or environment inventory is required.
-
-Inspect changed or uncertain premises and rerun affected checks when applicability can’t be established. Preserve complete invariant scope and required hooks. An unchanged commit or artifact identifier alone doesn’t prove unchanged external behavior. Reuse can’t turn a failed, partial, or unavailable check into a pass.
+Reuse successful validation across contribution phases only while its checked content, complete scope, inputs, procedure, and execution conditions still establish the required claim. Carry its result, limitations, and reuse basis into later review and commit preparation. Recheck changed or uncertain premises, including external behavior that a stable artifact identifier can’t establish. Preserve required hooks, and report failed, partial, or unavailable checks as validation gaps.
 
 ## Use Existing Tools Safely
 

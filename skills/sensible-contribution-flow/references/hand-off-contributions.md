@@ -50,7 +50,7 @@ Present the [completed deliverables](#complete-deliverables), then ask whether t
 
 This approval covers that contribution’s necessary personal-profile fork, local remote setup, branch publication, and pull request creation as one bounded operation. It does not cover merging, organization-owned fork creation, unrelated remote changes, or ongoing publication of later revisions. Carry the actual user approval, or the explicit waiver and scoped command, to the resolved execution workflows. Return for approval only if the prepared contribution or publication effects materially exceed that authority, not merely because execution advances to another covered operation.
 
-## Publish the Approved Pull Request
+## Publish Approved Pull Requests
 
 After publication is authorized, complete these steps in order:
 

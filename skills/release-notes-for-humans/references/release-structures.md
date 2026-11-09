@@ -36,10 +36,6 @@ Keep detail lists flat under a neutral subject heading such as `Option Handling`
 
 Don’t repeat migration prose in later patch releases unless the user explicitly requests the reminder. When migration guidance intentionally repeats across one major release line, name that major version rather than referring to “this release.”
 
-## Hosted Release Bodies
-
-For a ready-to-paste hosted release body, reserve levels 1 and 2 for the surrounding page and release title. Unless the user explicitly requests it, omit the tag link already rendered by the hosting platform.
-
 ## Synchronized Multi-Package Releases
 
 Give every package a stable section when one repository publishes several packages under a shared release. A non-initial synchronized release might use:

@@ -35,7 +35,7 @@ Direct `path` output captured by command substitution preserves item boundaries,
 
 ## Command Substitution Redirections
 
-Command substitutions can bypass surrounding stderr redirections, including redirections on a function call or `begin … end` block. When enclosing redirections must cover the producer’s diagnostics, capture text with a pipeline such as `command tool | read --null --local output` and save `$pipestatus[1]` immediately for the producer’s exit status. A redirection on `read` alone does not cover the producer.
+Command substitutions can bypass surrounding stderr redirections, including redirections on a function call or `begin … end` block. When enclosing redirections must cover the producer’s diagnostics, capture text with a pipeline such as `command tool | read --null --function output` and immediately save the producer’s exit status with `set --function producer_status $pipestatus[1]`. `--function` keeps both values after the redirected block ends. Use `--local` only when they’re consumed within that block. A redirection on `read` alone does not cover the producer.
 
 `read --null` preserves trailing newlines. With empty input it returns status 1 and leaves `output` as an empty list, even if the producer succeeded. Use the saved producer status to determine whether the command succeeded. Normalize trailing newlines and empty values explicitly when the consumer expects the representation produced by quoted substitution.
 

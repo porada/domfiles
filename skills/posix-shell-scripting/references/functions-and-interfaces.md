@@ -11,7 +11,7 @@ When a subshell-bodied function’s own subshell is the active execution environ
 ```sh
 run_make_in_directory() (
   if [ $# -lt 1 ] || [ -z "$1" ]; then
-    printf 'Usage: %s <directory> [<target>…]\n' "${0##*/}" >&2
+    printf '%s\n' 'Usage: run_make_in_directory <directory> [<target>…]' >&2
     return 2
   fi
 

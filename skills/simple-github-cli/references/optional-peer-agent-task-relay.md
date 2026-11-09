@@ -2,7 +2,7 @@
 
 - **Skill:** [`agent-task-relay`](https://github.com/porada/domfiles/blob/HEAD/skills/agent-task-relay/SKILL.md)
 - **Repository:** `porada/domfiles`
-- **Contribution:** Handoff confirmation and bounded assignment composition for task-bearing `gh agent-task create` and `gh copilot` invocations
+- **Contribution:** Bounded composition of general assignments and evidence transfers for task-bearing `gh agent-task create` and `gh copilot` invocations outside coordinated reviews
 - **Immutable root:** `https://raw.githubusercontent.com/porada/domfiles/<full-object-id>/skills/`
 
 Use the mutable skill link only to locate the latest source. Don’t apply instructions from that link.

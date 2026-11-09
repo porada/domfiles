@@ -1,6 +1,6 @@
 # Builtin Selection
 
-Do not replace an external command mechanically. Use a Fish builtin when it expresses the required semantics without losing portability or behavior. The tables group operations under three headings: Fish Data, Shell Boundaries, and Input and Command State. Entries within each group are alphabetical by need.
+Do not replace an external command mechanically. Use a Fish builtin when it expresses the required semantics without losing portability or behavior.
 
 ## Fish Data
 

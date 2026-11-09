@@ -62,7 +62,7 @@ For a task-bearing `gh agent-task create` or `gh copilot` invocation that assign
 
 ## Capability Boundaries
 
-For ordinary technical retrieval failures, use the bounded recovery in [Guidance Recovery](references/guidance-recovery.md). Handle authentication and scope boundaries under [Authentication](#authentication). If recovery doesn’t succeed, continue independent authorized work. Don’t use aliases or extensions to approximate unavailable behavior unless the user explicitly opted into that exact family.
+For ordinary GitHub retrieval failures, correct a demonstrated path or invocation mistake, make bounded retries within existing limits, or use an equivalent interface permitted by [Interface Choice](#interface-choice). Keep the target, authorized effects, authentication, and disclosure boundaries unchanged. Handle authentication and scope boundaries under [Authentication](#authentication), and don’t evade denied access through another tool. If recovery doesn’t succeed, report the resource, attempted methods, exact error with sensitive values redacted, and smallest corrective action, then continue independent authorized work. Don’t use aliases or extensions to approximate unavailable behavior unless the user explicitly opted into that exact family.
 
 ## General Policies
 

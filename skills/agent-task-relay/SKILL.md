@@ -3,7 +3,7 @@ name: agent-task-relay
 description: |-
     Create, revise, review, and audit general task assignments and evidence transfers between agents or conversations, including follow-ups and autonomous in-client or CLI delegation. Validate supplied findings and status reports outside an active coordinated review, including unframed reports.
 
-    Exclude initial reviewer assignments, review reports, disputes, follow-ups, and replacement handoffs within a coordinated review. Don’t use merely to select, launch, monitor, or resume agents without preparing or revising a prompt. Exclude archival, explicitly deferred, illustrative, or incidental reports, and outdated reports unless the user requests reassessment.
+    Exclude reusable prompts for coordinated reviews and all exchanges within an active coordinated review, including initial reviewer assignments, review reports, disputes, follow-ups, and replacement handoffs. Don’t use merely to select, launch, monitor, or resume agents without preparing or revising a prompt. Exclude archival, explicitly deferred, illustrative, or incidental reports, and outdated reports unless the user requests reassessment.
 ---
 
 # Agent Task Relay

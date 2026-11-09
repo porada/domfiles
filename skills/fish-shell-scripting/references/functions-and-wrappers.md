@@ -2,10 +2,6 @@
 
 Apply the shared [runtime state rules](fish-native-idioms.md#runtime-state) to functions and their variables.
 
-## Function Contracts
-
-Apply the [function documentation contract](../SKILL.md#function-documentation) to every explicit function on this surface.
-
 ## Function Autoloading
 
 Put an autoloaded function named `<function-name>` in `<function-name>.fish` within `$fish_function_path`, and treat it as that file’s owner. Put every other exposed function in its own matching autoload file. Replace each `-` in `<function-name>` with `_` to derive `<function-namespace>`. Choose a stable underscore-form `<owner>` namespace token for the owning tool or configuration rather than deriving it mechanically from its name. The token must be unique in the target Fish function namespace. Outside source maintained by Fish itself, `<owner>` must neither equal `fish` nor begin with `fish_`, keeping generated names outside the [Fish-owned `__fish_` namespace](fish-native-idioms.md#runtime-state). Prefix every private helper owned by the function with `__<owner>_<function-namespace>_`. Within one `<owner>`, no two helper-owning functions may derive the same `<function-namespace>`. For example, private helpers for `start-app` under owner `app_tools` use names such as `__app_tools_start_app_find_root`, while a `fish_prompt` under owner `shell_theme` uses `__shell_theme_fish_prompt_git`.

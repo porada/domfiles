@@ -4,7 +4,7 @@ Evaluate syntax, utilities, and process boundaries as separate contracts.
 
 ## POSIX Syntax Boundaries
 
-Use this table to distinguish portable forms from target-gated extensions. The routed guidance for each need owns the behavior behind its POSIX form. Command forms with angle-bracketed names are templates requiring substitution. Rows are alphabetized by need.
+Use this table to distinguish portable forms from target-gated extensions. The routed guidance for each need owns the behavior behind its POSIX form.
 
 | Need | POSIX Form | Reject Unless the Target Contract Permits It |
 | --- | --- | --- |

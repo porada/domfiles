@@ -22,7 +22,7 @@ Inspecting current upstream files remotely doesn’t synchronize the contributio
 
 ## Select Branch and Scope
 
-Create the contribution branch in the supplied worktree during the first synchronization, or retain an existing branch established as belonging to this contribution. Keep its name extremely concise, lowercase kebab-case, without prepositions or prefixes by default. The name identifies the distinguishing change rather than repeating the full title.
+Create the contribution branch in the supplied checkout during the first synchronization, or retain an existing branch established as belonging to this contribution. Keep its name extremely concise, lowercase kebab-case, without prepositions or prefixes by default. The name identifies the distinguishing change rather than repeating the full title.
 
 The branch name and pull request title remain provisional as the changeset develops and may be revised before submission. After submission, preserve them unless the user requests a change. Renaming the branch doesn’t authorize renaming or moving the user/application-managed checkout. If a pre-submission rename affects an already published remote branch, establish authorization for the needed publication or cleanup separately rather than silently changing remote state.
 
@@ -40,7 +40,7 @@ For broader contribution preparation, synchronize at setup and immediately befor
 
 Branch updates are confined to the contribution branch. Don’t rebase, merge into, reset, or synchronize a repository’s primary branch as a substitute. If the resolved commit workflow can’t establish eligibility or complete the approved update, report the remaining synchronization requirement rather than claiming readiness or silently selecting another method.
 
-## Plan and Implement Commits
+## Plan and Implement Contributions
 
 By default, plan for at least two meaningful commits when the changes can be reliably separated. The usual minimum is the implementation followed by `Update documentation`. Don’t invent documentation, empty commits, or artificial boundaries to reach a count, and keep documentation with the implementation when it is necessary for that commit’s correctness.
 
@@ -66,7 +66,7 @@ Review the complete contribution against its recorded baseline after validation,
 
 Proposal assessment and implementation review cover the agreed outcome, scope and exclusions, upstream fit, decisive upstream evidence, and repository requirements. Implementation review also examines the changeset and validation results for unsupported claims, correctness problems, performance or other regressions, and unnecessary changes. Passing tests are evidence, not a replacement for assessing whether every change belongs.
 
-For implementation review, follow the applicable reviewer-selection workflow. Otherwise, use an independent in-client reviewer when available. Give reviewers read-only assignments and require concise evidence-backed findings with locations. When independent review is applicable but no reviewer is available and no applicable workflow requires one, perform a fresh self-review and disclose the lack of independence. Review doesn’t authorize additional tools, external processing, or changes outside the task’s authority.
+For implementation review, follow any reviewer selection workflow established by the user or applicable instructions. Otherwise, use an independent in-client reviewer when available. Give reviewers read-only assignments and require concise evidence-backed findings with locations. When independent review is applicable but no reviewer is available and no applicable workflow requires one, perform a fresh self-review and disclose the lack of independence. Review doesn’t authorize additional tools, external processing, or changes outside the task’s authority.
 
 For delegated reviews, use the resolved [review workflow](../SKILL.md#compose-with-peers) for coordination and finding resolution when available. In every review, validate findings against current evidence, applicable requirements, and settled decisions before acting. Intent or a prior decision alone doesn’t establish correctness. Record each finding’s evidence-based disposition and remaining uncertainty. Correct only validated in-scope problems within the existing mutation authority.
 

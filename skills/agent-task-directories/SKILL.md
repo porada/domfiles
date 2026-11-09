@@ -18,7 +18,7 @@ An agent task directory holds agent-managed scratch artifacts for one task. The 
 
 If the request only covers discovering, inspecting, or reviewing existing task directories, stay read-only. Don’t create directories or repair ignore files. Treat other tasks’ directories as opaque unless their contents are explicitly in scope.
 
-Use supported file operations and established project tools. Preserve applicable approval and security boundaries. If required access is unavailable, request the narrowest supported grant or stop rather than disabling a control. Directory management doesn’t require background services, dependencies, locks, or a registry.
+If task storage requires unavailable filesystem access, request the narrowest supported grant or stop rather than disabling a control.
 
 Before cleaning up, moving, promoting to a durable location, renaming, retaining, or reusing task artifacts or their containing directory, follow [Directory Lifecycle](references/directory-lifecycle.md). Apply only the relevant artifact or directory rules. When reviewing those operations without making changes, use the rules as review criteria.
 
@@ -39,7 +39,7 @@ A coordinator may assign separate subpaths to agents sharing one task. Each agen
 
 ## Keep Project Workflows Separate
 
-Copy only the inputs the task requires. Don’t sweep up other task directories, unnecessary dependency trees, or unrelated source. Keep logs and generated output limited to what the task needs. Don’t introduce continuous background activity merely to manage scratch storage.
+Copy only the inputs the task requires. Don’t sweep up other task directories, unnecessary dependency trees, or unrelated source. Keep logs and generated output limited to what the task needs. Directory management doesn’t require background services, dependencies, locks, or a registry.
 
 Treat scratch contents as task artifacts, not canonical project source. Don’t activate copied configuration or instruction files merely because they’re present. Execution against them must be part of the authorized task and follow its execution boundaries.
 

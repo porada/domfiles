@@ -1,7 +1,7 @@
 ---
 name: release-notes-for-humans
 description: |-
-    Use this skill to write package release notes, changelog entries, and hosted release descriptions from supplied drafts or verified changes, or to review release copy for completeness, consistency, and wording.
+    Use this skill to write package release notes, changelog entries, and hosted release descriptions from supplied drafts or changes, or to review release copy for completeness, consistency, and wording.
 
     The work can cover a commit, commit range, pull request, branch, tag, diff, or every change since the latest release.
 
@@ -20,7 +20,7 @@ Choose the route that matches the requested result. An explicit change takes pre
 
 - **Existing draft:** Treat supplied text or a supplied file as the working draft. Apply the [revision scope and approval boundaries](references/approval-gates.md) to a user-supplied or previously approved draft.
 - **Inferred draft:** Honor the user’s explicit evidence scope, then edit the supplied note target or return a new draft after completing the shared scope and evidence workflow below.
-- **Review:** Keep the task read-only. Report evidence-backed omissions and concrete consistency problems without rewriting the notes, and distinguish defects from intentional or harmless variations.
+- **Review:** Keep the task read-only. Assess completeness and consistency against the release evidence, and wording against [Release Prose](#release-prose) and the applicable writing guidance. Report concrete problems without rewriting the notes, and distinguish defects from intentional or harmless variations.
 
 Earlier notes may be the requested draft or comparison material. Otherwise, consult them only to resolve a concrete format or voice question. Limit this optional inspection to relevant examples. Prior notes don’t establish current behavior or override current rules or supplied or approved choices.
 
@@ -103,7 +103,7 @@ Choose the smallest structure that communicates each material consumer decision.
 
 Start standalone release note bodies and changelog entries directly with bullets or level 3 package or thematic sections. Include a release-level heading such as `## Unreleased` or `## <version>` only when explicitly requested or when the working draft or requested output is an [aggregate release note document](references/release-structures.md#aggregate-release-note-files), whether supplied as text or a file.
 
-Read applicable sections of [Release Structures](references/release-structures.md) for initial releases or package sections, aggregate files, themes, migration context or repeated guidance, substantial related changes, nested hierarchy, or synchronized multi-package releases. For hosted release bodies, follow [Hosted Release Bodies](references/release-structures.md#hosted-release-bodies).
+Read applicable sections of [Release Structures](references/release-structures.md) for initial releases or package sections, aggregate files, themes, migration context or repeated guidance, substantial related changes, nested hierarchy, or synchronized multi-package releases.
 
 ## Item Ordering
 
@@ -133,7 +133,7 @@ Read applicable sections of [Release Structures](references/release-structures.m
 
 ## Writing Composition
 
-After the evidence and release-specific decisions are fixed, load `human-facing-writing` when it is available locally for drafting, editing, and the wording of review recommendations. Provide the selected consumer outcomes, required structure, exact tokens, qualifiers, intended voice, and approval boundaries, then let its entrypoint select the applicable writing routes.
+After the evidence and release-specific decisions are fixed, load `human-facing-writing` when it is available locally for drafting, editing, or reviewing release wording and composing review recommendations. Provide the selected consumer outcomes, required structure, exact tokens, qualifiers, intended voice, and approval boundaries, then let its entrypoint select the applicable writing routes.
 
 If `human-facing-writing` is unavailable locally and available evidence shows that remote use would materially improve the prose, follow the [optional public peer workflow](references/optional-peer-human-facing-writing.md). If the peer remains unavailable, preserve complete standalone behavior by applying [Release Prose](#release-prose) directly. Prioritize factual accuracy, clear consumer action, exact technical tokens, and the supplied voice.
 
@@ -186,7 +186,7 @@ These defaults apply to modifiers before nouns in all human-facing prose, includ
 
 #### Prefixes
 
-These steps apply to prefixed words in all human-facing prose, including GitHub collaboration, in every position and part of speech. Treat a word as prefixed when you can replace its prefix with the prefix’s plain meaning without changing the word’s meaning, as with `non-empty` (“not empty”) and `rerun` (“run again”). This test applies even when a dictionary lists another form. Words that fail it keep their spelling, such as `none`, `nonsense`, `postfix`, `postpone`, `preflight`, and `prefix`.
+These steps apply to prefixed words in all human-facing prose, including GitHub collaboration, in every position and part of speech. Treat a word as prefixed when you can replace its prefix with the prefix’s plain meaning without changing the word’s meaning, as with `non-empty` (“not empty”) and `rerun` (“run again”). This test applies even when a dictionary lists another form. Words that fail it keep their spelling, such as `none`, `nonsense`, `postfix`, `postpone`, and `prefix`. This also applies to `preflight` when it means preliminary checks rather than something occurring before a flight.
 
 When discussing a specific feature or defined term, keep the spelling its product or specification uses, such as the CSS `pseudo-element` or the Git `pre-commit` hook. For ordinary vocabulary, follow the steps even when sources disagree.
 

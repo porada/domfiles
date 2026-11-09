@@ -2,7 +2,7 @@
 
 ## Bound the Examination
 
-Invocation alone authorizes read-only examination and recommendations, not implementation. Separately established authority to make changes remains effective within its scope and lifetime. Don’t turn this command into an automatic task completion step.
+Invocation alone authorizes read-only examination and recommendations, not implementation. Separately established authority to make changes remains effective within its scope and lifetime. Run this examination only when invoked, not automatically at the end of another task.
 
 ## Resolve Focus
 
@@ -28,13 +28,15 @@ A required approval or sandbox prompt isn’t itself a policy defect. Distinguis
 
 ## Recommend Improvements
 
-Prefer applying adequate existing guidance over adding another rule. For a demonstrated gap, consider clarifying, consolidating, relocating, or removing guidance before adding instructions. Recommend a check or workflow change when it addresses the cause more directly than prose. Conclude that no policy change is needed when the evidence supports that result, including when the current detection point is appropriate.
+Prefer applying adequate existing guidance over adding another rule. For a demonstrated gap, consider clarifying, consolidating, relocating, or removing guidance before adding instructions. Recommend a check or workflow change when it addresses the cause more directly than prose. Conclude that no change is needed when the evidence supports that result, including when the current detection point is appropriate.
 
 Recommend the smallest useful intervention at its canonical owner. Explain how it would change the relevant decision in the next comparable task, and check it against the observed case and a nearby legitimate case to avoid unnecessary restriction. Weigh the expected benefit against recurring token cost and procedural overhead. State material limitations rather than promising that the issue can never recur.
 
 Use available user-global and project-local knowledge of skill ownership and maintenance boundaries to identify likely owners. Don’t assume the current project owns the skills used during its tasks. Global or project instructions may be the appropriate owner instead. Consult only guidance relevant to the evidence. Treat ownership information as a routing aid, not an audit checklist or authorization to invoke workflows or edit skills. When that knowledge is unavailable, continue from the task evidence and state any material ownership uncertainty.
 
-Lead with an explicit decision on whether you recommend a policy or workflow change, then answer the examined question with the demonstrated cause or remaining uncertainty. Distinguish changes you endorse from merely possible improvements. If the evidence is insufficient to decide, identify what would resolve that uncertainty. Support the decision with decisive evidence and material limitations, without a mandatory report template or an exhaustive list of possible improvements.
+Lead with an explicit decision on whether you recommend an instruction, check, or workflow change, then answer the examined question with the demonstrated cause or remaining uncertainty. Distinguish changes you endorse from merely possible improvements. If the evidence is insufficient to decide, identify what would resolve that uncertainty. Support the decision with decisive evidence and material limitations, without a mandatory report template or an exhaustive list of possible improvements.
+
+## Apply or Hand Off Improvements
 
 Apply improvements only when separately authorized, using the affected domain workflow. For authorized agent documentation changes, identify their canonical owner, preserve applicable maintenance requirements, and validate the changed guidance and affected references. Ask only when there’s a material decision, an effect outside current authorization, or a separately required approval, not merely because examination is complete.
 

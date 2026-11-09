@@ -1,7 +1,5 @@
 # Fish-Native Idioms
 
-Command forms with angle-bracketed names are templates requiring substitution.
-
 ## Variable Scope and State
 
 Fish treats scope and exportedness as separate properties. Use `set` to create, update, export, scope, query, and erase variables. Don’t write bare assignments except for the supported single-command `<name>=<value> <command>` override when that exact lifetime is intended.

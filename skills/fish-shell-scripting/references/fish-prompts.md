@@ -10,8 +10,6 @@ Fish builds the prompt from three named functions and displays what each writes 
 - `fish_right_prompt` renders the right prompt.
 - `fish_mode_prompt` renders the current mode when Vi key bindings use it.
 
-Give every prompt function and helper the source docstring required by the [function documentation contract](../SKILL.md#function-documentation).
-
 ## Rendering Contract
 
 Capture `$status` according to the [runtime state rules](fish-native-idioms.md#runtime-state), together with `$pipestatus` when the prompt reports the entire previous pipeline. Prompt rendering must not erase the state it intends to display. Keep rendering deterministic for the same inputs, relevant state, and rendering mode.

@@ -30,4 +30,4 @@ After earlier recovery steps, repeat any remaining checks for the safety of dest
 
 ## Cleanup Ownership
 
-Let an executable entrypoint own global cleanup traps. A sourceable library should release its resources before returning instead of replacing the caller’s trap configuration. Keep trap bodies simple, and preserve the operation’s status deliberately.
+Let an executable entrypoint own global cleanup traps. A sourceable library should release its resources before returning instead of replacing the caller’s trap configuration. Keep trap bodies simple, and preserve the operation’s status under [Output and Status](functions-and-interfaces.md#output-and-status).

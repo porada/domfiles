@@ -6,4 +6,4 @@ Interpret a maintainer’s request within its original scope, not as a universal
 
 If validated findings undermine the contribution’s premise, return to [Assess Contribution Fit](../SKILL.md#assess-contribution-fit).
 
-After validation and authorization checks, return to the calling local-edit, preparation, or [revision checkpoint](revise-existing-pull-requests.md) without restarting setup or findings validation. For pull requests, use the [upstream synchronization policy](prepare-pull-requests.md#synchronize-with-upstream) to determine when a fresh check is needed. Review only the resulting delta and integration boundaries instead of restarting the complete contribution review. For authorized commit changes, use [commit packaging](prepare-pull-requests.md#prepare-commits) to select new commits or authorized changes to existing history, then repeat the applicable [readiness check](prepare-pull-requests.md#check-submission-readiness).
+After validation and authorization checks, return to the calling local-edit, preparation, or [revision checkpoint](revise-existing-pull-requests.md) without restarting setup or findings validation.

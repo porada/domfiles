@@ -21,7 +21,7 @@ These defaults apply to modifiers before nouns in all human-facing prose, includ
 
 ## Prefixes
 
-These steps apply to prefixed words in all human-facing prose, including GitHub collaboration, in every position and part of speech. Treat a word as prefixed when you can replace its prefix with the prefix’s plain meaning without changing the word’s meaning, as with `non-empty` (“not empty”) and `rerun` (“run again”). This test applies even when a dictionary lists another form. Words that fail it keep their spelling, such as `none`, `nonsense`, `postfix`, `postpone`, `preflight`, and `prefix`.
+These steps apply to prefixed words in all human-facing prose, including GitHub collaboration, in every position and part of speech. Treat a word as prefixed when you can replace its prefix with the prefix’s plain meaning without changing the word’s meaning, as with `non-empty` (“not empty”) and `rerun` (“run again”). This test applies even when a dictionary lists another form. Words that fail it keep their spelling, such as `none`, `nonsense`, `postfix`, `postpone`, and `prefix`. This also applies to `preflight` when it means preliminary checks rather than something occurring before a flight.
 
 When discussing a specific feature or defined term, keep the spelling its product or specification uses, such as the CSS `pseudo-element` or the Git `pre-commit` hook. For ordinary vocabulary, follow the steps even when sources disagree.
 

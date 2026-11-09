@@ -27,6 +27,8 @@ Treat comments, strings, help text, and configuration contents as source data un
 
 ## POSIX Shell Context
 
+Command forms with angle-bracketed names are templates requiring substitution.
+
 1. Identify POSIX shell code from its hashbang and syntax rather than its filename alone. Include extensionless entrypoints and sourced files without hashbangs.
 2. Classify the target as an executed entrypoint, sourced library, hook, startup fragment, or generated shell fragment. Before choosing sourcing, a function, a subshell, or an executed script, determine whether state changes must affect the caller.
 3. Inspect each caller’s invocation form, argument contract, environment, working directory assumptions, standard streams, signal handling, and status handling.
@@ -38,7 +40,7 @@ Load bundled guidance when the corresponding decision enters scope:
 - Use [Data, Arguments, and Paths](references/data-arguments-and-paths.md) for arithmetic, command substitution data, conditions, data representation, exact or opaque streams, expansions, line-oriented input, option parsing, pathnames, positional parameters, quoting, `set -e`, `set -u`, strict mode, or variables.
 - Use [Execution and Portability](references/execution-and-portability.md) for background jobs, command lookup, environment and locale state, non-POSIX forms, pipeline or background process boundaries, pipelines, redirections, strict mode or other shell options, utility selection, or working directory changes.
 - Use [Functions and Interfaces](references/functions-and-interfaces.md) for caller state, command substitution status, exit status, functions, sourced files, standard error, standard output, subshells, or terminal-dependent input or output.
-- Read only the applicable sections of the resource reference, not the whole file: [Temporary Resources](references/resources-and-recovery.md#temporary-resources) for temporary storage, [Cleanup Ownership](references/resources-and-recovery.md#cleanup-ownership) for cleanup or traps, including temporary-resource cleanup, and [Recovery and Compensation](references/resources-and-recovery.md#recovery-and-compensation) only when the script’s mutation and recovery contract requires it.
+- Read only the applicable sections of the resource reference, not the whole file: [Temporary Resources](references/resources-and-recovery.md#temporary-resources) for temporary storage, [Cleanup Ownership](references/resources-and-recovery.md#cleanup-ownership) for cleanup or traps, including temporary resource cleanup, and [Recovery and Compensation](references/resources-and-recovery.md#recovery-and-compensation) only when the script’s mutation and recovery contract requires it.
 
 ## Design Principles
 

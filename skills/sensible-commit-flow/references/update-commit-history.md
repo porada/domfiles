@@ -16,7 +16,7 @@ An explicit user request or active scoped approval for a history-replacing branc
 
 Where a calling workflow requires a single commit’s complete message to match the pull request title, a user-requested title change also requests the corresponding message-only local amendment, including for an already published commit, unless the user limits the request to prose, remote metadata, or working tree changes.
 
-Add the affected range, intended base, and covered changes to the shared [authorization record](commit-execution.md#confirm-commits). A rebase-only request covers necessary replay and conflict resolution that preserves the intended behavior, not unrelated fixes, branch renaming, or opportunistic message changes.
+Add the affected range, intended base, and covered changes to the [recorded authorization](commit-execution.md#confirm-commits). A rebase-only request covers necessary replay and conflict resolution that preserves the intended behavior, not unrelated fixes, branch renaming, or opportunistic message changes.
 
 ## Establish Rewrite Eligibility
 
@@ -34,7 +34,7 @@ Apply governing restrictions on authorship, vendor provenance, and merge commits
 
 Apply [Group Hunks](../SKILL.md#group-hunks) to map each pending change to its appropriate original commit or to an independently useful new commit. Keep changes separate when they express a distinct decision rather than repairing an earlier one. Do not manufacture content changes for a base-only or message-only update.
 
-Preserve each existing commit’s complete message unless the selected request or governing grant authorizes its revision. Use [Compose Messages](compose-messages.md) for ordinary new commits and newly requested wording, not for inherited messages or Git’s temporary fixup messages. Treat a supplied exact replacement as a constraint, retaining the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints).
+Use [Compose Messages](compose-messages.md) for ordinary new commits and newly requested wording, not for inherited messages or Git’s temporary fixup messages. Treat a supplied exact replacement as a constraint.
 
 Add these details to the [execution baseline](commit-execution.md#confirm-commits). Shared confirmation determines whether to present them:
 
@@ -42,11 +42,11 @@ Add these details to the [execution baseline](commit-execution.md#confirm-commit
 2. Map each repair’s hunks to its original commit’s recorded object ID in the intended final series, identifying separate new commits and partial-file boundaries. Retain exact new or replacement messages and inspected sources for complete inherited messages.
 3. Select the [native operation](#execute-history-updates) and command sequence. Record any todo list changes, expected empty or already applied commits and their disposition, and resulting parent relationships. Distinguish temporary fixup messages from final messages.
 
-Replay requires a clean index and tracked working tree, with ignored and untracked state protected from overwrite. Any temporary isolation must be explicit, authorized, and exactly restorable. Do not let implicit autostashing or automatic updates to other branches widen the operation.
+Replay requires a clean index and tracked working tree, with ignored and untracked state protected from overwrite. Use explicitly authorized, exactly restorable isolation only when it preserves applicable marker rules and concurrent work. Do not let implicit autostashing or automatic updates to other branches widen the operation.
 
-A pending [human review marker](preserve-human-review-markers.md) may prevent clean replay. In that case, pause for the user’s required action instead of committing or temporarily hiding it.
+When a pending marker affects replay, follow [Preserve Human Review Markers](preserve-human-review-markers.md).
 
-For an unchanged-base rewrite incorporating pending changes, record the expected final tree as the original tip plus exactly those selected changes. When a base update is authorized, derive the expected result from the selected new base, the changes of every retained commit in the rewritten series, and approved pending changes, accounting for authorized conflict resolution. Keep exclusions and their index and working tree states in the preservation baseline. Include any temporary isolation and restoration in the proposal when approval is required. Do not stage, commit, discard, or hide exclusions merely to make replay possible. Use explicitly authorized, exactly restorable isolation only when it preserves applicable marker rules and concurrent work.
+For an unchanged-base rewrite incorporating pending changes, record the expected final tree as the original tip plus exactly those selected changes. When a base update is authorized, derive the expected result from the selected new base, the changes of every retained commit in the rewritten series, and approved pending changes, accounting for authorized conflict resolution. Keep exclusions and their index and working tree states in the execution baseline. Do not stage, commit, discard, or hide exclusions merely to make replay possible.
 
 ## Execute History Updates
 

@@ -26,9 +26,7 @@ For newly authored messages, proposal explanations, and result prose, apply [Com
 
 Keep preparation read-only until you establish user authorization through [Confirm Commits](references/commit-execution.md#confirm-commits). An explicit request or an established governing grant may supply that authority. Accepted findings, an approved implementation plan, completed edits, passing checks, and staged changes do not supply it independently. Only the user or their valid governing authorization can cover execution. An agent can’t approve its own proposal or treat a tool grant as authority for another effect.
 
-Stay within the requested task scope. Don’t fix unrelated issues or reshape source changes to make the commit plan easier to execute. Resolve a material ambiguity with the user rather than changing the requested scope or meaning.
-
-Require explicit user approval before introducing an agent-selected dependency or tool, or changing its prescribed features, source, or version, including through conflict resolution. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without that approval, stop before dependent implementation, mutation, installation, or mutating delegation.
+Require explicit user approval before introducing an agent-selected dependency or tool, or changing any dependency’s or tool’s prescribed features, source, or version, including through conflict resolution. This applies even when acquisition is temporary, uses a package runner, or leaves repository files unchanged. Without that approval, stop before dependent implementation, mutation, installation, or mutating delegation.
 
 Before interpreting authorization to acquire prescribed dependencies or incorporate dependency changes through history integration, follow [Dependency Approval](references/dependency-approval.md).
 
@@ -38,7 +36,7 @@ Treat mechanisms that download or execute code, including external helpers, hook
 
 During incidental inspection, suppress ambient startup files, plugins, and configuration that can execute code unless their behavior is in scope or required by an established repository workflow. Do not enable automatic loading of untrusted working directory configuration. For Git patch evidence, use `git --no-pager diff --no-ext-diff --no-textconv` or equivalent controls for the selected evidence command. These controls suppress optional diff and pager helpers, not every possible execution mechanism.
 
-Never request or emit bulk listings of machine-local configuration, credential stores, environment variables, keychains, process environments, or other machine-local values. Query only a specifically named value required by the task and not expected to contain private material.
+For Git, hook, and signing diagnostics, query only specifically named, necessary, non-secret machine-local values. Don’t request or emit bulk listings of configuration, credential stores, environment variables, keychains, or process environments.
 
 Use external services through their established machine-local authentication and default account, endpoint, profile, and provider. Send only task-required data to the selected service. Network access authorizes a connection, not disclosure. Optional transfers of diagnostics, generated artifacts, machine-local values, or repository contents require direct user authorization for that transfer. The same requirement applies before you select a different account, credential source, endpoint, profile, provider, or service. Do not enable secret-bearing debug output. Optional AI, chat, model provider, or other remote processing must be explicitly required by the task and permitted by applicable repository policy, not merely enabled by validation or commit tooling.
 
@@ -65,7 +63,7 @@ Treat each commit as one independently understandable change, not as a container
 
 - **Cohesion:** Keep implementation, necessary integration, and regression tests together when they establish one behavior. Supporting documentation and generated changes may belong to the same unit. A single subject should explain why its hunks belong together without concealing an independent concern.
 - **Feasibility:** Check that the proposed groups can be staged from the existing changes without duplicating or dropping hunks. Keep inseparable hunks together. Don’t rewrite source, introduce temporary behavior, or fabricate changes merely to manufacture a split.
-- **Order:** Put prerequisites before their consumers. Unless an [authorized unfinished checkpoint](references/commit-execution.md#record-checkpoint-permission) permits known defects, each intermediate commit must work independently of later commits. Don’t introduce avoidable failures merely to split coherent work. A passing final working tree doesn’t establish an earlier candidate’s validity.
+- **Order:** Put prerequisites before their consumers. Unless an [authorized unfinished checkpoint](references/commit-execution.md#record-checkpoint-permission) permits known defects, each intermediate commit must work independently of later commits. Don’t introduce avoidable failures merely to split coherent work.
 - **Splitting:** Separate changes that express distinct decisions. Group by changed hunks rather than filenames. One file may contribute to several commits, while one commit may span many files.
 
 ## Preserve Message Constraints

@@ -24,7 +24,7 @@ For explicit local edits without pull request preparation, resolve [scope and au
 
 For a request limited to refreshing and integrating upstream, resolve [scope and authority](#resolve-scope-and-authority), then follow [Synchronize With Upstream](references/prepare-pull-requests.md#synchronize-with-upstream) to its bounded endpoint without entering full contribution preparation.
 
-Load references only when the selected route or current phase requires them, and reuse established context and peer choices. For other user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/revise-existing-pull-requests.md) rather than restarting initial preparation.
+For other user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/revise-existing-pull-requests.md) rather than restarting initial preparation.
 
 For initial pull request preparation, use these default stages in execution order, resolving [scope and authority](#resolve-scope-and-authority) before acting. Apply explicit task-scoped procedural and evidence check waivers under [Agent Conduct](#agent-conduct). Do not advance past an unwaived prerequisite, required approval, or genuine human-only checkpoint:
 
@@ -36,6 +36,8 @@ For initial pull request preparation, use these default stages in execution orde
 6. [Present the completed contribution at its selected publication handoff](references/hand-off-contributions.md#preserve-remote-authorization).
 
 For other contribution outcomes, follow [contribution assessment](#assess-contribution-fit) and its selected preparation path.
+
+Load references only when the selected route or current phase requires them, and reuse established context and peer choices.
 
 ## Resolve Scope and Authority
 
@@ -49,7 +51,7 @@ Resolve each relevant local peer once, when the current phase first needs its re
 | --- | --- | --- |
 | `agent-task-relay` | Findings validation and authorization checks | Fallback: [findings validation](references/incorporate-feedback-and-findings.md) |
 | `human-facing-writing` | Writing accuracy, editorial guidance, and security report prose | Shared constraints and standalone writing: [Prepare Post Content](references/prepare-post-content.md). Fallback for private reports: [Prepare Security Reports](references/prepare-security-reports.md). |
-| `intentional-dependency-choice` | Dependency selection, informed approval, and declaration conventions | Fallback: [dependency guidance](references/execution-boundaries.md#handle-dependencies-and-protected-content) |
+| `intentional-dependency-choice` | Dependency selection, informed approval, version selection, and declaration conventions | Fallback: [dependency guidance](references/execution-boundaries.md#handle-dependencies-and-protected-content) |
 | `sensible-commit-flow` | Commit planning, authorized execution, history updates, and verification | Fallback: [standalone commit workflow](references/prepare-commits.md) |
 | `simple-github-cli` | Bounded GitHub evidence gathering and authorized remote changes | Fallback for reads: [Gather GitHub Evidence](references/gather-github-evidence.md). Shared constraints and standalone remote handling: [Hand Off Contributions](#hand-off-contributions). |
 | `subagent-review-flow` | Review coordination and finding resolution | Fallback: [Review Contributions](references/prepare-pull-requests.md#review-contributions) |

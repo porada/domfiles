@@ -82,7 +82,7 @@ This non-exhaustive index records intentionally retained user approval checkpoin
 
 ### Contribution Publication
 
-The contribution workflow owns [final publication approval](../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-the-approved-pull-request). The final checkpoint preserves the user’s control over what is submitted on their behalf.
+The contribution workflow owns [final publication approval](../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-approved-pull-requests). The final checkpoint preserves the user’s control over what is submitted on their behalf.
 
 ### Harmonization Destinations
 
@@ -115,6 +115,8 @@ With Codex CLI `0.166.0`, explicit sandbox escalation requests for a fixed-outpu
 ### Contribution Flow
 
 Contribution research and preparation live in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) so `human-facing-writing` remains useful independently of remote retrieval.
+
+The public workflow’s [command presentation rule](../skills/sensible-contribution-flow/references/execution-boundaries.md#deliver-commands) keeps separate operations individually copyable in installations without global presentation defaults.
 
 The global [contribution authorization policy](GLOBAL.md#contribution-preparation-authorization) delegates authority to named, domfiles-managed workflows. Renaming the installed skill therefore requires updating the policy’s named delegate, the installation mapping, and the retired-name migration together.
 
