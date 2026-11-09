@@ -16,7 +16,7 @@
 	"dependencies": {
 		"doclint": "workspace:*",
 		"skills": "^1.7.6",
-		"vercel": "^65.11.0"
+		"vercel": "^65.12.1"
 	},
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.11.1",
