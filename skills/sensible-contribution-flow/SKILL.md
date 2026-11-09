@@ -22,7 +22,9 @@ Keep assessment-only requests and standalone reviews read-only. Follow [contribu
 
 For explicit local edits without pull request preparation, resolve [scope and authority](#resolve-scope-and-authority), follow [Implement and Review](references/prepare-pull-requests.md#implement-and-review) for the scoped changes and applicable checks, then return directly to the [working tree handoff](references/hand-off-contributions.md#complete-deliverables). Honor existing user authorization without duplicate confirmation. This route doesn’t imply an automatic preparation grant, branch setup, commits, pull request draft, or remote mutation.
 
-Load references only when the selected route or current phase requires them, and reuse established context and peer choices. For user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/revise-existing-pull-requests.md) rather than restarting initial preparation.
+For a request limited to refreshing and integrating upstream, resolve [scope and authority](#resolve-scope-and-authority), then follow [Synchronize With Upstream](references/prepare-pull-requests.md#synchronize-with-upstream) to its bounded endpoint without entering full contribution preparation.
+
+Load references only when the selected route or current phase requires them, and reuse established context and peer choices. For other user-requested changes to an existing pull request, follow [Revise Existing Pull Requests](references/revise-existing-pull-requests.md) rather than restarting initial preparation.
 
 For initial pull request preparation, use these default stages in execution order, resolving [scope and authority](#resolve-scope-and-authority) before acting. Apply explicit task-scoped procedural and evidence check waivers under [Agent Conduct](#agent-conduct). Do not advance past an unwaived prerequisite, required approval, or genuine human-only checkpoint:
 
