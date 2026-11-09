@@ -64,7 +64,7 @@
 		"inline_blame": {
 			"enabled": false
 		},
-		"worktree_directory": "../.zed"
+		"worktree_directory": "../.worktrees"
 	},
 	"git_panel": {
 		"dock": "left"

@@ -58,6 +58,8 @@ done
 __print_heading_dimmed 'Provisioning additional files'
 
 __mkdir "$DOMFILES_PROJECTS_DIR"
+__mkdir "$DOMFILES_PROJECTS_DIR/.worktrees"
+
 __touch "$DOMFILES_CONFIG_DIR/fish/local.fish"
 __touch "$DOMFILES_CONFIG_DIR/git/allowed_signers"
 __touch "$DOMFILES_CONFIG_DIR/npm/user.npmrc"

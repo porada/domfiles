@@ -321,6 +321,10 @@ The corresponding scripts in `home/.local/bin/` are the stable command interface
 
 Without `--no-config`, `rg` combines its command line arguments with those in the file selected by `RIPGREP_CONFIG_PATH`. A configuration file can supply `--pre`, which runs another program against every searched file. A bare invocation is therefore an execution surface rather than a read-only search, so the [global tooling guidance](GLOBAL.md#system-available-tooling) requires `--no-config` on every agent invocation.
 
+### Worktree Location
+
+Zed rejects absolute `git.worktree_directory` values and requires the resolved directory to stay within the repository or its parent, so the shared root lives in `~/Projects`. For repositories directly under `~/Projects`, the [Zed setting](../home/.config/zed/settings.json) places new worktrees in a per-repository directory under `~/Projects/.worktrees`. Repositories elsewhere resolve it relative to their main checkout.
+
 ### Zed CLI Open Behavior
 
 `cli_default_open_behavior` remains explicit in [the user settings](../home/.config/zed/settings.json) to avoid repeating [CLI open behavior setup](https://github.com/zed-industries/zed/blob/v1.21.0/crates/zed/src/zed/open_listener.rs#L743-L768). When the setting is absent and a CLI request reaches that setup, Zed prompts for the preferred behavior and writes the selected value back to the user settings file. The [**Zed settings**](../AGENTS.md#general) policy owns the redundancy criterion.
