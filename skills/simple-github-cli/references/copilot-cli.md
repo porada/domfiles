@@ -10,9 +10,9 @@ If the CLI is unavailable or you can’t establish its presence, tell the user t
 
 ## Task Handoffs
 
-When the command gives Copilot a task or tool permission and the entrypoint resolves `agent-task-relay`, use it for applicable confirmation and assignment composition only. Carry the user’s actual authorization so covered effects don’t trigger duplicate confirmation. Return to [Execution Choice](#execution-choice) instead of the peer’s normal delivery, and don’t also return the assignment as a relay.
+When the command gives Copilot a task or tool permission and the entrypoint resolves a communication workflow, use it for assignment composition within the [Execution Choice](#execution-choice) authorization boundaries. Carry the user’s actual authorization so covered effects don’t trigger duplicate confirmation. Return to **Execution Choice** instead of the peer’s normal delivery, and don’t also return the assignment as a relay.
 
-When the entrypoint doesn’t resolve `agent-task-relay`, don’t compose or expand a task or its tool permissions. Preserve task text and permissions the user supplied directly, and leave unresolved values as named placeholders for the user to review and fill locally.
+When the entrypoint doesn’t resolve a communication workflow, don’t compose or expand a task or its tool permissions. Preserve task text and permissions the user supplied directly, and leave unresolved values as named placeholders for the user to review and fill locally.
 
 ## Execution Choice
 

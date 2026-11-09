@@ -58,7 +58,7 @@ Don’t initiate the following operations unless a direct user request names the
 
 Before preparing or invoking an operation in these families, follow [Opt-In Operations](references/opt-in-operations.md) for authorization and command-specific handling.
 
-For a task-bearing `gh agent-task create` or `gh copilot` invocation, load `agent-task-relay` when it is available locally. Provide the selected interface, target, scope, and applicable boundaries, then let its entrypoint select the workflow. If it is unavailable and available task evidence shows that remote use would materially improve the handoff, follow the [optional public peer workflow](references/optional-peer-agent-task-relay.md). If the peer remains unavailable, continue with the command-specific standalone behavior.
+For a task-bearing `gh agent-task create` or `gh copilot` invocation that assigns a coordinated review, use `subagent-review-flow` when available locally. For other assignments, load `agent-task-relay` when available locally. Provide the selected interface, target, scope, and applicable boundaries to the selected workflow. Only for a general relay, when the local peer is unavailable and task evidence shows that remote use would materially improve the handoff, follow the [optional public peer workflow](references/optional-peer-agent-task-relay.md). If the selected peer remains unavailable, continue with the command-specific standalone behavior.
 
 ## Capability Boundaries
 

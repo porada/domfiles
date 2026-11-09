@@ -20,7 +20,7 @@ Update the selected canonical owner before adjusting secondary documents.
 
 ## Maintain Prompt Assets
 
-Treat a reusable prompt or template as the authoring target, not as a live assignment. Apply `agent-task-relay` to its operational contract without selecting a receiving environment, confirming a live handoff, or executing the embedded task. Skill-owned assets also follow the entrypoint’s `skill-development` route.
+Treat a reusable prompt or template as the authoring target, not as a live assignment. Apply `subagent-review-flow` to coordinated reviewer prompts and `agent-task-relay` to other relays or decision capture prompts, without selecting a receiving environment, confirming a live handoff, or executing the embedded task. Skill-owned assets also follow the entrypoint’s `skill-development` route.
 
 A standalone asset must include every instruction its invocation needs when the authoring skills won’t be loaded. Preserve the selected route’s authority, scope, evidence, delivery, revision, and stopping requirements. Distinguish assignments from evidence-only transfers. Decision capture prompts collect available conversation context without continuing the underlying task or gathering new evidence unless the user separately authorizes that work.
 

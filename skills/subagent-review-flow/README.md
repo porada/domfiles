@@ -4,7 +4,7 @@
 
 A review should lead to a clear resolution, not stop at a list of findings.
 
-This skill helps a coordinating agent work with one or more reviewer subagents, verify their findings, and resolve disagreements through evidence. It treats review as a complete workflow, from independent assessment through fixes and final verification, rather than a one-off exchange of feedback.
+This skill coordinates independent reviewers, their communication, and the resolution of their findings. It keeps review decisions tied to evidence while preserving the calling workflow’s scope, authority, and selected review stages.
 
 ## Install
 

@@ -1,6 +1,6 @@
 # Agent Task Creation
 
-`gh agent-task create` assigns future work to an external agent and creates remote GitHub state. When the entrypoint resolves `agent-task-relay`, use it for handoff confirmation and assignment composition only, then continue at [Command Execution](#command-execution). Command execution replaces its normal delivery, so do not also return the assignment as a relay. Otherwise, follow the standalone [Handoff Confirmation](#handoff-confirmation) and [Task Description](#task-description) workflow below.
+`gh agent-task create` assigns future work to an external agent and creates remote GitHub state. Follow [Handoff Confirmation](#handoff-confirmation) before composing the assignment. Use the communication workflow resolved by the entrypoint, or [Task Description](#task-description) when none is available. Then continue at [Command Execution](#command-execution), which replaces the communication workflow’s normal delivery. Do not also return the assignment as a relay.
 
 ## Handoff Confirmation
 

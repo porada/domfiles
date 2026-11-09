@@ -21,7 +21,7 @@ When a task requests a Claude Code or Codex CLI agent, prefer a host-managed del
 
 A CLI name alone identifies the requested provider. Keep the CLI interface when the user expressly requires it or the task tests or debugs the CLI. Otherwise, when no eligible host-managed exchange is available, use the CLI workflow where permitted. If the host prohibits that fallback, report the limitation rather than substituting another provider or settings. Interface selection doesn’t expand authorization or change the authorized disclosure destination, account, or permission boundaries.
 
-Apply [Bound the Exchange](#bound-the-exchange) to either interface. For an eligible host-managed exchange, use `agent-task-relay` for assignments, `subagent-review-flow` for reviews, and the host’s dispatch, monitoring, continuation, and permission procedures. The remaining sections govern actual CLI exchanges only.
+Apply [Bound the Exchange](#bound-the-exchange) to either interface. For an eligible host-managed exchange, use `subagent-review-flow` for review assignments and communication, and `agent-task-relay` for other assignments. Use the host’s dispatch, monitoring, continuation, and permission procedures. The remaining sections govern actual CLI exchanges only.
 
 ## Bound the Exchange
 
@@ -36,7 +36,7 @@ Under the global **CLI subagent readiness** policy, load [Session Coordination](
 
 ## Prepare the Assignment
 
-Use `agent-task-relay` to compose assignments and follow-ups. Include the recursion boundary and active [progress and command limits](references/session-coordination.md#enforce-progress-and-command-limits) in the assignment. For follow-ups, apply the [retained-context checks](references/session-coordination.md#check-retained-context).
+Use `subagent-review-flow` to compose review assignments and follow-ups. Use `agent-task-relay` for other assignments. Include the recursion boundary and active [progress and command limits](references/session-coordination.md#enforce-progress-and-command-limits) in the assignment. For follow-ups, apply the [retained-context checks](references/session-coordination.md#check-retained-context).
 
 ## Dispatch and Coordinate
 

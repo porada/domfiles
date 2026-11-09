@@ -4,7 +4,7 @@
 
 Moving work between agent threads shouldn’t mean losing context or inadvertently changing the agent’s authority.
 
-This skill prepares outgoing prompts and validates incoming findings. It preserves the task’s context, evidence, authorization, and limits while leaving execution with the owning workflow.
+This skill prepares general task assignments and evidence transfers, and validates independently supplied findings. It preserves context, evidence, authorization, and limits while leaving execution with the owning workflow. Communication within a coordinated review belongs to that review workflow.
 
 ## Install
 
