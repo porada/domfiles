@@ -149,7 +149,7 @@
 	"show_whitespaces": "boundary",
 	"ssh_connections": [
 		{
-			"host": "homeassistant.local",
+			"host": "homeassistant",
 			"nickname": "Home Assistant",
 			"projects": [
 				{
@@ -157,8 +157,7 @@
 						"/homeassistant"
 					]
 				}
-			],
-			"username": "dom"
+			]
 		}
 	],
 	"tab_bar": {
