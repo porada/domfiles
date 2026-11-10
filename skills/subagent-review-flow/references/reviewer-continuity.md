@@ -4,7 +4,7 @@
 
 Preserve mandated provider, model, settings, environment, and lifecycle requirements. Record the predecessor, successor, reason, and transferred obligations. Proceed under existing authority when it covers the replacement and all separate requirements are satisfied.
 
-Allow at most one role transfer per reviewer role in a review round. A new session doesn’t start a new round or reset finding identifiers, correction history, valid clearance, or execution limits. Don’t use replacement chains to evade disagreement, access restrictions, exhausted retries, or approval requirements.
+Allow at most one role transfer per reviewer role in a review round, including its [early follow-ups](../SKILL.md#consolidate-each-round). A new session doesn’t start a new round or reset finding identifiers, correction history, valid clearance, or execution limits. Don’t use replacement chains to evade disagreement, access restrictions, exhausted retries, or approval requirements.
 
 For an ordinary continuation, give the successor the current assignment, applicable authority, baseline, scope, changes, outstanding findings, dispositions, validation limitations, and reuse basis. Preserve the predecessor’s reasoning, objections, and resolution exchanges as evidence distinct from coordinator conclusions. Accessible conversation references may carry detailed evidence only when the successor can retrieve them. A user-clickable link alone doesn’t establish that access.
 

@@ -52,6 +52,6 @@ Keep predecessor evidence with the coordinator until the replacement has indepen
 
 ## Continue After Changes
 
-If final review has already completed, finish the applicable earlier follow-up, [prepare the updated committed target](#prepare-the-committed-target), reopen the latest valid final-review thread, and send the applicable [current-commit prompt](#run-a-final-review-cycle). Continue an active final-review thread in the same way once the updated target is ready.
+If final review has already completed, finish the applicable earlier follow-up under the [unit’s stage prerequisites](super-review.md#run-the-initial-stage), [prepare the updated committed target](#prepare-the-committed-target), reopen the latest valid final-review thread, and send the applicable [current-commit prompt](#run-a-final-review-cycle). Continue an active final-review thread in the same way once the updated target is ready.
 
 Reusing a thread does not create a new numbered cycle or reset initial-response accounting. Superseded reviewer instances remain history.

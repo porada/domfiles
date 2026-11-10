@@ -14,7 +14,7 @@ Load `subagent-review-flow` for shared coordination. Use `sensible-commit-flow` 
 
 Divide the resolved review target into one unit per repository and target checkout. Apply the selected stages to each unit with separate reviewer roles, committed targets, clearance, and final-review cycle accounting in the shared review record. Comparison-only sources remain evidence rather than becoming review units unless explicitly selected as targets.
 
-Retain the calling workflow’s repository roles, authorization, cross-repository dependencies, validation, and permitted deferrals. Per-unit clearance does not replace checks spanning repositories. Continue independent work within the current stage only where those requirements permit.
+Retain the calling workflow’s repository roles, authorization, cross-repository dependencies, validation, and permitted deferrals. Per-unit clearance does not replace checks spanning repositories. Apply the shared review process’s independence criteria when scheduling work across units. A ready unit may advance to its next selected stage while independent units remain in an earlier stage. Wait for unfinished work elsewhere when it supplies a prerequisite or affects the advancing unit’s reviewed result or integration boundaries.
 
 ## Establish T3 Execution
 
@@ -36,7 +36,9 @@ Start the selected initial reviewers for each unit independently against the sam
 
 Use the shared review process to collect their reports, resolve disputes, apply authorized corrections, and obtain the required clearance.
 
-Before starting or continuing any final review, complete this stage for all participating units and settle its reviewer threads using the completion action permitted by global **Thread cleanup**. A limited review does not satisfy this prerequisite. Later follow-ups may reopen initial reviewer threads through the shared continuity process. Ordinary corrections during the final stage do not automatically reopen the initial stage.
+Before starting or continuing a unit’s final review, complete its required initial review and follow-ups for the whole target, including every selected initial role’s clearance and required validation. Settle that unit’s initial reviewer threads using the completion action permitted by global **Thread cleanup**. A limited review does not satisfy this prerequisite. Early corrections or clearance of part of the target do not make the whole target ready. Independent units’ outstanding reports or thread settlement do not delay this transition.
+
+Later follow-ups may reopen initial reviewer threads through the shared continuity process. Ordinary corrections during the final stage do not automatically reopen the initial stage.
 
 ## Run the Final Stage
 

@@ -54,7 +54,13 @@ Before dispatching a follow-up, verify the target against the recorded reviewed 
 
 ## Consolidate Each Round
 
-Include every selected reviewer in the stage’s initial round. Collect every participating reviewer’s report for the round before validating the combined findings, applying a correction batch, or starting the next round. Merge duplicates without losing their originating roles or distinct issues.
+Include every selected reviewer in the stage’s initial round and collect every participating role’s report. Validate findings as they arrive, including findings reported before an assessment finishes. Reconcile later reports with earlier findings and corrections, merging duplicates without losing their originating roles or distinct issues. An early finding or correction does not replace the reviewer’s completed assessment.
+
+Batch corrections and their verification by default to avoid repeated validation and follow-ups. An authorized correction or its required reviewer exchange may proceed before other reports arrive when its scope is stable, it offers a clear practical benefit, and it preserves ongoing assessments. Otherwise, accumulate findings for the batch while continuing independent investigation and dispute resolution. Wait until a reviewer’s own independent assessment is complete before sending it corrections, disputes, or other follow-up context.
+
+Before overlapping work, establish that it preserves the other assessments’ targets, baselines, relevant inputs, and integration boundaries. Separate files or repositories alone do not establish independence. A named immutable commit can remain a valid review target while corrections are prepared, but checks against a changing working tree do not establish that commit’s behavior. Defer mutations that would disturb a live assessment or make its target ambiguous, including through shared configuration or broader invariants. When independence is uncertain, wait only for the affected work.
+
+Keep outstanding assessments in their original round. Record the updated target and remaining obligations for an early follow-up without restarting that round or resetting replacement, recovery, or disagreement limits. Account for intervening changes before accepting a report or reusing clearance under [Coordinate Fixes and Re-Review](#coordinate-fixes-and-re-review). Do not close a round while required reports remain outstanding.
 
 If a participating reviewer becomes unavailable, record the absent report and follow [Recover Reviewer Continuity](references/reviewer-continuity.md#recover-reviewer-continuity). Use the [limited-review endpoint](#complete-the-review) when bounded recovery can’t restore the required participation.
 
@@ -82,7 +88,7 @@ Accepted changes receive the applicable validation and review coverage. Unaccept
 
 ## Coordinate Fixes and Re-Review
 
-For review-only work, resolve disputes and report validated findings requiring changes as standing. When fixes are authorized, consolidate the corrections, apply them, and run relevant checks before follow-up. Handle accepted opportunities under [Apply Findings Policies](#apply-findings-policies). Leave commit and publication decisions to the calling workflow.
+For review-only work, resolve disputes and report validated findings requiring changes as standing. When fixes are authorized, consolidate the corrections under [Consolidate Each Round](#consolidate-each-round), apply them, and complete required validation over its applicable scope before follow-up. Required reviewer verification also applies to small fixes already verified by the coordinator. Handle accepted opportunities under [Apply Findings Policies](#apply-findings-policies). Leave commit and publication decisions to the calling workflow.
 
 Clearance is evidence for the scope, state, integration boundaries, inputs, and assumptions examined. Reuse it only while those premises remain applicable. Inspect changed or uncertain premises and obtain affected re-review when reuse can’t establish clearance. Identical bytes or revision identifiers alone don’t prove unchanged inputs or behavior.
 
