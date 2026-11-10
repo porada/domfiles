@@ -11,14 +11,25 @@ function __domfiles_pretty_hostname
     and return $is_macos
 
     set --local name
+    set --local exit_code 0
 
     if test $is_macos -eq 0
         scutil --get ComputerName | read --null name
+        set exit_code $pipestatus[1]
     else
-        uname -n | read --null name
-    end
+        test -r /etc/machine-info
+        and set name (
+            string replace --filter --regex -- '^PRETTY_HOSTNAME=(["\']?)(.*)\1$' '$2' \
+                </etc/machine-info
+        )[-1]
 
-    set --local exit_code $pipestatus[1]
+        if test -n "$name"
+            set name "$name"\n
+        else
+            uname -n | read --null name
+            set exit_code $pipestatus[1]
+        end
+    end
 
     printf '%s' "$name"
     or return

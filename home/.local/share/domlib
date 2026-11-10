@@ -611,6 +611,19 @@ __pretty_hostname() (
 
   if [ "$is_macos" -eq 0 ]; then
     scutil --get ComputerName
+    return
+  fi
+
+  name=''
+
+  if [ -r /etc/machine-info ]; then
+    name="$(
+      sed -n 's/^PRETTY_HOSTNAME=\(["'\'']\{0,1\}\)\(.*\)\1$/\2/p' /etc/machine-info | tail -n 1
+    )"
+  fi
+
+  if [ -n "$name" ]; then
+    printf '%s\n' "$name"
   else
     uname -n
   fi
