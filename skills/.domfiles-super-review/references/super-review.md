@@ -61,3 +61,7 @@ Complete the run only when every participating unit has its selected stages’ r
 Ensure global **Thread cleanup** has been applied to every reviewer thread created for the run, including initial, replacement, and repeated final-review threads.
 
 Report the resulting commits, permitted deferrals, and material remaining limitations under the governing reporting policy. Do not claim clearance for deferred scope.
+
+When the completed run included the final stage, settle your own coordinating thread at the coordinating task’s final handoff only when no outstanding matters remain assigned to that thread. These include required work, verification, user questions, approvals, required human actions, promised follow-ups, and reported optional opportunities. Review clearance alone doesn’t establish this condition. Otherwise, leave the thread open and state what remains. Use the completion action permitted by global **Thread cleanup**.
+
+An item stops preventing settlement only when completed, explicitly dismissed by the user within applicable requirements, or transferred to a verified follow-up destination with established continuation ownership and user visibility. Deferring required work or an optional opportunity in the same thread doesn’t resolve it for settlement. Don’t infer an item’s disposition from an agent’s proposal or user silence. Disclosed limitations don’t prevent settlement unless they require a decision or further action to complete the agreed endpoint.

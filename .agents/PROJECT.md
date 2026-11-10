@@ -84,6 +84,10 @@ The `ctrl-enter` binding in `home/.config/zed/keymap.json` uses `workspace::Send
 
 This non-exhaustive index records intentionally retained user approval checkpoints and their rationale. The global [**Execution checkpoints** policy](GLOBAL.md#execution-checkpoints) owns checkpoint placement.
 
+### Commit Offers
+
+The commit-offer checkpoint is intentionally retained so the user decides whether to commit changes outside existing commit authority, including work without the independent review required for automatic committing. This decision is due for reconsideration when T3 Code restores continuation with the same reviewer context. The global [**Automatic commits** and **Commit offers** policies](GLOBAL.md#git-changes) own the requirements.
+
 ### Contribution Publication
 
 The contribution workflow owns [final publication approval](../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-approved-pull-requests). The final checkpoint preserves the user’s control over what is submitted on their behalf.

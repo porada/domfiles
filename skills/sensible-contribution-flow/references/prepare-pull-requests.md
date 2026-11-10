@@ -48,7 +48,7 @@ If a reliable split isn’t possible, use one commit whose complete message is t
 
 ### Implement and Review
 
-Implement only the approved contribution scope. Respect the execution boundary’s dependency and protected content gates before dependent work. Satisfy the repository’s applicable checks with [valid prior evidence](execution-boundaries.md#reuse-validation-evidence) or fresh checks, inspect the actual changes, and complete the [implementation review](#review-contributions). Report omitted checks, including tests, and their material limitations without implying completion. Correct validated in-scope findings within the existing mutation authority. A material change to the agreed outcome or approach returns to the user for a scope decision, and separate approval gates remain applicable.
+Implement only the approved contribution scope. Respect the execution boundary’s dependency and protected content gates before dependent work. Satisfy the repository’s applicable checks with [valid prior evidence](execution-boundaries.md#reuse-validation-evidence) or fresh checks, inspect the actual changes, and follow the [implementation review responsibilities](#review-contributions). Report omitted checks, including tests, and their material limitations without implying completion. Correct validated in-scope findings within the existing mutation authority. A material change to the agreed outcome or approach returns to the user for a scope decision, and separate approval gates remain applicable.
 
 ### Prepare Commits
 
@@ -62,7 +62,9 @@ Continue from the commit result to [final editorial work](#finalize-pull-request
 
 Assess the concrete proposal before implementation. Challenge whether the problem still exists, the proposed solution, the best simpler alternative, and upstream fit. For mechanical changes without a material design decision, the implementing agent performs this assessment without a separate design reviewer. Otherwise, use one independent in-client reviewer for design review when available.
 
-Review the complete contribution against its recorded baseline after validation, including easy or mechanical changes. For later revisions, review the revision delta and affected integration. Complete implementation review before preparing commits or handing back working tree changes unless the user waives it.
+The agent owning final contribution delivery coordinates implementation review. An implementing child may return its scoped changes, validation evidence, limitations, and required decisions to that coordinator before this review, without claiming contribution readiness. A full handoff transfers these responsibilities to the receiving conversation. Any review or commit duties expressly assigned to a child remain subject to its actual authority and the workflow’s prerequisites.
+
+Review the complete contribution against its recorded baseline after validation, including easy or mechanical changes. For later revisions, review the revision delta and affected integration. Complete implementation review before preparing commits or delivering working tree changes to the user unless the user waives it.
 
 Proposal assessment and implementation review cover the agreed outcome, scope and exclusions, upstream fit, decisive upstream evidence, and repository requirements. Implementation review also examines the changeset and validation results for unsupported claims, correctness problems, performance or other regressions, and unnecessary changes. Passing tests are evidence, not a replacement for assessing whether every change belongs.
 
