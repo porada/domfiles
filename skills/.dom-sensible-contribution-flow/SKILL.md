@@ -17,7 +17,7 @@ Read and apply `super-review`’s `SKILL.md` from the same installed skills root
 
 Unless the user selects different stages or waives review, use the initial stage to satisfy the base’s review before commit preparation. For requests limited to working tree changes, select only that stage. Otherwise, select the full sequence, with the base’s commit preparation serving as `super-review`’s committed-target preparation. Carry the base’s commit authorization, packaging, message, and shared pull request history constraints into that operation. After later changes, apply `super-review`’s continuation requirements before declaring readiness.
 
-Under **External services**, include `super-review`’s selected reviewer exchanges through T3 Code, required follow-ups, replacements, repeated final reviews, and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered reviewer exchange authorization before implementation. Loading this overlay doesn’t authorize disclosure.
+Under **External services** and **Agent communication**, include `super-review`’s selected recipients and processing providers through T3 Code, required follow-ups, replacements, repeated final reviews, and disclosure of task-required repository material and non-secret context in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered reviewer exchange authorization before implementation. Loading this overlay doesn’t authorize disclosure.
 
 ## Adjacent Opportunities
 

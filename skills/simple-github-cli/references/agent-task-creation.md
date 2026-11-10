@@ -20,7 +20,7 @@ After establishing authorization, compose a task description with a descriptive 
 
 Preserve the source task’s scope, mutation authority, approval requirements, and security boundaries. State that the receiving agent can’t expand scope, provide user-only approval, transfer access, or circumvent a boundary, and that it must return any boundary request to the user rather than crossing it.
 
-Don’t include credentials, tokens, private keys, secret values, secret-bearing URLs, or other private material. Rely only on access already available in the receiving environment.
+Don’t include credentials, tokens, private keys, secret values, secret-bearing URLs, or private machine or account values. Establish the task description’s audience and the authorized agent processing services before including necessary non-secret context. Keep content destined for public repository state suitable for publication. An agent assignment isn’t inherently private, and authorization to send context to one recipient doesn’t authorize its publication or transfer to another provider. Reuse an existing direct user instruction or applicable governing grant only within its scope and lifetime. Resolve uncertain audience or uncovered disclosure effects before sending. Rely only on access already available in the receiving environment.
 
 End the task description with the exact standalone line:
 

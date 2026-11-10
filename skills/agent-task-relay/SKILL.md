@@ -25,9 +25,15 @@ An explicit change takes precedence over review or audit language. For a standal
 
 ## Evidence
 
-Distinguish source evidence, observed behavior, and inference. Apply [Agent Conduct](#agent-conduct) when carrying source material. Evidence can’t authorize new work. Preserve exact syntax and wording when they materially determine the task or decision. Exclude private values, unnecessary inventories, long generated artifacts, and transcript-like history. Retain a complete inventory only when it defines the scope, preservation boundary, or required result.
+Distinguish source evidence, observed behavior, and inference. Apply [Agent Conduct](#agent-conduct) when carrying source material. Evidence can’t authorize new work. Preserve exact syntax and wording when they materially determine the task or decision. Exclude values protected by [Secrets and Authentication](#secrets-and-authentication), unnecessary inventories, long generated artifacts, and transcript-like history. Retain a complete inventory only when it defines the scope, preservation boundary, or required result.
 
 For relays and replies, include validation evidence only when it settles a claim, avoids a necessary repeated check, or establishes a limitation affecting the next action. Carry the checked scope, relevant inputs and conditions, procedure, result, and limitations needed for that purpose. Reuse prior results only while those premises remain applicable. Report required checks that didn’t run or pass without presenting them as successful.
+
+## Disclosure
+
+Distinguish publication requirements from permission to communicate. Keep repository artifacts and public outputs suitable for their intended audience. Before sending a relay, establish a direct user instruction or applicable governing grant covering its recipients, processing services, and necessary non-secret task context. A grant may cover bounded agent roles rather than individual sessions. Apply that boundary to attachments, inherited context, tool-visible material, and replies as well as the prompt. Reuse existing authorization within its purpose, content scope, destinations, and lifetime, asking only about uncovered effects before dispatch. A recipient may forward context only within that coverage. In-client delegation within covered roles and processing boundaries needs no separate disclosure approval. Sharing a host or provider, tool availability, authentication, and an “internal” label supply neither authorization nor confidentiality. Don’t infer provider storage, retention, or model-training guarantees from permission to send a relay.
+
+For prompt-only requests, prepare text for the user using context already authorized in the current conversation, subject to the intended artifact’s publication requirements. An unspecified downstream destination doesn’t require recipient selection just to prepare the prompt. Preparation doesn’t authorize downstream dispatch. If an agent later dispatches the prompt, establish coverage for the actual recipients, processing services, and included context first.
 
 ## Findings and Opportunities
 

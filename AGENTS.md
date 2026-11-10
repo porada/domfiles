@@ -6,7 +6,7 @@
 
 ## Public Repository Boundary
 
-- **Public surfaces:** Treat every tracked file, proposed repository artifact, patch, and relay as publicly disclosed.
+- **Public surfaces:** Treat every tracked file, proposed repository artifact, and patch as publicly disclosed. Apply that requirement to communication intended for inclusion in those artifacts or another public surface. Other agent communication follows the authorized recipient and processing boundaries under global **External services** and **Agent communication**. Permission to communicate context doesn’t authorize including it in a public artifact.
 - **Authentication review:** Before recommending or implementing a tool that uses authentication or private configuration, establish:
     - Which secrets or private values it requires.
     - How those values enter at runtime without appearing in command literals or repository files.
