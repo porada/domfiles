@@ -27,10 +27,25 @@ For every path in the reportable scope:
 
 ## Keep Audits Read-Only
 
-- Don’t modify repository files or run linters or formatters as part of the analysis, including read-only check modes.
+- Keep the endpoint analysis-only. Audit authority doesn’t cover fixes, source formatting, snapshot updates, or changes to repository configuration, dependency manifests and lockfiles, or tracked generated files.
 - Don’t report findings outside the reportable scope.
 - Base findings on the current repository contents under review. When current behavior must be verified, use authoritative installed tool behavior or official documentation and source as supporting evidence.
 - Never speculate about intent or hypothetical implementations.
+
+### Choose Automated Checks
+
+Use relevant automated checks, including linter and formatter check modes, when their actual effects fit the audit’s authority and preserve the contents under review. Prefer existing project entrypoints and documented behavior. A `--check` or “read-only” label alone doesn’t establish eligibility.
+
+- **Execution:** Establish the selected inputs, effective configuration, and material effects of the complete invocation, including its launcher, startup files, plugins, hooks, and lifecycle steps. Apply the global **Code Execution** and **Security** boundaries. Verify indirect reads, such as linked documents, against the reportable scope, supporting-evidence allowance, and remaining exclusions under [Resolve Audit Scope](#resolve-audit-scope).
+- **Dependencies:** The global **Prescribed acquisition** policy covers prerequisite tool and dependency installation or reconciliation for audit checks, provided it preserves source, repository configuration, dependency manifests and lockfiles, and tracked generated files in both the audited and shared tool checkouts. Apply this condition to configured lifecycle steps too. [pnpm execution behavior](../../../PROJECT.md#pnpm-execution-and-lockfile-behavior) illustrates effects to account for, not a blanket exemption for a launcher. Explicit task restrictions and separate grants still govern.
+- **Outputs:** Audit authority includes creating or updating bounded, disposable generated output and tool-managed caches needed for checks, and creating task-owned scratch data, while preserving audited inputs and unrelated state. Use `agent-task-directories` for agent-managed scratch data and its lifecycle. Ignore status alone doesn’t establish ownership, disposability, or permission to overwrite a path.
+- **Eligibility:** Omit optional checks whose inputs or effects cannot be established or exceed the audit’s scope or authority, continue independent inspection, and report material limitations. Ask through the global **Execution checkpoints** policy only when a decision or additional authority is necessary to establish the evidence the user requested. Don’t bypass required entrypoints or build new wrappers or isolation infrastructure merely to make a check eligible.
+
+### Interpret Check Evidence
+
+Tie each result to the contents and revision actually checked, relevant configuration and dependencies, and effective input coverage. Apply the global **Validation evidence** policy before reusing results. For publication audits, preserve the [selected tree](publication-audit-trees.md) and its [isolation requirements](publication-audit-staging.md) when applicable. A check against working-tree files doesn’t establish a result for the selected commit unless the relevant inputs and execution conditions match.
+
+Confirm that intended inputs were checked, accounting for ignored files, partial execution, and empty input sets. Treat diagnostics as candidate findings to validate against current contents and project rationale. A passing check establishes only its actual coverage, not completion of the audit or correctness beyond the properties it checks.
 
 ## Report Audit Results
 
@@ -42,3 +57,4 @@ Follow the global [communication](../../../GLOBAL.md#communication) and [**Findi
 
 1. Lead with the findings. If there are none, state that the audit found no reportable issues.
 2. State the resolved reportable scope.
+3. Report material validation limitations, including relevant checks omitted because their effects or target fidelity could not be established. Distinguish inspection from executed checks without listing routine passing diagnostics.

@@ -14,7 +14,7 @@ Use `doclint --help` for the native argument and flag reference, which identifie
 
 The base configuration selects `.md` and `.markdown` files. `--no-ignore` bypasses ignore rules, including exclusions for task fixtures, without changing ignore files. Inputs outside the working directory can still fall outside the configuration’s scope. For piped Markdown, use `--no-ignore --max-warnings 0 --stdin --stdin-filename <file-path>`.
 
-Link checks may read linked Markdown or HTML documents even when they’re ignored or outside the selected files. Include those targets in the authorized read scope.
+Link checks may read linked Markdown or HTML documents even when they’re ignored or outside the selected files. Before running the check, verify that those reads fit the task’s authorized scope and remaining exclusions.
 
 The shipped configuration is loaded by default, without automatic lookup of caller ESLint configuration. For project-specific checks, use `--config <config-file>` to select a trusted ESLint configuration. Where `doclint` is a project dependency, use `defineConfig` from `doclint/config` to apply the defaults before your configuration.
 

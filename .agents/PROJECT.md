@@ -102,7 +102,7 @@ The [`prepush` workflow](../skills/.domfiles-prepush/references/prepare-commit-p
 
 Separating [`agent-documentation`](../skills/.domfiles-agent-documentation/SKILL.md) from [`skill-development`](../skills/.domfiles-skill-development/SKILL.md) keeps ordinary instruction maintenance independent of skill packaging and scripting guidance. Both rely on the domfiles-managed global documentation, review, and writing policies rather than restating them.
 
-The explicit [writing composition route](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) also covers formatting-only and machine-readable metadata tasks, overriding the writing skill’s standalone trigger exclusions without broadening its discovery description.
+The [conditional writing composition](../skills/.domfiles-agent-documentation/SKILL.md#apply-documentation-principles) avoids loading editorial guidance for mechanical maintenance while leaving `human-facing-writing`’s discovery description unchanged.
 
 ### Agent Task Relay
 

@@ -26,4 +26,11 @@ Before adding or retaining a description exclusion, search project-authored skil
 
 Encode every project-authored skill description as a YAML `|-` literal block scalar. Treat each thematic unit as a paragraph, and separate paragraphs with a blank line. When another frontmatter field follows the description, place one blank line between the description value and that field.
 
-For every project-authored skill description, keep the decoded value within a conservative authoring cap of 1,024 UTF-8 bytes and any stricter limit imposed by a supported client. Measure the decoded value rather than the complete frontmatter or source line. Shorten redundant phrasing before dropping trigger distinctions, and validate every project-authored skill description after changing this policy or any description.
+For every project-authored skill description, keep the decoded value within a conservative authoring cap of 1,024 UTF-8 bytes and any stricter limit imposed by a supported client. Measure the decoded value rather than the complete frontmatter or source line. Shorten redundant phrasing before dropping trigger distinctions.
+
+## Validation Scope
+
+- **Discovery, invocation, or routing changes:** Validate affected descriptions and their relationships with competing or composed skills and entrypoints across the complete affected contract.
+- **Isolated description changes:** Validate each complete changed description for encoding, decoded size, and applicable semantic requirements, including trigger distinctions. An isolated edit doesn’t require checking unrelated descriptions. If it changes discovery, invocation, or routing, also apply that broader coverage.
+- **Shared policy changes:** Validate every description governed by the changed requirement against that requirement. Changes to the shared encoding or size policy require checking every project-authored description for encoding and decoded size, without an unrelated semantic re-review of the inventory.
+- **Broader audits:** Apply `agent-documentation`’s **Select Validation Scope** to the requested description inventory and checks.

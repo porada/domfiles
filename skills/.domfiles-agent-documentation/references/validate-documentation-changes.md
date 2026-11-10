@@ -6,7 +6,7 @@ For changes, reviews, and audits, select checks by the contract being changed or
 
 | Change or Evaluation | Required Coverage |
 | --- | --- |
-| Wording or formatting | Verify preserved meaning, prose conventions, and applicable mechanical checks. Don’t reopen unrelated routing, recovery, or peer behavior merely because the file belongs to a skill. |
+| Wording or formatting | Verify preserved meaning and applicable mechanical checks. Apply prose conventions when the [writing composition](../SKILL.md#apply-documentation-principles) applies. Don’t reopen unrelated routing, recovery, or peer behavior merely because the file belongs to a skill. |
 | Headings, links, or routing | Also verify affected anchors, inbound and directional references, discovery paths, and availability of required guidance from each affected entrypoint. When routing changes how a workflow is entered or which guidance loads, also apply **Check Workflow Compatibility**. |
 | Behavior or authorization | Also trace affected execution paths, scope, permissions, exceptions, recovery, and standalone fallbacks through **Check Workflow Compatibility** below. |
 

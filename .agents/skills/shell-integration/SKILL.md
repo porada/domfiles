@@ -71,4 +71,4 @@ After editing, follow [Validate Shell Changes](references/validate-shell-changes
 
 ## Validate Shell Audits, Diagnoses, and Reviews
 
-Run the applicable language skill’s read-only validation and [check integration contracts](references/validate-shell-changes.md#check-integration-contracts). When invoked through `audit`, preserve its [ban on linters and formatters](../audit/references/repository-audit.md#keep-audits-read-only) and use only the remaining permitted checks.
+Run the applicable language skill’s read-only validation and [check integration contracts](references/validate-shell-changes.md#check-integration-contracts). When invoked through `audit`, select checks and interpret their results under its [read-only audit boundary](../audit/references/repository-audit.md#keep-audits-read-only).
