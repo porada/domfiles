@@ -10,7 +10,7 @@ set --global fish_color_quote yellow --bold
 set --global fish_color_redirection blue --bold
 set --global fish_color_search_match --reverse
 set --global fish_color_selection --reverse
-set --global fish_color_user --bold
+set --global fish_color_user --bold --dim
 set --global fish_pager_color_completion green
 set --global fish_pager_color_description normal
 set --global fish_pager_color_prefix cyan --underline

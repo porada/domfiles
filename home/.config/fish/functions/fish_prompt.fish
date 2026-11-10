@@ -24,12 +24,18 @@ function fish_prompt
     set_color $fish_color_normal
 end
 
-# Prints remote host context for SSH sessions
+# Prints the current host context
 function __domfiles_fish_prompt_host
-    test -n "$SSH_CONNECTION"; or return
-    set --local name "$(__domfiles_pretty_hostname 2>/dev/null)"
-    or set name "$(prompt_hostname)"
-    printf '%s@%s ' "$USER" "$name"
+    set --local name
+
+    if set name "$(__domfiles_pretty_hostname 2>/dev/null)"
+        set name "$(string replace --regex -- '^Dom ' '' "$name")"
+    else
+        set name "$(prompt_hostname)"
+    end
+
+    test "$USER" != dom; and printf '%s@' "$USER"
+    printf '%s ' "$name"
 end
 
 # Prints the working directory with root-user styling
