@@ -8,7 +8,8 @@
 	"awaySummaryEnabled": false,
 	"enableArtifact": false,
 	"env": {
-		"CLAUDE_CODE_DISABLE_MOUSE": "1"
+		"CLAUDE_CODE_DISABLE_MOUSE": "1",
+		"CLAUDE_CODE_SHELL": "/bin/bash"
 	},
 	"includeGitInstructions": false,
 	"model": "opus",

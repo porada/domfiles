@@ -7,6 +7,9 @@
 				"effort": "xhigh",
 				"mode": "auto"
 			},
+			"env": {
+				"CLAUDE_CODE_SHELL": "/bin/bash"
+			},
 			"type": "registry"
 		},
 		"codex-acp": {
