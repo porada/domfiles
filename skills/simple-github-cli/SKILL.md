@@ -14,13 +14,13 @@ This skill helps agents choose the narrowest interface that can handle the task.
 
 ## Interface Choice
 
-Use `gh` when the user explicitly requests that interface or a specific `gh` command. An interface preference alone doesn’t authorize effects. A direct, scoped command can also supply the applicable opt-in and mutation authorization. Otherwise, use the first applicable interface in this order:
+Honor applicable host requirements and explicit user interface selections, including browser selection and fallback conditions. Use `gh` when the user explicitly requests that interface or a specific `gh` command. An interface preference alone doesn’t authorize effects. A direct, scoped command can also supply the applicable opt-in and mutation authorization. Without an applicable selection, use the first suitable available interface in this order:
 
 - Use local Git or source search tooling for checked-out source and local repository state.
 - Use direct HTTP retrieval for a directly addressable public resource.
 - For remote source discovery, prefer a dedicated indexed code search tool when one is available. Use bounded `gh search code` when authenticated GitHub access is required or no suitable search tool is available.
 - Use a focused `gh` command or `gh api` for bounded GitHub repository or API state and operations that the earlier interfaces can’t supply.
-- Use a browser or browser-backed MCP only for rendered or interactive state. Don’t use either as a GitHub source or repository browser for source files, trees, diffs, commits, or API-addressable metadata, and don’t switch to one merely because another retrieval method failed.
+- Use an available browser or browser-backed tool when it supplies a required capability that the earlier interfaces can’t supply.
 
 ## Bounded Reads
 

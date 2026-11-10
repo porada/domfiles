@@ -8,6 +8,7 @@ outdated_agent_skills=false
 
 for skill in \
   awesome-vitest-entry \
+  browser-automation \
   claude-cli-subagent \
   claude-collaboration \
   cli-subagent \

@@ -194,12 +194,6 @@ At handoff, report remaining actionable opportunities separately from required f
 
 - **Retrieval failure:** After an ordinary technical failure, correct a demonstrated path or invocation mistake, retry within bounds, or use an equivalent method without changing the target, authorized effects, authentication, or disclosure boundaries. Verify replacement guidance against authoritative evidence, and ask before changing an explicitly selected version or other material task assumption. Never evade denied access, authentication requirements, or security controls through substitution or delegation. Use supported grant or correction processes. If recovery fails, report the resource, attempted methods, exact error, and smallest corrective action. Continue independent authorized work where possible, without claiming the affected step succeeded. New dependencies, destinations, or broader effects retain their approval requirements. Submit external tooling issues only when explicitly requested.
 
-#### Browser Automation
-
-These rules apply only to tools that use browser capabilities, regardless of how they’re exposed.
-
-- **Eligibility:** Don’t use browser automation, including Safari MCP and Chrome MCP, as generic filesystem, HTTP, source code, or repository browsers. In particular, don’t use it to inspect source files, repository trees, diffs, commits, or API-addressable metadata. Use it only when the task requires server-owned semantics, rendered or interactive state, user interaction, browser-managed downloads, non-transferable authentication, or an explicit user or project workflow. Select it for the required capability.
-
 ## T3 Code Capability Fallback
 
 Ignore this entire section when running inside T3 Code. Accessing T3 Code through MCP from another client does not mean you are running inside T3 Code.

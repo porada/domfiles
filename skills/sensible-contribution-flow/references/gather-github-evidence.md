@@ -12,16 +12,15 @@ For each remaining question, bound retrieval to the repository, specific objects
 
 ## Choose Available Interfaces
 
-Use an explicitly requested suitable interface when one is selected. Otherwise choose the first suitable available interface in this order:
+Honor applicable host requirements and explicit user interface selections, including browser selection and fallback conditions. Without an applicable selection, choose the first suitable available interface in this order:
 
 1. Local Git or source search for checked-out source and local repository state.
 2. Direct non-browser retrieval for a directly addressable public resource.
 3. A dedicated indexed code search interface for remote source discovery, scoped to the relevant repository and source identifiers.
 4. A focused repository or API interface, such as an already available `gh`, for remote metadata or authenticated evidence that the preceding interfaces can’t supply.
+5. An available browser or browser-backed tool for a required capability that the preceding interfaces can’t supply.
 
 Use documented operations supported by the available interface. Verify unfamiliar arguments or request behavior before invocation rather than guessing an API or selecting a new tool version. Keep metadata requests read-only. Field parameters must not silently select a mutating operation, and GraphQL access is limited to bounded queries, not mutations. Neither authentication nor a request’s transport method establishes mutation authority.
-
-Reserve browser interaction for required rendered or interactive state. Don’t use a browser or browser-backed tool as a generic HTTP client or to inspect API-addressable metadata, commits, diffs, repository trees, or source files.
 
 Use only established secure machine-local authentication under [Secrets and Authentication](../SKILL.md#secrets-and-authentication), with the default account and configuration. Don’t run authentication management commands or supply token values. Don’t switch accounts, configuration sources, credentials, hosts, or providers, broaden scopes, or create credential stores. Additional access remains user-owned.
 

@@ -26,7 +26,6 @@ for source in \
   .dom-sensible-commit-flow \
   .dom-sensible-contribution-flow \
   .domfiles-agent-documentation \
-  .domfiles-browser-automation \
   .domfiles-prepush \
   .domfiles-skill-development \
   .domfiles-super-review \
