@@ -13,9 +13,11 @@ Load `sensible-contribution-flow` and apply these personal contribution defaults
 
 ## Implementation Review
 
-Read and apply `full-review`’s `SKILL.md` from the same installed skills root for the coordinator’s implementation review of initial contributions and implementation revisions, including documentation changes. Pass the base workflow’s review scope and established authority to it. Leave the base’s design review and standalone read-only review routes unchanged.
+Read and apply `super-review`’s `SKILL.md` from the same installed skills root for the coordinator’s implementation review of initial contributions and implementation revisions, including documentation changes. Pass the base workflow’s review scope and established authority to it. Leave the base’s design review and standalone read-only review routes unchanged.
 
-Under **External services**, include `full-review`’s selected provider review exchange through the interface selected by `cli-subagent`, follow-up exchanges in the same reviewer conversations and replacement sessions preserving its required interfaces and reviewer selection constraints, and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered provider exchange authorization before implementation. Loading this overlay doesn’t authorize disclosure.
+Unless the user selects different stages or waives review, use the initial stage to satisfy the base’s review before commit preparation. For requests limited to working tree changes, select only that stage. Otherwise, select the full sequence, with the base’s commit preparation serving as `super-review`’s committed-target preparation. Carry the base’s commit authorization, packaging, message, and shared pull request history constraints into that operation. After later changes, apply `super-review`’s continuation requirements before declaring readiness.
+
+Under **External services**, include `super-review`’s selected reviewer exchanges through T3 Code, required follow-ups, replacements, repeated final reviews, and disclosure of task-required repository material in the contribution’s existing execution checkpoint. Reuse explicit authorization that already covers those effects. When no checkpoint is otherwise needed, resolve only the uncovered reviewer exchange authorization before implementation. Loading this overlay doesn’t authorize disclosure.
 
 ## Adjacent Opportunities
 

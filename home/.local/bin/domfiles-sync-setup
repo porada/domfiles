@@ -27,8 +27,6 @@ for source in \
   .dom-sensible-contribution-flow \
   .domfiles-agent-documentation \
   .domfiles-browser-automation \
-  .domfiles-cli-subagent \
-  .domfiles-full-review \
   .domfiles-prepush \
   .domfiles-skill-development \
   .domfiles-super-review \

@@ -44,4 +44,3 @@ jobs:
           cache: true
           runtime: node@26
       - run: pnpm test
-      - run: pnpm test:skills

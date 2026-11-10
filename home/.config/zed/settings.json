@@ -46,6 +46,12 @@
 			"args": [
 				"--mcp"
 			]
+		},
+		"t3:m3": {
+			"url": "https://prod-4609089eaa098c77.t3coderelay.com/mcp"
+		},
+		"t3:m4": {
+			"url": "https://prod-47bd4eb8598c0f0b.t3coderelay.com/mcp"
 		}
 	},
 	"debugger": {

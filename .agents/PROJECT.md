@@ -34,6 +34,10 @@ The fallback to Homebrew’s canonical Apple Silicon or Linux location is only a
 
 The supported GitHub CLI setup for agent use targets `github.com` with credentials stored in the operating system credential store.
 
+### T3 Code MCP Authentication
+
+The MCP URLs under `t3coderelay.com` in [`home/.config/zed/settings.json`](../home/.config/zed/settings.json) are public routing addresses, not secrets or bearer credentials. Knowing a URL does not grant access. Connections require OAuth authentication and user approval in T3 Code. Zed stores OAuth credentials in the operating system credential store, outside the tracked settings file.
+
 ### Zed Agent Permissions
 
 Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandboxed`, and native `fetch` deliberately has no permission rules. With the terminal unsandboxed, fetch rules would only restrict destinations that terminal commands can already reach.
@@ -103,14 +107,6 @@ The explicit [writing composition route](../skills/.domfiles-agent-documentation
 ### Agent Task Relay
 
 [`agent-task-relay`](../skills/agent-task-relay/SKILL.md) is a separate skill rather than an `agent-documentation` reference because relay composition is a frequent user-initiated task. Reaching it through the parent skill would load both for work that needs only the relay workflow.
-
-### CLI Subagent Monitor Portability
-
-[`subagent-signal`](../skills/.domfiles-cli-subagent/scripts/subagent-signal.ts) reads the fixed `~/.claude` and `~/.codex` locations, and its tests do not cover an unset `HOME` or an unreadable `subagents` directory. These limitations are accepted while `cli-subagent` serves only domfiles-managed installations. Promotion to the public category requires covering both failure paths, honoring `CLAUDE_CONFIG_DIR` and `CODEX_HOME` wherever those CLIs use them to relocate session files, and relocating the monitor. Public skills remain documentation-only under the [domfiles skill policy](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#apply-category-contracts).
-
-### Codex Subagent Approvals
-
-With Codex CLI `0.166.0`, explicit sandbox escalation requests for a fixed-output probe completed in both fresh and resumed turns under [the prescribed automatic-review mode](../skills/.domfiles-cli-subagent/references/codex-cli.md#apply-runtime-configuration), and the user observed no approval prompt. This establishes completion for that command without a human prompt, not which approval path allowed it or how other security obstacles are handled. A silent waiting turn ends under the [inactivity procedure](../skills/.domfiles-cli-subagent/references/session-coordination.md#inactivity) or the host timeout for [foreground execution](../skills/.domfiles-cli-subagent/references/codex-cli.md#run-host-jobs).
 
 ### Contribution Flow
 

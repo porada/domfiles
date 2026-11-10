@@ -8,19 +8,7 @@ export default defineConfig({
 			'packages/**/vite.config.ts',
 		],
 	},
-	lint: defineOxlintConfig({
-		overrides: [
-			{
-				files: [
-					/* prettier-ignore */
-					'skills/**/*.test.ts',
-				],
-				rules: {
-					'vitest/no-import-node-test': 'off',
-				},
-			},
-		],
-	}),
+	lint: defineOxlintConfig(),
 	staged: {
 		'*': [
 			() => 'pnpm install --frozen-lockfile --ignore-scripts',

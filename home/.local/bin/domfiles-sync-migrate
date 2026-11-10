@@ -10,11 +10,13 @@ for skill in \
   awesome-vitest-entry \
   claude-cli-subagent \
   claude-collaboration \
+  cli-subagent \
   commit \
   commit-flow \
   contribution-flow \
   diagnose \
   examine-workflow \
+  full-review \
   git-worktrees \
   github-cli \
   harmonize \

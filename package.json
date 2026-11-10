@@ -42,7 +42,6 @@
 		"lint:ts:check": "vp lint --deny-warnings --type-check",
 		"prepare": "vp config --hooks-dir .hooks",
 		"test": "vp test",
-		"test:skills": "node --test 'skills/{*,.*}/**/*.test.ts'",
 		"typecheck": "tsc --noEmit"
 	}
 }
