@@ -9,6 +9,12 @@ if [ -n "${DOMFILES_BIN_DIR-}" ]; then
   exit 1
 fi
 
+# Require a home directory for domfiles’ paths
+if [ -z "${HOME-}" ]; then
+  printf '%s\n' '`domlib` requires a non-empty `HOME`' >&2
+  exit 1
+fi
+
 # Resolve domfiles’ paths based on the caller’s location
 DOMFILES_BIN_DIR="$(dirname "$(realpath "$0")")"
 DOMFILES_HOME_DIR="$(dirname "$(dirname "$DOMFILES_BIN_DIR")")"
