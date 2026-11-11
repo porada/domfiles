@@ -92,9 +92,9 @@ The commit-offer checkpoint is intentionally retained so the user decides whethe
 
 The contribution workflow owns [final publication approval](../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-approved-pull-requests). The final checkpoint preserves the user’s control over what is submitted on their behalf.
 
-### Harmonization Destinations
+### Harmonization Scope
 
-The harmonization workflow owns [repository and role selection](skills/harmonize/references/repository-harmonization.md#resolve-repositories). This initial checkpoint preserves the user’s control over which repositories may receive changes, rather than letting discovery alone select write destinations.
+The harmonization workflow owns [project selection, repository roles, and branch update approval](skills/harmonize/references/repository-harmonization.md#resolve-repositories). This initial checkpoint preserves the user’s control over the participating checkouts, their source-only or destination roles, and the upstream updates performed before harmonization, rather than treating discovery as permission to change a checkout.
 
 ### Prepush History Plan
 
