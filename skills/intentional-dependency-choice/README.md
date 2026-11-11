@@ -4,7 +4,7 @@
 
 Adding a new dependency should be an informed choice, not a surprise.
 
-This skill helps agents decide whether a new dependency or development tool is needed, choose a compatible option, and explain its impact before asking for approval.
+This skill helps agents decide whether a new dependency or development tool is needed, choose a compatible option, and establish approval or existing authority before implementation.
 
 ## Install
 

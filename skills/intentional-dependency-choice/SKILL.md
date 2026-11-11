@@ -10,7 +10,7 @@ description: |-
 
 Adding a new dependency should be an informed choice, not a surprise.
 
-This skill helps agents decide whether a new dependency or development tool is needed, choose a compatible option, and explain its impact before asking for approval.
+This skill helps agents decide whether a new dependency or development tool is needed, choose a compatible option, and establish approval or existing authority before implementation.
 
 ## Define Decision Scope
 
@@ -22,7 +22,7 @@ Selection itself is read-only. Don’t edit declarations, implement dependent fe
 
 For a review-only request, assess the selected choice against the same criteria, report the recommendation and decisive evidence or limitations, and stop. Don’t turn the review into an implementation approval request or a broader audit.
 
-When the task concerns already approved choices, prescribed acquisition, or existing declarations carried through history, follow [Existing Authorization](references/existing-authorization.md) before deciding whether a new approval is needed.
+When the task concerns already approved choices, a governing allowance for tool selection, prescribed acquisition, or existing declarations carried through history, follow [Existing Authorization](references/existing-authorization.md) before deciding whether a new approval is needed.
 
 ## Establish Necessity
 
@@ -51,13 +51,13 @@ Resolve the [declaration convention](#return-to-implementation) before presentin
 
 Support material claims with the evidence needed to check them. Recommend one option unless a material tradeoff requires the user’s choice. Don’t require a report file.
 
-Require explicit user approval before introducing an agent-selected dependency or tool, or changing any dependency’s or tool’s prescribed features, source, or version. This includes temporary acquisitions and package runners, even when no repository file changes. Without approval covering the concrete choice, stop before dependent implementation, installation, mutation, or mutating delegation. General implementation permission, tool availability, an agent’s proposal, or user silence doesn’t supply that approval.
+Before introducing an agent-selected dependency or tool, or changing prescribed features, source, or version, establish explicit user approval or coverage under an applicable [governing allowance](references/existing-authorization.md#governing-allowances). This includes temporary acquisitions and package runners, even when no repository file changes. Without authority covering the concrete choice and its effects, stop before dependent implementation, acquisition, execution, mutation, or mutating delegation. General implementation permission, tool availability, an agent’s proposal, or user silence doesn’t supply a tool selection grant. This skill supplies no standing allowance of its own.
 
-Ask once for the uncovered choice and its material effects. Preserve approval already supplied by a direct, scoped user instruction, and don’t ask again for covered effects. If approval is declined, offer an alternative within the remaining constraints or explain why the requested capability can’t be supplied under them.
+Ask once for the uncovered choice and its material effects. Preserve established authorization within its scope and lifetime, and don’t ask again for covered effects. If approval is declined, offer an alternative within the remaining constraints or explain why the requested capability can’t be supplied under them.
 
 ## Return to Implementation
 
-Return the choice, rationale, declaration convention, and approval status to the owning workflow, including exact user authorization when needed. Follow the project’s dependency declaration policies and conventions or, when none exist, the ecosystem’s convention for compatible updates. Explain intentional pins and other deviations.
+Return the choice, rationale, declaration convention when applicable, and authority to the owning workflow, identifying the direct user instruction or governing grant and its effect boundaries and lifetime. Follow the project’s dependency declaration policies and conventions or, when none exist, the ecosystem’s convention for compatible updates. Explain intentional pins and other deviations. Temporary use doesn’t require a project declaration or authorize one.
 
 When the toolchain supports shared specifications and the applicable declaration policies and conventions permit sharing for the affected consumers and dependency category without requiring another declaration form, centralize a specification that would otherwise be repeated across workspace consumers. Reuse an existing shared entry, or promote the matching inline specification and update the affected consumers to reference it. Preserve the selected dependency requirements and consumer-specific settings. Sharing doesn’t change dependency selection or approval requirements.
 
