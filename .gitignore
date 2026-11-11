@@ -15,5 +15,6 @@ home/.config/npm/user.npmrc
 home/.config/zed/prompts
 home/.config/zed/themes
 home/.local/bin/git-diff-highlight
+home/.local/bin/t3
 node_modules
 tsconfig.tsbuildinfo

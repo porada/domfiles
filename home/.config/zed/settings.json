@@ -1,26 +1,5 @@
 {
 	"agent_buffer_font_size": 13,
-	"agent_servers": {
-		"claude-acp": {
-			"default_config_options": {
-				"model": "opus",
-				"effort": "xhigh",
-				"mode": "auto"
-			},
-			"env": {
-				"CLAUDE_CODE_SHELL": "/bin/bash"
-			},
-			"type": "registry"
-		},
-		"codex-acp": {
-			"default_config_options": {
-				"model": "gpt-6.1-sol",
-				"mode": "agent",
-				"reasoning_effort": "xhigh"
-			},
-			"type": "registry"
-		}
-	},
 	"autosave": "on_focus_change",
 	"buffer_font_features": {
 		"calt": false
@@ -247,7 +226,6 @@
 			"allow_unsandboxed": true
 		},
 		"show_merge_conflict_indicator": false,
-		"terminal_init_command": "claude",
 		"threads_sidebar": {
 			"auto_open": true,
 			"default_width": 200,
