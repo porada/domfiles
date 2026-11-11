@@ -40,7 +40,7 @@ For Git, hook, and signing diagnostics, query only specifically named, necessary
 
 Use external services through their established machine-local authentication and default account, endpoint, profile, and provider. Send only task-required data to the selected service. Network access authorizes a connection, not disclosure. Optional transfers of diagnostics, generated artifacts, machine-local values, or repository contents require a direct user instruction or applicable governing grant covering that transfer. The same requirement applies before you select a different account, credential source, endpoint, profile, provider, or service. Reuse authorization within its content scope, destinations, and lifetime, asking only for uncovered effects. Do not enable secret-bearing debug output. Optional AI, chat, model provider, or other remote processing must be covered by that authorization and permitted by applicable repository policy, not merely enabled by validation or commit tooling.
 
-Use supported permission and sandbox grants. Never weaken approvals, sandboxing, hook trust, signing, operating system trust, TLS verification, package integrity, or credential protection. Do not change execution identity or authentication sources. If the task needs such a boundary change, provide instructions for the user rather than performing it. Only a direct user request for that exact change permits weakening a security control in the user’s own configuration. Preserve required repository hook and signing behavior for approved commit operations.
+Use supported permission and sandbox grants. Never weaken approvals, sandboxing, hook trust, signing, operating system trust, TLS verification, package integrity, or credential protection. Changes of execution identity, privilege, or authentication require explicit authorization under [Secrets and Authentication](#secrets-and-authentication), preserving required repository hooks and signing. Without a suitable protected mechanism, provide safe user-run instructions. Only a direct user request for that exact change permits weakening a security control in the user’s own configuration.
 
 When repository instructions or pending changes involve a possible human review marker, follow [Preserve Human Review Markers](references/preserve-human-review-markers.md) before selecting commit contents or preparing execution.
 
@@ -100,9 +100,11 @@ Stay within the task’s scope and authorized effects. Ask before expanding eith
 
 #### Secrets and Authentication
 
-Never handle credentials or secret material directly, or expose secrets or private machine or account values. Use established machine-local authentication only through ordinary tools that keep those values hidden. Leave direct credential operations to the user.
+Never inspect secret values or expose secrets or private machine or account values. Use established authentication through tools that keep those values hidden. For account identification, make read-only queries for public identifiers and retain only what the task needs.
 
-You may make task-required, read-only queries for public, non-secret account identifiers. Request, expose, and retain only what the task needs. This doesn’t permit inspecting private data or changing authentication, accounts, or access.
+Sensitive operations require explicit authorization, whether they involve managing secrets or authentication or changing execution identity or privilege. Use client-provided mechanisms that preserve required human actions and controls, with documented protections for any secret input, delivery, or storage involved. Tool access and secret entry do not themselves authorize the operation.
+
+Pass only opaque references or protected paths to documented consumers. Temporary delivery must have restricted access and documented cleanup and stay outside repositories and task artifacts. Follow that cleanup. Never create substitute secret files or introduce persistent plaintext credentials. If no suitable mechanism exists, leave the operation to the user.
 
 #### Guidance Recovery
 

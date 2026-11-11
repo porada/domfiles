@@ -6,7 +6,7 @@ After the required opt-in, treat `gh agent-task list` and `gh agent-task view` a
 
 Before any `gh copilot` invocation, follow [Copilot CLI](copilot-cli.md).
 
-Keep `gh codespace ssh` user-run because it may create a key pair in `~/.ssh` when no valid key is available. Before preparing the command, disclose that possible key management effect, require explicit opt-in, and follow [Sensitive Operations](sensitive-operations.md). Don’t infer a safe keyless execution path from assumed key availability or an unverified option.
+`gh codespace ssh` may create a key pair in `~/.ssh` when no valid key is available. Before preparing or executing it, disclose that possible key management effect, resolve explicit authorization for it, and follow [Sensitive Operations](sensitive-operations.md). Don’t infer a safe keyless execution path from assumed key availability or an unverified option.
 
 ## Tool Acquisition
 

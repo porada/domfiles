@@ -100,6 +100,10 @@ The harmonization workflow owns [project selection, repository roles, and branch
 
 The [`prepush` workflow](../skills/.domfiles-prepush/references/prepare-commit-proposal.md#obtain-proposal-approval) deliberately retains approval of its proposed commit series before mutation. The checkpoint lets the user judge grouping, messages, and the placement of pending changes before history is rewritten. Standing commit authority does not replace this review of the concrete proposal. Publication remains a separate decision.
 
+### Sensitive Operations
+
+The global [**Client-mediated operations** policy](GLOBAL.md#security) permits protected client execution while retaining explicit authorization for sensitive effects. Secret entry satisfies an input requirement, not approval of an unspecified operation. This distinction lets authorized work continue without a terminal handoff while preserving control over authentication, key management, secret updates, and elevation. Temporary delivery is transport, not persistent credential storage. The [GitHub CLI storage boundary](#github-cli-authentication-boundary) remains applicable.
+
 ## Skill Maintenance
 
 ### Agent Documentation Composition
@@ -146,6 +150,7 @@ This non-exhaustive index supplements each skill’s peer declarations and the [
 | [Human review marker preservation](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [Contribution marker preservation](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) | Semantic mirror |
 | Instruction source requirements under **Instruction provenance** and **Approval provenance** in [Instruction Authority](GLOBAL.md#instruction-authority) | [Relay fix authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [alternative commit approvals](../skills/sensible-commit-flow/references/alternative-approval-modes.md), and [contribution authorization](../skills/sensible-contribution-flow/references/execution-boundaries.md#preserve-authorization) | Standalone guidance |
 | Review reporting under [**Findings**](GLOBAL.md#findings) | [Review assignments and reports](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
+| Sensitive operations under **Secrets and authentication**, **Client-mediated operations**, and **Security boundaries** in [Security](GLOBAL.md#security) | [Shared public policy template](../skills/.domfiles-skill-development/assets/general-policies.txt), [GitHub sensitive operations](../skills/simple-github-cli/references/sensitive-operations.md), [commit execution boundaries](../skills/sensible-commit-flow/SKILL.md#preserve-execution-boundaries), and [contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md) | Minimal standalone defaults and domain applications, with [verbatim template propagation](../skills/.domfiles-skill-development/references/public-skill-portability.md#agent-conduct) |
 | [Terminal presentation compatibility in POSIX](../skills/posix-shell-scripting/references/functions-and-interfaces.md#terminal-destinations) | [Fish wrapper selection](../skills/fish-shell-scripting/references/functions-and-wrappers.md#wrapper-selection) | Paragraph mirror required for standalone installation |
 | [Updating commit history](../skills/sensible-commit-flow/references/update-commit-history.md) | [Updating contribution history](../skills/sensible-contribution-flow/references/update-commit-history.md) | Semantic mirror |
 

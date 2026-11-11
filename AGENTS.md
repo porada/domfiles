@@ -12,7 +12,7 @@
     - How those values enter at runtime without appearing in command literals or repository files.
     - Where the tool persists credentials and generated configuration.
     - Whether any generated or modified file can enter the repository.
-- **Feasibility:** Treat a tool as feasible only when its public configuration can remain separate from secret material through an established machine-local source or external credential store.
+- **Feasibility:** Treat a tool as feasible only when its public configuration can remain separate from secret material through an established machine-local source, external credential store, or qualifying mechanism under global **Client-mediated operations**. Temporary client delivery must remain outside the repository and does not establish persistent credential storage.
     - **Ignored-file boundary:** A Git-ignored file qualifies as an established machine-local source only when public repository provisioning creates or adopts it without embedding secret values, restricts it to user-only access, and tracked configuration refers only to its path. Ignore status alone isn’t enough.
 - **No safe route:** If no established public-safe route exists, report the tool as infeasible or ask the user to choose a secret storage boundary.
 

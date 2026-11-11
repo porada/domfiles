@@ -18,7 +18,7 @@ When the entrypoint doesn’t resolve a communication workflow, don’t compose 
 
 Execute only when a direct user request covers the concrete task, target, tool permissions, and any data sent to Copilot, and all applicable access, acquisition, and remote mutation requirements are satisfied. Verify a supported invocation for those effects without choosing a different source or version on the user’s behalf. Keep scope and runtime bounded, preserve approval controls, and don’t enable unrestricted tool permissions or untrusted startup configuration to make execution unattended.
 
-Don’t execute with unresolved placeholders or infer permission for operations the receiving agent might choose. Carry explicit commit or publication authority only when the user supplied it. Credential and key handling remain user-run. If the invocation can’t preserve required prompts or another genuine human-only checkpoint, use the user-run path instead.
+Don’t execute with unresolved placeholders or infer permission for operations the receiving agent might choose. Carry explicit commit or publication authority only when the user supplied it. For credential or key work, establish the receiving environment’s protected route under [Sensitive Operations](sensitive-operations.md) and include the operation’s explicit authorization and safeguards in the assignment, without relaying secret values. Otherwise, leave that operation user-run. If the invocation can’t preserve required prompts or another genuine human-only checkpoint, use the user-run path instead.
 
 ## User-Run Command
 
