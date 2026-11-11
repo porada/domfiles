@@ -705,9 +705,54 @@ __print_styled() (
     return
   fi
 
-  # Preserve trailing newlines through command substitution
-  text="$(__string_replace "$*" "$HOME" '~' && printf .)" || return
-  text="${text%?}"
+  subject="$*"
+  text=''
+  home="$HOME"
+
+  # Normalize slashes in `HOME` as Fish does
+  case "$home" in
+    *[!/]*)
+      while __string_contains "$home" //; do
+        home="${home%%//*}/${home#*//}"
+      done
+
+      home="${home%/}"
+      ;;
+  esac
+
+  # Shorten `$HOME` only as a whole path or leading directory
+  if [ -n "$home" ]; then
+    # Match the ASCII whitespace of Fish’s `\s` regardless of locale
+    boundaries="$(printf '\t\n\v\f\r') \`'\"():,;="
+    preceding=''
+
+    while __string_contains "$subject" "$home"; do
+      before="${subject%%"$home"*}"
+      subject="${subject#"$before"}"
+      text="$text$before"
+
+      if [ -n "$before" ]; then
+        preceding="${before#"${before%?}"}"
+      fi
+
+      following="${subject#"$home"}"
+      following="${following%"${following#?}"}"
+
+      if __string_contains "$boundaries" "$preceding" \
+        && __string_contains "/$boundaries" "$following"; then
+        text="$text~"
+        subject="${subject#"$home"}"
+        preceding="${home#"${home%?}"}"
+      else
+        # Retry from the next character, as a regular expression would
+        preceding="${subject%"${subject#?}"}"
+        text="$text$preceding"
+        subject="${subject#?}"
+      fi
+    done
+  fi
+
+  text="$text$subject"
 
   if ! __is_stdout_tty; then
     style=''
