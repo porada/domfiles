@@ -8,7 +8,9 @@ Run `doclint --no-ignore --max-warnings 0 -- <file-path> …` from the target re
 
 In editing workflows, use `doclint --fix --no-ignore --max-warnings 0 -- <file-path> …` when mechanical corrections to every selected document are authorized. Inspect the resulting diff and keep fixes within the task scope. Omit `--fix` for reviews and validation-only tasks.
 
-Use `doclint --help` for the native argument and flag reference, which identifies the command as ESLint. Without `--fix`, linting doesn’t rewrite documents, but the `PATH` launcher may reconcile the domfiles dependencies.
+Use `doclint --help` for the native argument and flag reference, which identifies the command as ESLint.
+
+The `PATH` launcher may reconcile the domfiles dependencies even without `--fix` or when dependencies are already installed. Apply global **Prescribed acquisition** to that preparation. Under an explicit read-only restriction, establish that the complete invocation’s effects fit the restriction. If they don’t, report the validation limitation.
 
 ## Select Files
 

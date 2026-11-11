@@ -31,7 +31,7 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 
 - **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. The [public repository boundary](#public-repository-boundary) remains applicable.
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
-- **Command entrypoints:** Use the entrypoint documented for each task, including validation, rather than another route to the same implementation. Invoke [repository-scoped commands](.agents/PROJECT.md#repository-scoped-commands) through `PATH`, overriding global **Direct invocation** for `skills` and `vercel` in this repository. This exercises the interfaces other users and agents rely on.
+- **Command entrypoints:** Use the entrypoint documented for each task, including validation, rather than another route to the same implementation. Invoke [repository-scoped commands](.agents/PROJECT.md#repository-scoped-commands) through `PATH`, overriding global **Direct invocation** for `skills` and `vercel` in this repository. For domfiles source validation, follow [Checkout Command Selection](#checkout-command-selection) so the command exercises the task checkout.
 - **Navigation:** Consult the relevant sections of `.agents/PROJECT.md`.
 - **Durable knowledge:** Add project knowledge to `.agents/PROJECT.md` only when it meets the global **Durable knowledge** threshold. Don’t record optimization recaps, routine implementation details, or workflow summaries. Prefer updating existing material over adding another explanation. If the task doesn’t permit the edit, report deferred documentation work only if it meets that threshold.
 - **Zed settings:** Keep `.zed/settings.json` and `home/.config/zed/settings.json` free of redundant entries. An entry is redundant only when omitting it preserves the supported workflow, including tool-managed state and later invocations. Matching a default or inherited value alone doesn’t make an entry redundant. See the [CLI persistence rationale](.agents/PROJECT.md#zed-cli-open-behavior).
@@ -41,6 +41,18 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 For changed JSON files, run `pnpm run lint:json <changed-json-files>`. Pass paths explicitly unless repository-wide validation is intended.
 
 For Markdown validation, invoke `doclint` and follow [Check Markdown](skills/.domfiles-agent-documentation/references/check-markdown.md).
+
+### Checkout Command Selection
+
+When invoking a repository-scoped launcher to validate domfiles source, prepend the task checkout’s absolute `home/.local/bin` path to `PATH` for that invocation and verify that the launcher resolves there. Other prescribed validation entrypoints retain their documented invocation. From the task checkout root, for example:
+
+```sh
+env PATH="$PWD/home/.local/bin:$PATH" doclint --no-ignore --max-warnings 0 -- AGENTS.md
+```
+
+For a check whose working directory must be another project, retain the absolute launcher directory from the task checkout rather than deriving it from that project’s `$PWD`. Leave persistent `PATH` settings, the provisioned `~/.local/bin` link, and global skill discovery unchanged. Ordinary use outside domfiles development continues through the provisioned installation.
+
+If a check cannot run within the task’s authority, report the validation limitation rather than substituting another checkout’s implementation.
 
 ## Scope
 

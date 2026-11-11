@@ -104,6 +104,10 @@ The [`prepush` workflow](../skills/.domfiles-prepush/references/prepare-commit-p
 
 The global [**Client-mediated operations** policy](GLOBAL.md#security) permits protected client execution while retaining explicit authorization for sensitive effects. Secret entry satisfies an input requirement, not approval of an unspecified operation. This distinction lets authorized work continue without a terminal handoff while preserving control over authentication, key management, secret updates, and elevation. Temporary delivery is transport, not persistent credential storage. The [GitHub CLI storage boundary](#github-cli-authentication-boundary) remains applicable.
 
+### Skill Activation
+
+The [skill activation boundary](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#synchronize-skill-links) preserves the stable global installation while changes are prepared in worktrees. Source validation does not authorize integration or activation. An existing grant covering both permits continuation without another approval, while a task ending before integration leaves those effects for a separately authorized task.
+
 ## Skill Maintenance
 
 ### Agent Documentation Composition
@@ -323,7 +327,9 @@ The [repository-scoped command wrappers](#repository-scoped-commands) rely on pn
 
 `doclint` is an ESLint-backed Markdown CLI implemented in [`packages/doclint`](../packages/doclint), not a skill-owned portable script. It uses the domfiles Node.js and pnpm installation rather than dependencies in the repository being checked. Native ESLint configuration and plugins provide its extension mechanism rather than a custom rule runner. Its [usage and coverage](../skills/.domfiles-agent-documentation/references/check-markdown.md) belong to the `agent-documentation` skill.
 
-The corresponding scripts in `home/.local/bin/` are the stable command interfaces. They resolve implementations from the domfiles pnpm workspace without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
+The corresponding scripts in `home/.local/bin/` are the stable command interfaces. They resolve implementations and dependencies from the domfiles checkout containing the launcher’s resolved location without changing the caller’s working directory, so relative operands and project-scoped operations retain their upstream path semantics. `package.json` and `pnpm-lock.yaml` remain the source of truth for installed versions. Parallel copies through global pnpm state are intentionally unsupported.
+
+The [checkout selection procedure](../AGENTS.md#checkout-command-selection) exercises worktree launchers without changing the provisioned installation or introducing another command interface.
 
 ### ripgrep Configuration Isolation
 
