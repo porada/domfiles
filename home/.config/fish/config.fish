@@ -1,3 +1,8 @@
+# Set consistent locale
+set --local overrides (set --global --names | string match 'LC_*')
+set --query overrides[1]; and set --erase --global $overrides
+set --global --export LANG C.UTF-8
+
 # Resolve current configuration path
 set --local config (status dirname)
 
