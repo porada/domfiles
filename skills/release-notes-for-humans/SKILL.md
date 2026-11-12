@@ -41,14 +41,16 @@ Treat an outcome as material when it changes what consumers can do, how they con
 
 A release unit is one independently released package or one set of packages that must release together. Its evidence scope is the complete set of changes evaluated for it. It may be ref-backed, such as a commit or range, or direct, such as a supplied or working tree diff. Resolve scope in this order:
 
-1. Identify the release version or unreleased state. Don’t invent a version. Resolve the repository and refs only when the selected evidence scope requires them. If you can’t resolve a required repository or ref from the request or available context, stop and ask for direction.
+1. Identify the release version or unreleased state. Don’t invent a version. Resolve the repository and refs from the request or available context only when the selected evidence scope requires them.
 2. Resolve the target publishable packages and their release grouping from repository metadata when available, otherwise from supplied context. For ambiguous ownership or grouping, multiple packages, or an unspecified package target, follow [Release Units](references/release-units.md) before selecting boundaries or mapping evidence.
 3. Select evidence for each release unit using the first applicable case:
     - **Initial release:** When the user identifies the release unit as initial, stop inspecting its change history and source. Resolve only the package and structure needed to use the exact [initial release status item](references/release-structures.md#status-items).
     - **Explicit scope:** Honor the user-provided evidence scope instead of selecting a default tag boundary. Use a supplied or working tree diff directly, without inferring a target ref or substituting the current repository’s `HEAD`. For a ref-backed scope, resolve only the refs needed to materialize the requested changes. Treat an explicitly requested lone commit as its diff against its first parent. For a root commit, use its complete contents.
     - **Default scope:** Without an explicit evidence scope, follow [Release Boundaries](references/release-boundaries.md).
 4. Detect the package manager and registry from repository configuration only when they are relevant to the evidence. Keep the note format independent of either.
-5. Map the changes from each resolved evidence scope to its publishable packages. If the affected package scope remains unclear, stop and ask for direction.
+5. Map the changes from each resolved evidence scope to its publishable packages.
+
+If a required repository, ref, package ownership, release grouping, or release boundary remains unresolved after inspecting available context and metadata, ask one focused question identifying the missing decision and any evidence-supported choices. Pause only the affected release units and continue units whose scope and independence are established.
 
 ## Evidence Inventory
 

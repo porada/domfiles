@@ -68,6 +68,7 @@ If a check cannot run within the task’s authority, report the validation limit
     - Symlinks created through `domfiles sync`.
     - `home/.config/fish/fish_variables`.
     - Documentation.
+- **Intentional stops:** When evaluating workflow interruptions, consult [Intentional Workflow Stops](.agents/PROJECT.md#intentional-workflow-stops) in `.agents/PROJECT.md`. Treat the recorded tradeoffs as settled within their stated scope. Don’t report a stop as a defect or recommend its removal solely because it interrupts autonomous work. Reconsider the decision when the user requests it or concrete evidence challenges its rationale, including fulfillment of a recorded reconsideration condition. Still report incorrect implementation, application outside the intended scope, redundant approval requests, or conflicts with governing instructions. Identify what falls outside the recorded decision or what evidence warrants reconsideration.
 
 ## Skills
 

@@ -13,7 +13,7 @@ Carry established dependency and tool choices without selecting new ones as part
 
 ## Assign Work
 
-For a live external assignment, establish its target, scope, source and access constraints, covered effects, and completion owner before drafting. Use the user’s direction and valid existing authorization. Ask one focused question before composing when a material choice or uncovered effect remains, without reconfirming covered effects. A tentative suggestion to delegate doesn’t authorize a handoff. Preparing or reviewing a reusable prompt asset, or preparing an explicitly requested subagent prompt, doesn’t require live-handoff confirmation.
+For a live external assignment, establish its target, scope, source and access constraints, intended effects, and completion owner from the user’s direction and available context. Prepare a concrete assignment within existing drafting authority even when dispatch authorization remains pending. Ask before composing only when a material unresolved choice prevents that preparation. Before dispatch, resolve any uncovered effects or disclosure through the owning workflow’s approval process, using the prepared assignment to make the request reviewable and without reconfirming covered effects. A tentative suggestion to delegate doesn’t authorize a handoff.
 
 Carry the selected checkout or isolation requirement when material. Leave checkout creation and lifecycle decisions to the owning workflow rather than choosing an isolated worktree merely to prepare a prompt. Don’t use a subagent to cross an access, authentication, or permission boundary. Rely only on access already available to the recipient, and never relay credentials.
 

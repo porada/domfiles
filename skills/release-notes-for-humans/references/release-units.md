@@ -4,4 +4,4 @@ When repository metadata is available, use package paths, release configuration,
 
 When repository metadata is available and the request doesn’t identify a package, treat each publishable release unit as a candidate. Before mapping changes, resolve each candidate’s evidence scope to determine whether it contains any changes.
 
-If package ownership or release grouping remains unclear, stop and ask for direction.
+Resolve remaining ambiguity about package ownership or release grouping through [Release Scope](../SKILL.md#release-scope).
