@@ -43,6 +43,37 @@ __ defaults write com.apple.AppStore InAppReviewEnabled -bool false || true
 # Quit the printer app when finished
 __ defaults write com.apple.print.PrintingPrefs 'Quit When Finished' -bool true
 
+# Enable Touch ID for `sudo`
+if ! __is_ci; then
+  sudo_local='/etc/pam.d/sudo_local'
+  touch_id_rule='auth       sufficient     pam_tid.so'
+
+  if [ ! -e "$sudo_local" ]; then
+    if ! __is_stdin_tty; then
+      __print_warning 'Enabling Touch ID for `sudo` requires an interactive terminal'
+    else
+      __print_heading 'Enabling Touch ID for `sudo`'
+
+      if ! __ sudo sh -c 'umask 222 && printf "%s\n" "$2" > "$1"' \
+        sh "$sudo_local" "$touch_id_rule"; then
+        __print_error 'Failed to enable Touch ID for `sudo`'
+      fi
+    fi
+  elif grep -Eq '^[[:space:]]*auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so([[:space:]]|$)' \
+    "$sudo_local"; then
+    __print_confirmation 'Touch ID enabled for `sudo`'
+  else
+    grep_status="$?"
+
+    if [ "$grep_status" -eq 1 ]; then
+      __print_warning \
+        "Add \`auth sufficient pam_tid.so\` to \`$sudo_local\` to enable Touch ID for \`sudo\`"
+    else
+      __print_error "Failed to read \`$sudo_local\`"
+    fi
+  fi
+fi
+
 # Prevent automatic sleep on power adapter
 if ! __is_ci; then
   power_adapter_sleep="$(
