@@ -43,21 +43,6 @@ if [ "$sync_repository" = true ]; then
     updated="$(__string_replace "$current" 'https://github.com/' 'git@github.com:')"
     updated="$(__string_replace "$updated" 'porada/dotfiles' 'porada/domfiles')"
 
-    if __is_macos && [ -z "${SSH_CONNECTION-}" ]; then
-      __print_heading_dimmed 'Ensuring the SSH key is linked to Apple Keychain'
-      __ssh_add --apple-use-keychain "$DOMFILES_SSH_KEY" || true
-    elif __is_stdin_tty && [ -n "${SSH_AUTH_SOCK-}" ]; then
-      __print_heading_dimmed 'Ensuring the SSH key is linked to the SSH agent'
-
-      if ssh-add -T "$DOMFILES_SSH_KEY.pub" > /dev/null 2>&1; then
-        __print_confirmation "$DOMFILES_SSH_KEY"
-      elif [ -n "${SSH_CONNECTION-}" ] && ssh-add -l > /dev/null 2>&1; then
-        __print_confirmation 'Forwarded agent'
-      else
-        __ssh_add "$DOMFILES_SSH_KEY" || true
-      fi
-    fi
-
     if [ "$current" = "$updated" ]; then
       __print_confirmation "$current"
     elif __ git -C "$DOMFILES" ls-remote "$updated" HEAD > /dev/null; then

@@ -873,18 +873,6 @@ __resolve_pager() (
   fi
 )
 
-# Runs `ssh-add` with `$@`
-__ssh_add() {
-  __print_command 'ssh-add' "$@"
-
-  if ssh-add "$@" > /dev/null 2>&1; then
-    return
-  else
-    __print_error 'Failed to add the SSH key'
-    return 1
-  fi
-}
-
 # Returns success when `$2` is a literal substring of `$1`
 __string_contains() {
   case "$1" in
