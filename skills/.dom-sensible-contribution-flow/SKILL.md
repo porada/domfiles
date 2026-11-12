@@ -11,6 +11,10 @@ metadata:
 
 Load `sensible-contribution-flow` and apply these personal contribution defaults under the global **Explicit user direction** policy. The base owns the contribution lifecycle and its authorization checkpoints.
 
+## Fork Remotes
+
+When creating or reusing a fork for a contribution, keep `origin` pointing to the fork and `upstream` pointing to the verified upstream repository. Reconcile existing remote names during authorized local setup under the base’s **Configure Git Remotes** rules, preserving existing branch tracking relationships.
+
 ## Implementation Review
 
 Read and apply `super-review`’s `SKILL.md` from the same installed skills root for the coordinator’s implementation review of initial contributions and implementation revisions, including documentation changes. Pass the base workflow’s review scope and established authority to it. Leave the base’s design review and standalone read-only review routes unchanged.
