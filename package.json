@@ -15,7 +15,7 @@
 	"packageManager": "pnpm@12.18.0",
 	"dependencies": {
 		"doclint": "workspace:*",
-		"skills": "^1.7.6",
+		"skills": "^1.8.1",
 		"vercel": "^65.14.0"
 	},
 	"devDependencies": {
