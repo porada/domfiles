@@ -12,7 +12,7 @@ Keep the selected commit list in history order. Do not rewrite history merely to
 
 ## Run a Final Review Cycle
 
-Start a fresh reviewer using the final profile and title from [Reviewer Defaults](reviewer-defaults.md). Do not inherit the coordinator’s conversation or supply implementation history, earlier review results, or a context handoff.
+Start a fresh reviewer through the [selected execution interface](super-review.md#establish-review-execution), using the final profile and title from [Reviewer Defaults](reviewer-defaults.md). Do not inherit the coordinator’s conversation or supply implementation history, earlier review results, or a context handoff.
 
 For one commit, send exactly:
 
@@ -26,7 +26,7 @@ Substitute the selected commit identifiers. Keep all other coordination state ou
 
 Retain the initial response for [repeat accounting](#repeat-when-required). Use the shared review process for findings and disputes throughout the cycle.
 
-Apply authorized corrections and accepted opportunities under the governing policies. Validate and record them through the commit workflow, then send the applicable review prompt for the complete current committed target in the same reviewer thread.
+Apply authorized corrections and accepted opportunities under the governing policies. Validate and record them through the commit workflow, then send the applicable review prompt for the complete current committed target through the shared reviewer-continuity process. Resume the same conversation when available and permitted. For a required fresh session, preserve the independent initial assessment and predecessor reconciliation under [Replace a Final Reviewer](#replace-a-final-reviewer), with successor counting governed by the shared continuity rules.
 
 Continue until no findings remain standing and all required verification is complete. Discussion messages may contain the evidence necessary to resolve a dispute. Subsequent commit-review requests retain the prompt forms above.
 
@@ -52,6 +52,6 @@ Keep predecessor evidence with the coordinator until the replacement has indepen
 
 ## Continue After Changes
 
-If final review has already completed, finish the applicable earlier follow-up under the [unit’s stage prerequisites](super-review.md#run-the-initial-stage), [prepare the updated committed target](#prepare-the-committed-target), reopen the latest valid final-review thread, and send the applicable [current-commit prompt](#run-a-final-review-cycle). Continue an active final-review thread in the same way once the updated target is ready.
+If final review has already completed, finish the applicable earlier follow-up under the [unit’s stage prerequisites](super-review.md#run-the-initial-stage), [prepare the updated committed target](#prepare-the-committed-target), resume the latest valid final reviewer through the shared continuity process, and send the applicable [current-commit prompt](#run-a-final-review-cycle). Continue an active final reviewer in the same way once the updated target is ready.
 
-Reusing a thread does not create a new numbered cycle or reset initial-response accounting. Superseded reviewer instances remain history.
+Continuing a reviewer role through the shared continuity process does not create a new numbered cycle or reset initial-response accounting. Superseded reviewer instances remain history.

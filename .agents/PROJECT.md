@@ -106,7 +106,7 @@ The [optional public peer fallback](../skills/.domfiles-skill-development/refere
 
 #### Required Capabilities and Evidence
 
-The [review execution requirements](../skills/.domfiles-super-review/references/super-review.md#establish-t3-execution), [reviewer continuity contract](../skills/subagent-review-flow/SKILL.md#establish-reviewer-continuity), and [handoff delivery requirements](../skills/agent-task-relay/references/outgoing-prompts.md#deliver-the-prompt) preserve the selected environment, assessment context, and observable result. Required capabilities cannot be silently replaced by a different review or handoff. The [evidence validation](../skills/verify-findings/references/verify-findings.md) and [guidance recovery](../skills/agent-task-relay/references/guidance-recovery.md) workflows retain unsupported conclusions or dependent work as limitations when authorized alternatives and complete fallbacks are exhausted.
+The [review execution requirements](../skills/.domfiles-super-review/references/super-review.md#establish-review-execution), [reviewer continuity contract](../skills/subagent-review-flow/SKILL.md#establish-reviewer-continuity), and [handoff delivery requirements](../skills/agent-task-relay/references/outgoing-prompts.md#deliver-the-prompt) preserve the selected environment, assessment context, and observable result. Required capabilities cannot be silently replaced by a different review or handoff. The review workflow permits [verified equivalent interfaces](../skills/.domfiles-super-review/references/super-review.md#verify-an-equivalent-interface) within existing authority while retaining explicit interface selections and every required capability. The [evidence validation](../skills/verify-findings/references/verify-findings.md) and [guidance recovery](../skills/agent-task-relay/references/guidance-recovery.md) workflows retain unsupported conclusions or dependent work as limitations when authorized alternatives and complete fallbacks are exhausted.
 
 #### Required Review
 
@@ -118,11 +118,11 @@ The global [**Focus** policy](GLOBAL.md#communication) limits repeated failure o
 
 #### Review Recovery
 
-The review workflow’s [dispute limits](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) and [reviewer recovery allowance](../skills/subagent-review-flow/references/reviewer-continuity.md#recover-reviewer-continuity) prevent repeated arguments or replacement chains from manufacturing agreement. Productive corrections and continuation in fresh sessions required by the host remain possible. A limited review preserves standing findings and evidence gaps instead of claiming clearance.
+The review workflow’s [dispute limits](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) and [reviewer recovery allowances](../skills/subagent-review-flow/references/reviewer-continuity.md#recover-reviewer-continuity) prevent repeated arguments or replacement chains from manufacturing agreement. Separate allowances distinguish recoverable infrastructure failures from lost assessment context. Productive corrections and continuation in fresh sessions required by the host remain possible. A limited review preserves standing findings and evidence gaps instead of claiming clearance.
 
 #### Review Thread Settlement
 
-The [`super-review` completion rules](../skills/.domfiles-super-review/references/super-review.md#complete-the-run) distinguish review clearance from coordinating thread settlement. Keeping reported optional opportunities outstanding until the owner’s disposition requirements are satisfied prevents them from disappearing at handoff without making acceptance a prerequisite for review clearance.
+The [`super-review` completion rules](../skills/.domfiles-super-review/references/super-review.md#complete-the-run) distinguish review clearance from coordinating thread settlement. [Reviewer session cleanup](../skills/.domfiles-super-review/references/super-review.md#settle-reviewer-sessions) permits subsequent review work during verified transient cleanup failures when assessments are complete, evidence is retained, and execution state is safe. Keeping reported optional opportunities outstanding until the owner’s disposition requirements are satisfied prevents them from disappearing at handoff without making acceptance a prerequisite for review clearance.
 
 ### Security Boundaries
 
