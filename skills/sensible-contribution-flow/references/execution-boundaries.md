@@ -24,7 +24,7 @@ A coordinator may carry this record to an in-client subagent but cannot supply a
 
 ## Preserve Scope and State
 
-Keep evidence gathering, implementation, and validation inside the authorized contribution. Prefer the smallest mechanism that satisfies its observable requirements. Preserve exact user input and settled decisions.
+Keep evidence gathering, implementation, and validation inside the authorized contribution. Prefer the smallest mechanism that satisfies its observable requirements. Preserve exact quotations, identifiers, explicitly chosen wording, and settled decisions.
 
 Use the supplied checkout. Before editing, inspect scoped status and diffs, preserve existing changes, and avoid another agent’s known write scope. Inspect the resulting scoped diff and status afterward. Treat concurrent agents as cooperative but unsynchronized rather than inventing a locking or transaction system.
 
