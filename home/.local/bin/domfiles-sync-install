@@ -52,6 +52,93 @@ install() (
   fi
 )
 
+setup_tailscale() (
+  cellar="$(brew --cellar tailscale)" || return
+  cellar="$(realpath "$cellar")" || return
+  prefix="$(brew --prefix tailscale)" || return
+  current_keg="$(realpath "$prefix")" || return
+
+  if [ "$(dirname "$current_keg")" != "$cellar" ]; then
+    __print_error 'Failed to locate the current Tailscale keg in its Homebrew cellar'
+    return 1
+  fi
+
+  # Repair only old kegs, preserving root ownership of the current service
+  set --
+
+  for keg in "$cellar"/*; do
+    if [ ! -d "$keg" ] || [ -L "$keg" ] || [ "$keg" = "$current_keg" ]; then
+      continue
+    fi
+
+    root_path="$(find "$keg" -user root -print -quit)" || return
+
+    if [ -n "$root_path" ]; then
+      set -- "$@" "$keg"
+    fi
+  done
+
+  # A version match cannot prove an old keg is unused after a Homebrew revision
+  if [ $# -eq 0 ]; then
+    # Recognize current and legacy Homebrew service registrations
+    for service_name in homebrew.mxcl.tailscale sh.brew.tailscale; do
+      if [ -f "/Library/LaunchDaemons/$service_name.plist" ] \
+        && launchctl print "system/$service_name" > /dev/null 2>&1; then
+        if version_info="$("$prefix/bin/tailscale" version --daemon --json 2> /dev/null)"; then
+          if printf '%s\n' "$version_info" | jq --exit-status \
+            '(.long | type == "string") and (.long != "") and (.long == .daemonLong)' > /dev/null; then
+            return 0
+          fi
+        fi
+
+        break
+      fi
+    done
+  fi
+
+  if [ -n "${SSH_CONNECTION-}" ]; then
+    __print_warning 'Tailscale setup requires a local session to avoid disconnecting SSH'
+    return 0
+  fi
+
+  if ! __is_stdin_tty; then
+    __print_warning 'Tailscale setup requires an interactive terminal'
+    return 0
+  fi
+
+  if ! __confirm 'Set up Tailscale with `sudo`?'; then
+    return 0
+  fi
+
+  brew_prefix="$(brew --prefix)" || return
+
+  if ! __ sudo "$brew_prefix/bin/brew" services stop tailscale; then
+    __print_error 'Failed to stop Tailscale'
+    return 1
+  fi
+
+  service_info="$(sudo "$brew_prefix/bin/brew" services info tailscale --json)" || return
+
+  # Homebrew can report an unsuccessful stop through a warning alone
+  if ! printf '%s\n' "$service_info" | jq --exit-status '
+    length == 1 and .[0].name == "tailscale" and .[0].loaded == false
+      and .[0].running == false and .[0].pid == null
+  ' > /dev/null; then
+    __print_error 'Failed to verify that Tailscale stopped'
+    return 1
+  fi
+
+  if ! __ sudo "$brew_prefix/bin/brew" services start tailscale; then
+    __print_error 'Failed to start Tailscale'
+    return 1
+  fi
+
+  if [ $# -gt 0 ]; then
+    owner="$(id -u)" || return
+    __ sudo chown -hR "$owner" "$@" || return
+  fi
+)
+
 # Install primary dependencies
 install fish
 install fisher
@@ -80,6 +167,7 @@ if ! __is_ci; then
     install just
     install mole
     install rust
+    install tailscale
     install zed --adopt --cask
   fi
 fi
@@ -90,6 +178,11 @@ if __is_callable git; then
   __symlink \
     "$(brew --prefix git)/share/git-core/contrib/diff-highlight/diff-highlight" \
     "$HOME/.local/bin/git-diff-highlight"
+fi
+
+# Set up Tailscale
+if __is_macos && ! __is_ci; then
+  setup_tailscale || __print_error 'Failed to set up Tailscale'
 fi
 
 # Configure `pnpm`

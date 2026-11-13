@@ -6,7 +6,7 @@
 __print_heading_dimmed 'Cleaning up'
 
 if ! __is_ci; then
-  __ brew cleanup --prune=all
+  __ brew cleanup --prune=all || true
   __is_callable pnpm && __ pnpm --dir "$DOMFILES" store prune
   __is_xcode_installed && __ xcrun simctl delete unavailable
 fi

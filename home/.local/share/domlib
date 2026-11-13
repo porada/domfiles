@@ -1049,7 +1049,8 @@ __touch() (
   __chmod "$1"
 )
 
-# Runs `brew` with domfiles’ defaults
+# Runs `brew` with domfiles’ defaults and disables automatic cleanup so
+# service setup can release old kegs owned by root before explicit cleanup
 brew() (
   command='brew'
 
@@ -1065,7 +1066,8 @@ brew() (
     fi
   fi
 
-  HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 command "$command" "$@"
+  HOMEBREW_NO_ASK=1 HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 \
+    command "$command" "$@"
 )
 
 # Initialize helper variables
