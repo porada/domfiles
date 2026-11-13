@@ -16,12 +16,12 @@
 	"dependencies": {
 		"doclint": "workspace:*",
 		"skills": "^1.8.1",
-		"vercel": "^65.14.0"
+		"vercel": "^65.15.0"
 	},
 	"devDependencies": {
 		"@standard-config/oxlint": "^2.11.1",
 		"@standard-config/oxlint-stylistic": "^2.11.1",
-		"@standard-config/prettier": "^1.22.0",
+		"@standard-config/prettier": "^1.23.0",
 		"@standard-config/tsconfig": "catalog:",
 		"@types/node": "catalog:",
 		"prettier": "catalog:",

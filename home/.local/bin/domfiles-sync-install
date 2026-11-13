@@ -52,7 +52,7 @@ install() (
   fi
 )
 
-setup_tailscale() (
+install_tailscale() (
   cellar="$(brew --cellar tailscale)" || return
   cellar="$(realpath "$cellar")" || return
   prefix="$(brew --prefix tailscale)" || return
@@ -87,6 +87,7 @@ setup_tailscale() (
         if version_info="$("$prefix/bin/tailscale" version --daemon --json 2> /dev/null)"; then
           if printf '%s\n' "$version_info" | jq --exit-status \
             '(.long | type == "string") and (.long != "") and (.long == .daemonLong)' > /dev/null; then
+            __print_confirmation 'Already set up'
             return 0
           fi
         fi
@@ -182,7 +183,8 @@ fi
 
 # Set up Tailscale
 if __is_macos && ! __is_ci; then
-  setup_tailscale || __print_error 'Failed to set up Tailscale'
+  __print_heading_dimmed 'Setting up Tailscale'
+  install_tailscale || __print_error 'Failed to set up Tailscale'
 fi
 
 # Configure `pnpm`
