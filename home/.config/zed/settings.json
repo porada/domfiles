@@ -29,6 +29,9 @@
 				"--mcp"
 			]
 		},
+		"t3:m1": {
+			"url": "https://prod-9ce84f089554cd69.t3coderelay.com/mcp"
+		},
 		"t3:m3": {
 			"url": "https://prod-4609089eaa098c77.t3coderelay.com/mcp"
 		},
@@ -196,7 +199,7 @@
 		"expand_terminal_card": false,
 		"favorite_models": [
 			{
-				"model": "claude-fable-5-1",
+				"model": "claude-fable-5-2",
 				"provider": "anthropic",
 				"effort": "xhigh",
 				"enable_thinking": true
