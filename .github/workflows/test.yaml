@@ -39,7 +39,7 @@ jobs:
           persist-credentials: false
       - run: home/.local/bin/domfiles-dev-brew-path >> "$GITHUB_PATH"
       - run: brew install fish
-      - uses: pnpm/setup@v3.1.2
+      - uses: pnpm/setup@v3.2.0
         with:
           cache: true
           runtime: node@26
