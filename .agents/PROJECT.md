@@ -46,7 +46,7 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 
 ### Agent CLI Distribution
 
-`claude` and `codex` are intentionally installed through Homebrew’s `claude-code` and `codex` casks rather than declared as `@anthropic-ai/claude-code` or `@openai/codex` project dependencies. Both CLIs remain machine-level development Homebrew dependencies, so dependency installation in CI excludes them. For Claude, the cask also follows Anthropic’s stable Homebrew channel. The Homebrew CLI installations are separate from the agent packages Zed manages, such as the `claude-acp` registry package.
+`claude` and `codex` are intentionally installed through Homebrew’s `claude-code@latest` and `codex` casks rather than declared as `@anthropic-ai/claude-code` or `@openai/codex` project dependencies. Both CLIs remain machine-level development Homebrew dependencies, so dependency installation in CI excludes them. Claude Code follows Anthropic’s latest release channel. Homebrew’s unversioned `claude-code` cask tracks the stable channel. The Homebrew CLI installations are separate from the agent packages Zed manages, such as the `claude-acp` registry package.
 
 ### Agent Discovery
 

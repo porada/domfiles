@@ -42,7 +42,7 @@ for skill in \
 done
 
 # Uninstall legacy commands
-for formula in ast-grep node@24; do
+for formula in ast-grep claude-code node@24; do
   if __is_brew_installed "$formula"; then
     __print_heading_dimmed "Uninstalling \`$formula\`"
     __ brew uninstall "$formula"
