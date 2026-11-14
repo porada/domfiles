@@ -46,6 +46,8 @@ For new messages or explicitly authorized wording changes, describe the verified
 
 Without a narrower convention, use a compact, sentence case imperative subject without terminal punctuation. Preserve exact technical tokens in backticks. Add a body only for verified motivation, constraints, or consequences the subject can’t convey, retaining required bodies and trailers. Name the common purpose of related supporting edits rather than joining them into an inventory title. Omit patch narration, routine testing checklists, and invented claims or references.
 
+Limit newly authored subjects to 72 characters, including spaces, punctuation, backticks, and any required prefix or suffix. Count the complete subject before returning it. Rephrase overlong subjects without losing their intended meaning rather than truncating them.
+
 Return provisional wording to the plan. Send messages intended for execution to the shared authorization check below. Writing approval alone doesn’t authorize execution.
 
 ## Confirm Commits

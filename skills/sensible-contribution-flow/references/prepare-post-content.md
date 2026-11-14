@@ -28,6 +28,8 @@ The following procedure remains complete when the writing peer is absent. When i
 
 Choose a clear, compact title that names the problem or intended outcome. Preserve the user’s meaning, voice, exact technical tokens, and settled wording. Keep claims proportional to verified evidence, distinguish inference from observation, and never invent a motivation or result to improve the prose.
 
+When the [single-commit title convention](prepare-pull-requests.md#plan-and-implement-contributions) applies, apply the resolved commit workflow’s subject length limit while drafting or revising the title, before supplying it as required commit wording.
+
 Use supplied examples of the user’s previous GitHub submissions to identify the recurring level of detail, structure, terminology, and tone. Preserve useful patterns without copying incidental wording. Apply the current repository template and those patterns unless explicit user direction changes them, without claiming compliance with requirements the result doesn’t meet.
 
 Preserve the template’s checklist statements, field and section order, headings, and separators unless the user or template authorizes a change. Fill placeholders and remove authoring instructions rather than submitting them as prose. Omit optional sections only when permitted and appropriate. Checklist applicability determines completion under [finalization](#finalize-content), not permission to paraphrase the item.
