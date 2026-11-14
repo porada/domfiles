@@ -9,6 +9,7 @@ set --local config (status dirname)
 # Resolve domfiles’ paths
 set --global DOMFILES (path dirname (path dirname (path dirname (path resolve "$config"))))
 set --global DOMFILES_PROJECTS_DIR "$HOME/Projects"
+set --global DOMFILES_DOMFLEET_DIR "$DOMFILES_PROJECTS_DIR/domfleet"
 
 # Set the default editor
 set --global --export EDITOR vim -c startinsert
