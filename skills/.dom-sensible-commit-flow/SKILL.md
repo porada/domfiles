@@ -33,6 +33,7 @@ Apply **Commit corrections** during contribution preparation too. Consolidate pe
 
 - **Subject:** Prefer the shortest clear statement of the shared purpose, using the public skill’s grammar except for the recurring subjects below. Omit colons, Conventional Commit prefixes, and scope labels. Do not use `a`, `an`, or `the` as articles in newly authored subjects. Rephrase to preserve meaning without articles rather than retaining them for fluency. Preserve exact names and code tokens.
 - **Body:** Use the subject as the complete newly authored message by default. Add an explanatory body, issue reference paragraphs, testing checklists, or trailers only when explicitly requested or required by the applicable message constraints. Route a remaining conflict with supplied attribution or another required message element through the public skill’s message safeguards rather than discarding it.
+- **Issue references:** When including issue references in a newly authored message for a commit not intended for a pull request, put each reference in a separate body paragraph before any trailers. Use `Closes #<number>` when the commit resolves the issue, and bare `#<number>` for a reference without closure. For another repository, use `<owner>/<repository>#<number>`, retaining `Closes` when applicable. Use no terminal punctuation.
 
 ## Recurring Subjects
 
