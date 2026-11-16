@@ -1,9 +1,9 @@
 ---
 name: sensible-commit-flow
 description: |-
-    Use whenever an agent considers or prepares to commit changes, including grouping hunks, composing or revising messages, commit-related staging, and commit creation. Also use for prospective planning before implementation, amendments, history updates or rebases, cherry-picks or merges that create commits, and scripts or tests that create commits.
+    Use whenever an agent considers or prepares to commit changes, including grouping hunks, composing or revising messages, commit-related staging, and commit creation. Also use for prospective planning before implementation, amendments, rebases or other history rewrites, cherry-picks or merges that create commits, and scripts or tests that create commits.
 
-    Don’t use for read-only inspection of existing history when no commit or history update is being prepared.
+    Don’t use for read-only inspection of existing history, fetches, or fast-forward-only updates when no commit creation or rewriting is planned. Keep these operations in scope when they are part of a broader operation that creates or rewrites commits.
 ---
 
 # Sensible Commit Flow
