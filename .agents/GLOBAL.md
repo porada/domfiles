@@ -178,7 +178,7 @@ At handoff, report remaining actionable opportunities separately from required f
 
 ### System-Available Tooling
 
-- **Availability:** On macOS and Linux, assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `doclint`, `fd`, `fish`, `gh`, `jq`, `node`, `pandoc`, `pnpm`, `rg`, `shellcheck`, `skills`, `vercel`, `yarn`, `yq`, and `zizmor`. On macOS, also assume `cargo`, `just`, and `rustc` are available.
+- **Availability:** On macOS and Linux, assume these non-standard development commands are installed and available through `PATH`: `actionlint`, `cmark-gfm`, `doclint`, `fd`, `fish`, `gh`, `jq`, `node`, `pandoc`, `pnpm`, `rg`, `shellcheck`, `skills`, `vercel`, `yarn`, `yq`, and `zizmor`. On macOS, also assume `cargo`, `just`, and `rustc` are available.
 - **Usage:** Default to `fish --no-config` when using Fish as a non-interactive interpreter unless Fish startup configuration or configured runtime behavior is in scope. Use `pandoc --sandbox` for document parsing and conversion when the reader and writer need access only to files supplied on the command line. Treat `--sandbox` as a reader and writer boundary only. It doesn’t constrain filters or PDF engines. Always pass `--no-config` to `rg`.
 - **Direct invocation:** For `skills` and `vercel`, invoke project-local commands through the project’s package manager. If the project doesn’t provide the command, invoke the system-available command directly, not through `npx` or `pnpm dlx`.
 - **Scope:** These command defaults govern agent execution, not consumer documentation, repository scripts, workflows, or configuration.

@@ -151,6 +151,7 @@ install pnpm
 if ! __is_ci; then
   install actionlint
   install claude-code@latest --cask
+  install cmark-gfm
   install codex --cask
   install coreutils
   install fd
