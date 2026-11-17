@@ -1,12 +1,12 @@
 # Final Review
 
-The reviewer, commit list, findings, and cycle number below belong to one [review unit](super-review.md#resolve-review-units).
+The reviewer, commit list, findings, and cycle number below belong to one [final review group](super-review.md#choose-review-groups).
 
 ## Prepare the Committed Target
 
-Commit task-owned uncommitted changes before the final stage, including when the initial stage was omitted. Apply the established commit authority and global **Commit corrections** policy.
+Commit task-owned uncommitted changes required by the group before its final review, including when the initial stage was omitted. Apply the established commit authority and global **Commit corrections** policy. Coordinate Git operations across groups sharing a repository so they preserve live review targets and unrelated work.
 
-Identify the exact commits forming the unit’s committed target, all within its repository. Include applicable task-owned fixups and corrections without including unrelated intervening commits. Verify their relationships rather than relying solely on matching subjects.
+Identify the exact commits forming the group’s committed target, all within its unit’s repository. Include applicable task-owned fixups and corrections without including unrelated intervening commits. Verify their relationships rather than relying solely on matching subjects. Check these commits against the work assigned to this group under [Choose Review Groups](super-review.md#choose-review-groups). Other groups’ pending work remains in the review record until the [whole-run coverage check](super-review.md#complete-the-run).
 
 Keep the selected commit list in history order. Do not rewrite history merely to reduce it to one SHA. Retain the selected committed target and its changes in the shared review record.
 
@@ -52,6 +52,6 @@ Keep predecessor evidence with the coordinator until the replacement has indepen
 
 ## Continue After Changes
 
-If final review has already completed, finish the applicable earlier follow-up under the [unit’s stage prerequisites](super-review.md#run-the-initial-stage), [prepare the updated committed target](#prepare-the-committed-target), resume the latest valid final reviewer through the shared continuity process, and send the applicable [current-commit prompt](#run-a-final-review-cycle). Continue an active final reviewer in the same way once the updated target is ready.
+If final review has already completed, finish the applicable earlier follow-up under the [group’s stage prerequisites](super-review.md#run-the-initial-stage), [prepare the updated committed target](#prepare-the-committed-target), resume the latest valid final reviewer through the shared continuity process, and send the applicable [current-commit prompt](#run-a-final-review-cycle). Continue an active final reviewer in the same way once the updated target is ready.
 
 Continuing a reviewer role through the shared continuity process does not create a new numbered cycle or reset initial-response accounting. Superseded reviewer instances remain history.

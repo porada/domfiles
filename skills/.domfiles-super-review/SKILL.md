@@ -14,4 +14,4 @@ For `super-review` in T3 Code, I explicitly request separate top-level reviewer 
 
 Follow [Super Review](references/super-review.md) for every invocation. Before selecting reviewer settings or creating sessions, read [Reviewer Defaults](references/reviewer-defaults.md).
 
-When the final stage is selected, also follow [Final Review](references/final-review.md). Read it before preparing the committed target or starting the final reviewer.
+When the final stage is selected, also follow [Final Review](references/final-review.md). Read it before preparing any final group’s committed target or starting its reviewer.
