@@ -4,11 +4,21 @@ Use `sensible-commit-flow`’s **Inspect Changes**, **Group Hunks**, **Compose M
 
 ## Recommend the Series
 
-Pending changes may become new commits or join eligible rewritten commits through `sensible-commit-flow`’s grouping and history routes.
+Review the eligible unpushed commits as a series, even when the working tree is clean. When several commits are steps toward one logical change, propose combining them even if other commits fall between them. Keep independently useful changes separate and order the resulting commits so prerequisites come first. Pending changes may join an eligible commit or form a new one.
 
-Briefly identify the base and selected range, then show the final series in order. For each proposed commit, give its complete message and a short explanation of what it combines or changes, including assigned pending changes. Identify dropped commits and explain why they are omitted. Mark unchanged or replay-only protected commits and any authorized published rewrite. Explain hunk boundaries only when needed to make the grouping clear.
+Establish that the grouping and order are feasible. If the proposal would rewrite history, identify other local refs containing any commit it would replace, replay, or drop. Exclude tool-managed checkpoint refs that the operation leaves untouched. Preserve all other refs and report shared history only when it affects the decision.
 
-Keep `sensible-commit-flow`’s **Prepare Update Details** in the internal execution baseline. Surface necessary temporary isolation and restoration, plus exclusions, shared-history consequences, and review or validation gaps that affect approval or the claimed result. Omit routine preservation details, command recipes, verification checklists, and empty caveat sections. On revisions, show the updated series and explain only the changed decisions.
+Briefly identify the base and selected range, then show the proposed series in order. Use the following format in place of the per-commit descriptions in **Confirm Commits**.
+
+- For each new or changed commit, show its complete proposed message in a blockquote. Beside it, list each contributing commit’s short SHA, adding its subject when combining multiple commits. Identify any assigned pending changes.
+- For a commit kept or replayed with its changes and message intact, use its original short SHA and subject.
+- Identify each dropped commit by its original short SHA and explain the omission.
+
+Mark protected commits and any authorized published rewrite. Briefly explain a split, grouping, placement, or hunk boundary when the reason or assignment would otherwise be unclear.
+
+Before asking for approval, retain the internal execution baseline from **Confirm Commits** and **Prepare Update Details**, including the affected refs, exact selected changes and their placement, exclusions, and preservation assumptions. Defer the exact command sequence and rebase todo edits until approval unless a detail is needed to establish feasibility or affects the decision.
+
+Disclose necessary temporary isolation and restoration, material exclusions, and any review or validation gaps that affect approval or the claimed result. Omit routine preservation details, command recipes, verification checklists, and empty caveat sections. On revisions, show the updated series and explain only the changed decisions.
 
 ## Obtain Proposal Approval
 

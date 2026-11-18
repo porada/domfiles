@@ -12,6 +12,4 @@ Default to all unpushed commits reachable from the current branch’s `HEAD` and
 
 Establish the base, complete affected range, publication evidence, and protected commits through `sensible-commit-flow`’s history route and the global **Rewrite eligibility** and **History update authorization** policies. An absent upstream or stale tracking refs do not establish an unpushed range. Reuse applicable current evidence or fetch only the refs needed to establish that range and rewrite eligibility. Keep the base unchanged unless the user separately requests synchronization.
 
-Identify other local refs sharing selected commits, excluding tool-managed checkpoint refs that the operation leaves unchanged. Report implications only when they affect the user’s decision, and leave all other refs untouched.
-
 This command packages the existing work. Do not fix source defects or alter final contents to simplify the history. Apply the global **Checkpoint quality** policy without claiming publication readiness or bypassing required gates. If there is no eligible change to record or useful rewrite to recommend, report that rather than manufacturing a commit or cosmetic rewrite.

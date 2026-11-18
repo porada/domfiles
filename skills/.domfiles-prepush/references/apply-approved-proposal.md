@@ -1,6 +1,6 @@
 # Apply Approved Proposal
 
-If the commit workflow’s execution-baseline recheck finds material changes to the approved refs, selected changes, exclusions, or preservation assumptions, [revise the affected proposal and obtain approval](prepare-commit-proposal.md) rather than applying a stale plan. Do not silently change approved messages or grouping during execution.
+For a history rewrite, derive the deferred command sequence and any rebase todo edits from the recorded proposal. If planning reveals an effect outside the approval or the **Create Approved Commits** recheck finds a material change from the baseline captured before approval, [revise the affected proposal and obtain approval](prepare-commit-proposal.md). Apply the approved grouping, messages, and order.
 
 ## Apply and Verify
 
