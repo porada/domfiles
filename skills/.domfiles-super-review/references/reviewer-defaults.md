@@ -2,14 +2,9 @@
 
 ## Profiles
 
-Use these model IDs with `xhigh` effort:
+The default reviewer profiles are Claude Opus and Codex GPT Sol, both at `xhigh` effort. Each initial group uses both profiles. Each final group uses the Claude profile in a fresh reviewer session. Apply the user’s runtime overrides to every role they cover. When the user selects only Claude or Codex, use that provider’s default reviewer profile.
 
-- **Claude:** `claude-opus-5-5`.
-- **Codex:** `gpt-6.1-sol`.
-
-Each initial group uses both profiles. Each final group uses the Claude profile in a fresh reviewer session.
-
-Apply invocation-specific selections to the requested roles without changing these defaults. Resolve the requested models and settings through the host’s supported identifiers. Do not silently substitute a different provider, model, or effort.
+For each new assessment, resolve the reviewer’s model against the current catalog in that review unit’s bound environment. Honor an explicitly requested version. Otherwise, identify the newest available version within the selected provider and model family. If the initial listing is partial, search the catalog for that family and verify the version order. If the required version cannot be established or run at the selected effort, pause the affected reviewer and report the limitation. Keep the resolved profile when resuming or replacing a reviewer for the same assessment.
 
 ## Titles
 
