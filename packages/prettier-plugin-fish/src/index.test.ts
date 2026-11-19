@@ -98,6 +98,30 @@ test.each([
 	}
 );
 
+test.each([
+	{
+		input: '#! /usr/bin/env nix-shell\n#! nix-shell -i fish -p jq\njq --version\n',
+		output: '#! /usr/bin/env nix-shell\n#! nix-shell -i fish -p jq\n\njq --version\n',
+	},
+	{
+		input: '#! /usr/bin/env nix-shell\n#! nix-shell -i fish -p jq\n# foo   bar\njq --version\n',
+		output: '#! /usr/bin/env nix-shell\n#! nix-shell -i fish -p jq\n\n# foo bar\njq --version\n',
+	},
+])(
+	'keeps `#!` lines below a shebang together',
+	async ({ input, output: expectedOutput }) => {
+		const options = {
+			parser: 'fish' as const,
+			plugins: [pluginFish],
+		};
+
+		const output = await format(input, options);
+
+		expect(output).toBe(expectedOutput);
+		await expect(format(output, options)).resolves.toBe(output);
+	}
+);
+
 test('preserves escaped trailing whitespace from `fish_indent`', async () => {
 	const input = "printf '<%s>\\n' foo\\ \n";
 

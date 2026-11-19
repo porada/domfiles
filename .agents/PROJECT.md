@@ -392,7 +392,7 @@ The skill-linking loop uses `__suppress` and confirms each source skill rather t
 The Fish Prettier plugin intentionally exposes a whole-file native formatter with these boundaries:
 
 - **Cursor mapping:** End-of-input cursor positions are supported. Interior positions may move between tokens because the native formatter supplies no source map, and the wrapper adds no heuristic mapping.
-- **Formatter output:** The plugin runs `fish_indent`, reflows eligible full-line comments to target `printWidth`, and inserts an empty line after a shebang when the next line contains code or a comment. Trailing comments retain their native formatting. `fish_indent` controls indentation regardless of `tabWidth` and `useTabs`.
+- **Formatter output:** The plugin runs `fish_indent`, inserts an empty line after a shebang and any `#!` lines right below it when code or a comment follows them directly, and reflows eligible full-line comments to target `printWidth`. Trailing comments retain their native formatting. `fish_indent` controls indentation regardless of `tabWidth` and `useTabs`.
 - **Partial ranges:** Partial `rangeEnd` or `rangeStart` requests leave source unchanged. The native formatter has no range API, and Prettier’s range calculation does not recognize custom parser names.
 - **Pragmas:** `checkIgnorePragma` and `requirePragma` do not gate formatting, and `insertPragma` adds no pragma. The corresponding optional plugin hooks are absent.
 - **Standalone mode:** Unsupported because the wrapper needs Node.js to execute the formatter binary.
