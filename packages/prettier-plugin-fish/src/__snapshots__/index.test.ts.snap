@@ -1,9 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`formats Fish files 1`] = `
-"set name ""
+"#!/usr/bin/env fish
+
+# Reads the value of the \`--name\` option, which stays empty when the option is
+# missing from the arguments
+set name ""
 
 for param in $argv
+    # Strips the \`--name=\` prefix to isolate the option value and leaves other
+    # arguments unchanged
     set value (string replace --regex '^--name=' '' -- "$param")
 
     if test "$value" != "$param"

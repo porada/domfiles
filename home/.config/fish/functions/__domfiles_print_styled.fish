@@ -1,6 +1,6 @@
-# Prints text with format `$argv[2]`. Applies style `$argv[1]` only to
-# terminal output. Replaces `$HOME` with `~`. `--inline` uses a trailing space
-# instead of a newline
+# Prints text with format `$argv[2]`. Applies style `$argv[1]` only to terminal
+# output. Replaces `$HOME` with `~`. `--inline` uses a trailing space instead of
+# a newline
 function __domfiles_print_styled
     if not set --query argv[1]
         return

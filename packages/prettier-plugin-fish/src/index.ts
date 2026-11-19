@@ -1,5 +1,7 @@
 import type { AstPath, ParserOptions, Plugin } from 'prettier';
 import { exec, NonZeroExitError } from 'tinyexec';
+import separateShebang from './separate-shebang/index.ts';
+import wrapComments from './wrap-comments/index.ts';
 
 type FishAst = {
 	formattedText: string;
@@ -36,7 +38,9 @@ export const parsers: Plugin['parsers'] = {
 				});
 
 				return {
-					formattedText: stdout,
+					formattedText: separateShebang(
+						await wrapComments(stdout, options)
+					),
 					sourceLength: text.length,
 				};
 			} catch (error: unknown) {

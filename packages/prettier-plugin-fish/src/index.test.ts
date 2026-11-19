@@ -18,10 +18,15 @@ test('exposes correct public API', () => {
 	expect(pluginFish.printers).toHaveProperty('fish-text');
 });
 
-const TEST_FISH = `
+const TEST_FISH = `#!/usr/bin/env fish
+
+# Reads the value of the \`--name\` option, which stays empty when the option is missing from the arguments
 set name ""
 
 for param in $argv
+  # Strips the \`--name=\` prefix
+  # to isolate the option value and
+  # leaves other arguments unchanged
   set value (string replace --regex '^--name=' '' -- "$param")
 
   if test "$value" != "$param"
@@ -44,7 +49,7 @@ test('formats Fish files', async () => {
 	await expect(format(output, options)).resolves.toBe(output);
 });
 
-test('infers Fish from the hashbang', async () => {
+test('infers Fish from the shebang', async () => {
 	await using directory = await mkdtempDisposable(
 		join(tmpdir(), 'prettier-plugin-fish-')
 	);
@@ -69,6 +74,30 @@ test('infers Fish from the hashbang', async () => {
 	});
 });
 
+test.each([
+	{
+		input: '#!/usr/bin/env fish\necho    foo\n',
+		output: '#!/usr/bin/env fish\n\necho foo\n',
+	},
+	{
+		input: '#!/usr/bin/env fish\n# Comment\necho foo\n',
+		output: '#!/usr/bin/env fish\n\n# Comment\necho foo\n',
+	},
+])(
+	'adds an empty line after a shebang',
+	async ({ input, output: expectedOutput }) => {
+		const options = {
+			parser: 'fish' as const,
+			plugins: [pluginFish],
+		};
+
+		const output = await format(input, options);
+
+		expect(output).toBe(expectedOutput);
+		await expect(format(output, options)).resolves.toBe(output);
+	}
+);
+
 test('preserves escaped trailing whitespace from `fish_indent`', async () => {
 	const input = "printf '<%s>\\n' foo\\ \n";
 
@@ -80,7 +109,7 @@ test('preserves escaped trailing whitespace from `fish_indent`', async () => {
 	expect(output).toBe(input);
 });
 
-test('preserves native formatter output with `tabWidth` and `useTabs`', async () => {
+test('keeps native indentation regardless of `tabWidth` and `useTabs`', async () => {
 	const options = {
 		parser: 'fish' as const,
 		plugins: [pluginFish],
@@ -221,6 +250,19 @@ test('respects `filepath`', async () => {
 	const output = await format(TEST_FISH, options);
 
 	expect(output).toBe(expectedOutput);
+	await expect(format(output, options)).resolves.toBe(output);
+});
+
+test('respects `printWidth`', async () => {
+	const options = {
+		parser: 'fish' as const,
+		plugins: [pluginFish],
+		printWidth: 12,
+	};
+
+	const output = await format('# foo bar baz qux\n', options);
+
+	expect(output).toBe('# foo bar\n# baz qux\n');
 	await expect(format(output, options)).resolves.toBe(output);
 });
 
