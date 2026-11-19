@@ -1,14 +1,14 @@
 # Prepush
 
-Prepare the current branch’s local work for publication through a user-approved commit plan. This is an explicitly invoked agent workflow, not a Git hook. Invocation authorizes inspection and a proposal, including scoped fetches needed to refresh remote-tracking refs for the destination and base. It does not authorize staging, committing, rewriting history, or pushing.
+Prepare the current branch’s local work for publication when the user invokes `prepush` directly or a calling workflow explicitly loads its instructions. Invocation authorizes inspection and a proposal, including scoped fetches needed to refresh remote-tracking refs for the destination and base. This workflow never authorizes pushing.
 
-Approval must cover the concrete plan, including new commits, amendments, broader replay, any permitted local rewrite of published commits, and necessary state isolation. An invocation, a request to revise the recommendation, or general commit authority is not approval of the resulting proposal.
+For every direct invocation, obtain the user’s approval of the concrete proposal before staging, committing, or rewriting history. The same checkpoint applies to a calling workflow unless its user-approved execution checkpoint explicitly waives proposal approval. With that waiver, the coordinator prepares the series and may apply it within the waiver’s limits. On either path, the user’s authorization must cover the proposed effects, including new commits, amendments, broader replay, any permitted local rewrite of published commits, and necessary state isolation. A request to revise the proposal or general commit authority supplies neither proposal approval nor a waiver.
 
 Load `sensible-commit-flow` and `dom-sensible-commit-flow` for the commit lifecycle.
 
 ## Resolve the Work
 
-Default to all unpushed commits reachable from the current branch’s `HEAD` and eligible staged, unstaged, and untracked changes in the current repository. Apply explicit user scope limits. Exclude secret-bearing and otherwise prohibited material before reading contents, and do not force-add ignored files. Existing staging does not itself select or authorize a change.
+Default to all unpushed commits reachable from the current branch’s `HEAD` and eligible staged, unstaged, and untracked changes in the current repository. Apply the user’s scope limits and the scope passed by the calling workflow. Exclude secret-bearing and otherwise prohibited material before reading contents, and do not force-add ignored files. Existing staging does not itself select or authorize a change.
 
 Establish the base, complete affected range, publication evidence, and protected commits through `sensible-commit-flow`’s history route and the global **Rewrite eligibility** and **History update authorization** policies. An absent upstream or stale tracking refs do not establish an unpushed range. Reuse applicable current evidence or fetch only the refs needed to establish that range and rewrite eligibility. Keep the base unchanged unless the user separately requests synchronization.
 

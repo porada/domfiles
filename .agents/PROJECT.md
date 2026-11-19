@@ -168,7 +168,7 @@ The POSIX shell workflow’s [language boundary](../skills/posix-shell-scripting
 
 #### Prepush History Plan
 
-The [`prepush` workflow](../skills/.domfiles-prepush/references/prepare-commit-proposal.md#obtain-proposal-approval) deliberately retains approval of its proposed commit series before mutation. The checkpoint lets the user judge grouping, messages, and the placement of pending changes before history is rewritten. Standing commit authority does not replace this review of the concrete proposal. Publication remains a separate decision.
+The [`prepush` proposal checkpoint](../skills/.domfiles-prepush/references/prepush.md) gives the user a chance to judge grouping, messages, and the placement of pending changes before history is rewritten. It applies to every direct invocation and to routed use unless the calling workflow carries the user’s explicit waiver. Publication remains a separate decision.
 
 #### Preserved Wording
 

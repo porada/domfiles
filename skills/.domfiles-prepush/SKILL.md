@@ -13,4 +13,4 @@ metadata:
 Follow [Prepush](references/prepush.md), then select the current phase:
 
 1. To prepare or revise a proposal, follow [Prepare Commit Proposal](references/prepare-commit-proposal.md).
-2. Only after the user approves the concrete proposal, follow [Apply Approved Proposal](references/apply-approved-proposal.md).
+2. Follow [Apply Approved Proposal](references/apply-approved-proposal.md) once the user approves the prepared series or the caller carries the user’s waiver and authority to apply that series.
