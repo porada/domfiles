@@ -58,7 +58,11 @@
 		"worktree_directory": "../.worktrees"
 	},
 	"git_panel": {
-		"dock": "left"
+		"date_style": "absolute",
+		"dock": "right",
+		"entry_primary_click_action": "file_diff",
+		"starts_open": true,
+		"tree_view": true
 	},
 	"gutter": {
 		"runnables": false
@@ -103,7 +107,8 @@
 		}
 	},
 	"outline_panel": {
-		"dock": "left"
+		"button": false,
+		"dock": "right"
 	},
 	"project_panel": {
 		"dock": "left",
@@ -168,7 +173,8 @@
 		},
 		"scrollbar": {
 			"show": "never"
-		}
+		},
+		"starts_open": true
 	},
 	"theme": "One Dark",
 	"title_bar": {
