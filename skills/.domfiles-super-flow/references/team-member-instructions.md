@@ -8,7 +8,7 @@ Leave commits, landing work, running reviews, and creating team threads to the c
 
 Engineers own code, test titles, and internal implementation comments, including `//` comments that don’t document a public API. The editor owns text surfaced to users, including runtime messages, documentation, and doc comments on public APIs. The editor also writes and revises the consolidated commit messages. The coordinator writes checkpoint messages.
 
-You may consult anyone on the roster directly except the security engineer, who is costly. Bring security questions for them to the coordinator. For any other consult, name yourself as sender and use `t3_thread_send` with `mode: queue`. Answer a consult in your own thread. When you initiate one, read the reply in the recipient’s thread.
+You may consult anyone on the roster directly except the security engineer, who is costly. Bring security questions for them to the coordinator. For any other consult, name yourself as sender and use `t3_thread_send` with `mode: auto`. These consults ask questions without assigning work or requesting file changes and, unlike security consults, don’t count toward the concurrency ceiling. Answer a consult in your own thread. When you initiate one, read the reply in the recipient’s thread.
 
 A safeguard block is your model’s or provider’s safety refusal of in-scope work. If you hit one, stop instead of rephrasing the request. Send the coordinator the refused request and the refusal in their exact wording, including any stated reason. Leave out anything outside the approved disclosure, and say what you left out. Don’t use anything from a consult to finish refused work.
 
@@ -18,4 +18,4 @@ If you are an engineer in a private worktree, bring your branch up to the curren
 
 When the coordinator steers an earlier correction into a newer unit, pause the newer work and make the correction first. Identify its paths or hunks separately from the work in progress. If they are inseparable, tell the coordinator and finish the newer unit for a combined checkpoint.
 
-To signal completion, queue a message to the coordinator naming the unit, the flow tip SHA your work sits on, the changed paths (including new untracked files), and validation evidence. Identify any pending edits that belong outside the checkpoint. After sending, leave your checkout untouched until the coordinator confirms the landing or asks you to catch up and resubmit.
+To signal completion, message the coordinator using `t3_thread_send` with `mode: auto`, naming the unit, the flow tip SHA your work sits on, the changed paths (including new untracked files), and validation evidence. Identify any pending edits that belong outside the checkpoint. After sending, leave your checkout untouched until the coordinator confirms the landing or asks you to catch up and resubmit.

@@ -94,7 +94,7 @@ The audit workflow’s [check eligibility rules](skills/audit/references/reposit
 
 #### Existing Work Preservation
 
-The [history eligibility rules](../skills/sensible-commit-flow/references/update-commit-history.md#establish-rewrite-eligibility), [commit execution safeguards](../skills/sensible-commit-flow/references/commit-execution.md#create-approved-commits), and global [**Concurrent work**](GLOBAL.md#collaboration) and [**High-impact local mutations**](GLOBAL.md#execution-checkpoints) policies preserve existing work when eligibility, expected targets, or concurrent state changes. These stops affect the unsafe mutation. The global [**Progress and recovery** policy](GLOBAL.md#task-conduct) permits evidence-backed correction within current authority without making every discrepancy a new approval request.
+The [history eligibility rules](../skills/sensible-commit-flow/references/update-commit-history.md#establish-rewrite-eligibility), [commit execution safeguards](../skills/sensible-commit-flow/references/commit-execution.md#create-approved-commits), and global [**Concurrent work**](GLOBAL.md#working-with-other-agents) and [**High-impact local mutations**](GLOBAL.md#execution-checkpoints) policies preserve existing work when eligibility, expected targets, or concurrent state changes. These stops affect the unsafe mutation. The global [**Progress and recovery** policy](GLOBAL.md#task-conduct) permits evidence-backed correction within current authority without making every discrepancy a new approval request.
 
 #### Harmonization Dependencies
 
@@ -184,7 +184,7 @@ The release note workflow’s [scope clarification](../skills/release-notes-for-
 
 #### Scope Changes
 
-The global [task authorization](GLOBAL.md#local-work), [checkout boundaries](GLOBAL.md#collaboration), and [protected documentation policy](GLOBAL.md#protected-documentation) preserve choices outside the active assignment, including additional checkouts and changes to external skills. Routine implementation decisions remain within existing authority. The [cross-shell helper contract](skills/shell-integration/references/shared-helper-design.md#port-helpers-between-shells) likewise requires mismatches to be resolved without making every resolution a user question. Expired grants do not silently authorize another task, while [returned findings](GLOBAL.md#local-work) can establish a new bounded correction request.
+The global [task authorization](GLOBAL.md#local-work), [checkout boundaries](GLOBAL.md#working-with-other-agents), and [protected documentation policy](GLOBAL.md#protected-documentation) preserve choices outside the active assignment, including additional checkouts and changes to external skills. Routine implementation decisions remain within existing authority. The [cross-shell helper contract](skills/shell-integration/references/shared-helper-design.md#port-helpers-between-shells) likewise requires mismatches to be resolved without making every resolution a user question. Expired grants do not silently authorize another task, while [returned findings](GLOBAL.md#local-work) can establish a new bounded correction request.
 
 #### Sensitive Operations
 
@@ -196,7 +196,7 @@ The [skill activation boundary](../skills/.domfiles-skill-development/references
 
 #### Thread Archival
 
-The global [**Thread cleanup** policy](GLOBAL.md#collaboration) distinguishes completion from archival when the host supports both. Explicit archival preserves the user’s choice about conversation organization after the work is complete.
+The global [**Thread cleanup** policy](GLOBAL.md#working-with-other-agents) distinguishes completion from archival when the host supports both. Explicit archival preserves the user’s choice about conversation organization after the work is complete.
 
 #### Workflow Refinement
 
@@ -240,7 +240,7 @@ This non-exhaustive index supplements each skill’s peer declarations and the [
 | [Decision conflicts](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) | [Inbound findings](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts) and [`verify-findings`](../skills/verify-findings/references/verify-findings.md#verify-evidence) | Standalone guidance for independently supplied findings |
 | Dependency choice in [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [Contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) | Standalone fallback |
 | **Durable knowledge** under [Documentation](GLOBAL.md#documentation) | [Review findings policies](../skills/subagent-review-flow/SKILL.md#apply-findings-policies) and [relay findings](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone defaults for assessing documentation concerns |
-| **Host-managed execution** under [Collaboration](GLOBAL.md#collaboration) | [Session Behavior Tests](../skills/agent-task-relay/references/outgoing-prompts.md#session-behavior-tests) and [Deliver the Prompt](../skills/agent-task-relay/references/outgoing-prompts.md#deliver-the-prompt) | Standalone guidance |
+| **Host-managed execution** under [Working with Other Agents](GLOBAL.md#working-with-other-agents) | [Session Behavior Tests](../skills/agent-task-relay/references/outgoing-prompts.md#session-behavior-tests) and [Deliver the Prompt](../skills/agent-task-relay/references/outgoing-prompts.md#deliver-the-prompt) | Standalone guidance |
 | [Human review marker preservation](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) | [Contribution marker preservation](../skills/sensible-contribution-flow/references/preserve-human-review-markers.md) | Semantic mirror |
 | Instruction source requirements under **Instruction provenance** and **Approval provenance** in [Instruction Authority](GLOBAL.md#instruction-authority) | [Relay fix authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [alternative commit approvals](../skills/sensible-commit-flow/references/alternative-approval-modes.md), and [contribution authorization](../skills/sensible-contribution-flow/references/execution-boundaries.md#preserve-authorization) | Standalone guidance |
 | Review reporting under [**Findings**](GLOBAL.md#findings) | [Review assignments and reports](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
