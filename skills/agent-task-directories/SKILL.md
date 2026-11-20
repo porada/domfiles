@@ -16,7 +16,7 @@ This skill defines task-specific directories for experiments, helper scripts, an
 
 An agent task directory holds agent-managed scratch artifacts for one task. The consuming workflow owns what those artifacts contain, how they are validated, and where durable results belong. Directory management doesn’t expand the authorized task. This skill’s cleanup, ignore, and placement conventions are defaults governed by [Agent Conduct](#agent-conduct).
 
-If the request only covers discovering, inspecting, or reviewing existing task directories, stay read-only. Don’t create directories or repair ignore files. Treat other tasks’ directories as opaque unless their contents are explicitly in scope.
+If the request only covers discovering, inspecting, or reviewing existing task directories, stay read-only. Don’t create directories or repair ignore files.
 
 If task storage requires unavailable filesystem access, request the narrowest supported grant or stop rather than disabling a control.
 
@@ -35,7 +35,7 @@ The local ignore file removes the need for a repository-wide namespace exclusion
 
 Preserve pre-existing and unrelated work. Before writing or removing contents, inspect the relevant state and confirm that each destination stays within the assigned write scope. Don’t let path traversal or symlink redirection expand the mutation scope.
 
-A coordinator may assign separate subpaths to agents sharing one task. Each agent stays within its assigned write scope, and the coordinator owns cleanup of the shared root. Don’t modify, read, or remove another task’s artifacts merely because they’re ignored or appear inactive.
+Establish current ownership from task history tied to the exact path, such as creating it during this task, an explicit assignment, or a handoff. A coordinator may assign separate subpaths to agents sharing a task and retains responsibility for cleanup of the shared root. An assignment covers only the specified path. Treat directories with another or unknown owner as opaque unless their contents are explicitly in scope. Use available handoffs to identify the owner without opening the files.
 
 ## Keep Project Workflows Separate
 
@@ -43,7 +43,7 @@ Copy only the inputs the task requires. Don’t sweep up other task directories,
 
 Treat scratch contents as task artifacts, not canonical project source. Don’t activate copied configuration or instruction files merely because they’re present. Execution against them must be part of the authorized task and follow its execution boundaries.
 
-Before broad scans or checks, account for tools that don’t honor `.gitignore`. Select inputs for each invocation using a method the tool supports, or remove disposable source copies after their consumers finish. Don’t discard needed state or suppress real project checks to obtain a passing result. If you can’t establish the required separation, preserve the artifacts and report the limitation.
+Before a broad scan or check, account for how the tool discovers inputs and establish which paths a formatter or other auto-fix may write. Use supported per-run inputs or exclusions when they preserve required coverage, including relevant new project files. If scratch paths still interfere, identify which command discovers them, including commands run by a pre-commit hook, and follow [Handle Interference with Project Checks](references/directory-lifecycle.md#handle-interference-with-project-checks).
 
 When intentionally validating scratch files, target them explicitly and use the narrowest supported ignore override. Verify that every intended file was actually checked. A successful zero-file check is not validation.
 
