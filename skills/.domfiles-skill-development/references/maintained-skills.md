@@ -20,6 +20,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `simple-github-cli`
 - `skill-development`
 - `subagent-review-flow`
+- `super-flow`: Coordinate a team of agents to carry out an agreed plan.
 - `super-review`: Review changes thoroughly and resolve validated findings.
 - `verify-findings`: Verify earlier findings and identify what still needs attention.
 - `vitest-conventions`

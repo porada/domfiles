@@ -28,6 +28,7 @@ for source in \
   .domfiles-agent-documentation \
   .domfiles-prepush \
   .domfiles-skill-development \
+  .domfiles-super-flow \
   .domfiles-super-review \
   .domfiles-vitest-conventions \
   agent-task-directories \
