@@ -94,7 +94,7 @@ The audit workflow’s [check eligibility rules](skills/audit/references/reposit
 
 #### Existing Work Preservation
 
-The [history eligibility rules](../skills/sensible-commit-flow/references/update-commit-history.md#establish-rewrite-eligibility), [commit execution safeguards](../skills/sensible-commit-flow/references/commit-execution.md#create-approved-commits), and global [**Concurrent work**](GLOBAL.md#working-with-other-agents), [**History coordination**](GLOBAL.md#gates), and [**High-impact local mutations**](GLOBAL.md#execution-checkpoints) policies preserve existing work when eligibility, expected targets, or concurrent state changes. These stops affect the unsafe mutation. The global [**Progress and recovery** policy](GLOBAL.md#task-conduct) permits evidence-backed correction within current authority without making every discrepancy a new approval request.
+The [history eligibility rules](../skills/sensible-commit-flow/references/update-commit-history.md#establish-rewrite-eligibility), [commit execution safeguards](../skills/sensible-commit-flow/references/commit-execution.md#create-approved-commits), [personal history checks](../skills/.dom-sensible-commit-flow/SKILL.md#corrections-and-history-updates), and global [**Concurrent work**](GLOBAL.md#working-with-other-agents), [**History coordination**](GLOBAL.md#gates), and [**High-impact local mutations**](GLOBAL.md#execution-checkpoints) policies preserve existing work when eligibility, expected targets, or concurrent state changes. These stops affect the unsafe mutation. The global [**Progress and recovery** policy](GLOBAL.md#task-conduct) permits evidence-backed correction within current authority without making every discrepancy a new approval request.
 
 #### Harmonization Dependencies
 

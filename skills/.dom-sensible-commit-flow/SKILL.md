@@ -15,11 +15,23 @@ Load `sensible-commit-flow` and apply these personal defaults under the global *
 
 Resolve the operation through the global **Automatic commits**, **Commit corrections**, and **Commit offers** policies. Pass the actual governing grant, task scope, applicable review evidence or reviewed findings and their bounded corrections, and current target into the base’s **Alternative Approval Modes** route. Include any separate **Checkpoint quality** permission and its remaining hard gates. This overlay supplies neither authorization nor a review result.
 
-Use the base’s history-update route for amendments and replay under **Commit corrections**, carrying the verified affected range and concurrent-work constraints. Use its new-commit route for retained fixups and independent changes. Before a retained fixup, inspect the target’s patch and complete message, apply the base’s **Establish Rewrite Eligibility** checks to that target, and confirm its ancestry. Use the fixup subject under **Recurring Subjects**, then verify the recorded target and contents. For subject-based fixups, use `git commit --fixup=<commit-oid>` to copy the target subject exactly.
+Use the base’s history-update route for amendments and replay under **Commit corrections**, carrying the verified affected range and concurrent-work constraints. Use its new-commit route for retained fixups and independent changes.
 
-Leave target message corrections to separately authorized history updates through the base’s history route. For every **Rewrite eligibility** check, establish the user’s authorship from task-confirmed author identity or reliable repository evidence, not the committer field or an assumed email alias. Identify upstream or vendor imports from their provenance, not just their paths.
+### Corrections and History Updates
 
-Before a history update involving existing fixups or their targets, follow [Preserve Pending Fixups](references/preserve-pending-fixups.md).
+Fold a covered correction into its original commit when the conditions under **Commit corrections** are met. Before folding, confirm that the original commit is an ancestor of the current `HEAD`. Leave target message corrections to separately authorized history updates through the base’s history route.
+
+For every **Rewrite eligibility** check, establish the user’s authorship from task-confirmed author identity or reliable repository evidence, not the committer field or an assumed email alias. Identify upstream or vendor imports from their provenance, not just their paths.
+
+Apply **Concurrent work** and **History coordination** before rewriting. Inspect the affected commits and available coordination evidence for another workflow’s active baselines, review targets, or pending operations.
+
+Before a history update involving existing fixups or their targets, follow [Preserve Pending Fixups](references/preserve-pending-fixups.md). Consolidate only task-owned fixups whose targets, contents, and affected history fall within the active correction authority.
+
+Run the base’s [execution recheck](../sensible-commit-flow/references/commit-execution.md#create-approved-commits) immediately before mutation. Reassess the operation if the branch tip, relevant index state, or task-owned changes differ from the baseline. Unrelated edits alone do not prohibit an amendment when they can remain untouched. These checks do not establish exclusive access to the checkout.
+
+When the target is eligible but rewriting would disrupt concurrent work or preservation cannot be established, use the target-linked fixup fallback under **Commit corrections**. Before a retained fixup, inspect the target’s patch and complete message, apply the base’s **Establish Rewrite Eligibility** checks to that target, and confirm its ancestry. Use the fixup subject under **Recurring Subjects**, then verify the recorded target and contents. For subject-based fixups, use `git commit --fixup=<commit-oid>` to copy the target subject exactly.
+
+Refresh task-owned review references after a rewrite.
 
 ## Contribution Preparation Authorization
 
@@ -27,7 +39,7 @@ Apply the global **Contribution Preparation Authorization** policy only when its
 
 For each call, supply the verified target, actual change scope, and requested operation. Carry forward the grant’s express request to revise provisional messages without assuming that supplied exact wording or all inherited messages may be revised. Return each commit result to `sensible-contribution-flow` while the recorded lifetime continues. Other calls follow the public skill’s applicable authorization path, including already authorized history updates.
 
-Apply **Commit corrections** during contribution preparation too. Consolidate pending fixups only when the active authority covers their targets, contents, and affected history. Resolve uncovered history updates before declaring readiness.
+Apply **Commit corrections** and [Corrections and History Updates](#corrections-and-history-updates) during contribution preparation too. Resolve uncovered history updates before declaring readiness.
 
 ## Message Form
 
