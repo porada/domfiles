@@ -94,7 +94,7 @@ The audit workflow’s [check eligibility rules](skills/audit/references/reposit
 
 #### Existing Work Preservation
 
-The [history eligibility rules](../skills/sensible-commit-flow/references/update-commit-history.md#establish-rewrite-eligibility), [commit execution safeguards](../skills/sensible-commit-flow/references/commit-execution.md#create-approved-commits), and global [**Concurrent work**](GLOBAL.md#collaboration) and [**High-impact local mutations**](GLOBAL.md#tooling) policies preserve existing work when eligibility, expected targets, or concurrent state changes. These stops affect the unsafe mutation. The global [**Progress and recovery** policy](GLOBAL.md#conduct) permits evidence-backed correction within current authority without making every discrepancy a new approval request.
+The [history eligibility rules](../skills/sensible-commit-flow/references/update-commit-history.md#establish-rewrite-eligibility), [commit execution safeguards](../skills/sensible-commit-flow/references/commit-execution.md#create-approved-commits), and global [**Concurrent work**](GLOBAL.md#collaboration) and [**High-impact local mutations**](GLOBAL.md#execution-checkpoints) policies preserve existing work when eligibility, expected targets, or concurrent state changes. These stops affect the unsafe mutation. The global [**Progress and recovery** policy](GLOBAL.md#task-conduct) permits evidence-backed correction within current authority without making every discrepancy a new approval request.
 
 #### Harmonization Dependencies
 
@@ -114,7 +114,7 @@ The contribution workflow’s [review prerequisites](../skills/sensible-contribu
 
 #### Retry Limits
 
-The global [**Focus** policy](GLOBAL.md#communication) limits repeated failure of one approach so repetition cannot substitute for progress. The [recovery policy](GLOBAL.md#conduct) leaves room for a genuinely different, evidence-backed approach within existing authority without resetting an exhausted limit by renaming the same attempt.
+The global [**Retry limit** policy](GLOBAL.md#task-conduct) limits repeated failure of one approach so repetition cannot substitute for progress. The [recovery policy](GLOBAL.md#task-conduct) leaves room for a genuinely different, evidence-backed approach within existing authority without resetting an exhausted limit by renaming the same attempt.
 
 #### Review Recovery
 
@@ -126,7 +126,7 @@ The [`super-review` completion rules](../skills/.domfiles-super-review/reference
 
 ### Security Boundaries
 
-The global [security requirements](GLOBAL.md#security) preserve protected execution and credential handling independently of task approval. The [retrieval boundary](GLOBAL.md#retrieval-boundaries) prevents a substitute tool or agent from becoming a route around denied access. Secret-bearing evidence therefore calls for sanitized material or protected user-run inspection, not broader approval to expose it.
+The global [security requirements](GLOBAL.md#security) preserve protected execution and credential handling independently of task approval. The [**Security boundaries** policy](GLOBAL.md#security) prevents a substitute tool or agent from becoming a route around denied access. Secret-bearing evidence therefore calls for sanitized material or protected user-run inspection, not broader approval to expose it.
 
 The [public repository boundary](../AGENTS.md#public-repository-boundary) makes an established public-safe credential route a prerequisite for authentication tools. The contribution workflow’s [private vulnerability reporting boundary](../skills/sensible-contribution-flow/SKILL.md#assess-contribution-fit) preserves confidentiality when an authorized private channel is unavailable, and [security report guidance](../skills/human-facing-writing/references/security-reports.md) excludes real secrets from reports. These protections remain distinct from user choices about authorization, disclosure destinations, or credential storage.
 
@@ -160,7 +160,7 @@ The harmonization workflow owns [project selection, repository roles, and branch
 
 #### Human Review Markers
 
-Keeping eligible human review markers outside automatic commits avoids cleanup commits without treating the checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility and preservation. Tooling that cannot proceed while the marker remains intentionally waits for the human action. Reporting pending human review under the global [**Outcomes**](GLOBAL.md#communication) policy does not depend on the commit workflow or marker eligibility.
+Keeping eligible human review markers outside automatic commits avoids cleanup commits without treating the checkpoint as completed. The [marker preservation route](../skills/sensible-commit-flow/references/preserve-human-review-markers.md) owns eligibility and preservation. Tooling that cannot proceed while the marker remains intentionally waits for the human action. Reporting pending human review under the global [**Outcomes**](GLOBAL.md#reporting) policy does not depend on the commit workflow or marker eligibility.
 
 #### Implementation Language
 
@@ -232,10 +232,10 @@ This non-exhaustive index supplements each skill’s peer declarations and the [
 
 | Canonical Contract | Related Guidance | Relationship |
 | --- | --- | --- |
-| Adjacent opportunity handling under [**Findings**](GLOBAL.md#findings) | [Review findings policies](../skills/subagent-review-flow/SKILL.md#apply-findings-policies) and [relay findings](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone guidance |
+| Adjacent opportunity handling under [**Preserve Adjacent Opportunities**](GLOBAL.md#preserve-adjacent-opportunities) | [Review findings policies](../skills/subagent-review-flow/SKILL.md#apply-findings-policies) and [relay findings](../skills/agent-task-relay/SKILL.md#findings-and-opportunities) | Standalone guidance |
 | Agent disclosure under **External services** and **Agent communication** in [External Effects](GLOBAL.md#external-effects) | [Relay disclosure](../skills/agent-task-relay/SKILL.md#disclosure), [review assignments](../skills/subagent-review-flow/SKILL.md#prepare-the-review), [GitHub agent tasks](../skills/simple-github-cli/references/agent-task-creation.md#task-description), [commit execution boundaries](../skills/sensible-commit-flow/SKILL.md#preserve-execution-boundaries), and [contribution service access](../skills/sensible-contribution-flow/references/execution-boundaries.md#limit-data-and-service-access) | Standalone defaults, with personal checkpoint integration in the [contribution overlay](../skills/.dom-sensible-contribution-flow/SKILL.md#implementation-review) |
 | Commit authority under [**Commit gate**](GLOBAL.md#git-changes) | [Commit approval modes](../skills/sensible-commit-flow/references/alternative-approval-modes.md), [relay authority](../skills/agent-task-relay/references/inbound-findings.md#resolve-fix-authority), [review coordination](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review), and [GitHub agent tasks](../skills/simple-github-cli/references/agent-task-creation.md) | Standalone guidance |
-| **Committed review state** under [Communication](GLOBAL.md#communication) | [Named-commit reviews](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
+| **Committed review state** under [Reviews](GLOBAL.md#reviews) | [Named-commit reviews](../skills/subagent-review-flow/SKILL.md#prepare-the-review) | Standalone guidance |
 | Contribution review checkpoints, criteria, and readiness in [`sensible-contribution-flow`](../skills/sensible-contribution-flow/SKILL.md) | [`subagent-review-flow`](../skills/subagent-review-flow/SKILL.md) coordination | Independent contribution requirements, with a standalone coordination fallback |
 | [Decision conflicts](../skills/subagent-review-flow/SKILL.md#resolve-disagreements) | [Inbound findings](../skills/agent-task-relay/references/inbound-findings.md#resolve-decision-conflicts) and [`verify-findings`](../skills/verify-findings/references/verify-findings.md#verify-evidence) | Standalone guidance for independently supplied findings |
 | Dependency choice in [`intentional-dependency-choice`](../skills/intentional-dependency-choice/SKILL.md) and its routed contracts | [Contribution execution boundaries](../skills/sensible-contribution-flow/references/execution-boundaries.md#handle-dependencies-and-protected-content) | Standalone fallback |
