@@ -75,6 +75,8 @@ For connected prose, identify the work’s dominant movement: argument, explanat
 
 Use precise, familiar, concrete language. When clarity must be immediate, name who acts, what causes what, and which conditions, contrasts, or dependencies matter. Keep confidence proportional to the available material, and verify factual statements. When wording could fit an unrelated subject with little change, check what it contributes. Remove stock framing, praise, reassurance, and offers of further help when they add no meaning.
 
+If the only evidence is Chen’s praise for a keyboard’s arrow keys, “reviewers praised the keyboard layout” suggests wider agreement about the whole layout. “Chen praised the arrow keys” identifies the reviewer and the feature.
+
 In connected prose, prefer precise nouns and active verbs where they clarify agency. Preserve abstraction, technical terms, and syntactic complexity when the thought genuinely requires them.
 
 **Diagnostics:** Distinguish accidental opacity from intentional ambiguity, complexity, or delayed comprehension. When immediate clarity is intended, test whether each sentence yields its meaning on a first honest reading while preserving agency, causality, distinctions, and necessary qualification. Watch for vague references, stacked abstraction, inflated transitions, cleverness that obscures meaning, or brevity that makes a complex thought falsely simple.
@@ -128,6 +130,8 @@ Complete the paragraph’s local job without sealing off the thought. When the r
 ### Concrete Material
 
 In connected prose, give concrete material a specific purpose: make an abstraction visible, test a claim, establish credibility, change scale, create experience, or expose a consequence. When the significance isn’t already clear, return from the detail to the meaning the reader should carry forward.
+
+An archive that adds Saturday hours gives people another day to visit. Calling the change “a turning point for local research” claims more than the schedule shows. If researchers describe projects those hours made possible, their accounts can show why the change mattered.
 
 **Diagnostics:** Ask what each scene, example, detail, quotation, analogy, fact, or calculation contributes. Unless purposeful inference or delayed recognition belongs to the intended experience, confirm that the reader can understand why that material matters. Watch for decorative anecdotes, stacked examples, isolated cases treated as typical evidence, unexplained numbers, or details detached from the work’s movement.
 
