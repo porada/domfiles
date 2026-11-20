@@ -351,9 +351,9 @@ For the supported one-argument form, the helper intentionally derives the follow
 
 ### Fish Local Configuration
 
-`home/.config/fish/local.fish` is active machine-local Fish configuration when present. Fish sources it through `home/.config/fish/config.fish` during startup without redirecting standard output or standard error.
+`home/.config/fish/config.fish` sources the machine-local `home/.config/fish/local.fish` only during interactive Fish startup, without redirecting standard output or standard error. Non-interactive SSH commands skip this file during shell startup.
 
-A bare Fish interpreter invocation can therefore execute machine-local configuration outside the requested command and emit its output. The [global tooling guidance](GLOBAL.md#system-available-tooling) owns invocation isolation.
+The [global tooling guidance](GLOBAL.md#system-available-tooling) covers Fish invocations that need to skip startup configuration entirely.
 
 ### Fish `ls` Alias
 

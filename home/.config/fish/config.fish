@@ -53,7 +53,5 @@ source "$config/path.fish"
 if status is-interactive
     source "$config/aliases.fish"
     source "$config/colors.fish"
+    source "$config/local.fish"
 end
-
-# Load local configuration
-source "$config/local.fish"
