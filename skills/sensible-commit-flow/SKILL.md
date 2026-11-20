@@ -32,7 +32,7 @@ Before interpreting authorization to acquire prescribed dependencies or incorpor
 
 ## Preserve Execution Boundaries
 
-Treat mechanisms that download or execute code, including external helpers, hooks, scripts, and tests, as execution rather than passive inspection. Use existing repository tooling for required checks, and inspect its effects before invoking it.
+Treat mechanisms that can download or execute code, including external helpers, hooks, scripts, and tests, as execution rather than passive inspection. Use existing repository tooling for required checks, and inspect its effects before invoking it.
 
 During incidental inspection, suppress ambient startup files, plugins, and configuration that can execute code unless their behavior is in scope or required by an established repository workflow. Do not enable automatic loading of untrusted working directory configuration. For Git patch evidence, use `git --no-pager diff --no-ext-diff --no-textconv` or equivalent controls for the selected evidence command. These controls suppress optional diff and pager helpers, not every possible execution mechanism.
 

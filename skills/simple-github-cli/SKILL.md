@@ -19,6 +19,7 @@ Honor applicable host requirements and explicit user interface selections, inclu
 - Use local Git or source search tooling for checked-out source and local repository state.
 - Use direct HTTP retrieval for a directly addressable public resource.
 - For remote source discovery, prefer a dedicated indexed code search tool when one is available. Use bounded `gh search code` when authenticated GitHub access is required or no suitable search tool is available.
+- Use a host-provided GitHub tool when the host supplies one for the operation, such as its pull request or issue tools.
 - Use a focused `gh` command or `gh api` for bounded GitHub repository or API state and operations that the earlier interfaces can’t supply.
 - Use an available browser or browser-backed tool when it supplies a required capability that the earlier interfaces can’t supply.
 
@@ -42,7 +43,7 @@ Authenticated work must remain in the environment that owns the credentials. Ano
 
 Drafting, preparation, review, and local work don’t authorize remote submission or mutation. Authentication and tool permission establish capability only.
 
-Before executing a command, classify it by its actual effects. Don’t treat a `--dry-run` label as proof that the operation is read-only. Before `gh repo sync` or any operation that changes GitHub or a remote repository, follow [Remote Changes](references/remote-changes.md).
+Before executing a command or calling a host-provided tool, classify it by its actual effects. Don’t treat a `--dry-run` label as proof that the operation is read-only. Before `gh repo sync` or any operation that changes GitHub or a remote repository, follow [Remote Changes](references/remote-changes.md).
 
 ## Opt-In Operations
 

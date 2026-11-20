@@ -33,7 +33,7 @@ Command forms with angle-bracketed names are templates requiring substitution.
 2. Write only for the latest stable Fish release unless the user or target environment requires another version.
 3. Classify the target as a non-interactive script, interactive configuration, autoloaded function, event handler, prompt, or completion. Each surface has different loading, status, output, and performance constraints.
 4. Choose the execution boundary according to who owns the state. Use a function for reusable behavior that must affect the current Fish process. Source a file only when file-based code must affect its caller. Execute a script when process isolation is intended. A sourced file has no process boundary, while an executed Fish script still reads startup configuration by default and inherits its environment.
-5. For agent-selected invocations and command examples, default to `fish --no-config` when using Fish as a non-interactive interpreter. This default doesn’t apply to repository scripts, workflows, or configuration, or when Fish startup configuration or configured runtime behavior is in scope.
+5. For agent-selected invocations and command examples, default to `fish --no-config` when using Fish as a non-interactive interpreter. This default doesn’t apply to consumer documentation, repository scripts, workflows, or configuration, or when Fish startup configuration or configured runtime behavior is in scope.
 6. Set `MANPAGER=cat` and `PAGER=cat` for agent-selected Fish-owned help commands so they terminate without opening an interactive pager.
 7. Prefer the project’s formatter, lint wrapper, tests, and conventions when they preserve Fish semantics. Don’t import POSIX shell policy merely because another shell exists in the same repository.
 
