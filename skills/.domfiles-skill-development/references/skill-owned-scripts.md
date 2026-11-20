@@ -93,7 +93,7 @@ Script tests are agent-owned. Document focused script and test commands in the o
 
 ## Choose Dependencies Before Implementation
 
-Apply `intentional-dependency-choice` before choosing a bespoke implementation of a mature general-purpose capability. Such capabilities include cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior. Reuse established decisions and approvals. The global **Dependencies** policy still governs implementation and mutating delegation.
+Apply `intentional-dependency-choice` before choosing a bespoke implementation of a mature general-purpose capability. Such capabilities include cryptography and hashing, shell parsing, structured-data parsing and serialization, Unicode processing, URL handling, and other standards-heavy behavior. Reuse established decisions and approvals. The global **Dependency gate** policy still governs implementation and mutating delegation.
 
 A portable command can’t take a package dependency or run an external command to supply such a capability. When its standard library lacks a capability of this kind, narrow the contract or keep the script out of portable use rather than reimplementing standards-heavy behavior.
 
