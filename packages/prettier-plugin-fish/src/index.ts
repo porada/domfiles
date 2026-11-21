@@ -37,10 +37,8 @@ export const parsers: Plugin['parsers'] = {
 					throwOnError: true,
 				});
 
-				// Separating the shebang first puts a comment right below the
-				// `#!` lines in a block of its own. Otherwise, `wrapComments`
-				// would leave that comment as written and only reflow it in a
-				// second pass
+				// Separate the shebang so a comment directly below the `#!`
+				// lines wraps on the first pass
 				return {
 					formattedText: await wrapComments(
 						separateShebang(stdout),

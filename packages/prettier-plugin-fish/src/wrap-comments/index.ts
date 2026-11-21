@@ -14,14 +14,7 @@ const IGNORE_MARKER_PATTERN = /^#+[ \t]*prettier-ignore[ \t]*$/;
 const LIST_MARKER_PATTERN = /^([*+-]|\d+[).])(?:[ \t]+|$)/;
 
 /**
- * Reflows comments that occupy their own lines, using the print width as a
- * target. Treats each run of these comments at one indentation as a block and
- * joins its lines into paragraphs, dropping extra `#` characters. Keeps one
- * empty comment line between paragraphs, and one in place of a block that
- * holds only empty comment lines. Leaves a shebang on the first line alone,
- * along with any block that `formatCommentBlock` returns as written. Skips
- * reflow if Fish’s highest token end offset differs from the text’s code
- * point count.
+ * Wraps comments on their own lines using the print width as a target.
  */
 export default async function wrapComments(
 	text: string,
@@ -77,11 +70,9 @@ export default async function wrapComments(
 }
 
 /**
- * Returns the UTF-16 index where the first comment on each line starts,
- * relative to the start of that line and keyed by line index. Uses Fish’s own
- * tokenizer, so a `#` inside a quoted Fish string doesn’t count. Returns an
- * empty map if Fish’s highest token end offset differs from the text’s code
- * point count.
+ * Maps each line index to the UTF-16 column of its first comment. Fish’s
+ * tokenizer skips `#` inside quoted strings. Returns an empty map if the token
+ * offsets disagree with the source length in code points.
  */
 async function findCommentColumns(text: string): Promise<Map<number, number>> {
 	const { stdout } = await exec('fish_indent', ['--pygments'], {
@@ -135,10 +126,10 @@ async function findCommentColumns(text: string): Promise<Map<number, number>> {
 
 /**
  * Formats the lines of one comment block, given without their indentation.
- * Preserves the block if a line starts with `#!` or if `prettier-ignore` is
- * the only text after a line’s `#` characters, allowing spaces or tabs before
- * and after the marker. Also preserves the block if the rest of a line after
- * its `#` characters and one optional space starts with a code fence, a list
+ * Preserves the block if a line starts with `#!` or if `prettier-ignore` is the
+ * only text after a line’s `#` characters, allowing spaces or tabs before and
+ * after the marker. Also preserves the block if the rest of a line after its
+ * `#` characters and one optional space starts with a code fence, a list
  * marker, or a space or tab followed by more text.
  */
 function formatCommentBlock(
@@ -159,9 +150,8 @@ function formatCommentBlock(
 			continue;
 		}
 
-		// Keep blocks with a `#!` line as written in case they hold license
-		// text, along with blocks that `prettier-ignore` marks or that hold
-		// markup
+		// Preserve blocks with a `#!` line in case they hold license text. Also
+		// preserve blocks marked with `prettier-ignore` or containing markup
 		if (
 			line.startsWith('#!') ||
 			IGNORE_MARKER_PATTERN.test(line) ||
@@ -205,8 +195,8 @@ function formatCommentBlock(
 
 /**
  * Fills lines greedily. May exceed the print width to avoid starting a line
- * with a fence marker, list marker, or `prettier-ignore`, or ending a line
- * that would read as a fence opener or a standalone `prettier-ignore` marker.
+ * with a fence marker, list marker, or `prettier-ignore`, or ending a line that
+ * would read as a fence opener or a standalone `prettier-ignore` marker.
  */
 function fillWords(
 	words: ReadonlyArray<string>,

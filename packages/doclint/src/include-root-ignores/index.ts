@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import isIgnoreEnabled from '../is-ignore-enabled/index.ts';
 
 /**
- * Provides global ignores from the directory’s own `.gitignore` when the
- * file exists and ignore patterns are enabled.
+ * Provides global ignores from the directory’s own `.gitignore` when the file
+ * exists and ignore patterns are enabled.
  */
 export default function includeRootIgnores(directory: string): Linter.Config[] {
 	if (!isIgnoreEnabled(process.argv.slice(2))) {
