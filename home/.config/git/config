@@ -9,6 +9,8 @@
 	cx = checkout HEAD --
 	cp = cherry-pick
 
+	ll = log --no-notes --no-show-signature --pretty=compact
+
 	ra = rebase --abort
 	rc = rebase --continue
 	rs = rebase --skip

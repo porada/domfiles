@@ -3,16 +3,10 @@
 # shellcheck source=../share/domlib
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
-# Print recent or all commits, or filter all commits by a search term
+# Print recent commits, or filter all commits by a search term
 color_mode=never
-show_all=false
 
 __is_stdout_tty && color_mode=always
-
-if [ "${1-}" = '--all' ]; then
-  show_all=true
-  shift
-fi
 
 print_log() {
   git --no-pager log --no-notes --no-show-signature --pretty=compact "$@"
@@ -25,9 +19,6 @@ if [ $# -gt 0 ]; then
 
   matches="$(printf '%s\n' "$log" | __grep --color="$color_mode" -i -- "$*")" || exit
   [ -z "$matches" ] || printf '%s\n' "$matches" | __page_input log
-elif [ "$show_all" = true ]; then
-  log="$(print_log --color="$color_mode")"
-  printf '%s\n' "$log" | __page_input log
 else
   default_count="$(__git_default_commit_count)"
   commit_count="$default_count"
