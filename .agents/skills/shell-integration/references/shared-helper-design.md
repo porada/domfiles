@@ -11,7 +11,7 @@
 - The POSIX helper named exactly `__` uses the established Fish counterpart `__domfiles_print_and_run`. The helper named exactly `__domfiles` has no automatic Fish counterpart name. For any other `domlib` helper, replace the leading `__` with `__domfiles_`, leaving names that already begin with `__domfiles_` unchanged.
 - Treat paired POSIX and Fish helpers as peer implementations of a shared contract. Neither implementation governs the other.
 - Keep their accepted inputs, `stdout` and `stderr` behavior, return statuses, side effects, defaults, failure conditions, validation timing, and adjacent contract documentation semantically aligned wherever both shells can support the same behavior.
-- Use shell-native implementations without weakening the shared contract. A preferred idiom does not take precedence when it requires lossy normalization, including command substitution that changes significant whitespace or record boundaries. Allow a shell-specific contract difference when native behavior has no equivalent in the other shell or a settled project decision intentionally selects different behavior. Document each accepted difference and its rationale in [cross-shell helper differences](../../../PROJECT.md#cross-shell-helper-differences), and keep the remainder of the pair’s contract aligned.
+- Use shell-native implementations without weakening the shared contract. A preferred idiom does not take precedence when it requires lossy normalization, including command substitution that changes significant whitespace or record boundaries. Allow a shell-specific contract difference when native behavior has no equivalent in the other shell or a settled project decision intentionally selects different behavior. Document each accepted difference and its rationale in [cross-shell helper differences](../../../project/shell-integration.md#cross-shell-helper-differences), and keep the remainder of the pair’s contract aligned.
 - When either helper changes, inspect its counterpart. During an authorized change, update the implementations, contract documentation, and documented differences as needed to keep the pair accurate. During a review, audit, or diagnosis, report required alignment without editing either helper or its documentation.
 
 ## Port Helpers Between Shells
@@ -25,7 +25,7 @@
 ## Document Helper Contracts
 
 - Begin standard output contracts with `Prints …`, predicates with `Returns success …`, and side effect contracts with a direct action verb.
-- Describe the semantic contract rather than narrating implementation. Include non-obvious inputs, outputs, or fallback behavior only when their omission would mislead. Repeat a source-owned value only when the contract would not make sense without it. See [`domlib` Helper Contracts](../../../PROJECT.md#domlib-helper-contracts) for intentional comment choices and their rationale.
+- Describe the semantic contract rather than narrating implementation. Include non-obvious inputs, outputs, or fallback behavior only when their omission would mislead. Repeat a source-owned value only when the contract would not make sense without it. See [`domlib` Helper Contracts](../../../project/shell-integration.md#domlib-helper-contracts) for intentional comment choices and their rationale.
 - Give every `domlib` function one adjacent natural language contract comment. Do not use `@param` or `@returns` tags.
 - Let command-shaped wrappers rely on ordinary command semantics implied by their names rather than restating them.
 - Name `$1`, `$@`, and other positional parameters only when their positions clarify the contract.
@@ -36,4 +36,4 @@
 
 - Treat difficulty explaining a helper in a concise contract comment as a signal to review its design. Flag comments that need unrelated clauses, counterintuitive parameter positions, or implementation walkthroughs rather than broadening the comment.
 - Review whether option-bearing helpers place options before operands. Across related helper families, review subject and object positions for consistency.
-- Record refactor signals separately from rename signals. When both are within the resolved scope, resolve refactors before renaming. Do not force a refactor for an intentional overload documented in [`domlib` Helper Contracts](../../../PROJECT.md#domlib-helper-contracts).
+- Record refactor signals separately from rename signals. When both are within the resolved scope, resolve refactors before renaming. Do not force a refactor for an intentional overload documented in [`domlib` Helper Contracts](../../../project/shell-integration.md#domlib-helper-contracts).

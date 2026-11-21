@@ -40,7 +40,7 @@ Verify that each affected installed name resolves to its intended source and tha
 
 Only public skills may declare GitHub-hosted fallbacks, and only to public peers in `porada/domfiles`.
 
-When changing a public skill contract or its standalone fallback, consult the **Shared Skill Contracts** section of domfiles’ `.agents/PROJECT.md` to identify related guidance.
+When changing a public skill contract or its standalone fallback, consult domfiles’ `.agents/project/shared-skill-contracts.md` to identify related guidance.
 
 ## Develop Scripts
 

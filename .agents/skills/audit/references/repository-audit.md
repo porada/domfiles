@@ -49,7 +49,7 @@ Confirm that intended inputs were checked, accounting for ignored files, partial
 
 ## Report Audit Results
 
-Before reporting a finding, check `.agents/PROJECT.md` for project rationale that explains or settles it.
+Before reporting a finding, check `.agents/PROJECT.md` and any relevant reference documents it links to under `.agents/project/` for project rationale that explains or settles it.
 
 Continue until the entire scope has been reviewed, then report all findings together.
 

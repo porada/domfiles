@@ -11,14 +11,14 @@ metadata:
 
 # Domfiles Shell Integration
 
-Use this skill as the canonical source for domfiles-specific shell integration, invariants, and validation.
+Use this skill as the canonical source for domfiles-specific shell integration, invariants, and validation. When changing or evaluating shell code or command entrypoints, consult the [Shell Integration](../../project/shell-integration.md) reference document for applicable design decisions and constraints.
 
 For every Fish target, load `fish-shell-scripting` for portable language policy and workflow. For every POSIX shell target, load `posix-shell-scripting`. Apply this skill as the narrower domfiles layer when either language skill governs the same task.
 
 ## Investigate Tasks
 
 1. Classify each in-scope shell file from its hashbang and syntax rather than its extension alone, then apply `fish-shell-scripting` or `posix-shell-scripting`.
-2. Evaluate `home/.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../PROJECT.md#fish-clone-argument-contract). Don’t report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
+2. Evaluate `home/.config/fish/functions/clone.fish` against the [Fish `clone` argument contract](../../project/shell-integration.md#fish-clone-argument-contract). Don’t report the absence of Git option parsing, option rejection, or reliable follow-up directory changes for unsupported option-bearing invocations.
 
 For every non-Fish shell target and whenever the task touches `domlib`, a Fish `__domfiles_*` helper, shared `$DOMFILES_*` state, or command suppression, follow [`domlib` Integration](references/domlib-integration.md).
 
@@ -27,7 +27,7 @@ For every non-Fish shell target and whenever the task touches `domlib`, a Fish `
 - Evaluate every in-scope domfiles shell script’s interpreter, external commands, options, `PATH`, architecture, and default-shell assumptions against the [supported environment](../../PROJECT.md#supported-environment).
 - Judge each requirement at its intended lifecycle stage—fresh bootstrap, synchronization, post-sync runtime, or development—and account for prerequisites that `domfiles sync` provisioned earlier.
 - Place `__is_ci` and `__domfiles_is_ci` checks, including negations, last among predicates in compound conditions so CI detection doesn’t short-circuit the other checks. Preserve boolean grouping and keep CI-guarded actions conditional.
-- Treat `domfiles dependencies` as the user-facing readiness check defined by [dependency status labels](../../PROJECT.md#dependency-status-labels). Add a row only for an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone doesn’t qualify a dependency.
+- Treat `domfiles dependencies` as the user-facing readiness check defined by [dependency status labels](../../project/shell-integration.md#dependency-status-labels). Add a row only for an established user-facing synchronization or runtime contract. Agent-only use or installation by synchronization alone doesn’t qualify a dependency.
 
 ## Apply Domfiles Shell Wording Constraints
 
@@ -52,7 +52,7 @@ Before reviewing a `home/.local/bin/git-*` entrypoint, follow [Git helper form](
 
 ## Evaluate Duplication and Reuse
 
-- Don’t report the language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints as duplication merely because each retains its own default scope and lint command. Shared discovery and execution belong in `domlib`. See [development lint wrapper architecture](../../PROJECT.md#development-lint-wrapper-architecture) for the rationale.
+- Don’t report the language-specific `home/.local/bin/domfiles-dev-lint-*` entrypoints as duplication merely because each retains its own default scope and lint command. Shared discovery and execution belong in `domlib`. See [development lint wrapper architecture](../../project/shell-integration.md#development-lint-wrapper-architecture) for the rationale.
 - Consolidate shell implementations when they duplicate a substantial, virtually identical behavior pipeline that must remain aligned.
 - Don’t report `__string_*` helpers or equivalent inline string operations as reimplementations.
 

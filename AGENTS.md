@@ -24,6 +24,7 @@
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
 | Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. |
 | `.agents/PROJECT.md` | Records constraints, durable facts, maintenance decisions, and rationale. It doesn’t override agent instructions. |
+| `.agents/project/` | Each reference document has the authority of the section it replaces in `.agents/PROJECT.md`. The [composition rules](skills/.domfiles-agent-documentation/references/compose-documentation.md) apply as if its contents still appeared under the original heading. |
 
 Unqualified phrases such as “global agent instructions,” “global `AGENTS.md`,” and “global `AGENTS` document,” along with equivalent wording, refer to `.agents/GLOBAL.md`.
 
@@ -32,8 +33,12 @@ Unqualified phrases such as “global agent instructions,” “global `AGENTS.m
 - **User direction:** The global **Explicit user direction** policy applies to this repository’s workflow requirements, conventions, and non-secret content exclusions, including those in project-authored skills. The [public repository boundary](#public-repository-boundary) remains applicable.
 - **Environment:** Follow the [supported environment](.agents/PROJECT.md#supported-environment), including its default-shell requirement.
 - **Command entrypoints:** Use the entrypoint documented for each task, including validation, rather than another route to the same implementation. Invoke [repository-scoped commands](.agents/PROJECT.md#repository-scoped-commands) through `PATH`, overriding global **Direct invocation** for `skills` and `vercel` in this repository. For domfiles source validation, follow [Checkout Command Selection](#checkout-command-selection) so the command exercises the task checkout.
-- **Navigation:** Consult the relevant sections of `.agents/PROJECT.md`.
-- **Durable knowledge:** Add project knowledge to `.agents/PROJECT.md` only when it meets the global **Durable knowledge** threshold. Don’t record optimization recaps, routine implementation details, or workflow summaries. Prefer updating existing material over adding another explanation. If the task doesn’t permit the edit, report deferred documentation work only if it meets that threshold.
+- **Navigation:** Consult the relevant sections of `.agents/PROJECT.md` and follow their links to reference documents in `.agents/project/` as needed.
+- **Durable knowledge:** Record project knowledge only when it meets the global **Durable knowledge** threshold. Don’t record optimization recaps, routine implementation details, or workflow summaries. Prefer updating existing material over adding another explanation. If the task doesn’t permit the edit, report deferred documentation work only if it meets that threshold.
+- **Separate reference documents:** Keep project knowledge in `.agents/PROJECT.md` by default. Record knowledge within a moved section’s scope in its reference document. When a section moves, keep its original heading with a link that says what the document holds, which tasks need it, and why it is separate. Point references in instructions and skills directly to the document. Move a whole section to `.agents/project/` only when all three conditions hold.
+    - The section serves one identifiable kind of task.
+    - An instruction in `AGENTS.md` or a project skill tells readers when to consult it.
+    - Given the section’s length and how often tasks would use it or skip it, the context saved on unrelated tasks outweighs the extra lookup for its readers.
 - **Zed settings:** Keep `.zed/settings.json` and `home/.config/zed/settings.json` free of redundant entries. An entry is redundant only when omitting it preserves the supported workflow, including tool-managed state and later invocations. Matching a default or inherited value alone doesn’t make an entry redundant. See the [CLI persistence rationale](.agents/PROJECT.md#zed-cli-open-behavior).
 
 ## Validation
@@ -56,7 +61,7 @@ If a check cannot run within the task’s authority, report the validation limit
 
 ## Scope
 
-- **Fish:** Treat [`home/.config/fish/local.fish`](.agents/PROJECT.md#fish-local-configuration) as secret-bearing machine-local configuration. Exclude its contents from analysis, execution, and validation, including indirect sourcing through Fish startup.
+- **Fish:** Treat [`home/.config/fish/local.fish`](.agents/project/shell-integration.md#fish-local-configuration) as secret-bearing machine-local configuration. Exclude its contents from analysis, execution, and validation, including indirect sourcing through Fish startup.
 - **Symlink:** Exclude the contents of `home/.local/bin/git-diff-highlight` by default because its target is outside the repository. Include its target only when the user explicitly requests that analysis and access boundaries permit it.
 - **Secret-bearing local files:** Don’t read, analyze, echo, or stage Git-ignored files that public provisioning and tracked configuration designate for machine-local secret material. Path-level metadata and public provisioning code remain in scope.
 
@@ -68,7 +73,7 @@ If a check cannot run within the task’s authority, report the validation limit
     - Symlinks created through `domfiles sync`.
     - `home/.config/fish/fish_variables`.
     - Documentation.
-- **Intentional stops:** When evaluating workflow interruptions, consult [Intentional Workflow Stops](.agents/PROJECT.md#intentional-workflow-stops) in `.agents/PROJECT.md`. Treat the recorded tradeoffs as settled within their stated scope. Don’t report a stop as a defect or recommend its removal solely because it interrupts autonomous work. Reconsider the decision when the user requests it or concrete evidence challenges its rationale, including fulfillment of a recorded reconsideration condition. Still report incorrect implementation, application outside the intended scope, redundant approval requests, or conflicts with governing instructions. Identify what falls outside the recorded decision or what evidence warrants reconsideration.
+- **Intentional stops:** When evaluating workflow interruptions, consult [Intentional Workflow Stops](.agents/project/intentional-workflow-stops.md). Treat the recorded tradeoffs as settled within their stated scope. Don’t report a stop as a defect or recommend its removal solely because it interrupts autonomous work. Reconsider the decision when the user requests it or concrete evidence challenges its rationale, including fulfillment of a recorded reconsideration condition. Still report incorrect implementation, application outside the intended scope, redundant approval requests, or conflicts with governing instructions. Identify what falls outside the recorded decision or what evidence warrants reconsideration.
 
 ## Skills
 
