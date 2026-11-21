@@ -18,11 +18,17 @@ For one commit, send exactly:
 
 > `Review commit <current-commit-sha>`
 
-For multiple commits, send exactly:
+For multiple commits, work through the selection in history order. Starting at the first unrepresented commit, take the longest run of two or more selected commits where each commit is a parent of the next and `git rev-list <first-sha>^..<last-sha>` returns exactly the commits in that run. Record the range as `<first-sha>^..<last-sha>`. If no such run starts there, record that commit’s SHA. Continue until every selected commit is represented.
 
-> `Review commits <commit-sha> … as a single unit`
+For one range, send exactly:
 
-Substitute the selected commit identifiers. Keep all other coordination state outside these prompts.
+> `Review commits <range> as a single unit`
+
+For several entries, separate them with commas and send exactly:
+
+> `Review commits <entry-list> as a single unit. Expand each range separately and include each standalone SHA as one commit.`
+
+Keep all other coordination state outside these prompts.
 
 Retain the initial response for [repeat accounting](#repeat-when-required). Use the shared review process for findings and disputes throughout the cycle.
 

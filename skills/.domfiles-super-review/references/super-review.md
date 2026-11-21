@@ -6,6 +6,8 @@ Resolve the task scope, selected stages, review target, and runtime overrides fr
 
 Apply explicit selections directly. Do not require a particular phrase or fixed option syntax to select stages or change settings. Ask only when materially different interpretations remain.
 
+When the user invokes `super-review` directly, first show them the complete commit messages for the resolved review target. Quote existing messages verbatim and label drafts for uncommitted changes as proposed. Then start the selected stages. The global **Reviews** rule governs the subsequent assessments and findings reports.
+
 Use the global **Review workflow requests** policy for direct invocation. When another workflow invokes this skill, retain its established authority. Preserve read-only and no-commit limits rather than silently dropping uncommitted work from the target. If those limits prevent a selected stage’s prerequisite, report the incompatibility and continue only independent covered work.
 
 Load `subagent-review-flow` for shared coordination. Use `sensible-commit-flow` with `dom-sensible-commit-flow` for commit operations.
