@@ -249,7 +249,13 @@ Reword when a prefix applies to a multi-word phrase, such as “pre-pull request
 
 #### Headings
 
-Use title case, and keep peer headings grammatically parallel. Prefer equally clear, natural wording that avoids a word that title case would lowercase. Keep the lowercased word when no alternative preserves the meaning or the user requires it. Apply these conventions to prose table headers, and preserve literal field names.
+Use title case for English headings. Apply all the conventions in this section to prose table headers as well. Preserve the established casing of names, commands, identifiers, and literal field names wherever they appear, as in `GitHub` and `pnpm`.
+
+- Capitalize the first and last words of each title and subtitle. A colon or an em dash starts a subtitle.
+- In other positions, lowercase only articles (`a`, `an`, `the`), coordinating conjunctions (`and`, `but`, `for`, `nor`, `or`, `so`, `yet`), prepositions of three letters or fewer (such as `by`, `in`, `of`, `per`, and `via`), the word `as`, and the infinitival `to`. Capitalize every other word, including short words such as `Be`, `If`, and `Is`, and longer prepositions such as `From`, `Into`, and `With`.
+- Capitalize the first and last parts of each hyphenated word, even in the middle of a heading, as in `Review In-Scope Changes` and `Run One-Off Checks`. Apply the ordinary word rules to the parts between them, as in `End-to-End Checks`. Capitalize particles in phrasal verbs and their derivatives, as in `Log In to Continue` and `Opt-In Operations`. The preposition stays lowercase in `Changes in Scope`.
+
+Keep peer headings grammatically parallel. Prefer equally clear, natural wording that avoids a word that title case would lowercase. Keep the lowercased word when no alternative preserves the meaning or the user requires it.
 
 #### Links
 

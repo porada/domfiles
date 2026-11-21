@@ -43,7 +43,7 @@ Copy only the inputs the task requires. Don’t sweep up other task directories,
 
 Treat scratch contents as task artifacts, not canonical project source. Don’t activate copied configuration or instruction files merely because they’re present. Execution against them must be part of the authorized task and follow its execution boundaries.
 
-Before a broad scan or check, account for how the tool discovers inputs and establish which paths a formatter or other auto-fix may write. Use supported per-run inputs or exclusions when they preserve required coverage, including relevant new project files. If scratch paths still interfere, identify which command discovers them, including commands run by a pre-commit hook, and follow [Handle Interference with Project Checks](references/directory-lifecycle.md#handle-interference-with-project-checks).
+Before a broad scan or check, account for how the tool discovers inputs and establish which paths a formatter or other auto-fix may write. Use supported per-run inputs or exclusions when they preserve required coverage, including relevant new project files. If scratch paths still interfere, identify which command discovers them, including commands run by a pre-commit hook, and follow [Handle Interference With Project Checks](references/directory-lifecycle.md#handle-interference-with-project-checks).
 
 When intentionally validating scratch files, target them explicitly and use the narrowest supported ignore override. Verify that every intended file was actually checked. A successful zero-file check is not validation.
 

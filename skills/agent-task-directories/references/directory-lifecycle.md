@@ -10,7 +10,7 @@ Before reusing a directory, establish task continuity and write ownership, then 
 
 Move or rename a directory only when the task authorizes it. Preserve its contents, including `.gitignore`, without replacing existing destination state. Follow the usual placement rules except for [temporary relocation during project checks](#handle-interference-with-project-checks). Update affected task references and coordinate with active consumers before they continue using the new path.
 
-## Handle Interference with Project Checks
+## Handle Interference With Project Checks
 
 Before changing an interfering path, establish who can act on it. Within your assigned scope, remove disposable artifacts once their consumers have finished. For another task’s files, have its owner handle them or agree with the owner or coordinator on the files, who will restore them, and when consumers can resume. Pause consumers before disturbing paths they use.
 
