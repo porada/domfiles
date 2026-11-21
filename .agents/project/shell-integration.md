@@ -95,4 +95,4 @@ The subshell also explains why `__suppress` rejects `__domfiles_exec`: it would 
 
 Fish intentionally has no global initialization for this variable. The configuration’s usual `set -g` would not reach `domlib`, while exporting it would suppress every domfiles command in the session.
 
-The skill-linking loop uses `__suppress` and confirms each source skill rather than routine replacement of its two fixed destinations. Destination removals remain visible in CI.
+The skill-linking loop suppresses individual link commands with `__suppress` and prints one confirmation per source skill. Destination removals remain visible in CI.

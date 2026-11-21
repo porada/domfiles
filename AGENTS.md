@@ -21,6 +21,7 @@
 | Source | Authority and Ownership |
 | --- | --- |
 | `.agents/GLOBAL.md` | Defines global user defaults. |
+| `.agents/ANTIGRAVITY.md` | Directs Antigravity to load `.agents/GLOBAL.md` as user instructions. |
 | `AGENTS.md` | Defines project instructions, scope, and documentation authority. Applicable project instructions override global defaults. |
 | Project-authored skill directories under `.agents/skills/` and `skills/` | Own delegated domain policy, workflows, validation, and reporting exceptions without contradicting applicable `AGENTS.md` instructions. |
 | `.agents/PROJECT.md` | Records constraints, durable facts, maintenance decisions, and rationale. It doesn’t override agent instructions. |

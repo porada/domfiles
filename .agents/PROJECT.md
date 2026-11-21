@@ -46,6 +46,8 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 
 ### Agent CLI Distribution
 
+T3 Code manages the Antigravity CLI and runs it with an isolated profile. The profile links selected rules and skills from `~/.gemini/`, including the locations used by domfiles below.
+
 `claude` and `codex` are intentionally installed through Homebrew’s `claude-code@latest` and `codex` casks rather than declared as `@anthropic-ai/claude-code` or `@openai/codex` project dependencies. Both CLIs remain machine-level development Homebrew dependencies, so dependency installation in CI excludes them. Claude Code follows Anthropic’s latest release channel. Homebrew’s unversioned `claude-code` cask tracks the stable channel. The Homebrew CLI installations are separate from the agent packages Zed manages, such as the `claude-acp` registry package.
 
 ### Agent Discovery
@@ -54,13 +56,17 @@ Zed Agent’s terminal sandbox is deliberately disabled through `allow_unsandbox
 
 | Surface | Canonical Source | Client Location | Mechanism |
 | --- | --- | --- | --- |
+| Antigravity global instructions | `.agents/GLOBAL.md` | `~/.gemini/AGENTS.md` | Synchronization symlink to the [bridge](ANTIGRAVITY.md), which tells Antigravity to read the canonical file through the `~/.agents/GLOBAL.md` symlink |
+| Antigravity project instructions and skills | [`AGENTS.md`](../AGENTS.md) and `.agents/skills/` | Repository root | Native workspace discovery |
 | Claude global instructions | `.agents/GLOBAL.md` | `~/.claude/CLAUDE.md` | Synchronization symlink |
 | Claude project instructions | [`AGENTS.md`](../AGENTS.md) | Repository `AGENTS.md` | Direct loading by Claude Code and Zed’s Claude Agent in the default project instruction mode |
 | Claude project skills | `.agents/skills/` | [`.claude/skills`](../.claude/skills) | Tracked directory symlink |
 | Claude settings | [`home/.claude/settings.json`](../home/.claude/settings.json) | `~/.claude/settings.json` | Synchronization symlink |
 | Codex global instructions | `.agents/GLOBAL.md` | `~/.codex/AGENTS.md` | Synchronization symlink |
-| Globally exposed skills | [Globally exposed categories](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#classify-skills) under `skills/` | `~/.agents/skills/<skill-name>` and `~/.claude/skills/<skill-name>` | Synchronization symlinks using installed names |
+| Globally exposed skills | [Globally exposed categories](../skills/.domfiles-skill-development/references/domfiles-skill-policy.md#classify-skills) under `skills/` | `~/.agents/skills/<skill-name>`, `~/.claude/skills/<skill-name>`, and `~/.gemini/config/skills/<skill-name>` | Synchronization symlinks using installed names |
 | Zed global instructions | `.agents/GLOBAL.md` | `~/.config/zed/AGENTS.md` | Tracked [`home/.config/zed/AGENTS.md`](../home/.config/zed/AGENTS.md) bridge through the managed `~/.config` link |
+
+Antigravity’s [24,000-byte rule limit](https://antigravity.google/docs/rules#size-limits-and-token-budgets) applies after includes expand. Reading the global instructions separately avoids truncation and may [require approval](https://antigravity.google/docs/permissions?tab=cli) when the file is outside the workspace.
 
 None of the `skills/` source namespaces is a project-local discovery surface. Project discovery remains backed by `.agents/skills/*`. Hidden source directories keep global skills, including personal overlays, out of `gh skill`’s default repository discovery. Client-specific roots and differing source and installed names motivate the [distributed skill link contract](../skills/.domfiles-skill-development/references/skill-installation.md#distributed-links).
 

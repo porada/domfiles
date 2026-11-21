@@ -6,7 +6,7 @@
 # Migrate agent skills
 outdated_agent_skills=false
 
-for skill in \
+for name in \
   awesome-vitest-entry \
   browser-automation \
   claude-cli-subagent \
@@ -29,7 +29,10 @@ for skill in \
   subagent-review \
   technical-copy \
   verify; do
-  for path in "$HOME/.agents/skills/$skill" "$HOME/.claude/skills/$skill"; do
+  for path in \
+    "$HOME/.agents/skills/$name" \
+    "$HOME/.claude/skills/$name" \
+    "$HOME/.gemini/config/skills/$name"; do
     if [ -L "$path" ]; then
       if [ "$outdated_agent_skills" = false ]; then
         __print_heading_dimmed 'Cleaning up outdated agent skills'
