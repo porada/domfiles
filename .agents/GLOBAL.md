@@ -145,6 +145,9 @@ The coordinator owns settlement of T3 Code threads it creates through MCP. Apply
 
 ### Input Conventions
 
+- **My open source projects** are the public, non-archived repositories owned by `porada` or `standard-config`, excluding forks. Use GitHub metadata to check these filters.
+- **My Prettier plugins** are the standalone `prettier-plugin-*` repositories among my open source projects and the custom Prettier plugins maintained inside `porada/domfiles` and `standard-config/prettier`.
+- For **batch requests across projects**, use these defaults unless the request or the governing workflow specifies otherwise. Use matching projects already checked out under `~/Projects`. Identify repositories by their Git remotes and use one checkout per repository, preferring its main checkout when several match.
 - **Commit references as requests:** A lone unambiguous commit hash requests a review unless context establishes another purpose.
 - **Ambiguity:** For apparently inconsistent, accidentally pasted, or mistyped input, proceed only when conversation and project evidence confidently establish the intended request without changing its material scope or outcome. Otherwise, stop and ask one focused clarification rather than following it literally or silently choosing among plausible interpretations.
 
