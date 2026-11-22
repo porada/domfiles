@@ -3,7 +3,7 @@ name: vitest-conventions
 description: |-
     Use when writing, refactoring, reviewing, or auditing JavaScript or TypeScript tests that use Vitest, including through Vite+ and `vite-plus/test`. This includes fixtures, assertions, snapshots, mocks, and cleanup.
 
-    Also use for Vitest configuration work involving setup files, `setupFiles`, their TypeScript type inclusion, automatic state resets, snapshot serializers, or lint overrides for test subjects and fixtures.
+    Also use when diagnosing Vitest test timeouts or considering a `testTimeout` change for a slow test. For other Vitest configuration work, use it for setup files, `setupFiles`, their TypeScript type inclusion, automatic state resets, snapshot serializers, or lint overrides for test subjects and fixtures.
 
     Don’t use merely to run existing tests or for configuration outside those conventions.
 
@@ -27,7 +27,7 @@ Test package-owned behavior and integration choices rather than unchanged upstre
 
 ## Configuration Conventions
 
-For setup files, `setupFiles` entries, and their TypeScript type inclusion, follow [Setup Files](references/configuration-conventions.md#setup-files). For mock, environment, or global state reset calls in hooks, follow [State Resets](references/configuration-conventions.md#state-resets). React serializer registration follows [Registration](references/component-tests.md#registration). The lint-override conventions remain in [Convention Scope](#convention-scope).
+For setup files, `setupFiles` entries, and their TypeScript type inclusion, follow [Setup Files](references/configuration-conventions.md#setup-files). For mock, environment, or global state reset calls in hooks, follow [State Resets](references/configuration-conventions.md#state-resets). Before changing `testTimeout` for a slow test, see [Test Timeouts](#test-timeouts). React serializer registration follows [Registration](references/component-tests.md#registration). The lint-override conventions remain in [Convention Scope](#convention-scope).
 
 ## Test Structure
 
@@ -62,7 +62,7 @@ For every semantically shared test, keep titles and inputs identical across rela
 
 ## Fixtures and Names
 
-Keep fixtures small and close to their tests. Name shared sample documents by format, such as `TEST_JSON` or `TEST_MARKDOWN`. Extract a shared constant when tests reuse an input, not merely because a literal can be extracted.
+Keep fixtures close to their tests. Prefer small fixtures, but keep a regression input large enough to expose the original bug across supported runtimes. Name shared sample documents by format, such as `TEST_JSON` or `TEST_MARKDOWN`. Extract a shared constant when tests reuse an input, not merely because a literal can be extracted.
 
 - **Incidental values:** Use `foo`, `bar`, `baz`, `qux`, `quux`, `corge`, `grault`, `garply`, `waldo`, `fred`, `plugh`, `xyzzy`, and `thud`, in that order. This includes incidental filenames such as `foo.md` and `foo bar.md`.
 - **Enumeration scope:** Restart the applicable incidental sequence in each test or parameterized table. Advance past the first value only when the test needs several distinct incidental values. Shared fixtures have their own sequence, and tests referencing them preserve their identifiers. Choose unused sequence values when local values must differ from shared fixture values.
@@ -72,6 +72,12 @@ Keep fixtures small and close to their tests. Name shared sample documents by fo
 - **Variables:** Prefer clear single word names such as `input`, `options`, `output`, `promise`, and `result`. Keep descriptive pairs when needed, such as `errorWithSource` and `errorWithoutSource`. Use `result` and `expectedResult` for structured observations. When a single word name already holds an object, name its identifier with a suffix, such as `parserName` beside `parser`.
 - **Transformation rows:** Name row keys `input` and `output`. Destructure `{ input, output: expectedOutput }` when the test also binds the actual result to `output`.
 - **CLI values:** Use `param` and `params`. Preserve `process.argv` and a captured `argv` when referring to Node’s process state.
+
+## Test Timeouts
+
+When Vitest reports a test timeout, check for an unexpected slowdown before adopting a longer limit. Use earlier timings from the same CI job when available. If the test has never completed under comparable conditions, a diagnostic run with a longer timeout on that test can show how much time it needs.
+
+If a test’s intended workload approaches or exceeds its time limit, extend only that test’s timeout. Allow room for coverage overhead and slower CI runners. When project rules leave the call form open, put `timeout` in the options object before the test body.
 
 ## Assertions
 
