@@ -18,7 +18,7 @@ Identify the contribution’s central claim and the most direct appropriate vali
 
 Use the repository’s validation workflow and prescribed setup. Resolve any new dependency choice through the [dependency boundary](execution-boundaries.md#handle-dependencies-and-protected-content) before dependent work, without reopening covered installation authority.
 
-Ask the resolved commit workflow for a read-only, prospective breakdown based on the intended scope. Supply the [contribution’s packaging constraints](prepare-pull-requests.md#plan-and-implement-contributions), then retain only a provisional plan until the actual diff exists.
+Before proposing a commit split or subjects, follow the [peer selection for `sensible-commit-flow`](../SKILL.md#compose-with-peers), reusing the commit workflow if already selected. Ask that workflow for a read-only, provisional breakdown based on the intended scope and the [contribution’s packaging constraints](prepare-pull-requests.md#plan-and-implement-contributions).
 
 Unless the user waives the early draft, prepare a title and body through [post content preparation](prepare-post-content.md). Use the draft to expose the intended outcome and scope, not to claim implementation or testing has already happened. Keep the wording provisional while discussing the solution.
 
