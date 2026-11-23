@@ -47,7 +47,7 @@ export const parsers: Plugin['parsers'] = {
 					sourceLength: text.length,
 				};
 			} catch (error: unknown) {
-				reportFormattingError(options.filepath, error);
+				reportFormattingError(error);
 			}
 		},
 	},
@@ -62,16 +62,8 @@ export const printers: Plugin['printers'] = {
 /**
  * Throws a Fish formatting error with the original failure as its cause.
  */
-function reportFormattingError(
-	filepath: string | undefined,
-	error: unknown
-): never {
-	let message = '[prettier-plugin-fish] Failed to format';
-
-	if (filepath) {
-		message += ` \`${filepath}\``;
-	}
-
+function reportFormattingError(error: unknown): never {
+	let message = '[prettier-plugin-fish] Failed to format Fish code';
 	let details = error instanceof Error && error.message ? error.message : '';
 
 	if (

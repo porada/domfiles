@@ -317,6 +317,7 @@ test('preserves comment-only files', async () => {
 test('reports formatting errors', async () => {
 	const input = 'echo foo\n';
 	const options = {
+		filepath: 'foo/bar.fish',
 		parser: 'fish' as const,
 		plugins: [pluginFish],
 	};
@@ -324,26 +325,15 @@ test('reports formatting errors', async () => {
 	vi.stubEnv('PATH', '');
 
 	try {
-		const errorWithSource = (await format(input, {
-			filepath: 'foo/bar.fish',
-			...options,
-		}).catch((error: unknown) => error)) as Error;
-		const errorWithoutSource = (await format(input, options).catch(
+		const result = (await format(input, options).catch(
 			(error: unknown) => error
 		)) as Error;
 
-		expect(errorWithSource).toBeInstanceOf(Error);
-		expect(errorWithSource.cause).toBeInstanceOf(Error);
-		expect(errorWithSource.message.split('\n')[0]).toMatchInlineSnapshot(
-			`"[prettier-plugin-fish] Failed to format \`foo/bar.fish\`:"`
+		expect(result).toBeInstanceOf(Error);
+		expect(result.cause).toBeInstanceOf(Error);
+		expect(result.message).toBe(
+			`[prettier-plugin-fish] Failed to format Fish code:\n\n${(result.cause as Error).message}`
 		);
-
-		expect(errorWithoutSource).toBeInstanceOf(Error);
-		expect(errorWithoutSource.cause).toBeInstanceOf(Error);
-		expect(errorWithoutSource.message.split('\n')[0]).toMatchInlineSnapshot(
-			`"[prettier-plugin-fish] Failed to format:"`
-		);
-		expect(errorWithoutSource.message).toContain('\n\n');
 	} finally {
 		vi.unstubAllEnvs();
 	}
