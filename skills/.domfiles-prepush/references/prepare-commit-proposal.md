@@ -10,6 +10,12 @@ Check the proposed series in order. When moving hunks, assess both the destinati
 
 Establish that the grouping and order are feasible. If the proposal would rewrite history, identify other local refs containing any commit it would replace, replay, or drop. Exclude tool-managed checkpoint refs that the operation leaves untouched. Preserve all other refs and report shared history only when it affects the decision.
 
+Retain the internal execution baseline from **Confirm Commits** and **Prepare Update Details**, including the affected refs, exact selected changes and their placement, exclusions, and preservation assumptions. Defer the exact command sequence and rebase todo edits to the application phase unless a detail is needed to establish feasibility or affects the decision.
+
+## Present the Proposal When Needed
+
+Show the initial or revised proposal when the user requests a preview or needs to approve the series or make another decision. Otherwise, keep it with the coordinator and proceed to [Obtain Proposal Approval](#obtain-proposal-approval).
+
 Briefly identify the base and selected range, then show the proposed series in order. Use the following format in place of the per-commit descriptions in **Confirm Commits**.
 
 - For each new or changed commit, show its complete proposed message in a blockquote. Beside it, list each contributing commit’s short SHA, adding its subject when combining multiple commits. For a partial contribution, name the change taken from that source. Identify any assigned pending changes.
@@ -17,8 +23,6 @@ Briefly identify the base and selected range, then show the proposed series in o
 - Identify each dropped commit by its original short SHA and explain the omission.
 
 Identify the hunk boundaries when a file is split between commits or only partly included. Mark protected commits and any authorized published rewrite. Briefly explain the reason for a split, grouping, or placement when it would otherwise be unclear.
-
-Retain the internal execution baseline from **Confirm Commits** and **Prepare Update Details**, including the affected refs, exact selected changes and their placement, exclusions, and preservation assumptions. Defer the exact command sequence and rebase todo edits to the application phase unless a detail is needed to establish feasibility or affects the decision.
 
 Disclose necessary temporary isolation and restoration, material exclusions, and any review or validation gaps that affect approval or the claimed result. Omit routine preservation details, command recipes, verification checklists, and empty caveat sections. On revisions, show the updated series and explain only the changed decisions.
 

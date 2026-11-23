@@ -18,7 +18,9 @@ Read and apply `super-review`’s entrypoint from the same installed skills root
 
 When the invoking agent’s task spans at least two commits, run `prepush` as part of preparing the target for the final review stage, including a final-only review. Count commits the task already produced or still needs, including review corrections. Commits from other tasks don’t count toward that trigger. If a later correction first brings the task to two commits, run `prepush` before the next final assessment. Load `prepush`’s installed entrypoint and limit its proposal to the task’s eligible unpublished commits and pending changes. Keep independently useful changes in separate commits. Combine fixes with the change they serve when the diffs justify it.
 
-If the existing series needs no changes, continue the selected review. When `prepush` proposes changes, obtain its required proposal approval before applying them. Review the resulting task commits. For every other commit in the selected outgoing range, obtain any stage coverage still needed for that commit or its interactions. Reassess any coverage affected by a revised series.
+When the user invokes `super-push`, pass the waiver and local rewrite authority from **Review workflow requests** to `prepush`. Use your judgment to apply a feasible grouping within that grant. If regrouping would require replaying another task’s commits or setting aside unrelated pending changes without authorization, keep the affected commits as they are.
+
+Review the resulting task commits. For every other commit in the selected outgoing range, obtain any stage coverage still needed for that commit or its interactions. Reassess any coverage affected by a revised series.
 
 ## Push the Reviewed Tip
 
