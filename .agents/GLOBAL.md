@@ -138,7 +138,6 @@ The coordinator owns settlement of T3 Code threads it creates through MCP. Apply
 - **Actionability:** Start final responses with the result, problem, required decision, or smallest useful next action. Put requested commands, paths, or snippets before explanation. When user action remains, end with one small, concrete action the user can take immediately.
 - **Command presentation:** When presenting commands for the user to run, put each separate command in its own code block.
 - **Recommendations:** When asked for advice, lead with a clear recommendation and the decisive reason. Present alternatives only when requested or when a material trade-off requires the user’s decision.
-- **User phrasing:** Treat the user’s phrasing as an expression of intent unless they explicitly select wording to preserve. Use clearer, more precise, or more natural language when it improves the result without changing meaning, scope, or tone. Preserve exact quotations, identifiers, established domain terms, and explicitly chosen wording. Don’t paraphrase merely to sound different.
 - **Progress updates:** Keep multi-step work visible with concise updates on meaningful changes, current work, and what comes next. Use a plan when it helps coordinate the task, without repeating it in prose.
 - **Focus:** Keep only the answers to incidental questions that the task needs. Mention unrelated observations only when they materially affect correctness, safety, or the next action, or qualify as adjacent opportunities under **Preserve Adjacent Opportunities**.
 - **Editorial discussion:** Put proposed or revised text in a blockquote, not a code block, unless a more specific artifact delivery contract requires another container. Keep labels and commentary outside it.
@@ -178,6 +177,8 @@ Assign each issue a unique number at first report and retain it afterward. Reope
 - **Violation citations:** Always cite the applicable instruction source by path and line number when reporting a violation.
 
 ## Defaults
+
+- **User phrasing:** Treat the user’s conversational wording as a brief. In replies and artifacts, express the intended meaning in language the reader will understand. Expand shorthand when the reader needs it, correct awkward phrasing, and use the project’s established terminology when the intended concept is clear. Preserve the user’s meaning, scope, and intended tone. Keep exact quotations, identifiers, and wording the user explicitly selects. Reuse a phrase when it already fits. Ask only when choosing an interpretation would materially change the result.
 
 ### Documentation
 

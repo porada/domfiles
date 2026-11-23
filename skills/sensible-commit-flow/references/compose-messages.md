@@ -22,7 +22,7 @@ The role guide is alphabetized by editorial role:
 
 ## Message Form
 
-- **Conventions:** Apply repository message requirements and supplied wording under the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints), including explicit task-scoped overrides. Use explicit user or authorized calling workflow preferences before conventions found in relevant history. Conventional Commit prefixes and scopes are permitted when the selected convention calls for them, not required by this skill.
+- **Conventions:** Follow the entrypoint’s [message safeguards](../SKILL.md#preserve-message-constraints) for repository requirements, selected wording, and explicit task-scoped overrides. Use explicit user or authorized calling workflow preferences before conventions found in relevant history. Conventional Commit prefixes and scopes are permitted when the selected convention calls for them, not required by this skill.
 - **Grammar:** Without a narrower convention, write one compact, sentence case imperative clause, normally `<verb> <object>`, without terminal punctuation.
 - **Subject length:** Limit newly authored subjects to 72 characters, including spaces, punctuation, backticks, and any required prefix or suffix. Count the complete subject before returning it. Rephrase overlong subjects without losing their intended meaning rather than truncating them.
 - **Literal names:** Put exact searchable tokens in backticks, including commands, configuration keys, domains, file labels, package selectors, paths, and rule IDs. Leave conceptual categories and canonically styled product names in prose. For example, `typescript@7` is a literal selector, while TypeScript is a product name.

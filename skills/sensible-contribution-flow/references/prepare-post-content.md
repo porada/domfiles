@@ -26,7 +26,7 @@ Let references carry background rather than repeating titles or entire reports, 
 
 The following procedure remains complete when the writing peer is absent. When it is available, supply these contribution-specific constraints without replacing its general editorial guidance.
 
-Choose a clear, compact title that names the problem or intended outcome. Preserve the user’s meaning, voice, exact technical tokens, and settled wording. Keep claims proportional to verified evidence, distinguish inference from observation, and never invent a motivation or result to improve the prose.
+Choose a clear, compact title that names the problem or intended outcome. Put the user’s notes into terms the repository’s maintainers will recognize. Expand shorthand where needed while preserving the user’s meaning, voice, exact technical tokens, and settled wording. Keep claims proportional to verified evidence, distinguish inference from observation, and never invent a motivation or result to improve the prose.
 
 When the [single-commit title convention](prepare-pull-requests.md#plan-and-implement-contributions) applies, apply the resolved commit workflow’s subject length limit while drafting or revising the title, before supplying it as required commit wording.
 

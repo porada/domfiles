@@ -16,6 +16,8 @@ Writing works when meaning, voice, and necessary complexity take a form that the
 
 Start with the authorized writing unit: the exact writing the task permits you to create, change, or evaluate. Establish where it will appear, the reader it must serve, its immediate purpose, and what should change in the reader’s understanding, feeling, judgment, or action.
 
+Use the user’s conversational notes to understand what they want to convey. Where shorthand or awkward phrasing would get in the reader’s way, express the idea in natural language using established terms. Keep exact quotations, identifiers, and wording the user explicitly selects.
+
 Choose the mode for the requested writing task. An explicit change takes precedence when the request also uses review or audit language.
 
 - **Consistency:** For an explicit consistency request, apply this skill’s guidance across the named family without expanding into behaviorally distinct surfaces.

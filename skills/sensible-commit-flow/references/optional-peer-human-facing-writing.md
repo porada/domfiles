@@ -1,6 +1,6 @@
 # Optional Peer: Human-Facing Writing
 
-`human-facing-writing` helps produce clear, technically accurate commit messages, proposal explanations, and result prose. It applies to new or explicitly authorized wording changes while preserving the verified intent, commit boundaries, supplied wording, and message requirements. The commit workflow continues to govern authorization, delivery, and stopping behavior.
+`human-facing-writing` helps produce clear, technically accurate commit messages, proposal explanations, and result prose. It applies to new or explicitly authorized wording changes while preserving the verified intent, commit boundaries, message requirements, and wording the user selects for the finished text. The commit workflow continues to govern authorization, delivery, and stopping behavior.
 
 The peer’s source is [`human-facing-writing`](https://github.com/porada/domfiles/blob/HEAD/skills/human-facing-writing/SKILL.md) in `porada/domfiles`. This link identifies the latest source. Retrieve and validate a frozen copy before applying its instructions.
 

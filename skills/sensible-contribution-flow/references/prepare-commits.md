@@ -42,7 +42,7 @@ Apply these safeguards to all messages, including inherited wording and temporar
 
 ## Compose Authored Messages
 
-For new messages or explicitly authorized wording changes, describe the verified intent of each commit within the [message constraints](#preserve-message-constraints). Follow supplied wording and applicable conventions. Only when conventions remain unclear, consult a bounded sample of relevant local history, excluding Git-generated messages and unrepresentative maintenance patterns. Don’t fetch history merely for style or normalize inherited messages.
+For new messages or explicitly authorized wording changes, describe the verified intent of each commit within the [message constraints](#preserve-message-constraints). Use applicable conventions and preserve wording the user selects for the message. Only when conventions remain unclear, consult a bounded sample of relevant local history, excluding Git-generated messages and unrepresentative maintenance patterns. Don’t fetch history merely for style or normalize inherited messages.
 
 Without a narrower convention, use a compact, sentence case imperative subject without terminal punctuation. Preserve exact technical tokens in backticks. Add a body only for verified motivation, constraints, or consequences the subject can’t convey, retaining required bodies and trailers. Name the common purpose of related supporting edits rather than joining them into an inventory title. Omit patch narration, routine testing checklists, and invented claims or references.
 
