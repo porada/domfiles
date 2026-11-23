@@ -31,6 +31,7 @@ metadata:
 
 ## Choose Workflow
 
+- Follow [Maintain Global Instructions](references/maintain-global-instructions.md) when adding, changing, moving, or removing a rule in domfiles’ `.agents/GLOBAL.md`, or when reviewing or auditing those rules or proposed changes.
 - When the task affects a project-authored skill’s documentation, metadata, assets, category, or supported installation, apply `skill-development` for the skill-specific contracts before the affected work. Also apply it when a global instruction changes or is evaluated and supplies a public skill mirror or standalone default, even when the request names only the global source. Compose once, then continue the shared workflow here rather than restarting either skill.
 - For reusable prompt assets, follow [Maintain Prompt Assets](references/compose-documentation.md#maintain-prompt-assets). Use `subagent-review-flow` for coordinated reviewer prompts and `agent-task-relay` for general relays or decision capture prompts. The selected skill owns the operational content contract, not the authoring lifecycle.
 - When establishing or assessing repository independence, setting up project agent documentation, selecting or relocating project requirements, or aligning documentation across repositories, follow [Repository Independence](references/repository-independence.md) before resolving ownership or composing changes.
