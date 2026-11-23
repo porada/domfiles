@@ -35,7 +35,7 @@ Refresh task-owned review references after a rewrite.
 
 ## Contribution Preparation Authorization
 
-Apply the global **Contribution Preparation Authorization** policy only when its managed-installation and task conditions hold. That policy alone delegates this mode. Supply its recorded setup authorization or checkpoint grant to `sensible-commit-flow` through its **Alternative Approval Modes** reference. Neither setup authorization nor a checkpoint grant supplies a waiver.
+Apply the global **Contribution Preparation Authorization** policy only when its managed-installation and task conditions hold. That policy alone delegates this mode. Pass the recorded setup authorization or preparation grant to `sensible-commit-flow` through its **Alternative Approval Modes** reference. Preserve required checks under either grant.
 
 For each call, supply the verified target, actual change scope, and requested operation. Carry forward the grant’s express request to revise provisional messages without assuming that supplied exact wording or all inherited messages may be revised. Return each commit result to `sensible-contribution-flow` while the recorded lifetime continues. Other calls follow the public skill’s applicable authorization path, including already authorized history updates.
 

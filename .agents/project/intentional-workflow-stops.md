@@ -58,7 +58,7 @@ The commit-offer checkpoint is intentionally retained so the user decides whethe
 
 ### Contribution Implementation
 
-The contribution workflow’s [execution authority checkpoint](../../skills/sensible-contribution-flow/references/propose-pull-requests.md#resolve-execution-authority) preserves the user’s choice of implementation scope and uncovered effects. Material changes to that scope remain decisions for the user, while an existing grant permits covered preparation to continue.
+The contribution workflow’s [execution authority checkpoint](../../skills/sensible-contribution-flow/references/propose-pull-requests.md#resolve-execution-authority) preserves the user’s choice when scope or design requires a decision or an effect needs approval. The [**Straightforward pull requests** grant](../GLOBAL.md#contribution-preparation-authorization) lets preparation proceed on the original request when its conditions hold.
 
 ### Dependency Choices
 

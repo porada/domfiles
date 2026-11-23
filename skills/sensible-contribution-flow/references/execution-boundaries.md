@@ -16,7 +16,7 @@ When a setup delegation or continuing approval mode governs pull request prepara
 
 1. Before the initial fetch or its necessary remote setup, retain the [setup authorization record](prepare-pull-requests.md#enter-supplied-checkout).
 2. Before contribution branch creation or a history update, add the [task-owned branch and authorized setup or replay effects](prepare-pull-requests.md#enter-supplied-checkout).
-3. Before an implementation grant effect, add the exact checkpoint response, bounded implementation scope and design, and grant’s effects and lifetime, preserving any limit narrower than the intended endpoint.
+3. Before acting on an implementation grant, record the exact user request and the governing grant whose conditions it satisfies, or the user’s exact approval at the checkpoint. Include the bounded scope, design, covered effects, and lifetime, preserving any limit narrower than the intended endpoint.
 
 Keep the fetched tip for each [upstream synchronization](prepare-pull-requests.md#synchronize-with-upstream) and provisional name changes in the same task-owned branch’s record. Refreshing the same upstream branch’s tip does not change the authorized target.
 
