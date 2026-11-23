@@ -4,6 +4,8 @@
 
 Treat a project-authored skill as **command-only** when it sets `disable-model-invocation: true`, and as **model-invocable** otherwise.
 
+For each command-only skill, set `policy.allow_implicit_invocation` to `false` in its `agents/openai.yaml` to disable implicit selection in Codex. A workflow that expressly routes to the skill can still read its entrypoint. Leave implicit invocation enabled for model-invocable skills.
+
 For every model-invocable project-authored skill, preserve complete positive and negative trigger boundaries and precedence conditions, and state them as direct reasons to load the skill. Include a peer name only when it defines one such condition. Don’t make loading depend on whether the task already exhibits a quality the skill enforces, such as being “focused,” “simple,” “safe,” or “bounded.”
 
 For every command-only project-authored skill, write concise human-facing UI copy instead. Lead with the action and outcome, add only task scope or exclusions that distinguish the command, and omit the invocation condition and literal slash command.
