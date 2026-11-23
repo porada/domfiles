@@ -59,6 +59,9 @@ export const printers: Plugin['printers'] = {
 	},
 };
 
+/**
+ * Throws a Fish formatting error with the original failure as its cause.
+ */
 function reportFormattingError(
 	filepath: string | undefined,
 	error: unknown
