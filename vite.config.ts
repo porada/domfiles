@@ -7,6 +7,7 @@ export default defineConfig({
 			/* prettier-ignore */
 			'packages/**/vite.config.ts',
 		],
+		silent: 'passed-only',
 	},
 	lint: defineOxlintConfig(),
 	staged: {
