@@ -166,6 +166,7 @@ if ! __is_ci; then
   install zizmor
 
   if __is_macos; then
+    install google-chrome --adopt --cask
     install just
     install mole
     install rust
