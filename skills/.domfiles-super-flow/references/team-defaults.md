@@ -8,4 +8,6 @@ Resolve models against the current catalog in the invoking thread’s T3 environ
 
 ## Names and Titles
 
-Give every member, including the coordinator, a short name unique within the team. Use the invoking thread’s title as the flow title. Title each new member thread `⤷ <Role> <Name>: <flow title>`. Keep a reused thread’s title unless the user requests a change.
+Use the title the user chose for the flow, or keep a title they explicitly set for the invoking thread. Otherwise keep an accurate title or choose a short one that names the agreed deliverable. If the title would change and T3 doesn’t establish who chose the current one, offer the rename when [asking whether to start](super-flow.md#request-approval). If the user explicitly directed you to start before seeing that proposal, keep the invoking thread’s title and use the new flow title for member and reviewer threads.
+
+Give every member, including the coordinator, a short name unique within the team. Title each new member thread `⤷ <Role> <Name>: <flow title>` using the title in the flow record. Keep a reused member thread’s title unless the user requests a change.
