@@ -5,6 +5,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `agent-documentation`
 - `agent-task-directories`
 - `agent-task-relay`
+- `dom-refine-agent-workflow`: Recommend improvements to agent instructions and workflows.
 - `dom-release-notes-for-humans`
 - `dom-sensible-commit-flow`
 - `dom-sensible-contribution-flow`

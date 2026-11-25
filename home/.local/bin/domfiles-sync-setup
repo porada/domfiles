@@ -24,6 +24,7 @@ __symlink "$DOMFILES/.agents/ANTIGRAVITY.md" "$HOME/.gemini/AGENTS.md"
 __print_heading_dimmed 'Linking agent skills'
 
 for source in \
+  .dom-refine-agent-workflow \
   .dom-release-notes-for-humans \
   .dom-sensible-commit-flow \
   .dom-sensible-contribution-flow \
