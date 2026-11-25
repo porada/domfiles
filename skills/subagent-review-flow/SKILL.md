@@ -44,7 +44,7 @@ Keep one conversation-local record with the target, baseline, scope and exclusio
 
 For ordinary initial assignments, supply the minimum neutral context needed to evaluate the target: baseline, scope and exclusions, intended behavior, applicable instructions, execution boundaries, and material evidence limitations. Keep coordinator conclusions, anticipated findings, implementation defenses, and decision history with the coordinator unless needed to establish a governing requirement or the expressly requested review subject. Don’t withhold safety or authority requirements, the actual requested subject, or evidence needed to evaluate it.
 
-For ordinary assignments, direct the reviewer to the [Reviewer Contract](references/reviewer-contract.md) when it can read the reference. Otherwise, include the contract’s requirements in the assignment. Carry applicable grants with their actual source, scope, and lifetime.
+For ordinary initial assignments and follow-ups, direct the reviewer to the [Reviewer Contract](references/reviewer-contract.md) when it can read the reference. Otherwise, include in the assignment any contract requirements the reviewer hasn’t retained. Carry applicable grants with their actual source, scope, and lifetime. If the interface supports direct messages, tell the reviewer where to send you a one-line notice when the report is ready.
 
 A calling workflow may select an assessment based only on a named artifact and specify the exact prompt. Send exactly that prompt, without adding a reporting template or context handoff. Reconcile the returned report against the reviewer contract. Necessary authority and access boundaries must remain established through the receiving environment and governing instructions. If the interface can’t preserve them, report the limitation rather than treating minimal wording as a waiver.
 
@@ -52,7 +52,7 @@ Before dispatching a follow-up, verify the target against the recorded reviewed 
 
 ## Consolidate Each Round
 
-Include every selected reviewer in the stage’s initial round and collect every participating role’s report. Record the state each report covers, even if the target changed before the report arrived. Validate findings as they arrive, including findings reported before an assessment finishes. Reconcile later reports with earlier findings and corrections, merging duplicates without losing their originating roles or distinct issues. An early finding or correction does not replace the reviewer’s completed assessment.
+Include every selected reviewer in the stage’s initial round. Collect every participating role’s report, using the readiness notice or a host wait when available. Record the state each report covers, even if the target changed before the report arrived. Validate findings as they arrive, including findings reported before an assessment finishes. Reconcile later reports with earlier findings and corrections, merging duplicates without losing their originating roles or distinct issues. An early finding or correction does not replace the reviewer’s completed assessment.
 
 When a report and the available evidence leave any material disposition uncertain, seek clarification through a channel the caller permits. If no permitted channel can provide the clarification, leave the disposition unsettled and use the [limited-review endpoint](#complete-the-review). Keep affected findings standing and any unconfirmed clearance outstanding.
 

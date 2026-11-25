@@ -12,7 +12,7 @@ Identify the revision or working-tree state your report covers. When reviewing n
 
 Report every evidence-backed finding within scope. Give each a stable identifier, precise location, supporting evidence, consequences, material uncertainty, and relevant validation limitations. When a finding is one instance of a broader class of defect, name the class and identify any unchecked contexts where it could also occur.
 
-Keep optional opportunities separate and state whether any findings remain standing. You own that status for your reviewer role. On reassessment, explain whether each finding under review still stands and why.
+Keep optional opportunities separate and state whether any findings remain standing. You own that status for your reviewer role. On reassessment, give each resolved finding one line with its identifier and status. Explain why each remaining finding under review still stands.
 
 On follow-up, compare the state you assessed for this report with the state your reviewer role last assessed. If you took over the role, use its prior assessment from your handoff.
 
