@@ -112,7 +112,7 @@ The global [contribution authorization policy](GLOBAL.md#contribution-preparatio
 
 ### Package Release Note Skills
 
-The [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-humans/SKILL.md#presentation-conventions) retains `*` as its unordered list marker to stay consistent with previously published release notes.
+The [`dom-release-notes-for-humans` overlay](../skills/.dom-release-notes-for-humans/references/release-note-defaults.md#presentation-conventions) retains `*` as its unordered list marker to stay consistent with previously published release notes.
 
 ### Shared Skill Contracts
 

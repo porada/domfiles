@@ -6,6 +6,8 @@ Good release notes respect both sides of the work.
 
 This skill keeps the evidence maintainers need separate from the notes readers see, producing accurate, concise release notes that help people decide whether and how to update.
 
+Invoke `release-notes-for-humans` by name to draft or review release notes.
+
 ## Install
 
 ```sh

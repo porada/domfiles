@@ -98,7 +98,7 @@ The global [**Remote mutation** and **Git publication** policies](../GLOBAL.md#g
 
 ### Release Scope
 
-The release note workflow’s [scope clarification](../../skills/release-notes-for-humans/SKILL.md#release-scope) prevents guessed package ownership, grouping, or release boundaries from silently omitting changes or including earlier releases. The decision pauses only affected release units, leaving independently established scopes available for drafting.
+The release note workflow’s [scope clarification](../../skills/release-notes-for-humans/references/write-and-review-release-notes.md#release-scope) prevents guessed package ownership, grouping, or release boundaries from silently omitting changes or including earlier releases. The decision pauses only affected release units, leaving independently established scopes available for drafting.
 
 ### Scope Changes
 

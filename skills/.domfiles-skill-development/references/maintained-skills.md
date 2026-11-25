@@ -6,7 +6,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `agent-task-directories`
 - `agent-task-relay`
 - `dom-refine-agent-workflow`: Recommend improvements to agent instructions and workflows.
-- `dom-release-notes-for-humans`
+- `dom-release-notes-for-humans`: Write or review package release notes and changelog entries.
 - `dom-sensible-commit-flow`
 - `dom-sensible-contribution-flow`
 - `fish-shell-scripting`
@@ -15,7 +15,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `posix-shell-scripting`
 - `prepush`: Prepare commits for publication.
 - `refine-agent-workflow`: Recommend improvements to agent instructions and workflows.
-- `release-notes-for-humans`
+- `release-notes-for-humans`: Write or review package release notes and changelog entries.
 - `sensible-commit-flow`
 - `sensible-contribution-flow`
 - `simple-github-cli`
