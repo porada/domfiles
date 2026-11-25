@@ -2,7 +2,7 @@
 
 # agent-task-directories
 
-Temporary agent files belong in Git-ignored task directories in your project and should be cleaned up when no longer needed.
+Temporary agent files belong in Git-ignored task directories and should be cleaned up when no longer needed.
 
 This skill defines task-specific directories for experiments, helper scripts, and notes, with clear rules for ownership, reuse, and cleanup. Agents can retain what they need and remove what they don’t without disturbing another task’s work.
 

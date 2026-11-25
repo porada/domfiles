@@ -68,7 +68,7 @@ Before accepting a behavioral limit or a fix with a wider side effect, reproduce
 
 When checking a collection of inputs across checkpoints, specify which supported settings to exercise, which outcomes to compare, and when to stop. Investigate unexplained changes in those outcomes. Use coverage changes to identify cases worth probing.
 
-For a long check, identify the source revision, any pending changes under test, and the build. When concurrent writes could affect the result, have the check’s owner use an isolated copy in storage managed through `agent-task-directories`, with its own writable dependencies and outputs. Provide initial reviewers with prepared inputs or run the check for them when its writes would exceed their read-only assignment. Verify a change to the checking tool on a case that demonstrates it before using the tool’s results. If scratch files interfere with a hook, follow the procedure for project checks in `agent-task-directories`.
+For a long check, identify the source revision, any pending changes under test, and the build. When concurrent writes could affect the result, have the check’s owner run it in an isolated repository copy with its own writable dependencies and outputs, using `agent-task-directories` to choose its location. Provide initial reviewers with prepared inputs or run the check for them when its writes would exceed their read-only assignment. Verify a change to the checking tool on a case that demonstrates it before using the tool’s results. If scratch files interfere with a hook, follow the procedure for project checks in `agent-task-directories`.
 
 ### Clean Up During the Flow
 

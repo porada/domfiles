@@ -82,4 +82,4 @@ When handing the user commands, put each separate command in its own code block.
 
 ## Keep Task Artifacts Separate
 
-Before creating, reusing, retaining, or cleaning up task artifacts, follow [Manage Task Artifacts](manage-task-artifacts.md).
+Keep scratch files out of the proposed changes and unrelated project checks, preserve evidence needed for handoff, and clean up only files the task owns.

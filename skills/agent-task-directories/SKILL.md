@@ -8,7 +8,7 @@ description: |-
 
 # Agent Task Directories
 
-Temporary agent files belong in Git-ignored task directories in your project and should be cleaned up when no longer needed.
+Temporary agent files belong in Git-ignored task directories and should be cleaned up when no longer needed.
 
 This skill defines task-specific directories for experiments, helper scripts, and notes, with clear rules for ownership, reuse, and cleanup. Agents can retain what they need and remove what they don’t without disturbing another task’s work.
 
@@ -24,12 +24,15 @@ Before cleaning up, moving, promoting to a durable location, renaming, retaining
 
 ## Establish Task Storage
 
-1. Create a task directory only when the task needs agent-managed scratch artifacts, and keep all of them inside it. Use subdirectories for task phases rather than additional roots or nested task directories.
-2. Place it directly under the relevant project root as `.agent-<name>`, unless applicable project instructions require another approved namespace. Choose a filesystem-safe name that identifies the task, adding a short suffix when needed to avoid collisions.
-3. Create a fresh destination for a new task without merging into an existing path. A matching name doesn’t establish ownership. If the destination already exists or creating it doesn’t establish ownership, choose another name. Don’t adopt its contents.
-4. Before adding any other artifacts, create a `.gitignore` containing a single `*` line. Don’t add an exception for `.gitignore` itself. Keep this file throughout the directory’s lifetime. If initialization fails, stop before writing artifacts.
+1. Create task storage only when the task needs agent-managed scratch artifacts. Keep them together at each required location, with subdirectories for task phases.
+2. For ordinary scratch files such as notes and helper scripts, create `.agent-<name>` directly under the relevant project root unless applicable project instructions require another approved namespace.
+3. Put repository copies and exports in a separate task directory outside the project root and every directory the project’s checks scan. Use that location for artifacts containing the project’s tool configuration or any other configuration its checks could load. Create the task directory with access limited to the user, under the user’s temporary directory when that location qualifies. Remove the task directory once [its contents are no longer needed](references/directory-lifecycle.md#retain-and-clean-up).
+4. Choose a filesystem-safe name that identifies the task. Create a fresh destination without merging into an existing path. A matching name doesn’t establish ownership. If the destination already exists or creating it doesn’t establish ownership, choose another name. Add a short suffix if needed. Don’t adopt existing contents.
+5. Before adding any other artifacts, create a `.gitignore` containing a single `*` line. Don’t add an exception for `.gitignore` itself. Keep this file throughout the directory’s lifetime. If initialization fails, stop before writing artifacts.
 
-The local ignore file removes the need for a repository-wide namespace exclusion. Ignore rules don’t ensure that every editor or tool excludes the directory, guarantee confidentiality, or untrack existing files. Don’t force-add scratch artifacts to Git. Changes to editor settings, repository-wide ignore rules, or test configuration require separate task authorization.
+After creating a task directory, check once which whole-tree checks read it, including checks run by commit hooks. Its `.gitignore` hides its contents from Git. Tools that consult only root-level ignore files, such as `prettier --check .`, can still read scratch files and load configuration they find inside the directory. Keep ordinary scratch files in a state those checks accept.
+
+The local ignore file makes a repository-wide Git exclusion unnecessary. Ignore rules don’t guarantee confidentiality or untrack existing files. Don’t force-add scratch artifacts to Git. Changes to editor settings, repository-wide ignore rules, or test configuration require separate task authorization.
 
 ## Coordinate Ownership
 
@@ -43,7 +46,7 @@ Copy only the inputs the task requires. Don’t sweep up other task directories,
 
 Treat scratch contents as task artifacts, not canonical project source. Don’t activate copied configuration or instruction files merely because they’re present. Execution against them must be part of the authorized task and follow its execution boundaries.
 
-Before a broad scan or check, account for how the tool discovers inputs and establish which paths a formatter or other auto-fix may write. Use supported per-run inputs or exclusions when they preserve required coverage, including relevant new project files. If scratch paths still interfere, identify which command discovers them, including commands run by a pre-commit hook, and follow [Handle Interference With Project Checks](references/directory-lifecycle.md#handle-interference-with-project-checks).
+Before a broad scan or check, account for how the tool discovers inputs and establish which paths a formatter or other auto-fix may write. Use supported per-run inputs or exclusions when they preserve required coverage, including relevant new project files. If scratch paths interfere with a check or hook, follow [Handle Interference With Project Checks](references/directory-lifecycle.md#handle-interference-with-project-checks).
 
 When intentionally validating scratch files, target them explicitly and use the narrowest supported ignore override. Verify that every intended file was actually checked. A successful zero-file check is not validation.
 
