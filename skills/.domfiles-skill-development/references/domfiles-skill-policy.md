@@ -20,6 +20,14 @@ Classify every project-authored skill by canonical source and supported installa
 - **Public independence:** Public skills must deliver their advertised behavior when independently installed.
 - **Script ownership:** Internal and global skills may own scripts. Public skills remain documentation-only.
 
+## Write T3 Code Thread Requests
+
+T3 Code requires an explicit user request to open new top-level threads. When a command-only skill’s invocation supplies that request, put it in the skill’s `SKILL.md` in the user’s voice. Begin with “When I invoke `<command>` in T3 Code, I explicitly request …” using that command’s own name.
+
+Trace the routes through every skill the command calls. The outermost command and each independently invocable command-only skill along the way must carry the full request for the routes it can start. Name the roles, when each needs a separate thread, any required replacements or repeats, and who coordinates the work.
+
+Preserve the caller’s scope and approvals. If a model-invocable workflow already has the user’s request for a review through T3 Code, the review command can state the user’s standing choice of top-level threads for that review. Ask before opening threads outside an established request. A command that only offers to open a thread leaves that decision to the user.
+
 ## Synchronize Skill Links
 
 When task-authorized changes under `skills/` alter the exposed skill set, logical names, or source-to-install mapping, update the [maintained skill inventory](maintained-skills.md) and the applicable provisioning and retired-name mappings together. Validate the proposed source before activating it through global discovery.
