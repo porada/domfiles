@@ -2,7 +2,7 @@
 
 ## Profiles
 
-The default reviewer models are Claude Opus and Codex GPT Sol. On every review interface, use the model’s default effort from global **Thread effort** for each reviewer profile. Each initial `super-review` group uses both profiles. Each cold review group uses the Claude profile in a fresh reviewer session. Apply the user’s runtime overrides to every role they cover. When the user selects only Claude or Codex, use that provider’s default reviewer profile.
+The default reviewer models are Claude Opus and Codex GPT Sol. On every review interface, use the model’s default effort from global **Thread effort** for each reviewer profile. Each peer review group uses both profiles. Each cold review group uses the Claude profile in a fresh reviewer session. Apply the user’s runtime overrides to every role they cover. When the user selects only Claude or Codex, use that provider’s default reviewer profile.
 
 For each new assessment, resolve the reviewer’s model against the current catalog in that review unit’s bound environment. Honor an explicitly requested version. Otherwise, identify the newest available version within the selected provider and model family. If the initial listing is partial, search the catalog for that family and verify the version order. If the required version cannot be established or run at the selected effort, pause the affected reviewer and report the limitation. Keep the resolved profile when resuming or replacing a reviewer for the same assessment.
 
@@ -10,7 +10,7 @@ For each new assessment, resolve the reviewer’s model against the current cata
 
 Use the title supplied by the calling workflow, or capture the initiating thread’s title when the run begins. Use the following titles in stage order for reviewer sessions. When the interface has no session title field, retain the title with the session reference in the user-visible review record.
 
-- **Initial reviewers:** `⤷ Review: <title>`
+- **Peer reviewers:** `⤷ Peer Review: <title>`
 - **First cold review:** `⤷ Cold Review: <title>`
 - **Repeated cold reviews:** `⤷ Cold Review <n>: <title>`, beginning with `2`.
 

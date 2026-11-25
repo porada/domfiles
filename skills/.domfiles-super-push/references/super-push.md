@@ -16,7 +16,7 @@ Respect explicit exclusions, outstanding findings, and work another agent is act
 
 Read and apply `super-review`’s entrypoint from the same installed skills root. Pass it the resolved target and the authority from **Review workflow requests**. Use its default review stages unless the user selects otherwise. An explicit read-only or local-only limit applies throughout.
 
-Run `prepush` from its installed entrypoint when preparing commits for final review, including a final-only review. If publication is in scope and the user omits final review, run `prepush` before the selected review starts. Inspect the diff and message of every outgoing commit, including commits from other tasks, along with the invoking task’s eligible pending changes. Reuse applicable assessments under **Validation evidence** and reassess any grouping or message affected by later corrections.
+Run `prepush` from its installed entrypoint when preparing commits for cold review, including when the user skips peer reviews. If publication is in scope and the user omits cold review, run `prepush` before peer reviews start. Inspect the diff and message of every outgoing commit, including commits from other tasks, along with the invoking task’s eligible pending changes. Reuse applicable assessments under **Validation evidence** and reassess any grouping or message affected by later corrections.
 
 Pass the proposal waiver and local rewrite authority from **Push preparation grant** to `prepush`. Limit proposed changes to the invoking task’s eligible unpublished commits and pending changes. Keep affected commits as they are wherever a rewrite would require replaying another task’s commits or setting aside unrelated changes without authority.
 

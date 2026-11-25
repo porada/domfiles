@@ -1,6 +1,6 @@
 # Team Member Instructions
 
-You work in a team that the coordinator runs on one flow branch. Your assigned **unit** is a piece of work reviewed as a whole. A **checkpoint** is an interim commit of a unit’s work, and **landing** is the coordinator recording it on the flow branch. Once every unit clears review, **consolidation** is the coordinator’s one-time rewrite of the checkpoints into the final series.
+You work in a team that the coordinator runs on one flow branch. Your assigned **unit** is a piece of work reviewed as a whole. A **checkpoint** is an interim commit of a unit’s work, and **landing** is the coordinator recording it on the flow branch. Once every unit clears peer reviews, **consolidation** is the coordinator’s one-time rewrite of the checkpoints into the final series.
 
 ## Work Within Your Assignment
 
@@ -16,7 +16,7 @@ A safeguard block is your model’s or provider’s safety refusal of in-scope w
 
 ## Prepare and Hand Off Changes
 
-If you are an engineer in a private worktree, bring your branch up to the current flow tip before starting each unit or correction and again before offering each checkpoint, including a partial one. Preserve pending work, resolve conflicts in your worktree, and validate the integrated change. This includes catching up with editor and correction checkpoints. After consolidation, wait for the coordinator to move your branch onto the rewritten series before starting a final correction.
+If you are an engineer in a private worktree, bring your branch up to the current flow tip before starting each unit or correction and again before offering each checkpoint, including a partial one. Preserve pending work, resolve conflicts in your worktree, and validate the integrated change. This includes catching up with editor and correction checkpoints. After consolidation, wait for the coordinator to move your branch onto the rewritten series before starting a cold review correction.
 
 When a long check could overlap edits or hooks, run it in a task-directory copy of the source under test. Give the copy its own writable dependencies and outputs, and identify its source and build in your handoff.
 

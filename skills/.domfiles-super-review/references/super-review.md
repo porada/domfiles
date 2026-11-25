@@ -2,7 +2,7 @@
 
 ## Resolve the Invocation
 
-Resolve the task scope, selected stages, review target, and runtime overrides from the invocation and conversation. The default sequence is the initial review stage followed by `cold-review`, which prepares and reviews the committed target.
+Resolve the task scope, selected stages, review target, and runtime overrides from the invocation and conversation. By default, run peer reviews of the changes followed by a cold review of the committed target.
 
 Apply explicit selections directly. Do not require a particular phrase or fixed option syntax to select stages or change settings. Ask only when materially different interpretations remain.
 
@@ -20,50 +20,50 @@ Retain the calling workflow’s repository roles, authorization, cross-repositor
 
 ### Choose Review Groups
 
-Within each unit, choose review groups separately for the initial and final stages. A group is the target assigned to the selected initial reviewers or one final reviewer. Default to one group per selected stage, and split substantial work when separable areas can be reviewed concurrently with full coverage and less elapsed time. Honor explicit user selections. Use the shared review process’s independence and scheduling criteria.
+Within each unit, choose review groups separately for peer reviews and cold review. A group is the target assigned to the selected peer reviewers or one cold reviewer. Default to one group per selected stage, and split substantial work when separable areas can be reviewed concurrently with full coverage and less elapsed time. Honor explicit user selections. Use the shared review process’s independence and scheduling criteria.
 
-Initial groups may cover separate areas of the changes. Final groups contain one or more whole commits. Several initial groups may feed one final review, one initial group may feed several final reviews, and multiple commits may receive either separate final reviews or one combined review. Commit boundaries alone do not establish independence. Keep changes together when separate assessments would miss their combined behavior.
+Peer review groups may cover separate areas of the changes. Each cold review group contains one or more whole commits. Several peer review groups may feed one cold review, or one peer review group may feed several cold reviews. Commits can receive separate cold reviews or one combined cold review. Commit boundaries alone do not establish independence. Keep changes together when separate assessments would miss their combined behavior.
 
-Before dispatch, account for every task-owned change in the unit’s review target, including uncommitted work, and its integration boundaries across the groups. Assign shared contracts and interactions to groups with enough context to assess them. Retain overlapping evidence where necessary. If a boundary cannot be reviewed adequately within separate groups, combine the affected work. Splitting must preserve each selected initial profile’s coverage of every part of the target and final coverage of the complete committed target. Do not change commit structure merely to match review groups.
+Before dispatch, account for every task-owned change in the unit’s review target, including uncommitted work, and its integration boundaries across the groups. Assign shared contracts and interactions to groups with enough context to assess them. Retain overlapping evidence where necessary. If a boundary cannot be reviewed adequately within separate groups, combine the affected work. When splitting groups, preserve each selected peer reviewer profile’s coverage of the full target and cold review coverage of the complete committed target. Do not change commit structure merely to match review groups.
 
-Keep group scopes, dependencies, reviewer roles, clearance, and each final group’s committed target and cycle accounting in the shared review record. Map each final group to the initial groups and validation it depends on. A ready group may advance while independent groups or units remain in an earlier stage. Wait for unfinished work that supplies a prerequisite or affects its reviewed result or integration boundaries.
+Keep group scopes, dependencies, reviewer roles, clearance, and each cold review group’s committed target and cycle accounting in the shared review record. Map each cold review group to the peer review groups and validation it depends on. A ready group may advance while independent groups or units remain in an earlier stage. Wait for unfinished work that supplies a prerequisite or affects its reviewed result or integration boundaries.
 
-## Run the Initial Stage
+## Run Peer Reviews
 
-Start the selected initial reviewers for each group independently against that group’s target and the unit’s common starting baseline. Run each group’s reviewers concurrently by default, subject to host capacity. Include relevant integration requirements and comparison evidence through the shared assignment contract. Each selected reviewer assesses the complete group. Do not divide that coverage between the profiles.
+Start the selected peer reviewers for each group independently against that group’s target and the unit’s common starting baseline. Run each group’s reviewers concurrently by default, subject to host capacity. Include relevant integration requirements and comparison evidence through the shared assignment contract. Each selected reviewer assesses the complete group. Do not divide that coverage between the profiles.
 
 Use the shared review process to collect their reports, resolve disputes, apply authorized corrections, and obtain the required clearance.
 
-Before starting or continuing a final group, complete every initial group and validation it depends on, including each selected initial role’s clearance for its complete assigned target. Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to those initial reviewers. A limited review or partial clearance does not satisfy this prerequisite. Independent groups’ outstanding reports or session settlement do not delay this transition. When the initial stage was omitted, retain required validation without creating initial reviewers.
+Before starting or continuing a cold review, complete the peer reviews and validation its group depends on. Each selected peer reviewer role must clear its complete assigned target. Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to those peer reviewers. A limited review or partial clearance does not satisfy this prerequisite. Independent groups’ outstanding reports or session settlement do not delay this transition. If the invocation omits peer reviews, complete the required validation before cold review.
 
-Later follow-ups may resume initial reviewers through the shared continuity process. Ordinary corrections during the final stage do not automatically reopen the initial stage.
+Later follow-ups may resume peer reviewers through the shared continuity process. Ordinary cold review corrections do not automatically reopen peer reviews.
 
-## Run the Final Stage
+## Run Cold Review
 
-Read and apply the installed `cold-review` entrypoint for the selected final groups, including a final-only request. Continue in the invoking thread with the established review record, target groups, dependencies, settings, and authority. Schedule independent groups through the shared review process.
+Read and apply the installed `cold-review` entrypoint for each selected cold review group. Continue in the invoking thread with the established review record, target groups, dependencies, settings, and authority. Schedule independent groups through the shared review process.
 
 ## Respond to Changes
 
 Distinguish corrections within the agreed task from changes to its target, intended behavior, or covered work.
 
-On an authorized scope change, identify affected units and groups, including cross-repository dependencies. Start the selected stages for newly added groups. For existing groups, follow up with their latest valid reviewers for the applicable stages. Refresh each affected initial group’s selected reviewers when that stage participated. Do not create reviewers for a stage the invocation omitted.
+On an authorized scope change, identify affected units and groups, including cross-repository dependencies. Start the selected stages for newly added groups. For existing groups, follow up with their latest valid reviewers for the applicable stages. For peer reviews, refresh clearance for each selected reviewer role in the affected groups. Do not create reviewers for a stage the invocation omitted.
 
-If initial grouping changes after review starts, retain standing findings and required follow-ups with the affected work. Reuse clearance only for coverage whose premises still hold, and obtain the remaining assessments through the shared continuity process without resetting recovery limits.
+If the peer review groups change after their reviews start, retain standing findings and required follow-ups with the affected work. Reuse clearance only for coverage whose premises still hold, and obtain the remaining assessments through the shared continuity process without resetting recovery limits.
 
-For a final stage that has started, complete any affected initial groups and validation before continuing the affected groups under `cold-review`.
+Once cold review has started, complete any affected peer reviews and validation before resuming the affected cold review groups.
 
 Reassess every group whose reviewed result or integration boundaries changed, even without scope expansion. Unrelated concurrent changes do not automatically become part of a review unit.
 
 ## Complete the Run
 
-Complete the run only when every group in every participating unit has its selected stage’s required clearance, no repeat is pending, and no accepted work or required verification remains, including checks spanning groups and repositories. For units selecting the final stage, every task-owned change in the unit’s review target must be committed and included in a final group’s cleared target, with the integration boundaries covered. Account explicitly for any deferrals the calling workflow permits.
+Complete the run only when every group in every participating unit has its selected stage’s required clearance, no repeat is pending, and no accepted work or required verification remains, including checks spanning groups and repositories. For each unit that includes cold review, verify that every task-owned change in its review target has been committed and that the cleared cold review groups cover those commits and their integration boundaries. Account explicitly for any deferrals the calling workflow permits.
 
-Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to every reviewer and capability probe session created for the run, including initial, replacement, and repeated final-review sessions. Distinguish review clearance from any remaining settlement limitation.
+Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to every reviewer and capability probe session created for the run, including peer reviewers, cold reviewers, their replacements, and any repeated cold reviews. Distinguish review clearance from any remaining settlement limitation.
 
 Report the resulting commits, permitted deferrals, and material remaining limitations under the governing reporting policy. Do not claim clearance for deferred scope.
 
 ## Settle the Coordinating Thread
 
-Apply these rules when `super-review` completes its final stage or a calling workflow expressly routes here after cold review. Settle the coordinating thread only at the outermost task’s final handoff, when no outstanding matters remain assigned to it. Review clearance alone doesn’t establish that condition. Outstanding matters include required work, verification, user questions, approvals, required human actions, promised follow-ups, and reported optional opportunities. Return from a routed review to its caller for any remaining work. Keep the thread open on explicit request or while an item remains outstanding, and identify any remaining work at handoff. Use the completion action permitted by global **Thread cleanup**.
+Apply these rules when `super-review` completes cold review or a calling workflow expressly routes here after cold review. Settle the coordinating thread only at the outermost task’s final handoff, when no outstanding matters remain assigned to it. Review clearance alone doesn’t establish that condition. Outstanding matters include required work, verification, user questions, approvals, required human actions, promised follow-ups, and reported optional opportunities. Return from a routed review to its caller for any remaining work. Keep the thread open on explicit request or while an item remains outstanding, and identify any remaining work at handoff. Use the completion action permitted by global **Thread cleanup**.
 
 An item stops preventing settlement only when completed, explicitly dismissed by the user within applicable requirements, or transferred to a verified follow-up destination with established continuation ownership and user visibility. Deferring required work or an optional opportunity in the same thread doesn’t resolve it for settlement. Don’t infer an item’s disposition from an agent’s proposal or user silence. Disclosed limitations don’t prevent settlement unless they require a decision or further action to complete the agreed endpoint.

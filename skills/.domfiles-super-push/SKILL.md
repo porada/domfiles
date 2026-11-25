@@ -10,6 +10,6 @@ metadata:
 
 # Super Push
 
-When I invoke `super-push` in T3 Code, I explicitly request separate top-level reviewer threads by default for the selected `super-review` stages, including required replacements and repeated final reviews. The agent in my invoking thread coordinates the review and push.
+When I invoke `super-push` in T3 Code, I explicitly request separate top-level reviewer threads by default for the selected `super-review` stages, including required replacements and repeated cold reviews. The agent in my invoking thread coordinates the review and push.
 
 Follow [Super Push](references/super-push.md) for every invocation.
