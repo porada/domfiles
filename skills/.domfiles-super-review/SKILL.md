@@ -10,8 +10,8 @@ metadata:
 
 # Super Review
 
-For `super-review` in T3 Code, I explicitly request separate top-level reviewer threads by default for the selected stages, including required replacements and repeated final reviews. This standing request covers direct invocations and reviews routed by another workflow. Follow [Establish Review Execution](references/super-review.md#establish-review-execution) for interface selection and verification. Continue follow-ups through the selected interface’s permitted lifecycle.
+For `super-review` in T3 Code, I explicitly request separate top-level reviewer threads by default for the selected stages, including required replacements and repeated final reviews. This standing request covers direct invocations and reviews routed by another workflow.
 
-Follow [Super Review](references/super-review.md) for every invocation. Before selecting reviewer settings or creating sessions, read [Reviewer Defaults](references/reviewer-defaults.md).
+Follow [Super Review](references/super-review.md) for every invocation. Before selecting reviewer settings or creating sessions, read [Reviewer Defaults](references/reviewer-defaults.md) and [Review Execution](references/review-execution.md).
 
-When the final stage is selected, also follow [Final Review](references/final-review.md). Read it before preparing any final group’s committed target or starting its reviewer.
+When the final stage is selected, apply the `cold-review` entrypoint before preparing its committed target or starting its reviewer.

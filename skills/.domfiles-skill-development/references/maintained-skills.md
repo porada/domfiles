@@ -5,6 +5,7 @@ Domfiles maintains these [public and global skills](domfiles-skill-policy.md#cla
 - `agent-documentation`
 - `agent-task-directories`
 - `agent-task-relay`
+- `cold-review`: Review committed changes with a fresh reviewer and resolve validated findings.
 - `dom-refine-agent-workflow`: Recommend improvements to agent instructions and workflows.
 - `dom-release-notes-for-humans`: Write or review package release notes and changelog entries.
 - `dom-sensible-commit-flow`

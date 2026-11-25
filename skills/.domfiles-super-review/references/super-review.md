@@ -2,7 +2,7 @@
 
 ## Resolve the Invocation
 
-Resolve the task scope, selected stages, review target, and runtime overrides from the invocation and conversation. The default sequence is the initial review stage, commit preparation, and final review stage.
+Resolve the task scope, selected stages, review target, and runtime overrides from the invocation and conversation. The default sequence is the initial review stage followed by `cold-review`, which prepares and reviews the committed target.
 
 Apply explicit selections directly. Do not require a particular phrase or fixed option syntax to select stages or change settings. Ask only when materially different interpretations remain.
 
@@ -28,51 +28,19 @@ Before dispatch, account for every task-owned change in the unit’s review targ
 
 Keep group scopes, dependencies, reviewer roles, clearance, and each final group’s committed target and cycle accounting in the shared review record. Map each final group to the initial groups and validation it depends on. A ready group may advance while independent groups or units remain in an earlier stage. Wait for unfinished work that supplies a prerequisite or affects its reviewed result or integration boundaries.
 
-## Establish Review Execution
-
-Use T3 Code top-level threads by default. Select another interface only when the default cannot meet host or workflow requirements, or the user explicitly selects an alternative. Before using that alternative, satisfy [Verify an Equivalent Interface](#verify-an-equivalent-interface). An invocation-specific interface selection remains binding.
-
-Keep reviewer assessments read-only. The coordinator owns corrections and commit operations. Reviewers may delegate bounded read-only work under the shared review process, within the established authorization and host limits. Follow the applicable interface branch below before dependent review work.
-
-### Bind T3 Reviewers
-
-Resolve each unit’s T3 environment before looking up or registering its project. For a checkout on another machine, use the host’s linked-environment interface and establish access there. SSH access alone does not establish T3 availability. Preserve the selected remote checkout rather than substituting a local clone or registering its path on the local machine.
-
-Verify that the resolved environment supports the selected [reviewer profiles](reviewer-defaults.md#profiles), target project and checkout binding, and required creation, continuation, observation, and cleanup operations before dependent work.
-
-Within that environment, use T3 Code top-level threads in the project corresponding to the unit’s repository, bound to its target checkout. Resolve the project from its registered workspace and repository identity rather than inheriting the initiating thread’s project or using the skill’s source location. When no matching project exists, register the existing repository folder there automatically without creating a repository or worktree.
-
-Retain the environment, project, and checkout binding with the unit’s review record. Select that environment and project explicitly when creating each reviewer, including replacements and repeated final reviews, and use that environment for subsequent thread operations. For an existing worktree, use the corresponding project’s host-supported worktree binding rather than its root checkout. A directory instruction in the review prompt does not establish the thread’s environment, project, or checkout.
-
-Follow the host’s top-level-thread lifecycle, distinguishing it from delegate-task requirements. If this route cannot supply a required capability, return to [Establish Review Execution](#establish-review-execution) or report the specific limitation. Do not change the requested provider or settings.
-
-### Verify an Equivalent Interface
-
-An alternative must preserve the selected profiles, environment and exact checkout, independent initial assessment and prompt isolation, receiving instructions and access boundaries, retrievable review evidence, follow-up continuity, and permitted cleanup. The coordinator and user must be able to inspect reviewer status, reports, and session references, revisit retained evidence, and identify each role by its prescribed title. A matching model or a thread creation capability alone doesn’t establish equivalence. Use the shared reviewer-continuity process for interfaces that require fresh sessions, preserving independent initial reports before reconciliation of inherited findings. This route cannot substitute a delegate for a task that specifically tests top-level session behavior.
-
-Verify those properties before dependent review work using documented host capabilities and applicable retained execution evidence. If a material property remains uncertain, use a minimal bounded capability probe only within established execution and disclosure authority. State the property, expected evidence, effects, and stopping condition before the probe. Keep its task neutral and preserve the selected provider, model, settings, environment, and checkout. Exercise only the uncertain lifecycle operations and apply [Settle Reviewer Sessions](#settle-reviewer-sessions) to every probe session. A probe does not count as review clearance. If authority or evidence is insufficient, retain the limitation instead of dispatching the review.
-
-Record the chosen interface, supporting evidence, limitations, and applicable authority in the existing review record. Reuse that verification only while its relevant capabilities and execution conditions remain applicable. Interface selection doesn’t authorize another processing service, recipient, checkout, or disclosure. It also doesn’t bypass denied access or reset recovery limits. Follow host requirements when selecting and operating the alternative, including its project binding, continuation, observation, and cleanup mechanisms. Apply the remaining review stages to that interface without weakening their assessment, evidence, or clearance requirements.
-
 ## Run the Initial Stage
 
 Start the selected initial reviewers for each group independently against that group’s target and the unit’s common starting baseline. Run each group’s reviewers concurrently by default, subject to host capacity. Include relevant integration requirements and comparison evidence through the shared assignment contract. Each selected reviewer assesses the complete group. Do not divide that coverage between the profiles.
 
 Use the shared review process to collect their reports, resolve disputes, apply authorized corrections, and obtain the required clearance.
 
-Before starting or continuing a final group, complete every initial group and validation it depends on, including each selected initial role’s clearance for its complete assigned target. Apply [Settle Reviewer Sessions](#settle-reviewer-sessions) to those initial reviewers. A limited review or partial clearance does not satisfy this prerequisite. Independent groups’ outstanding reports or session settlement do not delay this transition. When the initial stage was omitted, retain required validation without creating initial reviewers.
+Before starting or continuing a final group, complete every initial group and validation it depends on, including each selected initial role’s clearance for its complete assigned target. Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to those initial reviewers. A limited review or partial clearance does not satisfy this prerequisite. Independent groups’ outstanding reports or session settlement do not delay this transition. When the initial stage was omitted, retain required validation without creating initial reviewers.
 
 Later follow-ups may resume initial reviewers through the shared continuity process. Ordinary corrections during the final stage do not automatically reopen the initial stage.
 
-### Settle Reviewer Sessions
-
-Settle each reviewer and capability probe through the selected interface’s lifecycle when the session is no longer needed, applying global **Thread cleanup** to top-level threads. Verify completion whether automatic or through a permitted action. A verified transient cleanup failure may remain pending while subsequent review work proceeds only when the session’s assigned work is complete, its required evidence is retained and retrievable, and host state establishes that no live operation can interfere with that work. For reviewers, that includes every required assessment, follow-up, and clearance. Uncertain execution state or unfinished review obligations still pause the dependent transition.
-
-Keep each pending cleanup action and its session reference in the existing review record. The coordinator owns bounded retries under host and governing retry limits, without starting a replacement reviewer merely to obtain cleanup. Resolve pending cleanup before final handoff when possible. If recovery is exhausted or the permitted action remains unavailable, report the affected sessions and remaining limitation without claiming settlement. Preserve conversation history, reopenability, and the distinction between completion and archival.
-
 ## Run the Final Stage
 
-For each final group, follow [Final Review](final-review.md), beginning with committed-target preparation. Schedule independent final groups through the shared review process.
+Read and apply the installed `cold-review` entrypoint for the selected final groups, including a final-only request. Continue in the invoking thread with the established review record, target groups, dependencies, settings, and authority. Schedule independent groups through the shared review process.
 
 ## Respond to Changes
 
@@ -82,9 +50,7 @@ On an authorized scope change, identify affected units and groups, including cro
 
 If initial grouping changes after review starts, retain standing findings and required follow-ups with the affected work. Reuse clearance only for coverage whose premises still hold, and obtain the remaining assessments through the shared continuity process without resetting recovery limits.
 
-Once a final group starts, retain its identity through corrections and follow-ups rather than splitting or merging it. Update its committed target to cover affected work and new interactions, allowing overlap with other final groups when needed. Add new final groups for independently added scope. Each existing group retains its reviewer continuity, cycle accounting, and repeat obligations.
-
-For a final stage that has started, follow [Continue After Changes](final-review.md#continue-after-changes).
+For a final stage that has started, complete any affected initial groups and validation before continuing the affected groups under `cold-review`.
 
 Reassess every group whose reviewed result or integration boundaries changed, even without scope expansion. Unrelated concurrent changes do not automatically become part of a review unit.
 
@@ -92,10 +58,12 @@ Reassess every group whose reviewed result or integration boundaries changed, ev
 
 Complete the run only when every group in every participating unit has its selected stage’s required clearance, no repeat is pending, and no accepted work or required verification remains, including checks spanning groups and repositories. For units selecting the final stage, every task-owned change in the unit’s review target must be committed and included in a final group’s cleared target, with the integration boundaries covered. Account explicitly for any deferrals the calling workflow permits.
 
-Apply [Settle Reviewer Sessions](#settle-reviewer-sessions) to every reviewer and capability probe session created for the run, including initial, replacement, and repeated final-review sessions. Distinguish review clearance from any remaining settlement limitation.
+Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to every reviewer and capability probe session created for the run, including initial, replacement, and repeated final-review sessions. Distinguish review clearance from any remaining settlement limitation.
 
 Report the resulting commits, permitted deferrals, and material remaining limitations under the governing reporting policy. Do not claim clearance for deferred scope.
 
-When the completed run included the final stage, settle your own coordinating thread at the coordinating task’s final handoff only when no outstanding matters remain assigned to that thread. These include required work, verification, user questions, approvals, required human actions, promised follow-ups, and reported optional opportunities. Review clearance alone doesn’t establish this condition. Otherwise, leave the thread open and state what remains. Use the completion action permitted by global **Thread cleanup**.
+## Settle the Coordinating Thread
+
+Apply these rules when `super-review` completes its final stage or a calling workflow expressly routes here after cold review. Settle the coordinating thread only at the outermost task’s final handoff, when no outstanding matters remain assigned to it. Review clearance alone doesn’t establish that condition. Outstanding matters include required work, verification, user questions, approvals, required human actions, promised follow-ups, and reported optional opportunities. Return from a routed review to its caller for any remaining work. Keep the thread open on explicit request or while an item remains outstanding, and identify any remaining work at handoff. Use the completion action permitted by global **Thread cleanup**.
 
 An item stops preventing settlement only when completed, explicitly dismissed by the user within applicable requirements, or transferred to a verified follow-up destination with established continuation ownership and user visibility. Deferring required work or an optional opportunity in the same thread doesn’t resolve it for settlement. Don’t infer an item’s disposition from an agent’s proposal or user silence. Disclosed limitations don’t prevent settlement unless they require a decision or further action to complete the agreed endpoint.
