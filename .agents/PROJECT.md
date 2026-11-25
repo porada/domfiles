@@ -130,6 +130,12 @@ The [skill description policy](../skills/.domfiles-skill-development/references/
 
 The [`human-facing-writing`](../skills/human-facing-writing/SKILL.md) description and its [GitHub Collaboration route](../skills/human-facing-writing/SKILL.md#specialized-routes) intentionally frame GitHub material as copy within the authorized writing unit to avoid Snyk Agent Scan’s [W011 warning](https://github.com/snyk/agent-scan/blob/main/docs/issue-codes.md#W011) on [skills.sh](https://www.skills.sh/porada/domfiles). This framing preserves the skill’s applicability, but its effect on the scan remains unverified.
 
+### Subagent Review Corrections
+
+In a sample of 30 review runs, 27 had follow-up reports. Corrections accounted for 156 of the 204 follow-up findings by introducing a defect or leaving an earlier finding unresolved. By position in a reviewer’s sequence, the share of follow-up reports with at least one new finding was 27/54 for the first report, 16/41 for the second, 13/24 for the third, 10/17 for the fourth, and 29/65 for the fifth and later reports. New findings persisted across the sequence, supporting the same depth of [correction verification](../skills/subagent-review-flow/SKILL.md#coordinate-fixes-and-re-review) throughout a review.
+
+A retrospective test recorded where two consecutive qualifying reports from one reviewer would have triggered the [stall rule](../skills/subagent-review-flow/SKILL.md#apply-the-stall-rule) in this sample. It used the 149 attributed findings that coordinators later corrected as a proxy for validated findings. Each run had two reviewers, and run length was their combined number of follow-up reports assessing a correction. In all seven runs with ten or more such reports, the rule fired by a reviewer’s fourth follow-up report. It fired by that point in three of the other 20 runs with follow-ups. Counting all 156 attributed findings gave the same result. Both counts excluded findings of uncertain origin. Runs with few follow-up reports had fewer opportunities to trigger the rule, and the test examined only this threshold.
+
 ### Writing Skill Organization
 
 [`human-facing-writing`](../skills/human-facing-writing/SKILL.md) keeps general writing, including connected prose and substantive revision, self-contained in `SKILL.md`. Length, multiple reading units, and revision difficulty alone do not justify loading references. References serve specialized requirements, such as technical accuracy grounded in implementation evidence.
