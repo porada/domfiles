@@ -18,9 +18,11 @@ Separate shared prerequisites from conditional modes, phases, or recovery paths 
 
 ## Base Skills and Overlays
 
-Both an overlay and its base must be [model-invocable](skill-descriptions.md#invocation-mode). Determine whether every supported installation guarantees the base.
+Match the overlay’s [invocation mode](skill-descriptions.md#invocation-mode) to the base. Determine whether every supported installation guarantees the base.
 
-Match the base’s complete trigger family and exclusions without adding or narrowing applicability. When the base is guaranteed, state in the description that the overlay applies whenever the base applies. In that declaration, name the base by its stable frontmatter `name` without repeating the base description’s capability, trigger family, or exclusions. Applicability follows the resolved task whether the base is selected directly or through another workflow. Don’t infer automatic client loading from that declaration.
+For a model-invocable overlay, match the base’s complete trigger family and exclusions without adding or narrowing applicability. When the base is guaranteed, state in the description that the overlay applies whenever the base applies. In that declaration, name the base by its stable frontmatter `name` without repeating the base description’s capability, trigger family, or exclusions. Applicability follows the resolved task whether the base is selected directly or through another workflow. Don’t infer automatic client loading from that declaration.
+
+For a command-only overlay, give the user a command description and preserve the base’s explicit invocation requirement. Use the installation’s governing instructions to load the overlay when the usual base command runs. Verify that invoking the base alone reaches the customization before the affected action. Also check that the base works independently wherever installing it alone is supported.
 
 Define the overlay’s customizations in its body and route from its entrypoint to the base. Keep the base unaware of the overlay and routing one-way from overlay to base. Don’t make a base discover or activate overlays. Reuse already loaded guidance without skipping required workflow checkpoints for later operations.
 

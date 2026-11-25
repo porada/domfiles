@@ -8,7 +8,7 @@ For each command-only skill, set `policy.allow_implicit_invocation` to `false` i
 
 For every model-invocable project-authored skill, preserve complete positive and negative trigger boundaries and precedence conditions, and state them as direct reasons to load the skill. Include a peer name only when it defines one such condition. Don’t make loading depend on whether the task already exhibits a quality the skill enforces, such as being “focused,” “simple,” “safe,” or “bounded.”
 
-For every command-only project-authored skill, write concise human-facing UI copy instead. Lead with the action and outcome, add only task scope or exclusions that distinguish the command, and omit the invocation condition and literal slash command.
+For every command-only project-authored skill, write concise human-facing UI copy instead. State what the command helps the user accomplish. Add only scope or exclusions that distinguish it. Keep implementation details in the workflow and omit the invocation condition and literal slash command.
 
 When a description advertises review or audit, define an explicit read-only branch in the body or routed references that follows the shared workflow precedence in `agent-documentation`.
 
