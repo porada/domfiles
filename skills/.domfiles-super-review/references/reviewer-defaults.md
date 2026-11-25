@@ -8,7 +8,7 @@ For each new assessment, resolve the reviewer’s model against the current cata
 
 ## Titles
 
-Use the title supplied by the calling workflow, or capture the initiating thread’s title when the run begins. Use the following titles in stage order for reviewer sessions. When the interface has no session title field, retain the title with the session reference in the user-visible review record.
+The task title in reviewer names defaults to the initiating thread’s title. Apply global **Thread titles** when the review begins and use the selected task title throughout. Use the following titles in stage order for reviewer sessions. When the interface has no session title field, retain the title with the session reference in the user-visible review record.
 
 - **Peer reviewers:** `⤷ Peer Review: <title>`
 - **First cold review:** `⤷ Cold Review: <title>`
