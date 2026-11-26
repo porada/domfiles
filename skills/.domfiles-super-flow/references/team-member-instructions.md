@@ -16,7 +16,7 @@ A safeguard block is your model’s or provider’s safety refusal of in-scope w
 
 ## Prepare and Hand Off Changes
 
-If you are an engineer in a private worktree, bring your branch up to the current flow tip before starting each unit or correction and again before offering each checkpoint, including a partial one. Preserve pending work, resolve conflicts in your worktree, and validate the integrated change. This includes catching up with editor and correction checkpoints. After consolidation, wait for the coordinator to move your branch onto the rewritten series before starting a cold review correction.
+If you are an engineer in a private worktree, bring your branch up to the local flow tip before starting each unit or correction and again before offering each checkpoint, including a partial one. If the coordinator flags a checkpoint that affects your active work, incorporate it before relying on the affected files or interfaces. Preserve pending work, resolve conflicts in your worktree, and rerun the checks affected by the combined change. After consolidation, wait for the coordinator to move your branch onto the rewritten series before starting a cold review correction.
 
 When a long check could overlap edits or hooks, run it in a task-directory copy of the source under test. Give the copy its own writable dependencies and outputs, and identify its source and build in your handoff.
 

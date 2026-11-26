@@ -8,6 +8,6 @@ Resolve models against the current catalog in the invoking thread’s T3 environ
 
 ## Names and Titles
 
-The proposed flow title defaults to the invoking thread’s title. Apply global **Thread titles** when selecting it.
+Choose a very short flow title from the agreed task, usually two or three words. Choose it without consulting the invoking thread’s title. Use it for the coordinator and throughout the flow, independently of Git branch names.
 
 Give every member, including the coordinator, a short name unique within the team. Title each new member thread `⤷ <Role> <Name>: <flow title>` using the title in the flow record. Keep a reused member thread’s title unless the user requests a change.
