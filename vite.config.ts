@@ -30,6 +30,6 @@ export default defineConfig({
 			'chmod +x',
 			'pnpm lint:sh',
 		],
-		'home/.local/share/*': 'pnpm lint:sh',
+		'home/.local/share/**': 'pnpm lint:sh',
 	},
 });

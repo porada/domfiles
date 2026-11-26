@@ -2,6 +2,8 @@
 
 # shellcheck source=../share/domlib
 . "$(dirname "$(realpath "$0")")/../share/domlib"
+# shellcheck source=../share/domfiles/sync/repository
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/repository"
 
 # shellcheck disable=SC2119
 if ! __is_brew_installed; then
@@ -10,137 +12,14 @@ fi
 
 __print_heading "Syncing domfiles on $(__pretty_hostname)"
 
-sync_repository=false
+if can_update_repository; then
+  revision="$(__domfiles_revision)"
+  update_repository
 
-if __is_callable git; then
-  if branch="$(git -C "$DOMFILES" symbolic-ref --quiet --short HEAD)"; then
-    case "$branch" in
-      main | master)
-        sync_repository=true
-        ;;
-      *)
-        __print_info "Skipping repository update on branch \`$branch\`"
-        ;;
-    esac
-  else
-    status="$?"
-
-    if [ "$status" -eq 1 ]; then
-      __print_info 'Skipping repository update because `HEAD` does not reference a branch'
-    else
-      __print_error 'Failed to identify the current branch'
-    fi
-  fi
-fi
-
-if [ "$sync_repository" = true ]; then
-  stash_failed=false
-  stashed_changes=false
-
-  # Ensure the remote uses SSH
-  if __is_ssh_configured; then
-    current="$(git -C "$DOMFILES" remote get-url origin)"
-    updated="$(__string_replace "$current" 'https://github.com/' 'git@github.com:')"
-    updated="$(__string_replace "$updated" 'porada/dotfiles' 'porada/domfiles')"
-
-    if [ "$current" = "$updated" ]; then
-      __print_confirmation "$current"
-    elif __ git -C "$DOMFILES" ls-remote "$updated" HEAD > /dev/null; then
-      __ git -C "$DOMFILES" remote set-url origin "$updated"
-    else
-      __print_error "Failed to verify SSH access to \`$updated\`. Leaving \`origin\` as \`$current\`"
-    fi
-  fi
-
-  __print_heading_dimmed 'Fetching the latest changes'
-  current_revision="$(__domfiles_revision)"
-
-  if ! __ git -C "$DOMFILES" fetch --quiet; then
-    __print_error 'Failed to fetch the latest changes'
-  elif __ git -C "$DOMFILES" merge-base --is-ancestor '@{u}' HEAD; then
-    __print_confirmation 'Up to date'
-  else
-    merge_base_status="$?"
-
-    if [ "$merge_base_status" -ne 1 ]; then
-      __print_error 'Failed to compare the local and upstream revisions'
-    else
-      skipped_files="$(__git_skipped_files "$DOMFILES")"
-
-      if [ -n "$skipped_files" ]; then
-        __print_warning 'The repository contains skipped files. Unskip them before updating'
-      else
-        __print_heading 'Updating the repository'
-
-        if ! __domfiles_is_clean; then
-          __print_warning 'The repository contains uncommitted changes'
-
-          if ! stash_list="$(git -C "$DOMFILES" stash list --format='%H')"; then
-            __print_error 'Failed to stash uncommitted changes'
-            stash_failed=true
-          elif ! __ git -C "$DOMFILES" stash; then
-            __print_error 'Failed to stash uncommitted changes'
-            stash_failed=true
-          elif ! updated_stash_list="$(git -C "$DOMFILES" stash list --format='%H')"; then
-            __print_error 'Failed to verify stashed changes'
-            stash_failed=true
-            stashed_changes=true
-          elif [ "$updated_stash_list" != "$stash_list" ]; then
-            stashed_changes=true
-          fi
-        fi
-
-        if [ "$stash_failed" = false ]; then
-          if __ git -C "$DOMFILES" rebase; then
-            __print_confirmation 'Repository updated'
-          else
-            echo
-            __print_error 'Failed to update the repository'
-
-            git_dir="$(git -C "$DOMFILES" rev-parse --absolute-git-dir)" || exit
-
-            if [ -d "$git_dir/rebase-apply" ] || [ -d "$git_dir/rebase-merge" ]; then
-              __ git -C "$DOMFILES" rebase --abort || exit
-            fi
-          fi
-        fi
-      fi
-    fi
-  fi
-
-  if [ "$stashed_changes" = true ]; then
-    if __ git -C "$DOMFILES" stash pop --index --quiet; then
-      __print_confirmation 'Changes restored'
-    else
-      __print_error 'Failed to restore uncommitted changes'
-
-      __print_heading_dimmed 'Restoring the original state'
-      skipped_files="$(__git_skipped_files "$DOMFILES")"
-
-      if [ -n "$skipped_files" ]; then
-        __print_error_and_exit \
-          'The repository contains skipped files. Unskip them before restoring the original state'
-      fi
-
-      __ git -C "$DOMFILES" reset --hard "$current_revision" || {
-        status="$?"
-        __print_error 'Failed to restore the original state'
-        exit "$status"
-      }
-
-      if __ git -C "$DOMFILES" stash pop --index --quiet; then
-        __print_confirmation 'Original state restored'
-      else
-        status="$?"
-        __print_error 'Failed to restore the original state'
-        exit "$status"
-      fi
-    fi
-  fi
-
-  if [ "$(__domfiles_revision)" != "$current_revision" ]; then
+  # Restart with the original arguments so the updated sync runs
+  if [ "$(__domfiles_revision)" != "$revision" ]; then
     __print_heading_dimmed 'Restarting the sync after the update'
-    __domfiles_exec --print sync
+    __domfiles_exec --print sync "$@"
   fi
 fi
 
