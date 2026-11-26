@@ -1,0 +1,297 @@
+#!/bin/sh
+
+# Installs Homebrew package `$1` with any remaining arguments unless it is
+# already installed. Marks formulas as installed on request and links keg-only
+# formulas
+install_package() (
+  if ! __is_brew_installed "$1"; then
+    __print_heading "Installing \`$1\`"
+    __ brew install --quiet "$@"
+  fi
+
+  # Cask-installed apps don’t need any additional treatment
+  for param; do
+    if [ "$param" = '--cask' ]; then
+      return
+    fi
+  done
+
+  formula_info="$(brew info "$1" --json=v2)" || return
+
+  # Treat only an explicit `false` receipt flag as needing protection
+  # from `brew autoremove`
+  formula_is_requested="$(printf '%s\n' "$formula_info" \
+    | jq 'all(.formulae[0].installed[]?; .installed_on_request != false)')" || return
+
+  if [ "$formula_is_requested" = false ] && ! __is_ci; then
+    __print_heading_dimmed "Marking \`$1\` as installed on request"
+    __ brew tab --formula --installed-on-request "$1" > /dev/null
+  fi
+
+  # Ensure keg-only formulas are linked
+  formula_is_keg_only="$(printf '%s\n' "$formula_info" \
+    | jq '.formulae[0].keg_only == true')" || return
+
+  formula_is_linked="$(printf '%s\n' "$formula_info" \
+    | jq '(.formulae[0].linked_keg // "") != ""')" || return
+
+  if [ "$formula_is_keg_only" = true ] && [ "$formula_is_linked" = false ]; then
+    __print_heading_dimmed "Linking \`$1\`"
+    __ brew link --quiet --overwrite --force "$1"
+  fi
+)
+
+# Sets up the Tailscale service on macOS outside CI. Reports a failed service
+# setup without failing the stage
+provision_tailscale() (
+  if ! __is_macos || __is_ci; then
+    return
+  fi
+
+  __print_heading_dimmed 'Setting up Tailscale' || return
+  restart_tailscale_service || __print_error 'Failed to set up Tailscale'
+)
+
+# Restarts the Tailscale service with `sudo` after confirmation in a local
+# interactive session, then gives old root-owned kegs back to the current user.
+# Skips the restart when the service already runs the installed version and no
+# old keg contains root-owned files
+restart_tailscale_service() (
+  cellar="$(brew --cellar tailscale)" || return
+  cellar="$(realpath "$cellar")" || return
+  prefix="$(brew --prefix tailscale)" || return
+  current_keg="$(realpath "$prefix")" || return
+
+  if [ "$(dirname "$current_keg")" != "$cellar" ]; then
+    __print_error 'Failed to locate the current Tailscale keg in its Homebrew cellar'
+    return 1
+  fi
+
+  # Repair only old kegs, preserving root ownership of the current service
+  set --
+
+  for keg in "$cellar"/*; do
+    if [ ! -d "$keg" ] || [ -L "$keg" ] || [ "$keg" = "$current_keg" ]; then
+      continue
+    fi
+
+    root_path="$(find "$keg" -user root -print -quit)" || return
+
+    if [ -n "$root_path" ]; then
+      set -- "$@" "$keg"
+    fi
+  done
+
+  # A version match cannot prove an old keg is unused after a Homebrew revision
+  if [ $# -eq 0 ]; then
+    # Recognize current and legacy Homebrew service registrations
+    for service_name in homebrew.mxcl.tailscale sh.brew.tailscale; do
+      if [ -f "/Library/LaunchDaemons/$service_name.plist" ] \
+        && launchctl print "system/$service_name" > /dev/null 2>&1; then
+        if version_info="$("$prefix/bin/tailscale" version --daemon --json 2> /dev/null)"; then
+          if printf '%s\n' "$version_info" | jq --exit-status \
+            '(.long | type == "string") and (.long != "") and (.long == .daemonLong)' > /dev/null; then
+            __print_confirmation 'Already set up'
+            return 0
+          fi
+        fi
+
+        break
+      fi
+    done
+  fi
+
+  if [ -n "${SSH_CONNECTION-}" ]; then
+    __print_warning 'Tailscale setup requires a local session to avoid disconnecting SSH'
+    return 0
+  fi
+
+  if ! __is_stdin_tty; then
+    __print_warning 'Tailscale setup requires an interactive terminal'
+    return 0
+  fi
+
+  if ! __confirm 'Set up Tailscale with `sudo`?'; then
+    return 0
+  fi
+
+  brew_prefix="$(brew --prefix)" || return
+
+  if ! __ sudo "$brew_prefix/bin/brew" services stop tailscale; then
+    __print_error 'Failed to stop Tailscale'
+    return 1
+  fi
+
+  service_info="$(sudo "$brew_prefix/bin/brew" services info tailscale --json)" || return
+
+  # Homebrew can report an unsuccessful stop through a warning alone
+  if ! printf '%s\n' "$service_info" | jq --exit-status '
+    length == 1 and .[0].name == "tailscale" and .[0].loaded == false
+      and .[0].running == false and .[0].pid == null
+  ' > /dev/null; then
+    __print_error 'Failed to verify that Tailscale stopped'
+    return 1
+  fi
+
+  if ! __ sudo "$brew_prefix/bin/brew" services start tailscale; then
+    __print_error 'Failed to start Tailscale'
+    return 1
+  fi
+
+  if [ $# -gt 0 ]; then
+    owner="$(id -u)" || return
+    __ sudo chown -hR "$owner" "$@" || return
+  fi
+)
+
+# Installs dependencies, provisions packages, and sets `fish` as the login shell
+sync_install() (
+  __print_heading 'Installing dependencies'
+  __ brew analytics off
+
+  if __is_ci; then
+    __ brew --version
+  else
+    __print_heading_dimmed 'Ensuring `brew` is up to date'
+    __ brew update --quiet
+    __ brew upgrade --overwrite || true
+  fi
+
+  # Install primary dependencies
+  install_package fish
+  install_package fisher
+  install_package git
+  install_package node
+  install_package pnpm
+
+  # Install development dependencies
+  if ! __is_ci; then
+    install_package actionlint
+    install_package claude-code@latest --cask
+    install_package cmark-gfm
+    install_package codex --cask
+    install_package coreutils
+    install_package fd
+    install_package gh
+    install_package jq
+    install_package pandoc
+    install_package ripgrep
+    install_package shellcheck
+    install_package vim
+    install_package yarn
+    install_package yq
+    install_package zizmor
+
+    if __is_macos; then
+      install_package google-chrome --adopt --cask
+      install_package just
+      install_package mole
+      install_package rust
+      install_package tailscale
+      install_package zed --adopt --cask
+    fi
+  fi
+
+  # Link Homebrew-installed tools
+  if __is_callable git; then
+    __print_heading_dimmed 'Linking Homebrew-installed tools'
+    __symlink \
+      "$(brew --prefix git)/share/git-core/contrib/diff-highlight/diff-highlight" \
+      "$HOME/.local/bin/git-diff-highlight"
+  fi
+
+  # Provision packages whose setup goes beyond installation. Put new
+  # package-specific setup in a `provision_<package>` function when removing the
+  # package would make the step unnecessary. Keep definitions and calls in
+  # alphabetical order, and let each function decide whether it applies and
+  # which failures it tolerates
+  provision_tailscale
+
+  # Configure `pnpm`
+  if __is_callable node && __is_callable pnpm; then
+    __print_heading_dimmed 'Configuring `pnpm`'
+
+    # Install `pnpm` completions
+    if __is_callable fish; then
+      __mkdir "$DOMFILES_CONFIG_DIR/fish/completions"
+      __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_CONFIG_DIR/fish/completions/pnpm.fish"
+    fi
+
+    # Exclude `pnpm` directories from Time Machine backups
+    if __is_macos; then
+      __ pnpm config set --global macosBackup --json '{
+  "excludeModulesDir": true,
+  "excludeStoreDir": true
+}'
+    fi
+
+    # Install project dependencies
+    __print_heading_dimmed 'Installing `pnpm` dependencies'
+
+    if __domfiles_is_clean; then
+      __ pnpm --dir "$DOMFILES" --loglevel=error install --frozen-lockfile
+    else
+      __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
+    fi
+  fi
+
+  # Install `vim-plug`
+  if __is_callable vim && ! __is_vim_plug_installed && ! __is_ci; then
+    __print_heading 'Installing `vim-plug`'
+
+    url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+    __print_url "$url"
+
+    __suppress __ curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
+
+    if ! __is_vim_plug_installed; then
+      __print_error 'Failed to install `vim-plug`'
+      return 1
+    fi
+
+    __print_confirmation "$DOMFILES_VIM_PLUG"
+  fi
+
+  # Install Xcode components
+  if __is_macos && __is_xcode_installed && ! __is_ci; then
+    __print_heading_dimmed 'Installing Xcode components'
+
+    if xcrun --sdk macosx metal --version > /dev/null 2>&1; then
+      __print_confirmation 'Metal Toolchain'
+    elif __ xcodebuild -downloadComponent MetalToolchain; then
+      if __ xcrun --sdk macosx metal --version; then
+        __print_confirmation 'Metal Toolchain'
+      else
+        __print_error 'Failed to verify the Metal Toolchain after downloading'
+      fi
+    else
+      __print_error 'Failed to download the Metal Toolchain'
+    fi
+  fi
+
+  # Set `fish` as the default shell
+  fish="$(brew --prefix)/bin/fish"
+
+  if [ "$(__login_shell)" = "$fish" ] || __is_ci; then
+    return
+  fi
+
+  if ! __is_stdin_tty; then
+    __print_warning 'Setting `fish` as the default shell requires an interactive terminal'
+    return
+  fi
+
+  if ! grep -qFx -- "$fish" /etc/shells; then
+    __print_heading 'Adding `fish` to `/etc/shells`'
+    __ sudo sh -c 'printf "%s\n" "$1" >> /etc/shells' sh "$fish" || true
+  fi
+
+  __print_heading_dimmed 'Setting `fish` as the default shell'
+
+  if __ chsh -s "$fish"; then
+    __print_confirmation "$fish"
+  else
+    __print_error "Failed to set \`$fish\` as the default shell"
+    return 1
+  fi
+)

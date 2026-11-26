@@ -23,12 +23,27 @@ if can_update_repository; then
   fi
 fi
 
-__domfiles sync-migrate
-__domfiles sync-setup
-__domfiles sync-install
-__domfiles sync-macos
-__domfiles sync-update
-__domfiles sync-clean
+# Update first so upstream can repair a local stage that fails to parse
+# shellcheck source=../share/domfiles/sync/clean
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/clean"
+# shellcheck source=../share/domfiles/sync/install
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/install"
+# shellcheck source=../share/domfiles/sync/macos
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/macos"
+# shellcheck source=../share/domfiles/sync/migrate
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/migrate"
+# shellcheck source=../share/domfiles/sync/setup
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/setup"
+# shellcheck source=../share/domfiles/sync/update
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/update"
+
+# Run stages as plain commands to keep strict mode active within them
+sync_migrate
+sync_setup
+sync_install
+sync_macos
+sync_update
+sync_clean
 
 # Finish with dependency status
 __print_heading 'Sync complete'

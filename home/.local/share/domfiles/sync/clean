@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Outside CI, prunes Homebrew and pnpm caches and deletes unavailable simulator
+# devices. Removes stale files from the home directory
+sync_clean() (
+  __print_heading_dimmed 'Cleaning up'
+
+  if ! __is_ci; then
+    __ brew cleanup --prune=all || true
+    __is_callable pnpm && __ pnpm --dir "$DOMFILES" store prune
+    __is_xcode_installed && __ xcrun simctl delete unavailable
+  fi
+
+  __ rm -f "$HOME/.lesshst"
+  __ rm -f "$HOME/.npmrc"
+  __ rm -f "$HOME/.ssh/known_hosts.old"
+  __ rm -f "$HOME/.vim/autoload/plug.vim.old"
+  __ rm -f "$HOME/.viminfo"
+)
