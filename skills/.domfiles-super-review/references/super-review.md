@@ -14,7 +14,7 @@ Load `subagent-review-flow` for shared coordination. Use `sensible-commit-flow` 
 
 ## Resolve Review Units
 
-Divide the resolved review target into one unit per repository and target checkout. Each unit owns its execution binding and selected stages. Comparison-only sources remain evidence rather than becoming review units unless explicitly selected as targets.
+Divide the resolved review target into one unit per repository and target checkout. Each unit owns its execution binding and selected stages. Comparison-only sources remain evidence rather than becoming review units unless explicitly selected as targets. At startup, [choose the local destination](worktree-integration.md#choose-the-local-destination) for each standalone worktree unit. Resolve outstanding choices together. A called review takes its destinations from its caller and returns clearance to it.
 
 Retain the calling workflow’s repository roles, authorization, cross-repository dependencies, validation, and permitted deferrals. Per-unit clearance does not replace checks spanning repositories.
 
@@ -40,6 +40,8 @@ Later follow-ups may resume peer reviewers through the shared continuity process
 
 ## Run Cold Review
 
+For planned worktree integration, [check the candidate](worktree-integration.md#check-the-candidate-before-cold-review) once the committed target is prepared and before dispatch. Carry that check through calls to `cold-review`.
+
 Read and apply the installed `cold-review` entrypoint for each selected cold review group. Continue in the invoking thread with the established review record, target groups, dependencies, settings, and authority. Schedule independent groups through the shared review process.
 
 ## Respond to Changes
@@ -60,7 +62,7 @@ Complete the run only when every group in every participating unit has its selec
 
 Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to every reviewer and capability probe session created for the run, including peer reviewers, cold reviewers, their replacements, and any repeated cold reviews. Distinguish review clearance from any remaining settlement limitation.
 
-Report the resulting commits, permitted deferrals, and material remaining limitations under the governing reporting policy. Do not claim clearance for deferred scope.
+When this is the outermost command, [land each unit’s reviewed commit](worktree-integration.md#land-the-reviewed-commit) on its approved separate base before handoff. Report the resulting commits, destination, permitted deferrals, and material remaining limitations under the governing reporting policy. Do not claim clearance for deferred scope.
 
 ## Settle the Coordinating Thread
 
