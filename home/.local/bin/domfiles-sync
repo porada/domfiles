@@ -5,6 +5,27 @@
 # shellcheck source=../share/domfiles/sync/repository
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/repository"
 
+# Accept `--help` or one optional stage name and reject other arguments before
+# any changes
+stage=''
+usage='Usage: domfiles sync [--help | clean | install | macos | migrate | setup | update]'
+
+case "$#:${1-}" in
+  0:) ;;
+  1:--help)
+    printf '%s\n' "$usage" '' \
+      '`domfiles sync` checks for repository updates and runs all stages.' \
+      '`domfiles sync <stage>` runs one stage without updating the repository.'
+    exit
+    ;;
+  1:clean | 1:install | 1:macos | 1:migrate | 1:setup | 1:update)
+    stage="$1"
+    ;;
+  *)
+    __print_error_and_exit "$usage"
+    ;;
+esac
+
 # shellcheck disable=SC2119
 if ! __is_brew_installed; then
   __print_error_and_exit '`brew` needs to be installed before running `domfiles sync`'
@@ -12,7 +33,9 @@ fi
 
 __print_heading "Syncing domfiles on $(__pretty_hostname)"
 
-if can_update_repository; then
+# Update the repository only for a full sync. A named stage uses the current
+# checkout
+if [ -z "$stage" ] && can_update_repository; then
   revision="$(__domfiles_revision)"
   update_repository
 
@@ -38,6 +61,11 @@ fi
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/update"
 
 # Run stages as plain commands to keep strict mode active within them
+if [ -n "$stage" ]; then
+  "sync_$stage"
+  exit
+fi
+
 sync_migrate
 sync_setup
 sync_install

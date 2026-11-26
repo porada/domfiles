@@ -4,7 +4,7 @@
 # outside macOS
 sync_macos() (
   __print_heading 'Configuring macOS'
-  __continue_on_macos domfiles-sync-macos
+  __continue_on_macos 'domfiles sync macos'
 
   # Enable full keyboard access for all controls
   __ defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
