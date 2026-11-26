@@ -1,20 +1,21 @@
 #!/bin/sh
 
-# Installs Homebrew package `$1` with any remaining arguments unless it is
-# already installed. Marks formulas as installed on request and links keg-only
-# formulas
-install_package() (
-  if ! __is_brew_installed "$1"; then
+# Installs Homebrew package `$1` with any remaining arguments unless that
+# formula or cask is already installed. Marks formulas as installed on request
+# and links keg-only formulas
+install_homebrew_package() (
+  package_kind="$(package_type "$@")"
+
+  # Check the declared type so a same-named formula or cask can’t mask it
+  if ! brew list "$package_kind" --versions "$1" > /dev/null 2>&1; then
     __print_heading "Installing \`$1\`"
     __ brew install --quiet "$@"
   fi
 
   # Cask-installed apps don’t need any additional treatment
-  for param; do
-    if [ "$param" = '--cask' ]; then
-      return
-    fi
-  done
+  if [ "$package_kind" = --cask ]; then
+    return
+  fi
 
   formula_info="$(brew info "$1" --json=v2)" || return
 
@@ -41,6 +42,171 @@ install_package() (
   fi
 )
 
+# Installs every declared Homebrew package in mode `$1`, either `full` or
+# `core`, and runs each package’s `provision_<package>` hook after ensuring
+# it. A full sync ensures every package. A core sync skips packages in its
+# typed inventory and updates Homebrew once before installing the first
+# missing one
+install_packages() (
+  package_mode="$1"
+  package_newline='
+'
+  homebrew_updated=false
+
+  if [ "$package_mode" = core ]; then
+    __print_heading_dimmed 'Checking Homebrew packages'
+    formula_inventory="$(brew list --formula)" || return
+    cask_inventory="$(brew list --cask)" || return
+  fi
+
+  # Install declared package `$1` with its options, then run its hook. Scoped
+  # to this subshell so it doesn’t shadow `install(1)` elsewhere
+  install() {
+    if [ "$package_mode" = core ]; then
+      if [ "$(package_type "$@")" = --cask ]; then
+        package_inventory="$cask_inventory"
+      else
+        package_inventory="$formula_inventory"
+      fi
+
+      case "$package_newline$package_inventory$package_newline" in
+        *"$package_newline$1$package_newline"*)
+          return
+          ;;
+      esac
+
+      if [ "$homebrew_updated" = false ]; then
+        __print_heading_dimmed 'Ensuring `brew` is up to date'
+        __ brew update --quiet
+        homebrew_updated=true
+      fi
+    fi
+
+    install_homebrew_package "$@"
+
+    # Look up only shell functions so an executable can’t act as a hook
+    package_hook="provision_$(printf '%s' "$1" | tr -c '[:alnum:]_' '_')"
+
+    if PATH=/dev/null command -v "$package_hook" > /dev/null; then
+      (
+        # Let hooks use the system install utility
+        unset -f install
+        "$package_hook" "$package_mode"
+      )
+    fi
+  }
+
+  # Install primary dependencies
+  install fish
+  install fisher
+  install git
+  install node
+  install pnpm
+
+  # Install development dependencies
+  if ! __is_ci; then
+    install actionlint
+    install claude-code@latest --cask
+    install cmark-gfm
+    install codex --cask
+    install coreutils
+    install fd
+    install gh
+    install jq
+    install pandoc
+    install ripgrep
+    install shellcheck
+    install vim
+    install yarn
+    install yq
+    install zizmor
+
+    if __is_macos; then
+      install google-chrome --adopt --cask
+      install just
+      install mole
+      install rust
+      install tailscale
+      install zed --adopt --cask
+    fi
+  fi
+
+  if [ "$package_mode" = core ] && [ "$homebrew_updated" = false ]; then
+    __print_confirmation 'All packages installed'
+  fi
+)
+
+# Installs the domfiles checkout’s pnpm dependencies from its lockfile. Skips
+# the install when the checkout contains uncommitted changes
+install_project_dependencies() (
+  __print_heading_dimmed 'Installing `pnpm` dependencies'
+
+  if __domfiles_is_clean; then
+    __ pnpm --dir "$DOMFILES" --loglevel=error install --frozen-lockfile
+  else
+    __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
+  fi
+)
+
+# Prints `--cask` when the install options after package `$1` include `--cask`,
+# and `--formula` otherwise
+package_type() (
+  shift
+
+  for param; do
+    if [ "$param" = '--cask' ]; then
+      printf '%s\n' --cask
+      return
+    fi
+  done
+
+  printf '%s\n' --formula
+)
+
+# Each `provision_<package>` hook performs post-install work for one declared
+# package and never installs it. `install` runs it with the sync mode, `full`
+# or `core`, after ensuring the package: on every full sync, and during a core
+# sync only after installing the package. Name a hook after its package,
+# replacing characters other than letters, digits, and `_` with `_`. Define
+# one only for a package with post-install work, let it decide which modes and
+# platforms apply, and keep definitions in alphabetical order
+
+# Links Git’s `diff-highlight` script into `~/.local/bin`
+provision_git() (
+  if __is_callable git; then
+    __print_heading_dimmed 'Linking Homebrew-installed tools'
+    __symlink \
+      "$(brew --prefix git)/share/git-core/contrib/diff-highlight/diff-highlight" \
+      "$HOME/.local/bin/git-diff-highlight"
+  fi
+)
+
+# Installs pnpm’s Fish completions and its Time Machine exclusions on macOS
+# during a full sync
+provision_pnpm() (
+  if [ "$1" = core ]; then
+    return
+  fi
+
+  if __is_callable node && __is_callable pnpm; then
+    __print_heading_dimmed 'Configuring `pnpm`'
+
+    # Install `pnpm` completions
+    if __is_callable fish; then
+      __mkdir "$DOMFILES_CONFIG_DIR/fish/completions"
+      __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_CONFIG_DIR/fish/completions/pnpm.fish"
+    fi
+
+    # Exclude `pnpm` directories from Time Machine backups
+    if __is_macos; then
+      __ pnpm config set --global macosBackup --json '{
+  "excludeModulesDir": true,
+  "excludeStoreDir": true
+}'
+    fi
+  fi
+)
+
 # Sets up the Tailscale service on macOS outside CI. Reports a failed service
 # setup without failing the stage
 provision_tailscale() (
@@ -50,6 +216,29 @@ provision_tailscale() (
 
   __print_heading_dimmed 'Setting up Tailscale' || return
   restart_tailscale_service || __print_error 'Failed to set up Tailscale'
+)
+
+# Installs `vim-plug` outside CI during a full sync when Vim lacks it
+provision_vim() (
+  if [ "$1" = core ]; then
+    return
+  fi
+
+  if __is_callable vim && ! __is_vim_plug_installed && ! __is_ci; then
+    __print_heading 'Installing `vim-plug`'
+
+    url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+    __print_url "$url"
+
+    __suppress __ curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
+
+    if ! __is_vim_plug_installed; then
+      __print_error 'Failed to install `vim-plug`'
+      return 1
+    fi
+
+    __print_confirmation "$DOMFILES_VIM_PLUG"
+  fi
 )
 
 # Restarts the Tailscale service with `sudo` after confirmation in a local
@@ -144,7 +333,7 @@ restart_tailscale_service() (
   fi
 )
 
-# Installs dependencies, provisions packages, and sets `fish` as the login shell
+# Installs dependencies, runs package hooks, and sets `fish` as the login shell
 sync_install() (
   __print_heading 'Installing dependencies'
   __ brew analytics off
@@ -157,99 +346,11 @@ sync_install() (
     __ brew upgrade --overwrite || true
   fi
 
-  # Install primary dependencies
-  install_package fish
-  install_package fisher
-  install_package git
-  install_package node
-  install_package pnpm
+  install_packages full
 
-  # Install development dependencies
-  if ! __is_ci; then
-    install_package actionlint
-    install_package claude-code@latest --cask
-    install_package cmark-gfm
-    install_package codex --cask
-    install_package coreutils
-    install_package fd
-    install_package gh
-    install_package jq
-    install_package pandoc
-    install_package ripgrep
-    install_package shellcheck
-    install_package vim
-    install_package yarn
-    install_package yq
-    install_package zizmor
-
-    if __is_macos; then
-      install_package google-chrome --adopt --cask
-      install_package just
-      install_package mole
-      install_package rust
-      install_package tailscale
-      install_package zed --adopt --cask
-    fi
-  fi
-
-  # Link Homebrew-installed tools
-  if __is_callable git; then
-    __print_heading_dimmed 'Linking Homebrew-installed tools'
-    __symlink \
-      "$(brew --prefix git)/share/git-core/contrib/diff-highlight/diff-highlight" \
-      "$HOME/.local/bin/git-diff-highlight"
-  fi
-
-  # Provision packages whose setup goes beyond installation. Put new
-  # package-specific setup in a `provision_<package>` function when removing the
-  # package would make the step unnecessary. Keep definitions and calls in
-  # alphabetical order, and let each function decide whether it applies and
-  # which failures it tolerates
-  provision_tailscale
-
-  # Configure `pnpm`
+  # Install project dependencies
   if __is_callable node && __is_callable pnpm; then
-    __print_heading_dimmed 'Configuring `pnpm`'
-
-    # Install `pnpm` completions
-    if __is_callable fish; then
-      __mkdir "$DOMFILES_CONFIG_DIR/fish/completions"
-      __ fish --command 'pnpm completion fish > "$argv"' -- "$DOMFILES_CONFIG_DIR/fish/completions/pnpm.fish"
-    fi
-
-    # Exclude `pnpm` directories from Time Machine backups
-    if __is_macos; then
-      __ pnpm config set --global macosBackup --json '{
-  "excludeModulesDir": true,
-  "excludeStoreDir": true
-}'
-    fi
-
-    # Install project dependencies
-    __print_heading_dimmed 'Installing `pnpm` dependencies'
-
-    if __domfiles_is_clean; then
-      __ pnpm --dir "$DOMFILES" --loglevel=error install --frozen-lockfile
-    else
-      __print_warning 'The repository contains uncommitted changes. Skipping `pnpm install`'
-    fi
-  fi
-
-  # Install `vim-plug`
-  if __is_callable vim && ! __is_vim_plug_installed && ! __is_ci; then
-    __print_heading 'Installing `vim-plug`'
-
-    url='https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-    __print_url "$url"
-
-    __suppress __ curl --fail --location --remove-on-error "$url" --output "$DOMFILES_VIM_PLUG" --create-dirs
-
-    if ! __is_vim_plug_installed; then
-      __print_error 'Failed to install `vim-plug`'
-      return 1
-    fi
-
-    __print_confirmation "$DOMFILES_VIM_PLUG"
+    install_project_dependencies
   fi
 
   # Install Xcode components

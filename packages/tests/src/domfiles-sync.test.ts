@@ -1,11 +1,16 @@
 import { spawnSync } from 'node:child_process';
 import {
+	appendFile,
 	chmod,
 	copyFile,
+	lstat,
 	mkdir,
 	mkdtempDisposable,
 	readFile,
+	readlink,
+	realpath,
 	rm,
+	symlink,
 	writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -13,6 +18,59 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { expect, test } from 'vite-plus/test';
 
+const BREW_STUB = `#!/bin/sh
+printf 'brew %s\\n' "$*" >> "$COMMAND_LOG"
+
+if [ -n "\${BREW_FAIL-}" ] && [ "$1 $2 $3" = "install --quiet $BREW_FAIL" ]; then
+  exit 1
+fi
+
+has() {
+  for name in $1; do
+    if [ "$name" = "$2" ]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+case "$*" in
+  --version) printf 'Homebrew 0.0.0\\n' ;;
+  --prefix) printf '%s\\n' "$FAKE_PREFIX" ;;
+  '--cellar '* | '--prefix '*) printf '%s/%s\\n' "$FAKE_PREFIX" "$2" ;;
+  'info '*) printf '%s\\n' '{"formulae":[{"installed":[{"installed_on_request":true}],"keg_only":false,"linked_keg":"1.0"}]}' ;;
+  'list --cask') printf '%s\\n' $BREW_CASKS ;;
+  'list --cask --versions '*) has "$BREW_CASKS" "$4" ;;
+  'list --formula') printf '%s\\n' $BREW_FORMULAS ;;
+  'list --formula --versions '*) has "$BREW_FORMULAS" "$4" ;;
+esac
+`;
+const CASKS = ['claude-code@latest', 'codex', 'google-chrome', 'zed'];
+const FORMULAS = [
+	'actionlint',
+	'cmark-gfm',
+	'coreutils',
+	'fd',
+	'fish',
+	'fisher',
+	'gh',
+	'git',
+	'jq',
+	'just',
+	'mole',
+	'node',
+	'pandoc',
+	'pnpm',
+	'ripgrep',
+	'rust',
+	'shellcheck',
+	'tailscale',
+	'vim',
+	'yarn',
+	'yq',
+	'zizmor',
+];
 const FULL_RUN_STAGES = [
 	'migrate',
 	'setup',
@@ -64,7 +122,7 @@ async function createFixture(directory: string) {
 		join(share, 'domfiles/sync/repository')
 	);
 
-	for (const stage of STAGES) {
+	for (const stage of [...STAGES, 'core']) {
 		await writeFile(
 			join(share, 'domfiles/sync', stage),
 			[
@@ -110,6 +168,7 @@ async function runCommand(
 		join(directory, 'domfiles/home/.local/bin', command),
 		params,
 		{
+			cwd: directory,
 			encoding: 'utf8',
 			env: {
 				COMMAND_LOG: join(directory, 'commands.log'),
@@ -143,6 +202,106 @@ function runGit(cwd: string, params: string[]) {
 	}
 
 	return result.stdout;
+}
+
+async function createPackageFixture(directory: string) {
+	await createFixture(directory);
+
+	const checkout = join(directory, 'domfiles');
+	const modules = join(checkout, 'home/.local/share/domfiles/sync');
+	const stubs = join(directory, 'stubs');
+	const diffHighlight = join(
+		directory,
+		'prefix/git/share/git-core/contrib/diff-highlight'
+	);
+
+	for (const module of ['core', 'install', 'migrate', 'setup']) {
+		await copyFile(
+			join(REPOSITORY, 'home/.local/share/domfiles/sync', module),
+			join(modules, module)
+		);
+	}
+
+	await appendFile(
+		join(modules, 'install'),
+		'\nprovision_jq() (\n  install -d "$HOME/jq-hook"\n  printf \'hook jq %s\\n\' "$1" >> "$COMMAND_LOG"\n)\n'
+	);
+	await mkdir(diffHighlight, { recursive: true });
+	await writeFile(join(diffHighlight, 'diff-highlight'), '');
+
+	for (const source of ['.agents', 'home/.claude', 'skills']) {
+		await mkdir(join(checkout, source), { recursive: true });
+	}
+
+	await rm(join(stubs, 'git'));
+	await writeExecutable(join(stubs, 'brew'), BREW_STUB);
+
+	for (const command of ['chsh', 'defaults', 'fish', 'pnpm', 'sudo', 'vim']) {
+		await writeExecutable(
+			join(stubs, command),
+			`#!/bin/sh\nprintf '${command} %s\\n' "$*" >> "$COMMAND_LOG"\n`
+		);
+	}
+
+	for (const command of ['launchctl', 'xcodebuild']) {
+		await writeExecutable(join(stubs, command), '#!/bin/sh\nexit 1\n');
+	}
+
+	for (const { hook, hookDirectory } of [
+		{ hook: 'provision_codex', hookDirectory: directory },
+		{ hook: 'provision_fd', hookDirectory: stubs },
+	]) {
+		await writeExecutable(
+			join(hookDirectory, hook),
+			`#!/bin/sh\nprintf '${hook} %s\\n' "$*" >> "$COMMAND_LOG"\n`
+		);
+	}
+
+	await writeExecutable(
+		join(stubs, 'curl'),
+		[
+			'#!/bin/sh',
+			'printf \'curl %s\\n\' "$*" >> "$COMMAND_LOG"',
+			'',
+			'while [ $# -gt 0 ]; do',
+			'  if [ "$1" = --output ]; then',
+			'    mkdir -p "$(dirname "$2")"',
+			'    printf \'plug\\n\' > "$2"',
+			'  fi',
+			'',
+			'  shift',
+			'done',
+			'',
+		].join('\n')
+	);
+	await writeExecutable(
+		join(stubs, 'getent'),
+		"#!/bin/sh\nprintf 'foo:x:1:1:foo:/home/foo:/bin/zsh\\n'\n"
+	);
+	await writeExecutable(
+		join(stubs, 'id'),
+		"#!/bin/sh\ncase \"$1\" in -P) printf 'foo:*:1:1::0:0:foo:/home/foo:/bin/zsh\\n' ;; *) printf 'foo\\n' ;; esac\n"
+	);
+	await writeExecutable(
+		join(stubs, 'uname'),
+		"#!/bin/sh\ncase \"$1\" in -s) printf 'Darwin\\n' ;; *) printf 'foo\\n' ;; esac\n"
+	);
+	runGit(checkout, ['init', '--quiet', '--initial-branch=foo']);
+	runGit(checkout, ['add', '--all']);
+	runGit(checkout, ['commit', '--quiet', '--message=foo']);
+
+	return {
+		checkout: await realpath(checkout),
+		env: {
+			...GIT_ENV,
+			FAKE_PREFIX: join(directory, 'prefix'),
+			PATH: `${stubs}::${process.env.PATH ?? ''}`,
+		},
+	};
+}
+
+function lines(text: string, prefix: string) {
+	return text.split('\n').filter((line) => line.startsWith(prefix));
 }
 
 test('defines a function for every accepted stage', () => {
@@ -183,52 +342,90 @@ test.each([
 	expect(result.commands).toContain('git -C');
 });
 
-test('restarts a full sync after an update repairs a broken stage', async () => {
+test('runs only core setup through `domfiles sync --core`', async () => {
 	await using directory = await mkdtempDisposable(
 		join(tmpdir(), 'domfiles-sync-')
 	);
 	await createFixture(directory.path);
 
-	const checkout = join(directory.path, 'domfiles');
-	const upstream = join(directory.path, 'upstream.git');
-	const update = join(directory.path, 'update');
-	const stagePath = 'home/.local/share/domfiles/sync/install';
-	const stage = await readFile(join(checkout, stagePath), 'utf8');
-
-	await rm(join(directory.path, 'stubs/git'));
-	await writeFile(
-		join(checkout, stagePath),
-		'sync_install() (\n  if then\n)\n'
-	);
-	runGit(checkout, ['init', '--quiet', '--initial-branch=main']);
-	runGit(checkout, ['add', '--all']);
-	runGit(checkout, ['commit', '--quiet', '--message=foo']);
-	runGit(directory.path, ['clone', '--quiet', '--bare', checkout, upstream]);
-	runGit(checkout, ['remote', 'add', 'origin', upstream]);
-	runGit(checkout, ['fetch', '--quiet', 'origin']);
-	runGit(checkout, ['branch', '--quiet', '--set-upstream-to=origin/main']);
-	runGit(directory.path, ['clone', '--quiet', upstream, update]);
-	await writeFile(join(update, stagePath), stage);
-	runGit(update, ['commit', '--quiet', '--all', '--message=bar']);
-	runGit(update, ['push', '--quiet']);
-
-	const result = await runCommand(
-		directory.path,
-		'domfiles',
-		['sync'],
-		GIT_ENV
-	);
+	const result = await runCommand(directory.path, 'domfiles', [
+		'sync',
+		'--core',
+	]);
 
 	expect(result.status).toBe(0);
-	expect(result.stages).toStrictEqual(
-		FULL_RUN_STAGES.map((stage) => `stage ${stage}`)
-	);
-	expect(
-		result.stdout.match(/Restarting the sync after the update/g)
-	).toHaveLength(1);
-	expect(result.commands).toBe('brew --version\nbrew --version\n');
-	expect(runGit(checkout, ['log', '-1', '--format=%s'])).toBe('bar\n');
+	expect(result.stages).toStrictEqual(['stage core']);
+	expect(result.stdout).not.toContain('dependencies');
+	expect(result.commands).toContain('git -C');
 });
+
+test.each([
+	{ command: 'domfiles sync', params: ['sync'], stages: FULL_RUN_STAGES },
+	{
+		command: 'domfiles sync --core',
+		params: ['sync', '--core'],
+		stages: ['core'],
+	},
+])(
+	'restarts `$command` after an update repairs a broken stage',
+	async ({ params, stages }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const checkout = join(directory.path, 'domfiles');
+		const upstream = join(directory.path, 'upstream.git');
+		const update = join(directory.path, 'update');
+		const stagePath = 'home/.local/share/domfiles/sync/install';
+		const stage = await readFile(join(checkout, stagePath), 'utf8');
+
+		await rm(join(directory.path, 'stubs/git'));
+		await writeFile(
+			join(checkout, stagePath),
+			'sync_install() (\n  if then\n)\n'
+		);
+		runGit(checkout, ['init', '--quiet', '--initial-branch=main']);
+		runGit(checkout, ['add', '--all']);
+		runGit(checkout, ['commit', '--quiet', '--message=foo']);
+		runGit(directory.path, [
+			'clone',
+			'--quiet',
+			'--bare',
+			checkout,
+			upstream,
+		]);
+		runGit(checkout, ['remote', 'add', 'origin', upstream]);
+		runGit(checkout, ['fetch', '--quiet', 'origin']);
+		runGit(checkout, [
+			'branch',
+			'--quiet',
+			'--set-upstream-to=origin/main',
+		]);
+		runGit(directory.path, ['clone', '--quiet', upstream, update]);
+		await writeFile(join(update, stagePath), stage);
+		runGit(update, ['commit', '--quiet', '--all', '--message=bar']);
+		runGit(update, ['push', '--quiet']);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			params,
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(result.stages).toStrictEqual(
+			stages.map((stage) => `stage ${stage}`)
+		);
+		expect(
+			result.stdout.match(/Restarting the sync after the update/g)
+		).toHaveLength(1);
+		expect(result.stderr).toContain(`$ domfiles ${params.join(' ')}\n`);
+		expect(result.commands).toBe('brew --version\nbrew --version\n');
+		expect(runGit(checkout, ['log', '-1', '--format=%s'])).toBe('bar\n');
+	}
+);
 
 test.each(STAGES)(
 	'runs only the `%s` stage from the current checkout',
@@ -278,9 +475,12 @@ test.each([
 
 		expect(result.status).toBe(0);
 		expect(result.stdout).toMatchInlineSnapshot(`
-			"Usage: domfiles sync [--help | clean | install | macos | migrate | setup | update]
+			"Usage: domfiles sync [--core | --help | clean | install | macos | migrate | setup | update]
 
 			\`domfiles sync\` checks for repository updates and runs all stages.
+
+			\`domfiles sync --core\` checks for repository updates, refreshes links, and installs missing packages.
+
 			\`domfiles sync <stage>\` runs one stage without updating the repository.
 			"
 		`);
@@ -297,6 +497,9 @@ test.each([
 	[['install ']],
 	[['install', 'foo']],
 	[['--help', 'foo']],
+	[['--core', 'install']],
+	[['install', '--core']],
+	[['--core', '--help']],
 ])('rejects %j before running any command', async (params) => {
 	await using directory = await mkdtempDisposable(
 		join(tmpdir(), 'domfiles-sync-')
@@ -311,7 +514,7 @@ test.each([
 	expect(result.status).toBe(1);
 	expect(result.stdout).toBe('');
 	expect(result.stderr).toMatchInlineSnapshot(`
-		"× Usage: domfiles sync [--help | clean | install | macos | migrate | setup | update]
+		"× Usage: domfiles sync [--core | --help | clean | install | macos | migrate | setup | update]
 		"
 	`);
 	expect(result.commands).toBe('');
@@ -353,25 +556,29 @@ test('skips the `macos` stage outside macOS', async () => {
 	);
 });
 
-test('stops a stage at its first failing command', async () => {
-	await using directory = await mkdtempDisposable(
-		join(tmpdir(), 'domfiles-sync-')
-	);
-	await createFixture(directory.path);
+test.each([
+	{ param: 'install', stage: 'install' },
+	{ param: '--core', stage: 'core' },
+])(
+	'stops `domfiles sync $param` at its first failing command',
+	async ({ param, stage }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
 
-	const result = await runCommand(
-		directory.path,
-		'domfiles',
-		['sync', 'install'],
-		{
-			FAIL_STAGE: 'install',
-		}
-	);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', param],
+			{ FAIL_STAGE: stage }
+		);
 
-	expect(result.status).toBe(1);
-	expect(result.stages).toStrictEqual(['stage install']);
-	expect(result.stdout).not.toContain('continued after failure');
-});
+		expect(result.status).toBe(1);
+		expect(result.stages).toStrictEqual([`stage ${stage}`]);
+		expect(result.stdout).not.toContain('continued after failure');
+	}
+);
 
 test('stops a full sync at its first failing stage', async () => {
 	await using directory = await mkdtempDisposable(
@@ -391,4 +598,189 @@ test('stops a full sync at its first failing stage', async () => {
 	]);
 	expect(result.stdout).not.toContain('continued after failure');
 	expect(result.stdout).not.toContain('dependencies');
+});
+
+test('refreshes links without Homebrew work in a core sync when every package is installed', async () => {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const { checkout, env } = await createPackageFixture(directory.path);
+	const skills = join(directory.path, 'home/.agents/skills');
+
+	await mkdir(skills, { recursive: true });
+	await symlink(join(checkout, 'skills/prose'), join(skills, 'prose'));
+
+	const result = await runCommand(
+		directory.path,
+		'domfiles',
+		['sync', '--core'],
+		{
+			...env,
+			BREW_CASKS: CASKS.join(' '),
+			BREW_FORMULAS: FORMULAS.join(' '),
+		}
+	);
+
+	expect(result.status).toBe(0);
+	expect(result.commands).toBe(
+		[
+			'brew --version',
+			'brew list --formula',
+			'brew list --cask',
+			`pnpm --dir ${checkout} --loglevel=error install --frozen-lockfile`,
+			'',
+		].join('\n')
+	);
+	expect(result.stdout).toContain('All packages installed');
+	expect(result.stdout).not.toContain('Linking Homebrew-installed tools');
+	expect(result.stdout).not.toContain('Setting up Tailscale');
+	expect(result.stderr).not.toMatch(/No such file|cannot|failed/i);
+	await expect(lstat(join(skills, 'prose'))).rejects.toMatchObject({
+		code: 'ENOENT',
+	});
+	await expect(readlink(join(skills, 'human-facing-writing'))).resolves.toBe(
+		join(checkout, 'skills/human-facing-writing')
+	);
+});
+
+test('installs missing packages and runs only their core hooks', async () => {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const { env } = await createPackageFixture(directory.path);
+	const missing = new Set(['fd', 'git', 'jq', 'pnpm', 'tailscale', 'vim']);
+
+	const result = await runCommand(
+		directory.path,
+		'domfiles',
+		['sync', '--core'],
+		{
+			...env,
+			BREW_CASKS: CASKS.filter((cask) => cask !== 'codex').join(' '),
+			BREW_FORMULAS: [
+				...FORMULAS.filter((formula) => !missing.has(formula)),
+				'codex',
+			].join(' '),
+		}
+	);
+	const commands = result.commands.split('\n');
+	const hookDirectory = await lstat(join(directory.path, 'home/jq-hook'));
+
+	expect(result.status).toBe(0);
+	expect(lines(result.commands, 'brew install ')).toStrictEqual([
+		'brew install --quiet git',
+		'brew install --quiet pnpm',
+		'brew install --quiet codex --cask',
+		'brew install --quiet fd',
+		'brew install --quiet jq',
+		'brew install --quiet vim',
+		'brew install --quiet tailscale',
+	]);
+	expect(lines(result.commands, 'brew update')).toStrictEqual([
+		'brew update --quiet',
+	]);
+	expect(commands.indexOf('brew update --quiet')).toBeLessThan(
+		commands.indexOf('brew install --quiet git')
+	);
+	expect(lines(result.commands, 'hook ')).toStrictEqual(['hook jq core']);
+	expect(hookDirectory.isDirectory()).toBe(true);
+	expect(result.stdout).toContain('Linking Homebrew-installed tools');
+	expect(result.stdout).toContain('Setting up Tailscale');
+	expect(result.stdout).not.toContain('Configuring `pnpm`');
+	expect(result.stdout).not.toContain('default shell');
+	expect(result.commands).not.toMatch(
+		/^(chsh|curl|fish|pnpm config|provision_codex|provision_fd) /m
+	);
+	expect(result.commands).toContain('install --frozen-lockfile');
+});
+
+test('runs hooks for installed packages and finishes the install stage with system setup', async () => {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const { env } = await createPackageFixture(directory.path);
+
+	const result = await runCommand(
+		directory.path,
+		'domfiles',
+		['sync', 'install'],
+		{
+			...env,
+			BREW_CASKS: CASKS.join(' '),
+			BREW_FORMULAS: FORMULAS.join(' '),
+		}
+	);
+	const output = lines(result.stdout, '· ');
+
+	expect(result.status).toBe(0);
+	expect(lines(result.commands, 'brew install ')).toStrictEqual([]);
+	expect(lines(result.commands, 'hook ')).toStrictEqual(['hook jq full']);
+	expect(output).toStrictEqual(
+		expect.arrayContaining([
+			'· Linking Homebrew-installed tools',
+			'· Configuring `pnpm`',
+			'· Installing `vim-plug`',
+			'· Setting up Tailscale',
+		])
+	);
+	expect(output.at(-1)).toBe('· Installing `pnpm` dependencies');
+	expect(result.stdout.trimEnd().split('\n').at(-1)).toBe(
+		'▴ Setting `fish` as the default shell requires an interactive terminal'
+	);
+	expect(result.commands).not.toMatch(/^provision_(codex|fd) /m);
+});
+
+test('skips the frozen `pnpm` install for a dirty checkout during a core sync', async () => {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const { checkout, env } = await createPackageFixture(directory.path);
+
+	await appendFile(
+		join(checkout, 'home/.local/bin/domfiles-dependencies'),
+		'\n'
+	);
+
+	const result = await runCommand(
+		directory.path,
+		'domfiles',
+		['sync', '--core'],
+		{
+			...env,
+			BREW_CASKS: CASKS.join(' '),
+			BREW_FORMULAS: FORMULAS.join(' '),
+		}
+	);
+
+	expect(result.status).toBe(0);
+	expect(result.stdout).toContain('Skipping `pnpm install`');
+	expect(result.commands).not.toContain('install --frozen-lockfile');
+});
+
+test('stops a core sync before hooks when a package fails to install', async () => {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const { env } = await createPackageFixture(directory.path);
+
+	const result = await runCommand(
+		directory.path,
+		'domfiles',
+		['sync', '--core'],
+		{
+			...env,
+			BREW_CASKS: CASKS.join(' '),
+			BREW_FAIL: 'git',
+			BREW_FORMULAS: FORMULAS.filter((formula) => formula !== 'git').join(
+				' '
+			),
+		}
+	);
+
+	expect(result.status).toBe(1);
+	expect(lines(result.commands, 'brew install ')).toStrictEqual([
+		'brew install --quiet git',
+	]);
+	expect(result.stdout).not.toContain('Linking Homebrew-installed tools');
+	expect(result.commands).not.toContain('install --frozen-lockfile');
 });

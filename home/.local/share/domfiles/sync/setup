@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# Links domfiles into the home directory, provisions local files, and
-# verifies the SSH setup
-sync_setup() (
+# Links domfiles, agent instructions, and agent skills into the home directory
+link_domfiles() (
   __print_heading 'Linking domfiles'
 
   for source in \
@@ -58,6 +57,12 @@ sync_setup() (
     __suppress __symlink "$path" "$HOME/.gemini/config/skills/$name"
     __print_confirmation "$source"
   done
+)
+
+# Links domfiles into the home directory, provisions local files, and
+# verifies the SSH setup
+sync_setup() (
+  link_domfiles
 
   __print_heading_dimmed 'Provisioning additional files'
 

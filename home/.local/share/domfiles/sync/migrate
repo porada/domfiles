@@ -1,9 +1,7 @@
 #!/bin/sh
 
-# Removes retired agent skill links and legacy Homebrew packages. Outside macOS,
-# also removes packages that Linux doesn’t use
-sync_migrate() (
-  # Migrate agent skills
+# Removes links to retired agent skills from each client’s skill directory
+retire_agent_skill_links() (
   outdated_agent_skills=false
 
   for name in \
@@ -43,6 +41,12 @@ sync_migrate() (
       fi
     done
   done
+)
+
+# Removes retired agent skill links and legacy Homebrew packages. Outside macOS,
+# also removes packages that Linux doesn’t use
+sync_migrate() (
+  retire_agent_skill_links
 
   # Uninstall legacy commands
   for formula in ast-grep claude-code node@24; do

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Refreshes managed links, installs missing Homebrew packages with their
+# applicable hooks, and installs the checkout’s pnpm dependencies. Skips the
+# remaining machine setup of a full sync
+sync_core() (
+  retire_agent_skill_links
+  link_domfiles
+  install_packages core
+
+  if __is_callable node && __is_callable pnpm; then
+    install_project_dependencies
+  fi
+)

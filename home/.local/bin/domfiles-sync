@@ -5,16 +5,23 @@
 # shellcheck source=../share/domfiles/sync/repository
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/repository"
 
-# Accept `--help` or one optional stage name and reject other arguments before
-# any changes
+# Accept `--core`, `--help`, or one optional stage name and reject other
+# arguments before any changes
+core=false
 stage=''
-usage='Usage: domfiles sync [--help | clean | install | macos | migrate | setup | update]'
+usage='Usage: domfiles sync [--core | --help | clean | install | macos | migrate | setup | update]'
 
 case "$#:${1-}" in
   0:) ;;
+  1:--core)
+    core=true
+    ;;
   1:--help)
     printf '%s\n' "$usage" '' \
       '`domfiles sync` checks for repository updates and runs all stages.' \
+      '' \
+      '`domfiles sync --core` checks for repository updates, refreshes links, and installs missing packages.' \
+      '' \
       '`domfiles sync <stage>` runs one stage without updating the repository.'
     exit
     ;;
@@ -33,8 +40,8 @@ fi
 
 __print_heading "Syncing domfiles on $(__pretty_hostname)"
 
-# Update the repository only for a full sync. A named stage uses the current
-# checkout
+# Update the repository for a full or core sync. A named stage uses the
+# current checkout
 if [ -z "$stage" ] && can_update_repository; then
   revision="$(__domfiles_revision)"
   update_repository
@@ -49,6 +56,8 @@ fi
 # Update first so upstream can repair a local stage that fails to parse
 # shellcheck source=../share/domfiles/sync/clean
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/clean"
+# shellcheck source=../share/domfiles/sync/core
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/core"
 # shellcheck source=../share/domfiles/sync/install
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/install"
 # shellcheck source=../share/domfiles/sync/macos
@@ -61,6 +70,11 @@ fi
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/update"
 
 # Run stages as plain commands to keep strict mode active within them
+if [ "$core" = true ]; then
+  sync_core
+  exit
+fi
+
 if [ -n "$stage" ]; then
   "sync_$stage"
   exit
