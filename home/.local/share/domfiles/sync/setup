@@ -28,6 +28,7 @@ link_domfiles() (
     .dom-sensible-commit-flow \
     .dom-sensible-contribution-flow \
     .domfiles-agent-documentation \
+    .domfiles-cli-design \
     .domfiles-cold-review \
     .domfiles-prepush \
     .domfiles-skill-development \
