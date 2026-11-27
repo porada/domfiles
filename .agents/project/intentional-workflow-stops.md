@@ -102,7 +102,7 @@ The release note workflow’s [scope clarification](../../skills/release-notes-f
 
 ### Scope Changes
 
-The global [task authorization](../GLOBAL.md#task-authorization), [checkout boundaries](../GLOBAL.md#working-with-other-agents), and [**External skills** policy](../GLOBAL.md#gates) preserve choices outside the active assignment, including additional checkouts and changes to external skills. Routine implementation decisions remain within existing authority. The [cross-shell helper contract](../skills/shell-integration/references/shared-helper-design.md#port-helpers-between-shells) likewise requires mismatches to be resolved without making every resolution a user question. Expired grants do not silently authorize another task, while [returned findings](../GLOBAL.md#standing-grants) can establish a new bounded correction request.
+The global [task authorization](../GLOBAL.md#task-authorization), [checkout boundaries](../GLOBAL.md#working-with-other-agents), and [**External skills** policy](../GLOBAL.md#gates) preserve the user’s choice when a task needs another checkout or a change to an external skill beyond its existing grants. Routine implementation decisions remain within existing authority. The [cross-shell helper contract](../skills/shell-integration/references/shared-helper-design.md#port-helpers-between-shells) likewise requires mismatches to be resolved without making every resolution a user question. Expired grants do not silently authorize another task, while [returned findings](../GLOBAL.md#standing-grants) can establish a new bounded correction request.
 
 ### Sensitive Operations
 

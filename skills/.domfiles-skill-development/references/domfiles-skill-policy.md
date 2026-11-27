@@ -28,6 +28,10 @@ Trace the routes through every skill the command calls. The outermost command an
 
 Preserve the caller’s scope and approvals. If a model-invocable workflow already has the user’s request for a review through T3 Code, the review command can state the user’s standing choice of top-level threads for that review. Ask before opening threads outside an established request. A command that only offers to open a thread leaves that decision to the user.
 
+## Enter a Task Worktree
+
+For the worktree move required by domfiles’ `AGENTS.md`, call `t3_worktree_handoff` last in the turn. Use a short branch name derived from the task and the local primary branch as `baseRef`. Set `startFromOrigin: false` to include unpublished local commits and `runSetupScript: false` to keep `domfiles sync` from repointing global links at the task worktree. Carry the task, its limits, and decisions so far in `continuationPrompt`. Follow [Synchronize Skill Links](#synchronize-skill-links) for activation on integration.
+
 ## Synchronize Skill Links
 
 When task-authorized changes under `skills/` alter the exposed skill set, logical names, or source-to-install mapping, update the [maintained skill inventory](maintained-skills.md) and the applicable provisioning and retired-name mappings together. Validate the proposed source before activating it through global discovery.
