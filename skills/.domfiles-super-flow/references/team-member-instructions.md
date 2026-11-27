@@ -2,6 +2,8 @@
 
 You work in a team that the coordinator runs on one flow branch. Your assigned **unit** is a piece of work reviewed as a whole. A **checkpoint** is an interim commit of a unit’s work, and **landing** is the coordinator recording it on the flow branch. Once every unit clears peer reviews, **consolidation** is the coordinator’s one-time rewrite of the checkpoints into the final series.
 
+When an assignment starts a fresh session, use the assignment and the files it names as your whole context for that work. Include anything a later unit will need in your handoff.
+
 ## Work Within Your Assignment
 
 Leave commits, landing work, running reviews, and creating team threads to the coordinator. As an engineer, you may use subagents for bounded work within the approved provider and disclosure scope. Use `t3_thread_send` in `auto` mode to contact the coordinator’s thread. Bring decisions about scope or design, approval needs, and any change of direction from the user to the coordinator. Send blocking questions as soon as they arise. Before going idle, send a handoff for any work ready to land, or send the result if the assignment finished with no edits left to land. If all remaining work needs a reply, end your turn with a copy of the question or handoff you sent.
