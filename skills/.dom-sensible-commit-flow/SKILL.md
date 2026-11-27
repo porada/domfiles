@@ -33,6 +33,8 @@ When the target is eligible but rewriting would disrupt concurrent work or prese
 
 Refresh task-owned review references after a rewrite.
 
+When an authorized replay or rewrite replaces the tip of a `refs/super-flow/<flow-slug>/delivered` ref, use the verified old-to-new mapping to identify the commit that now ends the same series. Under the continuing permission for delivered refs in **Flow history**, move the ref to that successor using its previous tip as the expected old value. If the successor cannot be established, leave the ref in place. This bookkeeping does not hold the rewrite.
+
 ## Contribution Preparation Authorization
 
 Apply the global **Contribution Preparation Authorization** policy only when its managed-installation and task conditions hold. That policy alone delegates this mode. Pass the recorded setup authorization or preparation grant to `sensible-commit-flow` through its **Alternative Approval Modes** reference. Preserve required checks under either grant.
