@@ -96,6 +96,8 @@ The release note workflow’s [editorial approval gate](../../skills/release-not
 
 The global [**Remote mutation** and **Git publication** policies](../GLOBAL.md#gates) preserve the user’s control over pushes, submissions, and other remote changes beyond local preparation. Initial contribution publication also retains a distinct approval of the finished package. The contribution workflow owns [final publication approval](../../skills/sensible-contribution-flow/references/hand-off-contributions.md#confirm-pull-request-publication), [fork selection and naming](../../skills/sensible-contribution-flow/references/hand-off-contributions.md#resolve-publication-destination), and [approved publication execution](../../skills/sensible-contribution-flow/references/hand-off-contributions.md#publish-approved-pull-requests).
 
+The [personal contribution queue](../../skills/.dom-sensible-contribution-flow/SKILL.md#queue-publication) allows local preparation to finish while holding a new pull request at the user’s limit for that upstream.
+
 ### Release Scope
 
 The release note workflow’s [scope clarification](../../skills/release-notes-for-humans/references/write-and-review-release-notes.md#release-scope) prevents guessed package ownership, grouping, or release boundaries from silently omitting changes or including earlier releases. The decision pauses only affected release units, leaving independently established scopes available for drafting.

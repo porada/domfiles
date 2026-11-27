@@ -11,6 +11,12 @@ metadata:
 
 Load `sensible-contribution-flow` and apply these personal contribution defaults under the global **Explicit user direction** policy. The base owns the contribution lifecycle and its authorization checkpoints.
 
+## Check for Related Contributions
+
+When the user asks to prepare a new pull request, or before proposing one, compare it with the user’s pending unpublished contributions to the same upstream. Check the repository’s other contribution branches and worktrees and, in T3 Code, their contribution threads. Do this before moving the current thread or launching a requested thread.
+
+If the fix changes the same code or behavior as a pending contribution, name the receiving branch and propose adding the fix there as a separate commit. Give any proposed new branch name or pull request title. Explain that, by default, choosing the fold waives pre-commit implementation review and selects only cold review of the added commit and its affected integration. Let the user choose before proceeding with the fix.
+
 ## Start a Contribution in T3 Code
 
 Prepare each new pull request in its own worktree. Stay in a supplied worktree or in a root checkout whose pending changes the task reviews, commits, or continues. Revise an existing pull request where its branch is checked out. Outside T3 Code, use the base workflow’s supplied checkout.
@@ -30,7 +36,7 @@ When creating or reusing a fork for a contribution, keep `origin` pointing to th
 
 Read and apply `super-review`’s `SKILL.md` from the same installed skills root for the coordinator’s implementation review of initial contributions and implementation revisions, including documentation changes. Pass the base workflow’s review scope and established authority to it. Leave the base’s design review and standalone read-only review routes unchanged.
 
-Unless the user selects different stages or waives review, use peer reviews to satisfy the base’s review before commit preparation. For requests limited to working tree changes, select only peer reviews. Otherwise, select the full sequence, using the base’s commit preparation to prepare the target for `cold-review`. Carry the base’s commit authorization, packaging, message, and shared pull request history constraints into that operation. After later changes, apply `super-review`’s continuation requirements before declaring readiness.
+Honor the user’s stage selections and review waivers. For requests limited to working tree changes, select only peer reviews. Unless the user specifies other stages, their choice to fold a fix into a pending unpublished contribution waives pre-commit implementation review for the addition and selects only cold review of the added commit and its affected integration. Otherwise, select the full sequence. Selected peer reviews satisfy the base’s review before commit preparation. Prepare the `cold-review` target under established commit authority using the base’s commit preparation, packaging, message, and shared pull request history rules. After later changes, apply `super-review`’s continuation requirements before declaring readiness.
 
 Apply global **Contribution Preparation Authorization**, **External services**, and **Agent communication** to the selected T3 Code reviewers, providers, task material, and required follow-ups, replacements, or repeat reviews. Check disclosure authority separately before sending a proposal to a design reviewer. Before implementation, obtain approval for any uncovered implementation-review exchange. Identify the recipients, providers, and material in the existing execution checkpoint when one is needed. When asking for preparation approval, say when the selected reviewers will start. Peer reviews follow validation of the working tree. Cold review follows commit preparation.
 
@@ -39,7 +45,17 @@ Apply global **Contribution Preparation Authorization**, **External services**, 
 Apply global **Task refinement** and **Preserve Adjacent Opportunities** with upstream fit in mind:
 
 - **Current PR:** Include accepted improvements when they fit upstream expectations for this contribution. Sharing files or having a small diff doesn’t establish that fit.
-- **Separate PR idea:** Surface an independently useful opportunity whose distinct outcome, design decision, or review burden makes it a better separate contribution. Explain the separation without implementing it or opening another PR.
+- **Separate PR idea:** [Check for related contributions](#check-for-related-contributions) before proposing a separate pull request. Explain the distinct outcome, design decision, or review burden that warrants it. A proposal leaves implementation and submission for the user’s decision.
 - **Do not pursue:** Set aside opportunities whose benefit doesn’t justify the work.
 
 Include accepted work in the contribution’s commit planning and review coverage, preserving its packaging constraints and shared pull request history rules.
+
+The user’s choice to fold a fix explicitly authorizes an additional commit for that fix on the receiving branch. Record the request for the receiving contribution under the base’s **Record Preparation Authority** procedure and pass that record to its owner before they apply the fix. Follow the base’s rules for any agreed change to the provisional branch name or pull request title. Apply [Implementation Review](#implementation-review) to the addition. The folded thread verifies that the receiving branch contains its change before its final handoff.
+
+## Queue Publication
+
+At final readiness for a new pull request, use the base’s evidence workflow to count the user’s open pull requests against that upstream before asking for publication approval or handing back publication commands. The default limit is two per upstream. For agent-run publication, recheck the count immediately before opening the pull request, including when the user waived the approval request. If either count reaches or exceeds the applicable limit, complete local preparation and report the new pull request as ready and held until the count falls below that limit or the user lifts it for this task.
+
+## Settle the Contribution Thread
+
+At the final handoff after pull request publication or a verified fold, settle the contribution’s T3 Code thread using the outstanding-matters criteria in `super-review`’s **Settle the Coordinating Thread**. This handoff triggers the settlement check regardless of which review stages ran, including when review was waived. For user-run publication, keep the thread available after handing back the commands and apply the same check once the user confirms publication. Leave worktree removal to T3 Code.
