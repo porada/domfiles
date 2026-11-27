@@ -6,6 +6,8 @@ Keep reviewer assessments read-only. The coordinator owns corrections and commit
 
 ## Bind T3 Reviewers
 
+In the review record, identify the invoking thread and the user messages that establish the request for top-level threads and its limits. For a routed review, trace the request back to the caller’s user messages, reusing any references the caller kept.
+
 Resolve each unit’s T3 environment before looking up or registering its project. For a checkout on another machine, use the host’s linked-environment interface and establish access there. SSH access alone does not establish T3 availability. Preserve the selected remote checkout rather than substituting a local clone or registering its path on the local machine.
 
 Verify that the resolved environment supports the selected [reviewer profiles](reviewer-defaults.md#profiles), target project and checkout binding, and required creation, continuation, observation, and cleanup operations before dependent work.
