@@ -24,7 +24,7 @@ Within each unit, choose review groups separately for peer reviews and cold revi
 
 Peer review groups may cover separate areas of the changes. Each cold review group contains one or more whole commits. Several peer review groups may feed one cold review, or one peer review group may feed several cold reviews. Commits can receive separate cold reviews or one combined cold review. Commit boundaries alone do not establish independence. Keep changes together when separate assessments would miss their combined behavior.
 
-Before dispatch, account for every task-owned change in the unit’s review target, including uncommitted work, and its integration boundaries across the groups. Assign shared contracts and interactions to groups with enough context to assess them. Retain overlapping evidence where necessary. If a boundary cannot be reviewed adequately within separate groups, combine the affected work. When splitting groups, preserve each selected peer reviewer profile’s coverage of the full target and cold review coverage of the complete committed target. Do not change commit structure merely to match review groups.
+Before dispatch, account for every task-owned change in the unit’s review target, including uncommitted work, and its integration boundaries across the groups. Assign shared contracts and interactions to groups with enough context to assess them. Retain overlapping evidence where necessary. If a boundary cannot be reviewed adequately within separate groups, combine the affected work. When splitting groups, apply the [peer reviewer defaults](reviewer-defaults.md#profiles) to each group. Preserve any broader coverage the user assigned to a profile and cold review coverage of the complete committed target. Do not change commit structure merely to match review groups.
 
 Keep group scopes, dependencies, reviewer roles, clearance, and each cold review group’s committed target and cycle accounting in the shared review record. Map each cold review group to the peer review groups and validation it depends on. A ready group may advance while independent groups or units remain in an earlier stage. Wait for unfinished work that supplies a prerequisite or affects its reviewed result or integration boundaries.
 
@@ -36,7 +36,7 @@ Use the shared review process to collect their reports, resolve disputes, apply 
 
 Before starting or continuing a cold review, complete the peer reviews and validation its group depends on. Each selected peer reviewer role must clear its complete assigned target. Apply [Settle Reviewer Sessions](review-execution.md#settle-reviewer-sessions) to those peer reviewers. A limited review or partial clearance does not satisfy this prerequisite. Independent groups’ outstanding reports or session settlement do not delay this transition. If the invocation omits peer reviews, complete the required validation before cold review.
 
-Later follow-ups may resume peer reviewers through the shared continuity process. Ordinary cold review corrections do not automatically reopen peer reviews.
+For later follow-ups, return to the group’s reviewers under [Review Execution](review-execution.md). Ordinary cold review corrections do not automatically reopen peer reviews.
 
 ## Run Cold Review
 
@@ -48,7 +48,9 @@ Read and apply the installed `cold-review` entrypoint for each selected cold rev
 
 Distinguish corrections within the agreed task from changes to its target, intended behavior, or covered work.
 
-On an authorized scope change, identify affected units and groups, including cross-repository dependencies. Start the selected stages for newly added groups. For existing groups, follow up with their latest valid reviewers for the applicable stages. For peer reviews, refresh clearance for each selected reviewer role in the affected groups. Do not create reviewers for a stage the invocation omitted.
+On an authorized scope change, identify affected units and groups, including cross-repository dependencies. Start the selected stages for newly added groups. For existing groups, follow up with their latest valid reviewers for the applicable stages. Do not create reviewers for a stage the invocation omitted.
+
+If a correction, ruling, or other change alters how a peer review group’s target takes effect, reapply the [reviewer defaults](reviewer-defaults.md#profiles) and the user’s overrides. Have each newly required reviewer independently assess the complete updated group before reconciling prior findings. Obtain clearance from every required role.
 
 If the peer review groups change after their reviews start, retain standing findings and required follow-ups with the affected work. Reuse clearance only for coverage whose premises still hold, and obtain the remaining assessments through the shared continuity process without resetting recovery limits.
 
