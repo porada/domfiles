@@ -28,6 +28,109 @@ can_update_repository() (
   return 1
 )
 
+# Prints the PIDs of descendants of `$1`, one per line. An optional child PID
+# `$2` excludes that child and its descendants. If `$2` is no longer a direct
+# child of `$1`, prints nothing
+list_descendant_processes() (
+  ps -A -o pid= -o ppid= | awk -v root="$1" -v skip="${2-}" '
+    {
+      pids[NR] = $1
+      parents[$1] = $2
+    }
+
+    END {
+      if (skip != "" && parents[skip] != root) {
+        exit
+      }
+
+      tree[root] = 1
+
+      do {
+        found = 0
+
+        for (i = 1; i <= NR; i++) {
+          pid = pids[i]
+
+          if (pid != skip && !(pid in tree) && (parents[pid] in tree)) {
+            tree[pid] = 1
+            found = 1
+            print pid
+          }
+        }
+      } while (found)
+    }
+  '
+)
+
+# Runs Git in the domfiles checkout with arguments `$@` and a one-minute limit,
+# printing the command first. Returns 124 only when the limit stopped Git.
+# Otherwise returns Git’s status, reporting Git’s own 124 as 1
+run_git_with_limit() (
+  helper_pid="$(exec sh -c 'printf "%s\n" "$PPID"')" || return
+
+  # Keep the watchdog off the output so it never holds a caller’s pipe open
+  watch_git_with_limit "$helper_pid" 60 < /dev/null > /dev/null 2>&1 &
+  watchdog_pid="$!"
+  status=0
+  __print_command git -C "$DOMFILES" "$@"
+
+  # Give Git the original stderr in a separate process so dash cannot print its
+  # own termination notice there
+  exec 3>&2 2> /dev/null
+  (exec git -C "$DOMFILES" "$@" 2>&3 3>&-) || status="$?"
+
+  # Stop the watchdog, or let it finish stopping Git
+  kill -s TERM "$watchdog_pid" || :
+
+  if wait "$watchdog_pid" && [ "$status" -ne 0 ]; then
+    return 124
+  fi
+
+  # Reserve 124 for the limit
+  if [ "$status" -eq 124 ]; then
+    return 1
+  fi
+
+  return "$status"
+)
+
+# Scans the descendants of `$1`, excluding child `$2` and its subtree. Gives the
+# processes it finds one second to exit on `TERM` before sending `KILL`.
+# Processes that left the tree before the scan or start during termination may
+# survive. Returns failure if the scan finds no matching processes
+stop_descendant_processes() (
+  root="$1"
+  skip="$2"
+  found=true
+  stopped=' '
+  set --
+
+  while [ "$found" = true ]; do
+    found=false
+
+    for pid in $(list_descendant_processes "$root" "$skip"); do
+      case "$stopped" in
+        *" $pid "*) ;;
+        *)
+          kill -s STOP "$pid" 2> /dev/null || :
+          found=true
+          stopped="$stopped$pid "
+          set -- "$@" "$pid"
+          ;;
+      esac
+    done
+  done
+
+  if [ $# -eq 0 ]; then
+    return 1
+  fi
+
+  kill -s TERM "$@" 2> /dev/null || :
+  kill -s CONT "$@" 2> /dev/null || :
+  sleep 1
+  kill -s KILL "$@" 2> /dev/null || :
+)
+
 # Rebases the domfiles checkout onto its upstream, preserving tracked changes.
 # With an SSH key pair, switches `origin` to SSH only after verifying access.
 # Can skip an update or recover from a failed rebase and still return success.
@@ -45,18 +148,29 @@ update_repository() (
 
     if [ "$current" = "$updated" ]; then
       __print_confirmation "$current"
-    elif __ git -C "$DOMFILES" ls-remote "$updated" HEAD > /dev/null; then
-      __ git -C "$DOMFILES" remote set-url origin "$updated" || return
     else
-      __print_error "Failed to verify SSH access to \`$updated\`. Leaving \`origin\` as \`$current\`"
+      verify_status=0
+      run_git_with_limit ls-remote "$updated" HEAD > /dev/null || verify_status="$?"
+
+      if [ "$verify_status" -eq 0 ]; then
+        __ git -C "$DOMFILES" remote set-url origin "$updated" || return
+      elif [ "$verify_status" -eq 124 ]; then
+        __print_error "Failed to verify SSH access to \`$updated\` within 1 minute. Leaving \`origin\` as \`$current\`"
+      else
+        __print_error "Failed to verify SSH access to \`$updated\`. Leaving \`origin\` as \`$current\`"
+      fi
     fi
   fi
 
   __print_heading_dimmed 'Fetching the latest changes'
   current_revision="$(__domfiles_revision)" || return
+  fetch_status=0
+  run_git_with_limit fetch --quiet || fetch_status="$?"
 
-  if ! __ git -C "$DOMFILES" fetch --quiet; then
-    __print_error 'Failed to fetch the latest changes'
+  if [ "$fetch_status" -eq 124 ]; then
+    __print_error 'Failed to fetch the latest changes within 1 minute. Continuing with the local checkout'
+  elif [ "$fetch_status" -ne 0 ]; then
+    __print_error 'Failed to fetch the latest changes. Continuing with the local checkout'
   elif __ git -C "$DOMFILES" merge-base --is-ancestor '@{u}' HEAD; then
     __print_confirmation 'Up to date'
   else
@@ -139,3 +253,20 @@ update_repository() (
     fi
   fi
 )
+
+# Waits `$2` seconds before stopping the other descendants of `$1`. The watchdog
+# stays a direct child so it can verify its parent. `TERM` cancels the wait.
+# Once termination starts, the watchdog ignores `TERM` and returns success if it
+# found processes to stop
+watch_git_with_limit() {
+  watchdog_pid="$(exec sh -c 'printf "%s\n" "$PPID"')" || return
+
+  # shellcheck disable=SC2046
+  trap 'kill -s TERM $(list_descendant_processes "$watchdog_pid") 2> /dev/null; exit 1' TERM
+  sleep "$2" &
+  wait "$!" || return
+
+  # Finish stopping Git even if it exits in the meantime
+  trap '' TERM
+  stop_descendant_processes "$1" "$watchdog_pid"
+}

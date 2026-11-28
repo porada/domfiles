@@ -16,7 +16,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { expect, onTestFinished, test } from 'vite-plus/test';
+import { expect, onTestFinished, test, vi } from 'vite-plus/test';
 
 const BREW_STUB = `#!/bin/sh
 printf 'brew %s\\n' "$*" >> "$COMMAND_LOG"
@@ -87,10 +87,35 @@ const GIT_ENV = {
 	GIT_CONFIG_GLOBAL: '/dev/null',
 	GIT_CONFIG_NOSYSTEM: '1',
 };
+const HANGING_TRANSPORT = `#!/bin/sh
+printf '%s\\n' "$$" "$PPID" >> "$TRANSPORT_PIDS"
+exec tail -f /dev/null
+`;
+// Reaches the first one-minute limit once the transport starts and no later one
+const LIMIT_SLEEP_STUB = `#!/bin/sh
+if [ "$1" != 60 ]; then
+  exit
+fi
+
+if [ -e "$LIMIT_REACHED" ]; then
+  exec tail -f /dev/null
+fi
+
+until [ -s "$TRANSPORT_PIDS" ]; do
+  command -p sleep 0.1
+done
+
+: > "$LIMIT_REACHED"
+`;
 const PACKAGE_TEST_TIMEOUT = 20_000;
 const REPOSITORY = join(import.meta.dirname, '../../..');
 const REPOSITORY_TEST_TIMEOUT = 10_000;
 const STAGES = ['clean', 'install', 'macos', 'migrate', 'setup', 'update'];
+const TERM_IGNORING_TRANSPORT = `#!/bin/sh
+trap '' TERM
+printf '%s\\n' "$$" "$PPID" >> "$TRANSPORT_PIDS"
+exec tail -f /dev/null
+`;
 
 async function writeExecutable(path: string, content: string) {
 	await writeFile(path, content);
@@ -366,6 +391,26 @@ function lines(text: string, prefix: string) {
 	return text.split('\n').filter((line) => line.startsWith(prefix));
 }
 
+function isRunning(pid: number) {
+	try {
+		process.kill(pid, 0);
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === 'ESRCH') {
+			return false;
+		}
+
+		throw error;
+	}
+
+	return true;
+}
+
+async function readPids(path: string) {
+	const content = await readFile(path, 'utf8');
+
+	return content.split('\n').filter(Boolean).map(Number);
+}
+
 test('defines a function for every accepted stage', () => {
 	const result = spawnSync(
 		'sh',
@@ -583,6 +628,223 @@ test.each([
 			remoteRevision
 		);
 		expect(runGit(checkout, ['log', '-1', '--format=%s'])).toBe('foo\n');
+	}
+);
+
+test.each([
+	{ behavior: 'exits on `TERM`', script: HANGING_TRANSPORT },
+	{ behavior: 'ignores `TERM`', script: TERM_IGNORING_TRANSPORT },
+])(
+	'stops a repository fetch whose transport $behavior at its time limit and continues the sync',
+	{ timeout: REPOSITORY_TEST_TIMEOUT },
+	async ({ script }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const { checkout } = await createUpstreamFixture(
+			directory.path,
+			'master'
+		);
+		const transport = join(directory.path, 'transport');
+		const transportPids = join(directory.path, 'transport.pids');
+
+		await writeFile(transportPids, '');
+		await writeExecutable(transport, script);
+		await writeExecutable(
+			join(directory.path, 'stubs/sleep'),
+			LIMIT_SLEEP_STUB
+		);
+		runGit(checkout, ['config', 'protocol.ext.allow', 'always']);
+		runGit(checkout, ['remote', 'set-url', 'origin', `ext::${transport}`]);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				...GIT_ENV,
+				LIMIT_REACHED: join(directory.path, 'limit-reached'),
+				TRANSPORT_PIDS: transportPids,
+			}
+		);
+		const pids = await readPids(transportPids);
+
+		expect(result.status).toBe(0);
+		expect(result.stderr).toBe(
+			`$ git -C ${await realpath(checkout)} fetch --quiet\n× Failed to fetch the latest changes within 1 minute. Continuing with the local checkout\n`
+		);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(pids).toHaveLength(2);
+		await vi.waitFor(
+			() => {
+				expect(pids.filter(isRunning)).toStrictEqual([]);
+			},
+			{ timeout: REPOSITORY_TEST_TIMEOUT }
+		);
+	}
+);
+
+test(
+	'reports a fetch that Git ends with status 124 as an ordinary failure',
+	{ timeout: REPOSITORY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const { checkout } = await createUpstreamFixture(
+			directory.path,
+			'master'
+		);
+
+		await writeExecutable(
+			join(directory.path, 'stubs/git'),
+			`#!/bin/sh
+if [ "$3" = fetch ]; then
+  exit 124
+fi
+
+PATH="\${PATH#*:}" exec git "$@"
+`
+		);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(result.stderr).toBe(
+			`$ git -C ${await realpath(checkout)} fetch --quiet\n× Failed to fetch the latest changes. Continuing with the local checkout\n`
+		);
+		expect(result.stages).toStrictEqual(['stage core']);
+	}
+);
+
+test(
+	'stops the SSH access check at its time limit and leaves `origin` unchanged',
+	{ timeout: REPOSITORY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const { checkout } = await createUpstreamFixture(
+			directory.path,
+			'master'
+		);
+		const origin = 'https://github.com/foo/bar';
+		const ssh = join(directory.path, 'home/.ssh');
+		const transport = join(directory.path, 'transport');
+		const transportPids = join(directory.path, 'transport.pids');
+
+		await mkdir(ssh);
+		await writeFile(join(ssh, 'id_ed25519'), 'foo\n');
+		await writeFile(join(ssh, 'id_ed25519.pub'), 'foo\n');
+		await writeFile(transportPids, '');
+		await writeExecutable(transport, HANGING_TRANSPORT);
+		await writeExecutable(
+			join(directory.path, 'stubs/sleep'),
+			LIMIT_SLEEP_STUB
+		);
+		runGit(checkout, ['config', 'protocol.https.allow', 'never']);
+		runGit(checkout, ['remote', 'set-url', 'origin', origin]);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				...GIT_ENV,
+				GIT_SSH_COMMAND: transport,
+				GIT_SSH_VARIANT: 'simple',
+				LIMIT_REACHED: join(directory.path, 'limit-reached'),
+				TRANSPORT_PIDS: transportPids,
+			}
+		);
+		const pids = await readPids(transportPids);
+		const checkoutPath = await realpath(checkout);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '$ ')).toStrictEqual([
+			`$ git -C ${checkoutPath} ls-remote git@github.com:foo/bar HEAD`,
+			`$ git -C ${checkoutPath} fetch --quiet`,
+		]);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			`× Failed to verify SSH access to \`git@github.com:foo/bar\` within 1 minute. Leaving \`origin\` as \`${origin}\``,
+			'× Failed to fetch the latest changes. Continuing with the local checkout',
+		]);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(runGit(checkout, ['remote', 'get-url', 'origin'])).toBe(
+			`${origin}\n`
+		);
+		expect(pids).toHaveLength(2);
+		await vi.waitFor(
+			() => {
+				expect(pids.filter(isRunning)).toStrictEqual([]);
+			},
+			{ timeout: REPOSITORY_TEST_TIMEOUT }
+		);
+	}
+);
+
+test(
+	'stops the fetch time limit once the fetch finishes',
+	{ timeout: REPOSITORY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const { checkout, upstream } = await createUpstreamFixture(
+			directory.path,
+			'master'
+		);
+		const timerPids = join(directory.path, 'timer.pids');
+		const transport = join(directory.path, 'transport');
+
+		await writeFile(timerPids, '');
+		await writeExecutable(
+			join(directory.path, 'stubs/sleep'),
+			'#!/bin/sh\nprintf \'%s\\n\' "$$" >> "$TIMER_PIDS"\nexec tail -f /dev/null\n'
+		);
+		await writeExecutable(
+			transport,
+			'#!/bin/sh\nuntil [ -s "$TIMER_PIDS" ]; do\n  command -p sleep 0.1\ndone\n\nexec git upload-pack "$1"\n'
+		);
+		runGit(checkout, ['config', 'protocol.ext.allow', 'always']);
+		runGit(checkout, [
+			'remote',
+			'set-url',
+			'origin',
+			`ext::${transport} ${upstream}`,
+		]);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{ ...GIT_ENV, TIMER_PIDS: timerPids }
+		);
+		const pids = await readPids(timerPids);
+
+		expect(result.status).toBe(0);
+		expect(result.stdout).toContain('✓ Up to date');
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(pids).toHaveLength(1);
+		await vi.waitFor(
+			() => {
+				expect(pids.filter(isRunning)).toStrictEqual([]);
+			},
+			{ timeout: REPOSITORY_TEST_TIMEOUT }
+		);
 	}
 );
 
