@@ -170,7 +170,7 @@ All checkouts for the same user share the sync state directory, `~/.local/state/
 
 The `run` file identifies the sync process and its lock holder. The `status` file records the result of the last run that reported one. A waiting sync can reuse that result only if it was recorded during the wait and the checkout and arguments match.
 
-Sync reads `HEAD` before loading its modules and again after taking the lock and recovering any interrupted update. If the commit changed, sync restarts under the same lock to load the current launcher and modules. The shell opens the launcher before the first read, so an update in that interval can pair the old launcher with new modules. Uncommitted edits and a switch that overlaps module loading and then rolls back can both leave the two reads equal.
+Sync reads `HEAD` before loading its modules. If startup recovery rolls back an interrupted switch, sync restarts under the same lock to load the restored launcher and modules. Otherwise it reads `HEAD` again after recovery and restarts if the commit changed. The shell opens the launcher before the first read, so an update in that interval can pair the old launcher with new modules. Uncommitted edits and a switch that another process rolls back before this sync takes the lock can both leave the two reads equal.
 
 The state directory also holds each checkout’s update marker (`update-<id>`), lock file (`update-<id>.lock`), private Git worktree (`update-<id>.worktree`), and scratch directory (`update-<id>.tmp`). Updates and recovery hold the checkout lock on file descriptor 4. Child processes inherit it, so a later sync must wait for them to release it before recovering the checkout.
 

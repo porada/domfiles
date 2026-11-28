@@ -68,10 +68,22 @@ fi
 # repository update, any restart, and all stages
 acquire_sync_lock "$@"
 
-# Recover any interrupted update before starting a new update or a stage
-recover_repository_update
+# This sync may have loaded the interrupted update’s code. If recovery rolls
+# back the switch, restart with the restored files
+recovery_status=0
+recover_repository_update || recovery_status="$?"
 
-# Finish recovery with the loaded modules before deciding whether to restart
+if [ "$recovery_status" -eq 3 ]; then
+  __print_heading_dimmed 'Restarting the sync with the restored checkout'
+
+  # Pass the holder PID so the restarted sync can reuse the lock
+  export DOMFILES_SYNC_LOCK_HOLDER="$sync_lock_holder"
+  __domfiles_exec --print sync "$@"
+elif [ "$recovery_status" -ne 0 ]; then
+  exit "$recovery_status"
+fi
+
+# Another sync may have updated the checkout while this one waited for the lock
 if ! current_revision="$(__domfiles_revision)"; then
   __print_error_and_exit 'Failed to read `HEAD` in the domfiles checkout'
 fi

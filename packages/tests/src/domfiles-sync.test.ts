@@ -287,6 +287,9 @@ const RECOVERY_WAITING_MESSAGE =
 	'Waiting for the previous repository update to release the checkout lock';
 const REPOSITORY = join(import.meta.dirname, '../../..');
 const REPOSITORY_TEST_TIMEOUT = 10_000;
+// The heading of a restart after recovery rolled back a switch
+const RESTORED_CHECKOUT_RESTART =
+	'Restarting the sync with the restored checkout';
 // Stalls the first smudge that sync runs through a temporary index, while Git
 // holds that index’s lock
 const SMUDGE_GATE_STUB = `#!/bin/sh
@@ -335,13 +338,33 @@ case "$target" in
 esac
 `;
 const UPDATE_STEPS = [
-	{ gate: 'temp-index stash create', step: 'saving the uncommitted changes' },
-	{ gate: 'worktree add *', step: 'adding its worktree' },
-	{ gate: 'rebase *', step: 'rebasing' },
-	{ gate: 'stash apply *', step: 'reapplying the changes' },
-	{ gate: 'temp-index read-tree -m -u *', step: 'writing the working tree' },
-	{ gate: 'read-tree [0-9a-f]*', step: 'writing the index' },
-	{ gate: 'update-ref -m * refs/heads/master *', step: 'moving `master`' },
+	{
+		gate: 'temp-index stash create',
+		phase: 'prepared',
+		step: 'saving the uncommitted changes',
+	},
+	{ gate: 'worktree add *', phase: 'prepared', step: 'adding its worktree' },
+	{ gate: 'rebase *', phase: 'prepared', step: 'rebasing' },
+	{
+		gate: 'stash apply *',
+		phase: 'prepared',
+		step: 'reapplying the changes',
+	},
+	{
+		gate: 'temp-index read-tree -m -u *',
+		phase: 'switching',
+		step: 'writing the working tree',
+	},
+	{
+		gate: 'read-tree [0-9a-f]*',
+		phase: 'switching',
+		step: 'writing the index',
+	},
+	{
+		gate: 'update-ref -m * refs/heads/master *',
+		phase: 'switching',
+		step: 'moving `master`',
+	},
 ];
 // Pauses the first fetch from the upstream until `FETCH_RELEASE` exists and
 // logs `gate` to `FETCH_GATE` while it waits
@@ -1257,6 +1280,61 @@ async function interruptSwitch(
 	await local?.(checkout);
 
 	return { checkout, interrupted: readCheckoutState(checkout) };
+}
+
+// Commits a `domlib` helper that the `install` stage calls, both upstream and
+// locally, then pushes an update that renames the helper. Each stage version
+// fails with the other version’s `domlib`
+async function createRenamedHelperFixture(directory: string) {
+	const checkout = await createRecoveryFixture(directory);
+	const domlib = 'home/.local/share/domlib';
+	const stagePath = 'home/.local/share/domfiles/sync/install';
+
+	const addHelper = async (root: string) => {
+		const stage = await readFile(join(root, stagePath), 'utf8');
+
+		await appendFile(
+			join(root, domlib),
+			"\n__fixture_helper() {\n  printf 'helper old\\n'\n}\n"
+		);
+		await writeFile(
+			join(root, stagePath),
+			stage.replace(
+				'sync_install() (\n',
+				'sync_install() (\n  __fixture_helper\n'
+			)
+		);
+	};
+
+	await pushUpstreamChange(directory, addHelper);
+	await addHelper(checkout);
+	runGit(checkout, [
+		'commit',
+		'--quiet',
+		'--only',
+		'--message=qux',
+		'--',
+		domlib,
+		stagePath,
+	]);
+	await pushUpstreamChange(directory, async (update) => {
+		const library = await readFile(join(update, domlib), 'utf8');
+		const stage = await readFile(join(update, stagePath), 'utf8');
+
+		await writeFile(
+			join(update, domlib),
+			library.replace(
+				"__fixture_helper() {\n  printf 'helper old\\n'\n}\n",
+				"__fixture_helper_new() {\n  printf 'helper new\\n'\n}\n"
+			)
+		);
+		await writeFile(
+			join(update, stagePath),
+			stage.replace('  __fixture_helper\n', '  __fixture_helper_new\n')
+		);
+	});
+
+	return checkout;
 }
 
 // Links `plugh` to `thud` and truncates `thud/xyzzy` locally. Upstream replaces
@@ -3410,13 +3488,21 @@ test(
 );
 
 test.each(
-	UPDATE_STEPS.flatMap((step) =>
-		INTERRUPTIONS.map((interruption) => ({ ...step, ...interruption }))
+	UPDATE_STEPS.flatMap(({ phase, ...step }) =>
+		INTERRUPTIONS.map((interruption) => ({
+			...step,
+			...interruption,
+			// A sync that handles the signal rolls back its own switch
+			restarts:
+				phase === 'switching' && interruption.signal === 'SIGKILL'
+					? 1
+					: 0,
+		}))
 	)
 )(
 	'restores the checkout after `$signal` to the sync $target while $step',
 	{ timeout: RECOVERY_TEST_TIMEOUT },
-	async ({ gate, ...interruption }) => {
+	async ({ gate, restarts, ...interruption }) => {
 		await using directory = await mkdtempDisposable(
 			join(tmpdir(), 'domfiles-sync-')
 		);
@@ -3438,6 +3524,12 @@ test.each(
 		expect(interrupted.status).toBe(interruption.status);
 		expect(interrupted.stages).toStrictEqual([]);
 		expect(recovered.status).toBe(0);
+		expect(
+			recovered.stdout.match(
+				/Restarting the sync with the restored checkout/g
+			) ?? []
+		).toHaveLength(restarts);
+		expect(recovered.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
 		expect(recovered.stages).toStrictEqual(['stage install']);
 		expect(readCheckoutState(checkout)).toStrictEqual(before);
 		await expect(
@@ -3470,6 +3562,8 @@ test.each(INTERRUPTIONS)(
 
 		expect(interrupted.status).toBe(interruption.status);
 		expect(recovered.status).toBe(0);
+		expect(recovered.stdout).not.toContain(RESTORED_CHECKOUT_RESTART);
+		expect(recovered.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
 		expect(recovered.stages).toStrictEqual(['stage install']);
 		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
 			branch: 'refs/heads/master\n',
@@ -6118,7 +6212,7 @@ test(
 );
 
 test(
-	'restores the interrupted switch before deciding whether to restart',
+	'restarts after recovery moves `master` back to the commit the waiter sampled',
 	{ timeout: RECOVERY_TEST_TIMEOUT },
 	async () => {
 		await using directory = await mkdtempDisposable(
@@ -6162,8 +6256,185 @@ test(
 		expect(lines(result.stdout, '✓ ')).toStrictEqual([
 			'✓ Checkout restored to its state before the update',
 		]);
+		expect(
+			result.stdout.match(
+				/Restarting the sync with the restored checkout/g
+			)
+		).toHaveLength(1);
 		expect(result.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
 		expect(result.stages).toStrictEqual(['stage install']);
 		expect(readCheckoutState(checkout)).toStrictEqual(before);
+	}
+);
+
+test(
+	'reloads the restored code after recovering a switch whose files it loaded',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRenamedHelperFixture(directory.path);
+		const before = readCheckoutState(checkout);
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref -m * refs/heads/master *'
+		);
+		const library = await readFile(
+			join(checkout, 'home/.local/share/domlib'),
+			'utf8'
+		);
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		process.kill(-(gated.run.pid ?? 0), 'SIGKILL');
+
+		const result = await waiter.done;
+		const second = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(library).toContain('__fixture_helper_new');
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(
+			result.stdout.match(
+				/Restarting the sync with the restored checkout/g
+			)
+		).toHaveLength(1);
+		expect(result.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
+		expect(lines(result.stdout, 'helper')).toStrictEqual(['helper old']);
+		expect(result.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		expect(second.status).toBe(0);
+		expect(second.stdout).not.toContain(RESTORED_CHECKOUT_RESTART);
+		expect(second.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
+		expect(lines(second.stdout, 'helper')).toStrictEqual(['helper old']);
+	}
+);
+
+test(
+	'skips the restart when an earlier recovery already rolled back the switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const recovery = await interruptSync(
+			directory.path,
+			['sync', 'install'],
+			'update-ref -d *',
+			{ signal: 'SIGKILL', status: null, target: 'group' },
+			'cleanup'
+		);
+
+		await recovery.run.done;
+
+		const phase = await readUpdatePhase(directory.path, checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(phase).toBe('restored');
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(result.stdout).not.toContain(RESTORED_CHECKOUT_RESTART);
+		expect(result.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
+		expect(result.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'keeps the lock across the restart after recovery rolls back a switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+
+		await createRecoveryFixture(directory.path);
+
+		const gate = join(directory.path, 'stage.gate');
+		const log = join(directory.path, 'stages.log');
+		const env = { ...GIT_ENV, STAGE_GATE: gate, STAGE_LOG: log };
+
+		await writeFile(log, '');
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*'
+		);
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			env
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+
+		const holders = listChildProcesses(waiter.pid ?? 0);
+
+		process.kill(-(gated.run.pid ?? 0), 'SIGKILL');
+		await waitForLine(log, `start install ${waiter.pid}`);
+
+		const holder = await readSyncHolder(directory.path);
+		const third = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			env
+		);
+
+		await waitForOutput(third, LOCK_WAITING_MESSAGE);
+		await writeFile(gate, '');
+
+		const result = await waiter.done;
+		const thirdResult = await third.done;
+		const events = await readLog(log);
+
+		expect(result.status).toBe(0);
+		expect(result.stdout).toContain(RESTORED_CHECKOUT_RESTART);
+		expect(holders).toContain(holder);
+		expect(thirdResult.status).toBe(0);
+		expect(events).not.toContainEqual(expect.stringMatching(/^holder \S/));
+		expect(stageEvents(events)).toStrictEqual([
+			`start install ${waiter.pid}`,
+			`end install ${waiter.pid}`,
+			`start setup ${third.pid}`,
+			`end setup ${third.pid}`,
+		]);
 	}
 );

@@ -1231,7 +1231,8 @@ rebase_repository_update() {
   [ -z "$repository_update_saved" ] || __print_confirmation 'Changes restored'
 }
 
-# Runs recovery under the checkout lock if a marker exists
+# Runs recovery under the checkout lock if a marker exists. Returns 3 after
+# rollback so the caller reloads the restored code
 recover_repository_update() (
   if [ ! -e "$repository_update_marker" ] && [ ! -L "$repository_update_marker" ]; then
     return 0
@@ -1244,7 +1245,7 @@ recover_repository_update() (
 
 # Rolls back a `switching` update or finishes cleanup for any other recorded
 # phase. Keeps the marker if recovery fails. `branch-moved` preserves the
-# current tip of `master`
+# current tip of `master`. At startup, a successful rollback returns 3
 restore_repository_update() (
   marker_status=0
   read_repository_update_marker || marker_status="$?"
@@ -1292,6 +1293,13 @@ restore_repository_update() (
       __print_confirmation 'Completed update kept'
       ;;
   esac
+
+  # Restart after startup recovery so the restored files supply the running code
+  if [ "$1:$repository_update_phase" = recover:switching ]; then
+    return 3
+  fi
+
+  return 0
 )
 
 # Restores the checked paths, index, and original tip of `master`. Keeps the new
