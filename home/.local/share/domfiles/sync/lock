@@ -1,0 +1,331 @@
+#!/bin/sh
+
+# Acquires the per-user lock or reuses its holder after a restart. A waiting
+# sync can reuse the recorded result of an identical request. A nested sync
+# exits before running any stages
+acquire_sync_lock() {
+  sync_finished=false
+  sync_request="$*"
+
+  # Prefer the BSD `lockf` that macOS provides, then the util-linux `flock`
+  if __is_callable lockf; then
+    sync_lock_tool=lockf
+  elif __is_callable flock; then
+    sync_lock_tool=flock
+  else
+    __print_error_and_exit 'The sync lock requires `lockf` or `flock`'
+  fi
+
+  state_status=0
+  prepare_sync_state_directory || state_status="$?"
+
+  case "$state_status" in
+    0) ;;
+    2)
+      __print_error_and_exit "Cannot use symlink \`$DOMFILES_STATE_DIR\` as the sync state directory"
+      ;;
+    3)
+      __print_error_and_exit "The sync state path \`$DOMFILES_STATE_DIR\` must be a directory"
+      ;;
+    *)
+      __print_error_and_exit "Failed to prepare the sync state directory \`$DOMFILES_STATE_DIR\`"
+      ;;
+  esac
+
+  if [ -n "${DOMFILES_SYNC_LOCK_HOLDER-}" ] && adopt_sync_lock_holder; then
+    return
+  fi
+
+  nested_status=0
+  is_nested_sync || nested_status="$?"
+
+  if [ "$nested_status" -eq 0 ]; then
+    __print_error_and_exit '`domfiles sync` cannot run inside another sync'
+  fi
+
+  previous_status_id=''
+
+  if read_sync_status; then
+    previous_status_id="$sync_status_id"
+  fi
+
+  handshake="$DOMFILES_STATE_DIR/handshake.$$"
+  lifeline="$DOMFILES_STATE_DIR/lifeline.$$"
+  rm -f "$handshake" "$lifeline"
+
+  if ! mkfifo -m 600 "$handshake" "$lifeline"; then
+    __print_error_and_exit 'Failed to create the pipes for the sync lock'
+  fi
+
+  # Open both FIFOs in the same order as the holder. Redirect with `exec` so the
+  # holder keeps no copy of the caller’s output
+  (
+    exec < /dev/null > /dev/null 2>&1 9>&-
+    hold_sync_lock "$$" "$DOMFILES_STATE_DIR/lock" "$handshake" "$lifeline"
+  ) &
+  sync_lock_holder="$!"
+  exec 7< "$handshake" 9> "$lifeline"
+  rm -f "$handshake" "$lifeline"
+  waited=false
+
+  while :; do
+    if ! read -r line <&7; then
+      __print_error_and_exit 'Failed to acquire the sync lock'
+    fi
+
+    case "$line" in
+      locked)
+        break
+        ;;
+      waiting)
+        # Avoid waiting on a lock that an ancestor may hold
+        if [ "$nested_status" -eq 2 ]; then
+          __print_error_and_exit 'Failed to check whether this sync is nested. `ps` could not list processes'
+        fi
+
+        waited=true
+        waited_run_id=''
+
+        if read_sync_run; then
+          waited_run_id="$sync_run_owner.$sync_run_holder"
+        fi
+
+        __print_warning 'Waiting for another sync to finish'
+        ;;
+    esac
+  done
+
+  exec 7<&-
+
+  if [ "$waited" = true ]; then
+    if read_sync_status && [ "$sync_status_id" != "$previous_status_id" ] \
+      && [ "$sync_status_checkout" = "$DOMFILES" ] \
+      && [ "$sync_status_request" = "$sync_request" ]; then
+      if [ "$sync_status_code" -eq 0 ]; then
+        __print_confirmation 'An identical sync succeeded. Skipping this run'
+      else
+        __print_error "An identical sync failed. Exiting with status $sync_status_code"
+      fi
+
+      exit "$sync_status_code"
+    fi
+
+    # Report a missing result only for the run that held the lock when the wait
+    # began, and only while no later run has held it
+    if [ -n "$waited_run_id" ] && read_sync_run \
+      && [ "$sync_run_owner.$sync_run_holder" = "$waited_run_id" ] \
+      && ! { read_sync_status && [ "$sync_status_id" = "$waited_run_id" ]; }; then
+      __print_info 'The previous sync left no result. Starting this run'
+    fi
+  fi
+
+  sync_run_id="$$.$sync_lock_holder"
+  printf '%s %s\n%s\n%s\n' "$$" "$sync_lock_holder" "$DOMFILES" "$sync_request" \
+    > "$DOMFILES_STATE_DIR/run.$$"
+  mv -f "$DOMFILES_STATE_DIR/run.$$" "$DOMFILES_STATE_DIR/run"
+  trap 'record_sync_status "$?"' EXIT
+}
+
+# Reuses the holder after a restart if its recorded owner and holder PIDs match.
+# Exits on a mismatch or returns failure if the lifeline has no reader
+adopt_sync_lock_holder() {
+  holder="$DOMFILES_SYNC_LOCK_HOLDER"
+  unset DOMFILES_SYNC_LOCK_HOLDER
+
+  # Never wait on this process’s own holder
+  if ! read_sync_run || [ "$sync_run_owner" != "$$" ] || [ "$sync_run_holder" != "$holder" ]; then
+    __print_error_and_exit 'Failed to verify ownership of the sync lock after the restart'
+  fi
+
+  if ! has_sync_lifeline_reader; then
+    return 1
+  fi
+
+  sync_lock_holder="$holder"
+  sync_run_id="$$.$holder"
+  trap 'record_sync_status "$?"' EXIT
+}
+
+# Checks whether the lifeline on descriptor 9 still has a reader. The caller
+# must first verify the recorded owner and holder PIDs
+has_sync_lifeline_reader() {
+  (printf '\n' >&9) 2> /dev/null
+}
+
+# Holds the per-user lock for sync process `$1` and signals readiness through
+# the handshake FIFO. Keeping this function a direct child lets the watcher
+# detect when its owner exits
+hold_sync_lock() {
+  # Outlast every signal the owner survives
+  trap '' HUP INT QUIT TERM
+  exec 7> "$3" 6< "$4"
+  holder_pid="$(exec sh -c 'printf "%s\n" "$PPID"')" || exit 1
+  exec 8>> "$2"
+  lock_status=0
+  lock_sync_file try 8 6<&- 7>&- || lock_status="$?"
+
+  if [ "$lock_status" -eq 75 ]; then
+    printf 'waiting\n' >&7
+    lock_sync_file wait 8 6<&- 7>&- || exit 1
+  elif [ "$lock_status" -ne 0 ]; then
+    exit 1
+  fi
+
+  # The reader exits when the lifeline closes. The watcher stops it if the owner
+  # exits while a descendant still holds the pipe open
+  (
+    exec 0<&6 6<&- 7>&- 8>&-
+
+    while IFS= read -r line; do
+      :
+    done
+  ) &
+  reader_pid="$!"
+  exec 6<&-
+  (
+    exec 7>&- 8>&-
+    watch_sync_owner "$1" "$holder_pid" "$reader_pid"
+  ) &
+  watcher_pid="$!"
+  # Report success only after both the reader and the watcher have started
+  printf 'locked\n' >&7
+  exec 7>&-
+  wait "$reader_pid" || :
+  kill -s KILL "$watcher_pid" 2> /dev/null || :
+  exit 0
+}
+
+# Checks whether the recorded owner is both an ancestor of this sync and the
+# holder’s parent. Returns 0 for a match, 1 for no match, or 2 when `ps` fails
+is_nested_sync() (
+  read_sync_run || return 1
+
+  if ! listing="$(ps -A -o pid= -o ppid=)" || [ -z "$listing" ]; then
+    return 2
+  fi
+
+  printf '%s\n' "$listing" | awk -v self="$$" -v owner="$sync_run_owner" -v holder="$sync_run_holder" '
+    {
+      parents[$1] = $2
+    }
+
+    END {
+      if (!(holder in parents) || parents[holder] != owner) {
+        exit 1
+      }
+
+      pid = parents[self]
+
+      for (depth = 0; pid != "" && pid > 1 && depth < 1000; depth++) {
+        if (pid == owner) {
+          exit 0
+        }
+
+        pid = parents[pid]
+      }
+
+      exit 1
+    }
+  '
+)
+
+# Locks file descriptor `$2` with the platform’s lock command. With `try`,
+# returns 75 when another process holds the lock. With `wait`, blocks until
+# the lock is free
+lock_sync_file() {
+  case "$sync_lock_tool:$1" in
+    flock:try)
+      flock -n -E 75 "$2"
+      ;;
+    flock:wait)
+      flock "$2"
+      ;;
+    lockf:try)
+      lockf -s -t 0 "$2"
+      ;;
+    lockf:wait)
+      lockf -s "$2"
+      ;;
+  esac
+}
+
+# Creates `$DOMFILES_STATE_DIR` if needed and sets its mode to 700. Preserves
+# existing parent permissions. Returns 2 for a symlink, 3 for any other existing
+# non-directory, or the failing status from `mkdir` or `chmod`
+prepare_sync_state_directory() {
+  if [ -L "$DOMFILES_STATE_DIR" ]; then
+    return 2
+  fi
+
+  if [ -e "$DOMFILES_STATE_DIR" ] && [ ! -d "$DOMFILES_STATE_DIR" ]; then
+    return 3
+  fi
+
+  mkdir -p "$DOMFILES_STATE_DIR" && chmod 700 "$DOMFILES_STATE_DIR"
+}
+
+# Prints the parent PID of process `$1`, or nothing if the process is absent
+# from the listing. Returns failure if `ps` cannot list processes
+print_process_parent() (
+  if ! listing="$(ps -A -o pid= -o ppid=)" || [ -z "$listing" ]; then
+    return 1
+  fi
+
+  printf '%s\n' "$listing" | awk -v pid="$1" '$1 == pid { print $2 }'
+)
+
+# Reads the recorded owner and holder PIDs into `sync_run_owner` and
+# `sync_run_holder`. Returns failure if the record cannot be read
+read_sync_run() {
+  [ -f "$DOMFILES_STATE_DIR/run" ] || return 1
+  read -r sync_run_owner sync_run_holder < "$DOMFILES_STATE_DIR/run"
+}
+
+# Reads the last finished run into `sync_status_id`, `sync_status_code`,
+# `sync_status_checkout`, and `sync_status_request`. Returns failure unless all
+# four lines are readable and the exit status consists of decimal digits
+read_sync_status() {
+  [ -f "$DOMFILES_STATE_DIR/status" ] || return 1
+
+  {
+    IFS= read -r sync_status_id \
+      && IFS= read -r sync_status_code \
+      && IFS= read -r sync_status_checkout \
+      && IFS= read -r sync_status_request
+  } < "$DOMFILES_STATE_DIR/status" || return
+
+  case "$sync_status_code" in
+    '' | *[!0-9]*)
+      return 1
+      ;;
+  esac
+}
+
+# Records exit status `$1` if sync reached its end or exited with status 1
+# through 127. Other exits leave the previous status record in place
+record_sync_status() {
+  if [ "$sync_finished" = true ] || { [ "$1" -gt 0 ] && [ "$1" -lt 128 ]; }; then
+    printf '%s\n%s\n%s\n%s\n' "$sync_run_id" "$1" "$DOMFILES" "$sync_request" \
+      > "$DOMFILES_STATE_DIR/status.$$" \
+      && mv -f "$DOMFILES_STATE_DIR/status.$$" "$DOMFILES_STATE_DIR/status" || :
+  fi
+}
+
+# Stops reader `$3` when holder `$2` is no longer a child of owner `$1`. Retries
+# a failed `ps` lookup so a missing process listing cannot release the lock
+watch_sync_owner() {
+  while :; do
+    if holder_parent="$(print_process_parent "$2")"; then
+      if [ -z "$holder_parent" ]; then
+        exit 0
+      fi
+
+      if [ "$holder_parent" != "$1" ]; then
+        kill -s KILL "$3" 2> /dev/null || :
+        exit 0
+      fi
+    fi
+
+    command -p sleep 1
+  done
+}

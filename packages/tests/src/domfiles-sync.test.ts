@@ -3,9 +3,11 @@ import {
 	appendFile,
 	chmod,
 	copyFile,
+	cp,
 	lstat,
 	mkdir,
 	mkdtempDisposable,
+	readdir,
 	readFile,
 	readlink,
 	realpath,
@@ -14,9 +16,24 @@ import {
 	writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { expect, onTestFinished, test, vi } from 'vite-plus/test';
+
+// Logs each `brew` command like the fixture’s stub and pauses the first one
+// until `BREW_RELEASE` exists when `BREW_GATE` names a log
+const BREW_GATE_STUB = `#!/bin/sh
+printf 'brew %s\\n' "$*" >> "$COMMAND_LOG"
+
+if [ -n "\${BREW_GATE-}" ] && [ ! -e "$BREW_GATE.done" ]; then
+  : > "$BREW_GATE.done"
+  printf 'gate\\n' >> "$BREW_GATE"
+
+  until [ -e "$BREW_RELEASE" ]; do
+    command -p sleep 0.05
+  done
+fi
+`;
 
 const BREW_STUB = `#!/bin/sh
 printf 'brew %s\\n' "$*" >> "$COMMAND_LOG"
@@ -47,6 +64,51 @@ case "$*" in
 esac
 `;
 const CASKS = ['claude-code@latest', 'codex', 'google-chrome', 'zed'];
+const CHANGED_CHECKOUT_RESTART =
+	'Restarting the sync with the updated checkout';
+const FAILABLE_PS_STUB = `#!/bin/sh
+if [ -e "$PS_FAILURE" ]; then
+  printf 'failed\\n' >> "$PS_LOG"
+  exit 1
+fi
+
+PATH="\${PATH#*:}" exec ps "$@"
+`;
+// Answers lookups of the checkout’s commit like `FIXTURE_GIT_STUB`, but fails
+// lookup number `FAILING_LOOKUP`, counting them in `LOOKUP_LOG`
+const FAILING_LOOKUP_GIT_STUB = `#!/bin/sh
+printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+
+case "$*" in
+  *' rev-parse HEAD')
+    printf 'lookup\\n' >> "$LOOKUP_LOG"
+
+    if [ "$(($(wc -l < "$LOOKUP_LOG")))" -eq "$FAILING_LOOKUP" ]; then
+      exit 128
+    fi
+
+    printf '%s\\n' 0123456789abcdef0123456789abcdef01234567
+    exit 0
+    ;;
+esac
+
+exit 1
+`;
+const FAILING_STUB = '#!/bin/sh\nexit 1\n';
+// Logs each Git command and fails it, except the lookup of the checkout’s
+// commit that every sync makes, which it answers as a checkout would
+const FIXTURE_GIT_STUB = `#!/bin/sh
+printf 'git %s\\n' "$*" >> "$COMMAND_LOG"
+
+case "$*" in
+  *' rev-parse HEAD')
+    printf '%s\\n' 0123456789abcdef0123456789abcdef01234567
+    exit 0
+    ;;
+esac
+
+exit 1
+`;
 const FORMULAS = [
 	'actionlint',
 	'cmark-gfm',
@@ -107,19 +169,87 @@ done
 
 : > "$LIMIT_REACHED"
 `;
+const LOCK_TEST_TIMEOUT = 20_000;
+const LOCK_WAITING_MESSAGE = '▴ Waiting for another sync to finish';
 const PACKAGE_TEST_TIMEOUT = 20_000;
 const REPOSITORY = join(import.meta.dirname, '../../..');
 const REPOSITORY_TEST_TIMEOUT = 10_000;
+const STAGE_GATE_STUB = `#!/bin/sh
+trap 'printf "signaled %s\\n" "$$" >> "$STAGE_LOG"' HUP INT QUIT TERM
+printf 'gate %s\\n' "$$" >> "$STAGE_LOG"
+
+until [ -e "$STAGE_GATE" ]; do
+  command -p sleep 0.05
+done
+`;
 const STAGES = ['clean', 'install', 'macos', 'migrate', 'setup', 'update'];
 const TERM_IGNORING_TRANSPORT = `#!/bin/sh
 trap '' TERM
 printf '%s\\n' "$$" "$PPID" >> "$TRANSPORT_PIDS"
 exec tail -f /dev/null
 `;
+// Pauses the first fetch from the upstream until `FETCH_RELEASE` exists and
+// logs `gate` to `FETCH_GATE` while it waits
+const UPLOAD_PACK_GATE_STUB = `#!/bin/sh
+if [ ! -e "$FETCH_GATE.done" ]; then
+  : > "$FETCH_GATE.done"
+  printf 'gate\\n' >> "$FETCH_GATE"
+
+  until [ -e "$FETCH_RELEASE" ]; do
+    command -p sleep 0.05
+  done
+fi
+
+exec git-upload-pack "$@"
+`;
 
 async function writeExecutable(path: string, content: string) {
 	await writeFile(path, content);
 	await chmod(path, 0o755);
+}
+
+function createStageStub(stage: string) {
+	return `sync_${stage}() (
+  printf 'stage %s\\n' ${stage}
+
+  if [ -n "\${STAGE_LOG-}" ]; then
+    trap 'printf "signaled %s\\n" "$$" >> "$STAGE_LOG"' HUP INT QUIT TERM
+    printf 'start %s %s\\n' ${stage} "$$" >> "$STAGE_LOG"
+    printf 'holder %s\\n' "\${DOMFILES_SYNC_LOCK_HOLDER-}" >> "$STAGE_LOG"
+
+    if [ -n "\${STAGE_LINGER-}" ]; then
+      (
+        exec < /dev/null > /dev/null 2>&1
+
+        until [ -e "$STAGE_LINGER" ]; do
+          command -p sleep 0.05
+        done
+      ) &
+    fi
+
+    if [ -n "\${STAGE_OWNER-}" ]; then
+      printf 'owner %s\\n' "$(ps -o stat= -p "$STAGE_OWNER" | tr -d ' ')" >> "$STAGE_LOG"
+    fi
+
+    if [ -n "\${STAGE_NESTED-}" ]; then
+      nested_status=0
+      "$DOMFILES_BIN_DIR/domfiles" sync "$STAGE_NESTED" < /dev/null > "$NESTED_OUTPUT" 2>&1 || nested_status="$?"
+      printf 'nested %s\\n' "$nested_status" >> "$STAGE_LOG"
+    fi
+
+    if [ -n "\${STAGE_GATE-}" ]; then
+      stage-gate
+    fi
+
+    printf 'end %s %s\\n' ${stage} "$$" >> "$STAGE_LOG"
+  fi
+
+  if [ "\${FAIL_STAGE-}" = ${stage} ]; then
+    false
+    printf 'continued after failure\\n'
+  fi
+)
+`;
 }
 
 async function createFixture(directory: string) {
@@ -144,27 +274,22 @@ async function createFixture(directory: string) {
 		join(REPOSITORY, 'home/.local/share/domlib'),
 		join(share, 'domlib')
 	);
-	await copyFile(
-		join(REPOSITORY, 'home/.local/share/domfiles/sync/repository'),
-		join(share, 'domfiles/sync/repository')
-	);
+
+	for (const module of ['lock', 'repository']) {
+		await copyFile(
+			join(REPOSITORY, 'home/.local/share/domfiles/sync', module),
+			join(share, 'domfiles/sync', module)
+		);
+	}
 
 	for (const stage of [...STAGES, 'core']) {
 		await writeFile(
 			join(share, 'domfiles/sync', stage),
-			[
-				`sync_${stage}() (`,
-				`  printf 'stage %s\\n' ${stage}`,
-				'',
-				`  if [ "\${FAIL_STAGE-}" = ${stage} ]; then`,
-				'    false',
-				`    printf 'continued after failure\\n'`,
-				'  fi',
-				')',
-				'',
-			].join('\n')
+			createStageStub(stage)
 		);
 	}
+
+	await writeExecutable(join(stubs, 'stage-gate'), STAGE_GATE_STUB);
 
 	await writeExecutable(
 		join(bin, 'domfiles-dependencies'),
@@ -174,10 +299,7 @@ async function createFixture(directory: string) {
 		join(stubs, 'brew'),
 		'#!/bin/sh\nprintf \'brew %s\\n\' "$*" >> "$COMMAND_LOG"\n'
 	);
-	await writeExecutable(
-		join(stubs, 'git'),
-		'#!/bin/sh\nprintf \'git %s\\n\' "$*" >> "$COMMAND_LOG"\nexit 1\n'
-	);
+	await writeExecutable(join(stubs, 'git'), FIXTURE_GIT_STUB);
 	await writeExecutable(
 		join(stubs, 'scutil'),
 		"#!/bin/sh\nprintf 'foo\\n'\n"
@@ -204,8 +326,18 @@ async function runCommand(
 	params: string[],
 	env: Record<string, string> = {}
 ) {
+	return startCommand(directory, command, params, env).done;
+}
+
+function startCommand(
+	directory: string,
+	command: string,
+	params: string[],
+	env: Record<string, string> = {},
+	checkout = 'domfiles'
+) {
 	const child = spawn(
-		join(directory, 'domfiles/home/.local/bin', command),
+		join(directory, checkout, 'home/.local/bin', command),
 		params,
 		{
 			cwd: directory,
@@ -239,19 +371,31 @@ async function runCommand(
 	});
 
 	// Resolve only once the command has exited and closed its output
-	const status = await new Promise<number | null>((resolve, reject) => {
+	const done = new Promise<number | null>((resolve, reject) => {
 		child.on('close', resolve);
 		child.on('error', reject);
+	}).then(async (status) => {
+		const output = stripVTControlCharacters(stdout);
+
+		return {
+			commands: await readFile(join(directory, 'commands.log'), 'utf8'),
+			stages: output
+				.split('\n')
+				.filter((line) => line.startsWith('stage ')),
+			status,
+			stderr: stripVTControlCharacters(stderr),
+			stdout: output,
+		};
 	});
 
-	stdout = stripVTControlCharacters(stdout);
+	// Treat a rejection as handled until the test awaits it
+	done.catch(() => undefined);
 
 	return {
-		commands: await readFile(join(directory, 'commands.log'), 'utf8'),
-		stages: stdout.split('\n').filter((line) => line.startsWith('stage ')),
-		status,
-		stderr: stripVTControlCharacters(stderr),
-		stdout,
+		done,
+		pid,
+		stderr: () => stripVTControlCharacters(stderr),
+		stdout: () => stripVTControlCharacters(stdout),
 	};
 }
 
@@ -409,6 +553,185 @@ async function readPids(path: string) {
 	const content = await readFile(path, 'utf8');
 
 	return content.split('\n').filter(Boolean).map(Number);
+}
+
+async function createLockFixture(directory: string) {
+	await createFixture(directory);
+
+	const gate = join(directory, 'gate');
+	const log = join(directory, 'stages.log');
+
+	await writeFile(log, '');
+
+	return { env: { STAGE_GATE: gate, STAGE_LOG: log }, gate, log };
+}
+
+// Makes the `install` stage depend on a new `domlib` helper so mixing revisions
+// fails. Pauses the first upstream fetch until `release` runs
+async function createChangedCodeFixture(directory: string) {
+	const { env, gate, log } = await createLockFixture(directory);
+	const { checkout, update } = await createUpstreamFixture(
+		directory,
+		'master'
+	);
+	const fetchGate = join(directory, 'fetch.log');
+	const fetchRelease = join(directory, 'fetch.release');
+	const stagePath = 'home/.local/share/domfiles/sync/install';
+	const stage = await readFile(join(update, stagePath), 'utf8');
+
+	await appendFile(
+		join(update, 'home/.local/share/domlib'),
+		"\n__fixture_helper() {\n  printf 'helper\\n'\n}\n"
+	);
+	await writeFile(
+		join(update, stagePath),
+		stage.replace(
+			'sync_install() (\n',
+			'sync_install() (\n  __fixture_helper\n'
+		)
+	);
+	runGit(update, ['commit', '--quiet', '--all', '--message=bar']);
+	runGit(update, ['push', '--quiet']);
+	await writeFile(fetchGate, '');
+	await writeExecutable(
+		join(directory, 'stubs/upload-pack'),
+		UPLOAD_PACK_GATE_STUB
+	);
+	runGit(checkout, [
+		'config',
+		'remote.origin.uploadpack',
+		join(directory, 'stubs/upload-pack'),
+	]);
+
+	return {
+		env: {
+			...GIT_ENV,
+			FETCH_GATE: fetchGate,
+			FETCH_RELEASE: fetchRelease,
+			STAGE_LOG: env.STAGE_LOG,
+		},
+		fetchGate,
+		gate,
+		log,
+		release: async () => {
+			await writeFile(fetchRelease, '');
+		},
+	};
+}
+
+async function readLog(path: string) {
+	const content = await readFile(path, 'utf8');
+
+	return content.split('\n').filter(Boolean);
+}
+
+function stageEvents(lines: string[]) {
+	return lines.filter((line) => /^(?:end|start) /.test(line));
+}
+
+async function waitForLine(path: string, line: string) {
+	await vi.waitFor(
+		async () => {
+			await expect(readLog(path)).resolves.toContain(line);
+		},
+		{ interval: 50, timeout: LOCK_TEST_TIMEOUT }
+	);
+}
+
+async function waitForGate(path: string, pid: number | undefined) {
+	let gatePid = 0;
+
+	await vi.waitFor(
+		async () => {
+			const lines = await readLog(path);
+			const start = lines.indexOf(`start core ${pid}`);
+			const gate = lines
+				.slice(start + 1)
+				.find((line) => line.startsWith('gate '));
+
+			expect(start).toBeGreaterThanOrEqual(0);
+			expect(gate).toBeDefined();
+			gatePid = Number(gate?.split(' ')[1]);
+		},
+		{ interval: 50, timeout: LOCK_TEST_TIMEOUT }
+	);
+
+	return gatePid;
+}
+
+async function createSystemPath(directory: string, excluded: string[]) {
+	const path = join(directory, 'system-bin');
+
+	await mkdir(path);
+
+	for (const source of ['/usr/bin', '/bin', '/usr/sbin', '/sbin']) {
+		const entries = await readdir(source).catch(() => []);
+
+		for (const entry of entries) {
+			if (!excluded.includes(entry)) {
+				await symlink(join(source, entry), join(path, entry)).catch(
+					(error: unknown) => {
+						if (
+							(error as NodeJS.ErrnoException).code !== 'EEXIST'
+						) {
+							throw error;
+						}
+					}
+				);
+			}
+		}
+	}
+
+	return path;
+}
+
+function listChildProcesses(pid: number) {
+	const result = spawnSync('ps', ['-A', '-o', 'pid=,ppid='], {
+		encoding: 'utf8',
+	});
+
+	return result.stdout
+		.split('\n')
+		.map((line) => line.trim().split(/\s+/).map(Number))
+		.filter(([, parent]) => parent === pid)
+		.map(([child]) => child);
+}
+
+function listFixtureProcesses(directory: string) {
+	const result = spawnSync('ps', ['-A', '-o', 'pid=,command='], {
+		encoding: 'utf8',
+	});
+
+	return result.stdout
+		.split('\n')
+		.filter((line) => line.includes(basename(directory)));
+}
+
+function isProcessLive(pid: number) {
+	const result = spawnSync('ps', ['-o', 'stat=', '-p', String(pid)], {
+		encoding: 'utf8',
+	});
+	const state = result.stdout.trim();
+
+	return state !== '' && !state.startsWith('Z');
+}
+
+async function readSyncHolder(directory: string) {
+	const content = await readFile(
+		join(directory, 'home/.local/state/domfiles/run'),
+		'utf8'
+	);
+
+	return Number(content.split('\n', 1)[0]?.split(' ')[1]);
+}
+
+async function waitForOutput(run: { stdout: () => string }, text: string) {
+	await vi.waitFor(
+		() => {
+			expect(run.stdout()).toContain(text);
+		},
+		{ interval: 50, timeout: LOCK_TEST_TIMEOUT }
+	);
 }
 
 test('defines a function for every accepted stage', () => {
@@ -860,11 +1183,14 @@ test.each(STAGES)(
 			'sync',
 			stage,
 		]);
+		const checkout = await realpath(join(directory.path, 'domfiles'));
 
 		expect(result.status).toBe(0);
 		expect(result.stages).toStrictEqual([`stage ${stage}`]);
 		expect(result.stdout).not.toContain('dependencies');
-		expect(result.commands).toBe('brew --version\n');
+		expect(result.commands).toBe(
+			`git -C ${checkout}/home/.local/bin/../../.. rev-parse HEAD\nbrew --version\ngit -C ${checkout} rev-parse HEAD\n`
+		);
 	}
 );
 
@@ -875,10 +1201,13 @@ test('runs a named stage through the checkout entrypoint', async () => {
 	await createFixture(directory.path);
 
 	const result = await runCommand(directory.path, 'domfiles-sync', ['setup']);
+	const checkout = await realpath(join(directory.path, 'domfiles'));
 
 	expect(result.status).toBe(0);
 	expect(result.stages).toStrictEqual(['stage setup']);
-	expect(result.commands).toBe('brew --version\n');
+	expect(result.commands).toBe(
+		`git -C ${checkout}/home/.local/bin/../../.. rev-parse HEAD\nbrew --version\ngit -C ${checkout} rev-parse HEAD\n`
+	);
 });
 
 test.each([
@@ -1275,5 +1604,1022 @@ test(
 		]);
 		expect(result.stdout).not.toContain('Linking Homebrew-installed tools');
 		expect(result.commands).not.toContain('install --frozen-lockfile');
+	}
+);
+
+test.each([
+	{
+		failStage: '',
+		message: 'An identical sync succeeded. Skipping this run',
+		outcome: 'success',
+		status: 0,
+		stream: 'stdout',
+	},
+	{
+		failStage: 'core',
+		message: 'An identical sync failed. Exiting with status 1',
+		outcome: 'failure',
+		status: 1,
+		stream: 'stderr',
+	},
+] as const)(
+	'passes the owner’s $outcome to an identical waiter without running it',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async ({ failStage, message, status, stream }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				...env,
+				FAIL_STAGE: failStage,
+			}
+		);
+
+		await waitForLine(log, `start core ${owner.pid}`);
+
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+
+		expect(ownerResult.status).toBe(status);
+		expect(waiterResult.status).toBe(status);
+		expect(waiterResult[stream]).toContain(message);
+		expect(waiterResult.stages).toStrictEqual([]);
+		expect(stageEvents(await readLog(log))).toStrictEqual([
+			`start core ${owner.pid}`,
+			`end core ${owner.pid}`,
+		]);
+	}
+);
+
+test.each([
+	{
+		checkout: 'domfiles',
+		params: ['sync', 'setup'],
+		stage: 'setup',
+		title: 'a different request',
+	},
+	{
+		checkout: 'domfiles-copy',
+		params: ['sync', '--core'],
+		stage: 'core',
+		title: 'the same request from another checkout',
+	},
+])(
+	'queues $title and runs it after the owner finishes',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async ({ checkout, params, stage }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+
+		await cp(
+			join(directory.path, 'domfiles'),
+			join(directory.path, 'domfiles-copy'),
+			{ recursive: true }
+		);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForLine(log, `start core ${owner.pid}`);
+
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			params,
+			env,
+			checkout
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+
+		expect(ownerResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stages).toStrictEqual([`stage ${stage}`]);
+		expect(stageEvents(await readLog(log))).toStrictEqual([
+			`start core ${owner.pid}`,
+			`end core ${owner.pid}`,
+			`start ${stage} ${waiter.pid}`,
+			`end ${stage} ${waiter.pid}`,
+		]);
+	}
+);
+
+test.each(['SIGKILL', 'SIGTERM'] as const)(
+	'lets a waiter take over from an owner killed with %s',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async (signal) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+		const gatePid = await waitForGate(log, owner.pid);
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		process.kill(owner.pid!, signal);
+		process.kill(gatePid, 'SIGKILL');
+		await waitForLine(log, `start core ${waiter.pid}`);
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+		const laterResult = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		expect(ownerResult.status).toBeNull();
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stdout).toContain(
+			'The previous sync left no result. Starting this run'
+		);
+		expect(laterResult.status).toBe(0);
+		expect(laterResult.stages).toStrictEqual(['stage core']);
+	}
+);
+
+test(
+	'runs queued requests one at a time after the owner dies',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+		const gatePid = await waitForGate(log, owner.pid);
+		const waiters = ['install', 'migrate', 'setup'].map((stage) =>
+			startCommand(directory.path, 'domfiles', ['sync', stage], env)
+		);
+
+		await Promise.all(
+			waiters.map(async (waiter) =>
+				waitForOutput(waiter, LOCK_WAITING_MESSAGE)
+			)
+		);
+		process.kill(owner.pid!, 'SIGKILL');
+		process.kill(gatePid, 'SIGKILL');
+		await writeFile(gate, '');
+
+		const results = await Promise.all(
+			waiters.map(async (waiter) => waiter.done)
+		);
+		const events = stageEvents(await readLog(log));
+		const starts = events
+			.slice(1)
+			.filter((line) => line.startsWith('start '));
+
+		expect(results.map((result) => result.status)).toStrictEqual([0, 0, 0]);
+		expect(events[0]).toBe(`start core ${owner.pid}`);
+		expect(events.slice(1)).toStrictEqual(
+			starts.flatMap((line) => [line, line.replace(/^start/, 'end')])
+		);
+		expect(
+			starts
+				.map((line) => line.replace(/^start (\S+) .*$/, '$1'))
+				.toSorted((first, second) => first.localeCompare(second))
+		).toStrictEqual(['install', 'migrate', 'setup']);
+	}
+);
+
+test(
+	'keeps the lock across the restart after a repository update',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const { update } = await createUpstreamFixture(
+			directory.path,
+			'master'
+		);
+
+		runGit(update, ['commit', '--quiet', '--allow-empty', '--message=bar']);
+		runGit(update, ['push', '--quiet']);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				...GIT_ENV,
+				...env,
+			}
+		);
+
+		await waitForLine(log, `start core ${owner.pid}`);
+
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			{
+				...GIT_ENV,
+				...env,
+			}
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+		const lines = await readLog(log);
+
+		expect(ownerResult.status).toBe(0);
+		expect(ownerResult.stdout).toContain(
+			'Restarting the sync after the update'
+		);
+		expect(ownerResult.stdout).not.toContain(LOCK_WAITING_MESSAGE);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
+		expect(lines).not.toContainEqual(expect.stringMatching(/^holder \S/));
+		expect(stageEvents(lines)).toStrictEqual([
+			`start core ${owner.pid}`,
+			`end core ${owner.pid}`,
+			`start setup ${waiter.pid}`,
+			`end setup ${waiter.pid}`,
+		]);
+	}
+);
+
+test.each([
+	{ command: 'sync', params: ['sync'], stages: FULL_RUN_STAGES },
+	{
+		command: 'sync install',
+		params: ['sync', 'install'],
+		stages: ['install'],
+	},
+])(
+	'runs `domfiles $command` with the updated code after waiting for the lock',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async ({ params, stages }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, fetchGate, release } = await createChangedCodeFixture(
+			directory.path
+		);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForLine(fetchGate, 'gate');
+
+		const waiter = startCommand(directory.path, 'domfiles', params, env);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		await release();
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+
+		expect(ownerResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stdout).toContain(CHANGED_CHECKOUT_RESTART);
+		expect(lines(waiterResult.stdout, 'helper')).toStrictEqual(['helper']);
+		expect(waiterResult.stages).toStrictEqual(
+			stages.map((stage) => `stage ${stage}`)
+		);
+	}
+);
+
+test(
+	'keeps the lock across the restart after the checkout changed during the wait',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, fetchGate, gate, log, release } =
+			await createChangedCodeFixture(directory.path);
+		const gatedEnv = { ...env, STAGE_GATE: gate };
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForLine(fetchGate, 'gate');
+
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			gatedEnv
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+
+		const holders = listChildProcesses(waiter.pid ?? 0);
+
+		await release();
+		await waitForLine(log, `start install ${waiter.pid}`);
+
+		const holder = await readSyncHolder(directory.path);
+
+		const third = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			gatedEnv
+		);
+
+		await waitForOutput(third, LOCK_WAITING_MESSAGE);
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+		const thirdResult = await third.done;
+		const events = await readLog(log);
+
+		expect(ownerResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stdout).toContain(CHANGED_CHECKOUT_RESTART);
+		expect(holders).toContain(holder);
+		expect(thirdResult.status).toBe(0);
+		expect(events).not.toContainEqual(expect.stringMatching(/^holder \S/));
+		expect(stageEvents(events)).toStrictEqual([
+			`start core ${owner.pid}`,
+			`end core ${owner.pid}`,
+			`start install ${waiter.pid}`,
+			`end install ${waiter.pid}`,
+			`start setup ${third.pid}`,
+			`end setup ${third.pid}`,
+		]);
+	}
+);
+
+test(
+	'restarts when an update finishes between loading the modules and waiting for the lock',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, fetchGate, gate, log, release } =
+			await createChangedCodeFixture(directory.path);
+		const brewGate = join(directory.path, 'brew.log');
+		const brewRelease = join(directory.path, 'brew.release');
+
+		await writeFile(brewGate, '');
+		await writeExecutable(
+			join(directory.path, 'stubs/brew'),
+			BREW_GATE_STUB
+		);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				...env,
+				STAGE_GATE: gate,
+			}
+		);
+
+		await waitForLine(fetchGate, 'gate');
+
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			{ ...env, BREW_GATE: brewGate, BREW_RELEASE: brewRelease }
+		);
+
+		await waitForLine(brewGate, 'gate');
+		await release();
+		await waitForLine(log, `start core ${owner.pid}`);
+		await writeFile(brewRelease, '');
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+
+		expect(ownerResult.status).toBe(0);
+		expect(ownerResult.stdout).toContain(
+			'Restarting the sync after the update'
+		);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stdout).toContain(CHANGED_CHECKOUT_RESTART);
+		expect(lines(waiterResult.stdout, 'helper')).toStrictEqual(['helper']);
+		expect(waiterResult.stages).toStrictEqual(['stage install']);
+	}
+);
+
+test.each([
+	{ lookup: 1, when: 'before it waits for the lock' },
+	{ lookup: 2, when: 'once it holds the lock' },
+])(
+	'stops when it cannot read the checkout’s commit $when',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async ({ lookup }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const log = join(directory.path, 'lookups.log');
+
+		await writeFile(log, '');
+		await writeExecutable(
+			join(directory.path, 'stubs/git'),
+			FAILING_LOOKUP_GIT_STUB
+		);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			{ FAILING_LOOKUP: String(lookup), LOOKUP_LOG: log }
+		);
+
+		expect(result.status).toBe(1);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to read `HEAD` in the domfiles checkout',
+		]);
+		expect(result.stages).toStrictEqual([]);
+		await expect(readLog(log)).resolves.toHaveLength(lookup);
+	}
+);
+
+test(
+	'answers `--help` and rejects usage errors while the lock is held',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForLine(log, `start core ${owner.pid}`);
+
+		const helpResult = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--help'],
+			env
+		);
+		const usageResult = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'foo'],
+			env
+		);
+
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+
+		expect(helpResult.status).toBe(0);
+		expect(helpResult.stdout).toContain('Usage: domfiles sync');
+		expect(usageResult.status).toBe(1);
+		expect(usageResult.stderr).toContain('Usage: domfiles sync');
+		expect(ownerResult.status).toBe(0);
+	}
+);
+
+test.each(['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGTERM'] as const)(
+	'keeps the lock until a sync that survives %s to its group exits',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async (signal) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const sync = join(
+			directory.path,
+			'domfiles/home/.local/bin/domfiles-sync'
+		);
+		const source = await readFile(sync, 'utf8');
+
+		await writeFile(
+			sync,
+			source.replace(
+				/^.*\n/,
+				(shebang) =>
+					`${shebang}\ntrap 'printf "sync signaled %s\\n" "$$" >> "$STAGE_LOG"' HUP INT QUIT TERM\n`
+			)
+		);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+		const gatePid = await waitForGate(log, owner.pid);
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			{
+				...env,
+				STAGE_OWNER: String(owner.pid),
+			}
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+
+		const holderPid = await readSyncHolder(directory.path);
+
+		process.kill(-owner.pid!, signal);
+		await waitForLine(log, `signaled ${gatePid}`);
+
+		const holderLive = isProcessLive(holderPid);
+
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+		const lines = await readLog(log);
+
+		expect(holderLive).toBe(true);
+		expect(ownerResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		expect(stageEvents(lines)).toStrictEqual([
+			`start core ${owner.pid}`,
+			`end core ${owner.pid}`,
+			`start setup ${waiter.pid}`,
+			`end setup ${waiter.pid}`,
+		]);
+		expect(lines).toContainEqual(
+			expect.stringMatching(/^owner (?:Z\S*)?$/)
+		);
+	}
+);
+
+test(
+	'runs an identical request whose owner died, even after an earlier identical run finished',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+
+		await writeFile(gate, '');
+
+		const firstResult = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await rm(gate);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+		const gatePid = await waitForGate(log, owner.pid);
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		process.kill(owner.pid!, 'SIGKILL');
+		process.kill(gatePid, 'SIGKILL');
+		await waitForLine(log, `start core ${waiter.pid}`);
+		await writeFile(gate, '');
+		await owner.done;
+
+		const waiterResult = await waiter.done;
+
+		expect(firstResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stdout).toContain(
+			'The previous sync left no result. Starting this run'
+		);
+		expect(waiterResult.stages).toStrictEqual(['stage core']);
+	}
+);
+
+test(
+	'stops a sync started inside another sync at once',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { log } = await createLockFixture(directory.path);
+		const nestedOutput = join(directory.path, 'nested.log');
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				NESTED_OUTPUT: nestedOutput,
+				STAGE_LOG: log,
+				STAGE_NESTED: 'setup',
+			}
+		);
+		const nested = stripVTControlCharacters(
+			await readFile(nestedOutput, 'utf8')
+		);
+
+		expect(result.status).toBe(0);
+		await expect(readLog(log)).resolves.toContain('nested 1');
+		expect(nested).toContain(
+			'× `domfiles sync` cannot run inside another sync'
+		);
+		expect(nested).not.toContain(LOCK_WAITING_MESSAGE);
+	}
+);
+
+test(
+	'keeps the lock while `ps` fails during a run',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const psFailure = join(directory.path, 'ps-failure');
+		const psLog = join(directory.path, 'ps.log');
+		const psEnv = { ...env, PS_FAILURE: psFailure, PS_LOG: psLog };
+
+		await writeFile(psLog, '');
+		await writeExecutable(
+			join(directory.path, 'stubs/ps'),
+			FAILABLE_PS_STUB
+		);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			psEnv
+		);
+
+		await waitForLine(log, `start core ${owner.pid}`);
+
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			psEnv
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+
+		const holderPid = await readSyncHolder(directory.path);
+
+		await writeFile(psFailure, '');
+		await vi.waitFor(
+			async () => {
+				const calls = await readLog(psLog);
+
+				expect(calls.length).toBeGreaterThanOrEqual(2);
+			},
+			{ interval: 50, timeout: LOCK_TEST_TIMEOUT }
+		);
+
+		const holderLive = isProcessLive(holderPid);
+
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+		const waiterResult = await waiter.done;
+
+		expect(holderLive).toBe(true);
+		expect(ownerResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		await vi.waitFor(
+			() => {
+				expect(listFixtureProcesses(directory.path)).toStrictEqual([]);
+			},
+			{ interval: 50, timeout: LOCK_TEST_TIMEOUT }
+		);
+		expect(stageEvents(await readLog(log))).toStrictEqual([
+			`start core ${owner.pid}`,
+			`end core ${owner.pid}`,
+			`start setup ${waiter.pid}`,
+			`end setup ${waiter.pid}`,
+		]);
+	}
+);
+
+test(
+	'stops a sync that would wait while `ps` fails',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const psFailure = join(directory.path, 'ps-failure');
+		const psEnv = {
+			...env,
+			PS_FAILURE: psFailure,
+			PS_LOG: join(directory.path, 'ps.log'),
+		};
+
+		await writeExecutable(
+			join(directory.path, 'stubs/ps'),
+			FAILABLE_PS_STUB
+		);
+
+		const owner = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			psEnv
+		);
+
+		await waitForLine(log, `start core ${owner.pid}`);
+		await writeFile(psFailure, '');
+
+		const waiterResult = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'setup'],
+			psEnv
+		);
+
+		await writeFile(gate, '');
+
+		const ownerResult = await owner.done;
+
+		expect(waiterResult.status).toBe(1);
+		expect(waiterResult.stderr).toContain(
+			'× Failed to check whether this sync is nested. `ps` could not list processes'
+		);
+		expect(waiterResult.stages).toStrictEqual([]);
+		expect(ownerResult.status).toBe(0);
+	}
+);
+
+test(
+	'runs the restarted sync while `ps` fails',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { env, gate, log } = await createLockFixture(directory.path);
+		const { update } = await createUpstreamFixture(
+			directory.path,
+			'master'
+		);
+
+		runGit(update, ['commit', '--quiet', '--allow-empty', '--message=bar']);
+		runGit(update, ['push', '--quiet']);
+		await writeExecutable(join(directory.path, 'stubs/ps'), FAILING_STUB);
+		await writeFile(gate, '');
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{ ...GIT_ENV, ...env }
+		);
+
+		expect(result.status).toBe(0);
+		expect(result.stdout).toContain('Restarting the sync after the update');
+		expect(result.stdout).not.toContain(LOCK_WAITING_MESSAGE);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(stageEvents(await readLog(log))).toHaveLength(2);
+	}
+);
+
+test(
+	'runs a waiter without reporting a missing result when the previous sync had finished',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { log } = await createLockFixture(directory.path);
+		const linger = join(directory.path, 'linger');
+		const psFailure = join(directory.path, 'ps-failure');
+
+		await writeFile(psFailure, '');
+		await writeExecutable(
+			join(directory.path, 'stubs/ps'),
+			FAILABLE_PS_STUB
+		);
+
+		const ownerResult = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				PS_FAILURE: psFailure,
+				PS_LOG: join(directory.path, 'ps.log'),
+				STAGE_LINGER: linger,
+				STAGE_LOG: log,
+			}
+		);
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{ STAGE_LOG: log }
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+		await writeFile(linger, '');
+
+		const waiterResult = await waiter.done;
+
+		expect(ownerResult.status).toBe(0);
+		expect(waiterResult.status).toBe(0);
+		expect(waiterResult.stages).toStrictEqual(['stage core']);
+		expect(waiterResult.stdout).not.toContain(
+			'The previous sync left no result'
+		);
+	}
+);
+
+test(
+	'restricts the sync state directory to the user and keeps the mode of its parent',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const parent = join(directory.path, 'home/.local/state');
+
+		await mkdir(parent, { recursive: true });
+		await chmod(parent, 0o755);
+
+		const result = await runCommand(directory.path, 'domfiles', [
+			'sync',
+			'--core',
+		]);
+		const parentStats = await lstat(parent);
+		const stateStats = await lstat(join(parent, 'domfiles'));
+
+		expect(result.status).toBe(0);
+		expect(stateStats.isDirectory()).toBe(true);
+		expect(stateStats.mode % 0o1000).toBe(0o700);
+		expect(parentStats.mode % 0o1000).toBe(0o755);
+	}
+);
+
+test.each([
+	{
+		error: '× Failed to prepare the sync state directory `~/.local/state/domfiles`',
+		path: 'home/.local/state',
+	},
+	{
+		error: '× The sync state path `~/.local/state/domfiles` must be a directory',
+		path: 'home/.local/state/domfiles',
+	},
+])(
+	'stops without changing a file at `$path`',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async ({ error, path }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const file = join(directory.path, path);
+
+		await mkdir(join(file, '..'), { recursive: true });
+		await writeFile(file, 'foo\n');
+		await chmod(file, 0o644);
+
+		const result = await runCommand(directory.path, 'domfiles', [
+			'sync',
+			'--core',
+		]);
+		const stats = await lstat(file);
+
+		expect(result.status).toBe(1);
+		expect(lines(result.stderr, '× ')).toStrictEqual([error]);
+		expect(result.stages).toStrictEqual([]);
+		expect(stats.isFile()).toBe(true);
+		expect(stats.mode % 0o1000).toBe(0o644);
+		await expect(readFile(file, 'utf8')).resolves.toBe('foo\n');
+	}
+);
+
+test(
+	'stops without following a symlink at the sync state directory',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const link = join(directory.path, 'home/.local/state/domfiles');
+		const target = join(directory.path, 'foo');
+
+		await mkdir(target, { mode: 0o755 });
+		await mkdir(join(link, '..'), { recursive: true });
+		await symlink(target, link);
+
+		const result = await runCommand(directory.path, 'domfiles', [
+			'sync',
+			'--core',
+		]);
+
+		expect(result.status).toBe(1);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Cannot use symlink `~/.local/state/domfiles` as the sync state directory',
+		]);
+		expect(result.stages).toStrictEqual([]);
+		await expect(readlink(link)).resolves.toBe(target);
+		await expect(readdir(target)).resolves.toStrictEqual([]);
+		const stats = await lstat(target);
+
+		expect(stats.mode % 0o1000).toBe(0o755);
+	}
+);
+
+test(
+	'stops before any stage without `lockf` or `flock`',
+	{ timeout: LOCK_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		await createFixture(directory.path);
+
+		const systemPath = await createSystemPath(directory.path, [
+			'flock',
+			'lockf',
+		]);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{ PATH: `${join(directory.path, 'stubs')}:${systemPath}` }
+		);
+
+		expect(result.status).toBe(1);
+		expect(result.stderr).toContain(
+			'× The sync lock requires `lockf` or `flock`'
+		);
+		expect(result.stages).toStrictEqual([]);
 	}
 );

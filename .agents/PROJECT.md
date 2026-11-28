@@ -156,6 +156,12 @@ Repository updates are skipped when the checkout contains entries marked by `git
 
 Synchronization links the repository’s `home/.local/bin` directory to `~/.local/bin`. Commands resolve their real paths to load `domlib` from the same checkout. The sync entrypoint also loads its private modules from that checkout’s `home/.local/share/domfiles/sync/` directory.
 
+All checkouts for the same user share the sync state directory, `~/.local/state/domfiles`, outside the paths sync replaces. A [child process](../home/.local/share/domfiles/sync/lock) holds the per-user lock so stages never inherit it. The sync process keeps the write end of a FIFO open on file descriptor 9 across stages and restarts. Closing it can release the lock before the run ends.
+
+The `run` file identifies the sync process and its lock holder. The `status` file records the result of the last run that reported one. A waiting sync can reuse that result only if it was recorded during the wait and the checkout and arguments match.
+
+Sync reads `HEAD` before loading its modules and again after taking the lock. If the commit changed, sync restarts under the same lock to load the current launcher and modules. The shell opens the launcher before the first read, so an update in that interval can pair the old launcher with new modules. Uncommitted edits do not change `HEAD`.
+
 `domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. It can finish despite visible failures only when the main workflow or a sync stage explicitly handles them and later work does not depend on the failed operation. The final dependency status is advisory.
 
 ## Shell Integration

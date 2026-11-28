@@ -1,14 +1,9 @@
 #!/bin/sh
 
-# shellcheck source=../share/domlib
-. "$(dirname "$(realpath "$0")")/../share/domlib"
-# shellcheck source=../share/domfiles/sync/repository
-. "$DOMFILES_BIN_DIR/../share/domfiles/sync/repository"
-
-# Accept `--core`, `--help`, or one optional stage name and reject other
-# arguments before any changes
+# Validate the requested stage or option before sync makes any changes
 core=false
 stage=''
+usage_error=false
 usage='Usage: domfiles sync [--core | --help | clean | install | macos | migrate | setup | update]'
 
 case "$#:${1-}" in
@@ -31,9 +26,29 @@ case "$#:${1-}" in
     stage="$1"
     ;;
   *)
-    __print_error_and_exit "$usage"
+    usage_error=true
     ;;
 esac
+
+# Read `HEAD` before sourcing the modules. Another sync can replace them before
+# this process reaches the lock
+sync_bin_dir="$(dirname "$(realpath "$0")")"
+loaded_revision_status=0
+
+if [ "$usage_error" = false ]; then
+  loaded_revision="$(git -C "$sync_bin_dir/../../.." rev-parse HEAD)" || loaded_revision_status="$?"
+fi
+
+# shellcheck source=../share/domlib
+. "$sync_bin_dir/../share/domlib"
+# shellcheck source=../share/domfiles/sync/lock
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/lock"
+# shellcheck source=../share/domfiles/sync/repository
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/repository"
+
+if [ "$usage_error" = true ]; then
+  __print_error_and_exit "$usage"
+fi
 
 # shellcheck disable=SC2119
 if ! __is_brew_installed; then
@@ -42,20 +57,41 @@ fi
 
 __print_heading "Syncing domfiles on $(__pretty_hostname)"
 
-# Update the repository for a full or core sync. A named stage uses the
-# current checkout
+if [ "$loaded_revision_status" -ne 0 ]; then
+  __print_error_and_exit 'Failed to read `HEAD` in the domfiles checkout'
+fi
+
+# Run one state-changing sync at a time per user, holding the lock through the
+# repository update, any restart, and all stages
+acquire_sync_lock "$@"
+
+# Reload the launcher and its modules if another sync updated the checkout
+if ! current_revision="$(__domfiles_revision)"; then
+  __print_error_and_exit 'Failed to read `HEAD` in the domfiles checkout'
+fi
+
+if [ "$current_revision" != "$loaded_revision" ]; then
+  __print_heading_dimmed 'Restarting the sync with the updated checkout'
+
+  # Pass the holder PID so the restarted sync can reuse the lock
+  export DOMFILES_SYNC_LOCK_HOLDER="$sync_lock_holder"
+  __domfiles_exec --print sync "$@"
+fi
+
+# Update first so upstream can repair a stage that fails to parse
 if [ -z "$stage" ] && can_update_repository; then
   revision="$(__domfiles_revision)"
   update_repository
 
-  # Restart with the original arguments so the updated sync runs
+  # Restart with the original arguments and lock holder to load the update
   if [ "$(__domfiles_revision)" != "$revision" ]; then
     __print_heading_dimmed 'Restarting the sync after the update'
+
+    export DOMFILES_SYNC_LOCK_HOLDER="$sync_lock_holder"
     __domfiles_exec --print sync "$@"
   fi
 fi
 
-# Update first so upstream can repair a local stage that fails to parse
 # shellcheck source=../share/domfiles/sync/clean
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/clean"
 # shellcheck source=../share/domfiles/sync/core
@@ -74,11 +110,13 @@ fi
 # Run stages as plain commands to keep strict mode active within them
 if [ "$core" = true ]; then
   sync_core
+  sync_finished=true
   exit
 fi
 
 if [ -n "$stage" ]; then
   "sync_$stage"
+  sync_finished=true
   exit
 fi
 
@@ -88,6 +126,7 @@ sync_install
 sync_macos
 sync_update
 sync_clean
+sync_finished=true
 
 # Finish with dependency status
 __print_heading 'Sync complete'

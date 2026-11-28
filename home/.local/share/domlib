@@ -25,6 +25,8 @@ DOMFILES_CONFIG_DIR="$DOMFILES_HOME_DIR/.config"
 DOMFILES_PROJECTS_DIR="$HOME/Projects"
 # shellcheck disable=SC2034
 DOMFILES_DOMFLEET_DIR="$DOMFILES_PROJECTS_DIR/domfleet"
+# shellcheck disable=SC2034
+DOMFILES_STATE_DIR="$HOME/.local/state/domfiles"
 
 # Runs `$@`, printing the command beforehand
 __() {
