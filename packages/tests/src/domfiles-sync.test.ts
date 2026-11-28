@@ -11,6 +11,7 @@ import {
 	readFile,
 	readlink,
 	realpath,
+	rename,
 	rm,
 	symlink,
 	writeFile,
@@ -20,6 +21,8 @@ import { basename, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { expect, onTestFinished, test, vi } from 'vite-plus/test';
 
+const ANY_CAUSE =
+	/Creating a directory for|Replacing the directory|Sync cannot add|Sync cannot update paths|Sync prepared the update using|The checkout changed while sync prepared|The update would overwrite|`master` moved before sync could update it/;
 // Logs each `brew` command like the fixture’s stub and pauses the first one
 // until `BREW_RELEASE` exists when `BREW_GATE` names a log
 const BREW_GATE_STUB = `#!/bin/sh
@@ -34,7 +37,6 @@ if [ -n "\${BREW_GATE-}" ] && [ ! -e "$BREW_GATE.done" ]; then
   done
 fi
 `;
-
 const BREW_STUB = `#!/bin/sh
 printf 'brew %s\\n' "$*" >> "$COMMAND_LOG"
 
@@ -63,6 +65,10 @@ case "$*" in
   'list --formula --versions '*) has "$BREW_FORMULAS" "$4" ;;
 esac
 `;
+const CASE_RENAMES = [
+	{ added: 'Grault', from: 'grault', spelled: 'Grault', to: 'Grault' },
+	{ added: 'Garply/waldo', from: 'garply', spelled: 'Garply', to: 'Garply' },
+];
 const CASKS = ['claude-code@latest', 'codex', 'google-chrome', 'zed'];
 const CHANGED_CHECKOUT_RESTART =
 	'Restarting the sync with the updated checkout';
@@ -109,6 +115,35 @@ esac
 
 exit 1
 `;
+// Whether the fixture filesystem treats uppercase and lowercase names as equal
+const FOLDS_CASE = await (async () => {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+
+	await writeFile(join(directory.path, 'foo'), '');
+
+	try {
+		await lstat(join(directory.path, 'FOO'));
+
+		return true;
+	} catch {
+		return false;
+	}
+})();
+// Runs `grep`, but finds `garply` among the switch paths, so that recovery
+// accepts a symlink in place of that directory and leaves it to the rollback
+const FOREIGN_PARENT_GREP_STUB = `#!/bin/sh
+PATH="\${PATH#*:}"
+
+case "$*" in
+  *' -- garply '*/switch.names)
+    exit 0
+    ;;
+esac
+
+exec grep "$@"
+`;
 const FORMULAS = [
 	'actionlint',
 	'cmark-gfm',
@@ -149,10 +184,81 @@ const GIT_ENV = {
 	GIT_CONFIG_GLOBAL: '/dev/null',
 	GIT_CONFIG_NOSYSTEM: '1',
 };
+// Pauses the first Git command matching `GIT_GATE`. `GIT_FAILURES` lists
+// command patterns to fail in order with status 128. Both match commands
+// without global options, with a `temp-index` prefix for a temporary index.
+// Records commands and failures in separate logs
+const GIT_GATE_STUB = `#!/bin/sh
+PATH="\${PATH#*:}"
+
+print_command() {
+  if [ -n "\${GIT_INDEX_FILE-}" ]; then
+    printf 'temp-index '
+  fi
+
+  while :; do
+    case "$1" in
+      -c | -C)
+        shift 2
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  printf '%s\\n' "$*"
+}
+
+if [ -n "\${GIT_GATE-}\${GIT_FAILURES-}\${GIT_COMMAND_LOG-}" ]; then
+  command="$(print_command "$@")"
+fi
+
+if [ -n "\${GIT_GATE-}" ] && [ ! -e "$GIT_GATE_LOG.done" ]; then
+  case "$command" in
+    $GIT_GATE)
+      : > "$GIT_GATE_LOG.done"
+      printf 'gate %s %s\\n' "$$" "$command" >> "$GIT_GATE_LOG"
+
+      until [ -e "$GIT_GATE_RELEASE" ]; do
+        command -p sleep 0.05
+      done
+      ;;
+  esac
+fi
+
+if [ -n "\${GIT_FAILURES-}" ]; then
+  failed="$(wc -l < "$FAILURE_LOG")"
+  pattern="$(printf '%s\\n' "$GIT_FAILURES" | sed -n "$((failed + 1))p")"
+
+  if [ -n "$pattern" ]; then
+    case "$command" in
+      $pattern)
+        printf '%s\\n' "$command" >> "$FAILURE_LOG"
+        exit 128
+        ;;
+    esac
+  fi
+fi
+
+if [ -n "\${GIT_COMMAND_LOG-}" ]; then
+  printf '%s\\n' "$command" >> "$GIT_COMMAND_LOG"
+fi
+
+exec git "$@"
+`;
 const HANGING_TRANSPORT = `#!/bin/sh
 printf '%s\\n' "$$" "$PPID" >> "$TRANSPORT_PIDS"
 exec tail -f /dev/null
 `;
+const INTERRUPTIONS = [
+	{ signal: 'SIGTERM', status: 143, target: 'process' },
+	{ signal: 'SIGTERM', status: 143, target: 'group' },
+	{ signal: 'SIGKILL', status: null, target: 'process' },
+	{ signal: 'SIGKILL', status: null, target: 'group' },
+] as const;
+// Skip permission tests when running as root
+const IS_ROOT = process.getuid?.() === 0;
 // Reaches the first one-minute limit once the transport starts and no later one
 const LIMIT_SLEEP_STUB = `#!/bin/sh
 if [ "$1" != 60 ]; then
@@ -171,9 +277,30 @@ done
 `;
 const LOCK_TEST_TIMEOUT = 20_000;
 const LOCK_WAITING_MESSAGE = '▴ Waiting for another sync to finish';
+const MOVED_MASTER_TREE_MESSAGE =
+	'The tree at the new tip of `master` differs from both the original tree and the saved index';
 const PACKAGE_TEST_TIMEOUT = 20_000;
+const RECOVERY_CAUSE =
+	/Recovery expected a directory at|The checkout is no longer on|The index differs from both versions|contains a change the interrupted update cannot account for|contains skipped files|has a Git-quoted name that sync cannot restore|may still have an operation in progress|points to a commit outside this update/;
+const RECOVERY_TEST_TIMEOUT = 40_000;
+const RECOVERY_WAITING_MESSAGE =
+	'Waiting for the previous repository update to release the checkout lock';
 const REPOSITORY = join(import.meta.dirname, '../../..');
 const REPOSITORY_TEST_TIMEOUT = 10_000;
+// Stalls the first smudge that sync runs through a temporary index, while Git
+// holds that index’s lock
+const SMUDGE_GATE_STUB = `#!/bin/sh
+if [ -n "\${SMUDGE_LOG-}" ] && [ -n "\${GIT_INDEX_FILE-}" ] && [ ! -e "$SMUDGE_LOG.done" ]; then
+  : > "$SMUDGE_LOG.done"
+  printf 'smudge %s\\n' "$$" >> "$SMUDGE_LOG"
+
+  until [ -e "$SMUDGE_RELEASE" ]; do
+    command -p sleep 0.05
+  done
+fi
+
+exec cat
+`;
 const STAGE_GATE_STUB = `#!/bin/sh
 trap 'printf "signaled %s\\n" "$$" >> "$STAGE_LOG"' HUP INT QUIT TERM
 printf 'gate %s\\n' "$$" >> "$STAGE_LOG"
@@ -188,6 +315,34 @@ trap '' TERM
 printf '%s\\n' "$$" "$PPID" >> "$TRANSPORT_PIDS"
 exec tail -f /dev/null
 `;
+// Moves files like `mv`, then removes read permission from the first
+// `switch.untracked` it writes and logs the change to `FAILURE_LOG`
+const UNREADABLE_LISTING_STUB = `#!/bin/sh
+PATH="\${PATH#*:}"
+mv "$@" || exit
+
+for param do
+  target="$param"
+done
+
+case "$target" in
+  */switch.untracked)
+    if [ ! -s "$FAILURE_LOG" ]; then
+      chmod 000 "$target"
+      printf 'mv %s\\n' "$*" >> "$FAILURE_LOG"
+    fi
+    ;;
+esac
+`;
+const UPDATE_STEPS = [
+	{ gate: 'temp-index stash create', step: 'saving the uncommitted changes' },
+	{ gate: 'worktree add *', step: 'adding its worktree' },
+	{ gate: 'rebase *', step: 'rebasing' },
+	{ gate: 'stash apply *', step: 'reapplying the changes' },
+	{ gate: 'temp-index read-tree -m -u *', step: 'writing the working tree' },
+	{ gate: 'read-tree [0-9a-f]*', step: 'writing the index' },
+	{ gate: 'update-ref -m * refs/heads/master *', step: 'moving `master`' },
+];
 // Pauses the first fetch from the upstream until `FETCH_RELEASE` exists and
 // logs `gate` to `FETCH_GATE` while it waits
 const UPLOAD_PACK_GATE_STUB = `#!/bin/sh
@@ -275,7 +430,7 @@ async function createFixture(directory: string) {
 		join(share, 'domlib')
 	);
 
-	for (const module of ['lock', 'repository']) {
+	for (const module of ['lock', 'recovery', 'repository']) {
 		await copyFile(
 			join(REPOSITORY, 'home/.local/share/domfiles/sync', module),
 			join(share, 'domfiles/sync', module)
@@ -399,11 +554,12 @@ function startCommand(
 	};
 }
 
-function runGit(cwd: string, params: string[]) {
+function runGit(cwd: string, params: string[], input?: string) {
 	const result = spawnSync('git', params, {
 		cwd,
 		encoding: 'utf8',
 		env: { ...GIT_ENV, PATH: process.env.PATH ?? '' },
+		input,
 	});
 
 	if (result.status !== 0) {
@@ -725,13 +881,517 @@ async function readSyncHolder(directory: string) {
 	return Number(content.split('\n', 1)[0]?.split(' ')[1]);
 }
 
-async function waitForOutput(run: { stdout: () => string }, text: string) {
+async function waitForOutput(
+	run: { stdout: () => string },
+	text: string,
+	timeout = LOCK_TEST_TIMEOUT
+) {
 	await vi.waitFor(
 		() => {
 			expect(run.stdout()).toContain(text);
 		},
-		{ interval: 50, timeout: LOCK_TEST_TIMEOUT }
+		{ interval: 50, timeout }
 	);
+}
+
+function numberedLines(first: string, last: string) {
+	const lines = Array.from({ length: 18 }, (_, index) => `${index + 2}`);
+
+	return `${[first, ...lines, last].join('\n')}\n`;
+}
+
+// Builds a checkout on `master` one commit ahead of its upstream and one behind
+// it, with staged, unstaged, and untracked changes and a stash entry
+async function createRecoveryFixture(directory: string) {
+	await createFixture(directory);
+
+	const checkout = join(directory, 'domfiles');
+
+	await writeFile(join(checkout, 'foo'), numberedLines('1', '20'));
+	await writeFile(join(checkout, 'bar'), 'bar\n');
+	await writeFile(join(checkout, 'baz'), 'baz\n');
+	await writeFile(join(checkout, 'grault'), 'grault\n');
+	await mkdir(join(checkout, 'garply'));
+	await writeFile(join(checkout, 'garply/waldo'), 'waldo\n');
+
+	const { update } = await createUpstreamFixture(directory, 'master');
+
+	await writeExecutable(join(directory, 'stubs/git'), GIT_GATE_STUB);
+	await writeFile(join(update, 'foo'), numberedLines('1', 'twenty'));
+	await writeFile(join(update, 'qux'), 'qux\n');
+	runGit(update, ['add', '--all']);
+	runGit(update, ['commit', '--quiet', '--message=bar']);
+	runGit(update, ['push', '--quiet']);
+	await writeFile(join(checkout, 'quux'), 'quux\n');
+	runGit(checkout, ['add', 'quux']);
+	runGit(checkout, ['commit', '--quiet', '--message=baz']);
+	await writeFile(join(checkout, 'bar'), 'corge\n');
+	runGit(checkout, ['stash', 'push', '--quiet', '--message=foo']);
+	await writeFile(join(checkout, 'foo'), numberedLines('one', '20'));
+	runGit(checkout, ['add', 'foo']);
+	await writeFile(join(checkout, 'bar'), 'grault\n');
+	await writeFile(join(checkout, 'baz'), 'garply\n');
+	runGit(checkout, ['add', 'baz']);
+	await writeFile(join(checkout, 'baz'), 'waldo\n');
+	await writeFile(join(checkout, 'fred'), 'fred\n');
+
+	return checkout;
+}
+
+function readCheckoutState(checkout: string) {
+	return {
+		branch: runGit(checkout, ['rev-parse', '--symbolic-full-name', 'HEAD']),
+		commits: runGit(checkout, ['log', '--format=%H %s']),
+		index: runGit(checkout, ['ls-files', '--stage']),
+		stashes: runGit(checkout, ['stash', 'list', '--format=%H']),
+		status: runGit(checkout, [
+			'status',
+			'--porcelain',
+			'--untracked-files=all',
+		]),
+		worktree: runGit(checkout, ['diff']),
+	};
+}
+
+async function readUpdatedState(checkout: string) {
+	return {
+		branch: runGit(checkout, ['symbolic-ref', 'HEAD']),
+		commits: runGit(checkout, ['log', '--format=%s']),
+		files: {
+			bar: await readFile(join(checkout, 'bar'), 'utf8'),
+			baz: await readFile(join(checkout, 'baz'), 'utf8'),
+			foo: await readFile(join(checkout, 'foo'), 'utf8'),
+			stagedBaz: runGit(checkout, ['show', ':baz']),
+			stagedFoo: runGit(checkout, ['show', ':foo']),
+		},
+		status: runGit(checkout, [
+			'status',
+			'--porcelain',
+			'--untracked-files=all',
+		]),
+	};
+}
+
+async function readUpdateId(checkout: string) {
+	const result = spawnSync(
+		'sh',
+		[
+			'-c',
+			'printf "%s" "$1" | cksum | awk "{ print \\$1 \\"-\\" \\$2 }"',
+			'sh',
+			await realpath(checkout),
+		],
+		{ encoding: 'utf8' }
+	);
+
+	return result.stdout.trim();
+}
+
+async function readUpdateLeftovers(directory: string, checkout: string) {
+	const entries = await readdir(
+		join(directory, 'home/.local/state/domfiles')
+	);
+	const worktrees = runGit(checkout, ['worktree', 'list', '--porcelain']);
+
+	return {
+		files: entries.filter(
+			(entry) =>
+				entry.startsWith('update-') &&
+				!entry.endsWith('.lock') &&
+				!entry.endsWith('.tmp')
+		),
+		refs: runGit(checkout, ['for-each-ref', 'refs/domfiles-sync/']),
+		worktrees: lines(worktrees, 'worktree ').length,
+	};
+}
+
+async function readUpdatePhase(directory: string, checkout: string) {
+	const marker = await readFile(
+		join(
+			directory,
+			'home/.local/state/domfiles',
+			`update-${await readUpdateId(checkout)}`
+		),
+		'utf8'
+	);
+
+	return marker.split('\n')[2];
+}
+
+// Use the Git trace to observe when sync reaches the index lock check
+async function waitForIndexLockLookup(readCommands: () => Promise<string>) {
+	await vi.waitFor(
+		async () => {
+			await expect(readCommands()).resolves.toMatch(
+				/^rev-parse --path-format=absolute --git-path index\.lock$/m
+			);
+		},
+		{ interval: 50, timeout: RECOVERY_TEST_TIMEOUT }
+	);
+}
+
+async function waitForSyncOwner(directory: string, pid: number | undefined) {
+	await vi.waitFor(
+		async () => {
+			const content = await readFile(
+				join(directory, 'home/.local/state/domfiles/run'),
+				'utf8'
+			);
+
+			expect(Number(content.split(' ', 1)[0])).toBe(pid);
+		},
+		{ interval: 50, timeout: RECOVERY_TEST_TIMEOUT }
+	);
+}
+
+async function startGatedSync(
+	directory: string,
+	params: string[],
+	gate: string,
+	name = 'gate',
+	env: Record<string, string> = {}
+) {
+	const log = join(directory, `${name}.log`);
+	const release = join(directory, `${name}.release`);
+
+	await writeFile(log, '');
+
+	const run = startCommand(directory, 'domfiles', params, {
+		...GIT_ENV,
+		...env,
+		GIT_GATE: gate,
+		GIT_GATE_LOG: log,
+		GIT_GATE_RELEASE: release,
+	});
+
+	await vi.waitFor(
+		async () => {
+			const content = await readLog(log);
+
+			expect(content).toHaveLength(1);
+		},
+		{ interval: 50, timeout: RECOVERY_TEST_TIMEOUT }
+	);
+
+	return {
+		release: async () => {
+			await writeFile(release, '');
+		},
+		run,
+	};
+}
+
+// Stops a sync at Git command `gate` and sends `signal` to the sync process
+// alone or to its process group
+async function interruptSync(
+	directory: string,
+	params: string[],
+	gate: string,
+	{
+		signal,
+		target,
+	}: {
+		signal: NodeJS.Signals;
+		status?: number | null;
+		target: 'group' | 'process';
+	},
+	name = 'gate'
+) {
+	const gated = await startGatedSync(directory, params, gate, name);
+	const pid = gated.run.pid ?? 0;
+
+	process.kill(target === 'group' ? -pid : pid, signal);
+
+	return gated;
+}
+
+// Runs a named sync stage after an interruption. If `KILL` stopped only the
+// sync process, starts the stage before releasing its surviving Git command
+async function recoverInterruptedSync(
+	directory: string,
+	gated: Awaited<ReturnType<typeof startGatedSync>>,
+	{
+		signal,
+		target,
+	}: {
+		signal: NodeJS.Signals;
+		status?: number | null;
+		target: 'group' | 'process';
+	}
+) {
+	if (signal === 'SIGKILL' && target === 'process') {
+		const recovery = startCommand(
+			directory,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		await waitForSyncOwner(directory, recovery.pid);
+		await gated.release();
+
+		return {
+			interrupted: await gated.run.done,
+			recovered: await recovery.done,
+		};
+	}
+
+	if (target === 'process') {
+		await gated.release();
+	}
+
+	const interrupted = await gated.run.done;
+	const recovered = await runCommand(
+		directory,
+		'domfiles',
+		['sync', 'install'],
+		GIT_ENV
+	);
+
+	return { interrupted, recovered };
+}
+
+// Runs the stubbed command from the rest of `PATH`. Fails the first call with
+// an argument matching `pattern` with status 2 and logs it to `FAILURE_LOG`
+function createArgumentFailureStub(pattern: string) {
+	return `#!/bin/sh
+PATH="\${PATH#*:}"
+
+if [ ! -s "$FAILURE_LOG" ]; then
+  for param do
+    case "$param" in
+      ${pattern})
+        printf '%s\\n' "\${0##*/} $*" >> "$FAILURE_LOG"
+        exit 2
+        ;;
+    esac
+  done
+fi
+
+exec "\${0##*/}" "$@"
+`;
+}
+
+type Failure = { command: string; stub: string } | { git: string[] };
+
+// Installs a command stub or configures the Git failures for this case. Returns
+// the environment and readers for the command and failure logs
+async function injectFailure(directory: string, failure?: Failure) {
+	const commandLog = join(directory, 'git.log');
+	const failureLog = join(directory, 'failures.log');
+	const patterns = failure && 'git' in failure ? failure.git : [];
+
+	await writeFile(commandLog, '');
+	await writeFile(failureLog, '');
+
+	if (failure && 'stub' in failure) {
+		await writeExecutable(
+			join(directory, 'stubs', failure.command),
+			failure.stub
+		);
+	}
+
+	return {
+		env: {
+			...GIT_ENV,
+			FAILURE_LOG: failureLog,
+			GIT_COMMAND_LOG: commandLog,
+			GIT_FAILURES: patterns.join('\n'),
+		},
+		failures: failure && 'stub' in failure ? 1 : patterns.length,
+		readCommands: async () => readFile(commandLog, 'utf8'),
+		readFailures: async () => readLog(failureLog),
+	};
+}
+
+// Sets the mode of each path in `modes` under `checkout` and returns a function
+// that restores the original modes
+async function restrictModes(
+	checkout: string,
+	modes: Array<{ mode: number; path: string }> = []
+) {
+	const originals: Array<{ mode: number; path: string }> = [];
+
+	for (const { mode, path } of modes) {
+		const stats = await lstat(join(checkout, path));
+
+		originals.unshift({ mode: stats.mode % 0o10000, path });
+		await chmod(join(checkout, path), mode);
+	}
+
+	return async () => {
+		for (const { mode, path } of originals) {
+			await chmod(join(checkout, path), mode);
+		}
+	};
+}
+
+// Stops a core sync with `KILL` at Git command `gate`, by default once the
+// switch has written the working tree, and applies `local`. Returns the
+// checkout and its state at that point
+async function interruptSwitch(
+	directory: string,
+	{
+		change,
+		gate = 'read-tree [0-9a-f]*',
+		local,
+	}: {
+		gate?: string;
+		change?: (update: string) => Promise<void>;
+		local?: (checkout: string) => Promise<void>;
+	}
+) {
+	const checkout = await createRecoveryFixture(directory);
+
+	if (change) {
+		await pushUpstreamChange(directory, change);
+	}
+
+	const update = await interruptSync(directory, ['sync', '--core'], gate, {
+		signal: 'SIGKILL',
+		status: null,
+		target: 'group',
+	});
+
+	await update.run.done;
+	await local?.(checkout);
+
+	return { checkout, interrupted: readCheckoutState(checkout) };
+}
+
+// Links `plugh` to `thud` and truncates `thud/xyzzy` locally. Upstream replaces
+// the symlink with a directory where `plugh/<added>` contains the original
+// bytes of `thud/xyzzy`
+async function createSymlinkedParentFixture(directory: string, added: string) {
+	const checkout = await createRecoveryFixture(directory);
+
+	const addParent = async (root: string) => {
+		await mkdir(join(root, 'thud'));
+		await writeFile(join(root, 'thud/xyzzy'), 'xyzzy\nthud\n');
+		await symlink('thud', join(root, 'plugh'));
+	};
+
+	await pushUpstreamChange(directory, addParent);
+	await pushUpstreamChange(directory, async (update) => {
+		await rm(join(update, 'plugh'));
+		await mkdir(join(update, 'plugh'));
+		await writeFile(join(update, 'plugh', added), 'xyzzy\nthud\n');
+	});
+	await addParent(checkout);
+	runGit(checkout, ['add', '--', 'plugh', 'thud']);
+	runGit(checkout, [
+		'commit',
+		'--quiet',
+		'--only',
+		'--message=qux',
+		'--',
+		'plugh',
+		'thud',
+	]);
+	await writeFile(join(checkout, 'thud/xyzzy'), 'xyzzy\n');
+
+	return checkout;
+}
+
+type FailureCase = {
+	failure?: Failure;
+	gate?: string;
+	modes?: Array<{ mode: number; path: string }>;
+	reason: string;
+	change?: (update: string) => Promise<void>;
+	local?: (checkout: string) => Promise<void>;
+};
+
+// Runs a core sync with the failure of `row`, setting its modes once the
+// changes are saved, and checks that sync skipped the switch, named no cause,
+// and left the checkout unchanged
+async function skipsSwitchWithoutCause(row: FailureCase) {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const checkout = await createRecoveryFixture(directory.path);
+
+	if (row.change) {
+		await pushUpstreamChange(directory.path, row.change);
+	}
+
+	await row.local?.(checkout);
+
+	const before = readCheckoutState(checkout);
+	const injected = await injectFailure(directory.path, row.failure);
+	const gated = await startGatedSync(
+		directory.path,
+		['sync', '--core'],
+		'rebase *',
+		'gate',
+		injected.env
+	);
+	const restore = await restrictModes(checkout, row.modes);
+
+	await gated.release();
+
+	const result = await gated.run.done.finally(restore);
+
+	expect(result.status).toBe(0);
+	expect(lines(result.stderr, '× ')).toStrictEqual([
+		'× Failed to update the repository',
+	]);
+	expect(result.stdout).not.toMatch(ANY_CAUSE);
+	expect(result.stages).toStrictEqual(['stage core']);
+	expect(readCheckoutState(checkout)).toStrictEqual(before);
+	await expect(injected.readFailures()).resolves.toHaveLength(
+		injected.failures
+	);
+	await expect(injected.readCommands()).resolves.not.toMatch(
+		/^temp-index read-tree -m -u /m
+	);
+	await expect(
+		readUpdateLeftovers(directory.path, checkout)
+	).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+}
+
+// Recovers an interrupted switch with the failure and modes of `row` and checks
+// that recovery stopped with `row.message`, named no cause, and left the
+// checkout and the saved state unchanged
+async function stopsRecoveryWithoutCause(
+	row: FailureCase & { message: string }
+) {
+	await using directory = await mkdtempDisposable(
+		join(tmpdir(), 'domfiles-sync-')
+	);
+	const { checkout, interrupted } = await interruptSwitch(
+		directory.path,
+		row
+	);
+	const injected = await injectFailure(directory.path, row.failure);
+	const restore = await restrictModes(checkout, row.modes);
+
+	const result = await runCommand(
+		directory.path,
+		'domfiles',
+		['sync', 'install'],
+		injected.env
+	).finally(restore);
+
+	expect(result.status).toBe(1);
+	expect(lines(result.stderr, '× ')).toStrictEqual([
+		'× Recovery stopped before changing the checkout. Nothing was discarded',
+	]);
+	expect(result.stdout).toContain(row.message);
+	expect(result.stdout).not.toMatch(RECOVERY_CAUSE);
+	expect(result.stages).toStrictEqual([]);
+	expect(readCheckoutState(checkout)).toStrictEqual(interrupted);
+	await expect(injected.readFailures()).resolves.toHaveLength(
+		injected.failures
+	);
+	await expect(
+		readUpdateLeftovers(directory.path, checkout)
+	).resolves.toMatchObject({
+		files: expect.arrayContaining([
+			expect.stringMatching(/^update-\d+-\d+$/),
+		]),
+		worktrees: 2,
+	});
 }
 
 test('defines a function for every accepted stage', () => {
@@ -1233,7 +1893,8 @@ test.each([
 
 			Both commands check for repository updates only when the checkout is on \`master\`.
 
-			\`domfiles sync <stage>\` runs one stage without updating the repository.
+			\`domfiles sync <stage>\` runs one stage without checking for new updates.
+			Sync handles an interrupted repository update before running any stage.
 			"
 		`);
 		expect(result.stderr).toBe('');
@@ -2621,5 +3282,2888 @@ test(
 			'× The sync lock requires `lockf` or `flock`'
 		);
 		expect(result.stages).toStrictEqual([]);
+	}
+);
+
+test(
+	'updates the repository and restores uncommitted changes without using the stash list',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		runGit(checkout, ['update-ref', 'ORIG_HEAD', 'HEAD^']);
+
+		const before = readCheckoutState(checkout);
+		const original = runGit(checkout, ['rev-parse', 'HEAD']);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '▴ ')).toStrictEqual([
+			'▴ The repository contains uncommitted changes',
+		]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		expect(runGit(checkout, ['rev-parse', 'ORIG_HEAD'])).toBe(original);
+		expect(result.stages).toStrictEqual(['stage core']);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'baz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			before.stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'leaves the checkout unchanged when local commits conflict with the upstream',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		runGit(checkout, ['stash', 'push', '--quiet', '--message=bar']);
+		await writeFile(join(checkout, 'foo'), numberedLines('1', 'plugh'));
+		runGit(checkout, ['commit', '--quiet', '--all', '--message=qux']);
+		runGit(checkout, ['stash', 'pop', '--index', '--quiet']);
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Local changes kept',
+		]);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'leaves the checkout unchanged when uncommitted changes conflict with the upstream',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await writeFile(join(checkout, 'foo'), numberedLines('one', 'plugh'));
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to reapply the saved changes in the private worktree',
+		]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout unchanged',
+		]);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each(
+	UPDATE_STEPS.flatMap((step) =>
+		INTERRUPTIONS.map((interruption) => ({ ...step, ...interruption }))
+	)
+)(
+	'restores the checkout after `$signal` to the sync $target while $step',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ gate, ...interruption }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const gated = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			gate,
+			interruption
+		);
+		const { interrupted, recovered } = await recoverInterruptedSync(
+			directory.path,
+			gated,
+			interruption
+		);
+
+		expect(interrupted.status).toBe(interruption.status);
+		expect(interrupted.stages).toStrictEqual([]);
+		expect(recovered.status).toBe(0);
+		expect(recovered.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each(INTERRUPTIONS)(
+	'keeps a finished update after `$signal` to the sync $target while it cleans up',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (interruption) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const gated = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref -d *',
+			interruption
+		);
+		const { interrupted, recovered } = await recoverInterruptedSync(
+			directory.path,
+			gated,
+			interruption
+		);
+
+		expect(interrupted.status).toBe(interruption.status);
+		expect(recovered.status).toBe(0);
+		expect(recovered.stages).toStrictEqual(['stage install']);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'baz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			before.stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'waits for a Git command that outlives a killed sync before restoring the checkout',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const gated = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'temp-index read-tree -m -u *',
+			{ signal: 'SIGKILL', status: null, target: 'process' }
+		);
+		const recovery = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		await waitForOutput(
+			recovery,
+			RECOVERY_WAITING_MESSAGE,
+			RECOVERY_TEST_TIMEOUT
+		);
+		await gated.release();
+
+		const result = await recovery.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(result.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(gated.run.done).resolves.toMatchObject({ status: null });
+	}
+);
+
+test.each([
+	{ signal: 'SIGKILL', status: null, target: 'group' },
+	{ signal: 'SIGKILL', status: null, target: 'process' },
+] as const)(
+	'restores the checkout after `$signal` to the sync $target interrupts the restoration',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (interruption) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref -m * refs/heads/master *',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const restoration = await interruptSync(
+			directory.path,
+			['sync', 'install'],
+			'temp-index checkout-index *',
+			interruption,
+			'restoration'
+		);
+		const { interrupted, recovered } = await recoverInterruptedSync(
+			directory.path,
+			restoration,
+			interruption
+		);
+
+		expect(interrupted.status).toBe(interruption.status);
+		expect(recovered.status).toBe(0);
+		expect(recovered.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'finishes the cleanup after a restoration without checking later edits',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref -m * refs/heads/master *',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const cleanup = await interruptSync(
+			directory.path,
+			['sync', 'install'],
+			'update-ref -d refs/domfiles-sync/*/saved',
+			{ signal: 'SIGKILL', status: null, target: 'group' },
+			'cleanup'
+		);
+
+		await cleanup.run.done;
+		await writeFile(join(checkout, 'foo'), 'plugh\n');
+
+		const edited = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(result.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(edited);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'restores files that the interrupted switch left cut short',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+		await writeFile(join(checkout, 'foo'), 'one\n2\n3\n4');
+		await writeFile(join(checkout, 'qux'), '');
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+	}
+);
+
+test(
+	'stops every sync without changes after the checkout changed during an interruption',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+		await writeFile(join(checkout, 'foo'), 'plugh\n');
+
+		const interrupted = readCheckoutState(checkout);
+		const first = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+		const second = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(first.status).toBe(1);
+		expect(lines(first.stderr, '× ')).toStrictEqual([
+			'× Recovery stopped before changing the checkout. Nothing was discarded',
+		]);
+		expect(first.stdout).toContain(
+			'`foo` contains a change the interrupted update cannot account for'
+		);
+		expect(first.stages).toStrictEqual([]);
+		expect(second.status).toBe(1);
+		expect(second.stderr).toBe(first.stderr);
+		expect(second.stages).toStrictEqual([]);
+		expect(readCheckoutState(checkout)).toStrictEqual(interrupted);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toMatchObject({
+			files: expect.arrayContaining([
+				expect.stringMatching(/^update-\d+-\d+$/),
+			]),
+			worktrees: 2,
+		});
+	}
+);
+
+test(
+	'waits for a Git lock file and stops without removing it',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+		const lock = join(checkout, '.git/index.lock');
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref -m * refs/heads/master *',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+		await writeFile(lock, '');
+
+		const stopped = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		await expect(lstat(lock)).resolves.toMatchObject({ size: 0 });
+		await rm(lock);
+
+		const restored = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(stopped.status).toBe(1);
+		expect(lines(stopped.stderr, '× ')).toStrictEqual([
+			`× Git lock file \`${await realpath(checkout)}/.git/index.lock\` still exists after 5 seconds. Remove it only after confirming that no Git process is using it`,
+			'× Recovery could not finish restoring the checkout. The saved state is intact',
+		]);
+		expect(stopped.stages).toStrictEqual([]);
+		expect(restored.status).toBe(0);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+	}
+);
+
+test(
+	'switches the working tree after the existing index lock is released',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const foo = await readFile(join(checkout, 'foo'), 'utf8');
+		const lock = join(checkout, '.git/index.lock');
+		const injected = await injectFailure(directory.path);
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'rebase *',
+			'gate',
+			injected.env
+		);
+
+		await writeFile(lock, '');
+		await gated.release();
+		await waitForIndexLockLookup(injected.readCommands);
+
+		const phase = await readUpdatePhase(directory.path, checkout);
+		const fooDuringWait = await readFile(join(checkout, 'foo'), 'utf8');
+		const commandsDuringWait = await injected.readCommands();
+
+		await rm(lock);
+
+		const result = await gated.run.done;
+
+		expect(phase).toBe('prepared');
+		expect(fooDuringWait).toBe(foo);
+		expect(commandsDuringWait).not.toMatch(/^temp-index read-tree -m -u /m);
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'baz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+	}
+);
+
+test(
+	'skips the switch when the lock holder changes the index',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const commits = runGit(checkout, ['log', '--format=%H %s']);
+		const lock = join(checkout, '.git/index.lock');
+		const injected = await injectFailure(directory.path);
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'rebase *',
+			'gate',
+			injected.env
+		);
+
+		// Hold the lock as Git does, with a new index that stages `fred`
+		await copyFile(join(checkout, '.git/index'), lock);
+
+		const staged = spawnSync('git', ['add', 'fred'], {
+			cwd: checkout,
+			env: {
+				...GIT_ENV,
+				GIT_INDEX_FILE: lock,
+				PATH: process.env.PATH ?? '',
+			},
+		});
+
+		await gated.release();
+		await waitForIndexLockLookup(injected.readCommands);
+
+		const phase = await readUpdatePhase(directory.path, checkout);
+
+		await rename(lock, join(checkout, '.git/index'));
+
+		const result = await gated.run.done;
+
+		expect(staged.status).toBe(0);
+		expect(phase).toBe('prepared');
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× The checkout changed while sync prepared the update. Sync skipped the switch',
+		]);
+		await expect(injected.readCommands()).resolves.not.toMatch(
+			/^temp-index read-tree -m -u /m
+		);
+		expect(runGit(checkout, ['log', '--format=%H %s'])).toBe(commits);
+		expect(runGit(checkout, ['status', '--porcelain'])).toBe(
+			' M bar\nMM baz\nM  foo\nA  fred\n'
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'keeps the checkout and the Git lock when the wait times out before the switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+		const lock = join(checkout, '.git/index.lock');
+		const injected = await injectFailure(directory.path);
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'rebase *',
+			'gate',
+			injected.env
+		);
+
+		await writeFile(lock, '');
+		await gated.release();
+
+		const result = await gated.run.done;
+		const lockAfter = await lstat(lock);
+
+		await rm(lock);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			`× Git lock file \`${await realpath(checkout)}/.git/index.lock\` still exists after 5 seconds. Remove it only after confirming that no Git process is using it`,
+			'× Failed to update the repository',
+		]);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(lockAfter.size).toBe(0);
+		await expect(injected.readCommands()).resolves.not.toMatch(
+			/^temp-index read-tree -m -u /m
+		);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'waits for a new lock before writing the index during the switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const lock = join(checkout, '.git/index.lock');
+		const injected = await injectFailure(directory.path);
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'temp-index read-tree -m -u *',
+			'gate',
+			injected.env
+		);
+
+		await writeFile(lock, '');
+		await gated.release();
+		await vi.waitFor(
+			async () => {
+				const commands = await injected.readCommands();
+
+				expect(
+					commands.match(
+						/^rev-parse --path-format=absolute --git-path index\.lock$/gm
+					)
+				).toHaveLength(2);
+			},
+			{ interval: 50, timeout: RECOVERY_TEST_TIMEOUT }
+		);
+		await rm(lock);
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		expect(runGit(checkout, ['log', '--format=%s'])).toBe(
+			'baz\nbar\nfoo\n'
+		);
+	}
+);
+
+test(
+	'keeps a commit made on `master` during the rebase and updates after the restart',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'rebase *'
+		);
+
+		runGit(checkout, [
+			'commit',
+			'--quiet',
+			'--allow-empty',
+			'--only',
+			'--message=qux',
+		]);
+		await gated.release();
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× The checkout changed while sync prepared the update. Sync skipped the switch',
+		]);
+		expect(
+			result.stdout.match(/Restarting the sync after the update/g)
+		).toHaveLength(2);
+		expect(result.stages).toStrictEqual(['stage core']);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'qux\nbaz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'leaves the checkout unchanged when a file the update changes is edited during the rebase',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'rebase *'
+		);
+
+		await writeFile(join(checkout, 'foo'), 'plugh\n');
+
+		const before = readCheckoutState(checkout);
+
+		await gated.release();
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).toContain(
+			'Sync prepared the update using an earlier version of `foo`. Rerun your sync command to use your current changes'
+		);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'keeps an edit made during the rebase to a file the update leaves alone',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'rebase *'
+		);
+
+		await writeFile(join(checkout, 'bar'), 'plugh\n');
+		await gated.release();
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(0);
+		expect(result.stages).toStrictEqual(['stage core']);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'baz\nbar\nfoo\n',
+			files: {
+				bar: 'plugh\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+	}
+);
+
+test(
+	'updates the repository after the marker of an interrupted update was removed',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'stash apply *',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const state = join(directory.path, 'home/.local/state/domfiles');
+		const entries = await readdir(state);
+		const marker = entries.find(
+			(entry) => entry.startsWith('update-') && !entry.includes('.')
+		);
+
+		await rm(join(state, marker ?? 'missing'));
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		expect(runGit(checkout, ['log', '--format=%s'])).toBe(
+			'baz\nbar\nfoo\n'
+		);
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each(['.gitignore', '.git/info/exclude'])(
+	'leaves the checkout unchanged and names a file ignored through `%s` where the update adds one',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (ignoreFile) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await appendFile(join(checkout, ignoreFile), 'qux\n');
+		await writeFile(join(checkout, 'qux'), 'plugh\n');
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).toContain(
+			'The update would overwrite a local file or symlink at `qux`. Even if Git ignores it, move it outside the checkout and rerun your sync command'
+		);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(readFile(join(checkout, 'qux'), 'utf8')).resolves.toBe(
+			'plugh\n'
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'leaves the checkout unchanged and names a path the update adds with a Git-quoted name',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const update = join(directory.path, 'update');
+
+		await writeFile(join(update, 'corge"'), 'corge\n');
+		runGit(update, ['add', '--all']);
+		runGit(update, ['commit', '--quiet', '--message=qux']);
+		runGit(update, ['push', '--quiet']);
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).toContain(
+			'Sync cannot update paths that Git lists in quotes, including "corge\\"". Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git'
+		);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+	}
+);
+
+test(
+	'restores the checkout after `KILL` stops Git while it holds the switch index lock',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const log = join(directory.path, 'smudge.log');
+		const smudge = join(directory.path, 'smudge');
+
+		await writeExecutable(smudge, SMUDGE_GATE_STUB);
+		await writeFile(log, '');
+		await writeFile(
+			join(checkout, '.git/info/attributes'),
+			'foo filter=gate\n'
+		);
+		runGit(checkout, ['config', 'filter.gate.smudge', smudge]);
+
+		const before = readCheckoutState(checkout);
+		const env = {
+			...GIT_ENV,
+			SMUDGE_LOG: log,
+			SMUDGE_RELEASE: join(directory.path, 'smudge.release'),
+		};
+		const run = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			env
+		);
+
+		await vi.waitFor(
+			async () => {
+				await expect(readLog(log)).resolves.toHaveLength(1);
+			},
+			{ interval: 50, timeout: RECOVERY_TEST_TIMEOUT }
+		);
+		process.kill(-(run.pid ?? 0), 'SIGKILL');
+		await run.done;
+
+		const lock = join(
+			directory.path,
+			`home/.local/state/domfiles/update-${await readUpdateId(checkout)}.tmp/index.w0.lock`
+		);
+
+		await expect(lstat(lock)).resolves.toBeDefined();
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			env
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each(['index.check', 'index.w0', 'index.w1'])(
+	'restores the checkout past a stale `%s.lock` left by an interrupted switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (index) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', target: 'group' }
+		);
+
+		await update.run.done;
+		await writeFile(
+			join(
+				directory.path,
+				`home/.local/state/domfiles/update-${await readUpdateId(checkout)}.tmp/${index}.lock`
+			),
+			''
+		);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each(['original', 'saved', 'updated'])(
+	'updates the repository past a stale lock of the private `%s` ref',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (name) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const refs = join(
+			checkout,
+			`.git/refs/domfiles-sync/${await readUpdateId(checkout)}`
+		);
+
+		await mkdir(refs, { recursive: true });
+		await writeFile(join(refs, `${name}.lock`), '');
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		expect(runGit(checkout, ['log', '--format=%s'])).toBe(
+			'baz\nbar\nfoo\n'
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+		await expect(lstat(join(refs, `${name}.lock`))).rejects.toMatchObject({
+			code: 'ENOENT',
+		});
+	}
+);
+
+test.each(['original', 'saved', 'updated'])(
+	'removes the private `%s` ref past a stale lock while recovery cleans up',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (name) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', target: 'group' }
+		);
+
+		await update.run.done;
+		await writeFile(
+			join(
+				checkout,
+				`.git/refs/domfiles-sync/${await readUpdateId(checkout)}/${name}.lock`
+			),
+			''
+		);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each([
+	{ signal: 'SIGHUP', status: 129 },
+	{ signal: 'SIGINT', status: 130 },
+] as const)(
+	'restores the checkout and exits with $status after `$signal` to the sync group during the switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ signal, status }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const gated = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal, target: 'group' }
+		);
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(status);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× A signal interrupted the repository update',
+		]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(result.stages).toStrictEqual([]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'keeps a commit that moves `master` while the switch writes the index',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*'
+		);
+		const commit = runGit(checkout, [
+			'commit-tree',
+			'HEAD^{tree}',
+			'-p',
+			'HEAD',
+			'-m',
+			'qux',
+		]).trim();
+
+		runGit(checkout, ['update-ref', 'refs/heads/master', commit]);
+		await gated.release();
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× `master` moved before sync could update it',
+		]);
+		expect(
+			result.stdout.match(/Restarting the sync after the update/g)
+		).toHaveLength(2);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'qux\nbaz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'stops without changing the checkout when it cannot read the tree of a moved `master`',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const injected = await injectFailure(directory.path, {
+			git: ['rev-parse --quiet --verify refs/heads/master^{tree}'],
+		});
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			'gate',
+			injected.env
+		);
+		const commit = runGit(checkout, [
+			'commit-tree',
+			'HEAD^{tree}',
+			'-p',
+			'HEAD',
+			'-m',
+			'qux',
+		]).trim();
+
+		runGit(checkout, ['update-ref', 'refs/heads/master', commit]);
+		await gated.release();
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(1);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× `master` moved before sync could update it',
+			'× Recovery stopped before changing the checkout. Nothing was discarded',
+		]);
+		expect(result.stdout).toContain(
+			'Sync could not compare the trees of `master` and the original commit'
+		);
+		await expect(injected.readFailures()).resolves.toHaveLength(1);
+		expect(runGit(checkout, ['rev-parse', 'HEAD']).trim()).toBe(commit);
+	}
+);
+
+test(
+	'keeps a commit of the staged changes that moves `master` while the switch writes the index',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const staged = runGit(checkout, ['write-tree']).trim();
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*'
+		);
+		const commit = runGit(checkout, [
+			'commit-tree',
+			staged,
+			'-p',
+			'HEAD',
+			'-m',
+			'qux',
+		]).trim();
+
+		runGit(checkout, ['update-ref', 'refs/heads/master', commit]);
+		await gated.release();
+
+		const result = await gated.run.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× `master` moved before sync could update it',
+		]);
+		expect(
+			result.stdout.match(/Restarting the sync after the update/g)
+		).toHaveLength(2);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'qux\nbaz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\n M baz\n?? fred\n',
+		});
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each([
+	{
+		listTree: (checkout: string) => {
+			const blob = runGit(
+				checkout,
+				['hash-object', '-w', '--stdin'],
+				'thud\n'
+			).trim();
+
+			return `${runGit(checkout, ['ls-tree', 'HEAD'])}100644 blob ${blob}\tthud\n`;
+		},
+		tip: 'a commit that adds a file',
+	},
+	{
+		listTree: (checkout: string) => {
+			const [info = ''] = runGit(checkout, [
+				'ls-files',
+				'--stage',
+				'foo',
+			]).split('\t');
+			const [, blob = ''] = info.split(' ');
+
+			return runGit(checkout, ['ls-tree', 'HEAD']).replace(
+				/^(100644 blob )[0-9a-f]+(\tfoo)$/m,
+				`$1${blob}$2`
+			);
+		},
+		tip: 'a commit of part of the staged changes',
+	},
+])(
+	'stops without changing the checkout when `master` moves to $tip while the switch writes the index',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ listTree }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const tree = runGit(checkout, ['mktree'], listTree(checkout)).trim();
+
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*'
+		);
+		const commit = runGit(checkout, [
+			'commit-tree',
+			tree,
+			'-p',
+			'HEAD',
+			'-m',
+			'qux',
+		]).trim();
+
+		runGit(checkout, ['update-ref', 'refs/heads/master', commit]);
+		await gated.release();
+
+		const stopped = await gated.run.done;
+		const state = readCheckoutState(checkout);
+		const recovered = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(stopped.status).toBe(1);
+		expect(lines(stopped.stderr, '× ')).toStrictEqual([
+			'× `master` moved before sync could update it',
+			'× Recovery stopped before changing the checkout. Nothing was discarded',
+		]);
+		expect(stopped.stdout).toContain(MOVED_MASTER_TREE_MESSAGE);
+		expect(stopped.stages).toStrictEqual([]);
+		expect(runGit(checkout, ['rev-parse', 'HEAD']).trim()).toBe(commit);
+		expect(recovered.status).toBe(1);
+		expect(lines(recovered.stderr, '× ')).toStrictEqual([
+			'× Recovery stopped before changing the checkout. Nothing was discarded',
+		]);
+		expect(recovered.stdout).toContain(
+			'`master` points to a commit outside this update'
+		);
+		expect(recovered.stages).toStrictEqual([]);
+		expect(readCheckoutState(checkout)).toStrictEqual(state);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toMatchObject({
+			files: expect.arrayContaining([
+				expect.stringMatching(/^update-\d+-\d+$/),
+			]),
+			refs: expect.stringContaining('refs/domfiles-sync/'),
+			worktrees: 2,
+		});
+	}
+);
+
+async function pushUpstreamChange(
+	directory: string,
+	change: (update: string) => Promise<void>
+) {
+	const update = join(directory, 'update');
+
+	await change(update);
+	runGit(update, ['add', '--all']);
+	runGit(update, ['commit', '--quiet', '--message=qux']);
+	runGit(update, ['push', '--quiet']);
+}
+
+async function readEntry(path: string) {
+	const stats = await lstat(path);
+
+	return stats.isSymbolicLink()
+		? { link: await readlink(path) }
+		: { content: await readFile(path, 'utf8') };
+}
+
+test.each([
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		local: async () => {},
+		path: 'plugh/xyzzy',
+		shape: 'adds a file in a new directory',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'garply/thud'), 'xyzzy\n');
+		},
+		local: async () => {},
+		path: 'garply/thud',
+		shape: 'adds a file in an existing directory',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'grault'));
+			await mkdir(join(update, 'grault'));
+			await writeFile(join(update, 'grault/xyzzy'), 'xyzzy\n');
+		},
+		local: async () => {},
+		path: 'grault/xyzzy',
+		shape: 'replaces a tracked file with a directory',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		local: async () => {},
+		path: 'garply',
+		shape: 'replaces a directory of tracked files with a file',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'plugh'), 'xyzzy\n');
+		},
+		local: async (checkout: string) => {
+			await mkdir(join(checkout, 'plugh/xyzzy'), { recursive: true });
+		},
+		path: 'plugh',
+		shape: 'replaces an empty local directory with a file',
+	},
+])(
+	'preserves local changes when the update $shape',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ change, local, path }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		await pushUpstreamChange(directory.path, change);
+		await local(checkout);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		await expect(readFile(join(checkout, path), 'utf8')).resolves.toBe(
+			'xyzzy\n'
+		);
+		expect(runGit(checkout, ['log', '--format=%s'])).toBe(
+			'baz\nqux\nbar\nfoo\n'
+		);
+		expect(runGit(checkout, ['status', '--porcelain'])).toBe(
+			' M bar\nMM baz\nM  foo\n?? fred\n'
+		);
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each([
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		entry: 'plugh',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'plugh'), 'plugh\n');
+		},
+		message:
+			'Creating a directory for `plugh/xyzzy` would overwrite the local file or symlink at `plugh`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'an ignored file where the update needs a parent directory',
+	},
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		entry: 'plugh',
+		local: async (checkout: string, outside: string) => {
+			await symlink(outside, join(checkout, 'plugh'));
+		},
+		message:
+			'Creating a directory for `plugh/xyzzy` would overwrite the local file or symlink at `plugh`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'an ignored symlink to a directory where the update needs a parent directory',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		entry: 'garply/plugh',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'garply/plugh'), 'plugh\n');
+		},
+		message:
+			'Replacing the directory `garply` with a file would delete the local file or symlink at `garply/plugh`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'an ignored file inside a directory the update replaces',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'plugh'), 'xyzzy\n');
+		},
+		entry: 'plugh',
+		local: async (checkout: string, outside: string) => {
+			await symlink(outside, join(checkout, 'plugh'));
+		},
+		message:
+			'The update would overwrite a local file or symlink at `plugh`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'an ignored symlink at a path the update adds',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'pl*gh'), 'xyzzy\n');
+		},
+		entry: 'pl*gh',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'pl*gh'), 'plugh\n');
+		},
+		message:
+			'The update would overwrite a local file or symlink at `pl*gh`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'the literal glob character in an untracked filename',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		entry: 'garply/plugh/xyzzy',
+		local: async (checkout: string) => {
+			await mkdir(join(checkout, 'garply/plugh'));
+			runGit(join(checkout, 'garply/plugh'), ['init', '--quiet']);
+			await writeFile(join(checkout, 'garply/plugh/xyzzy'), 'xyzzy\n');
+		},
+		message:
+			'Replacing the directory `garply` with a file would delete the untracked directory `garply/plugh/` and its contents. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'a nested repository as a single untracked directory',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		entry: 'garply/plugh\t',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'garply/plugh\t'), 'plugh\n');
+		},
+		message:
+			'Replacing the directory `garply` with a file would delete the local file or symlink at `garply/plugh\t`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'the trailing tab in a filename inside a directory the update replaces',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		entry: 'garply/\tplugh',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'garply/\tplugh'), 'plugh\n');
+		},
+		message:
+			'Replacing the directory `garply` with a file would delete the local file or symlink at `garply/\tplugh`. Even if Git ignores it, move it outside the checkout and rerun your sync command',
+		shape: 'the leading tab in a filename inside a directory the update replaces',
+	},
+])(
+	'reports $shape and skips the switch',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ change, entry, local, message }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const outside = join(directory.path, 'outside');
+
+		await mkdir(outside);
+		await pushUpstreamChange(directory.path, change);
+		await local(checkout, outside);
+		await appendFile(
+			join(checkout, '.git/info/exclude'),
+			'/plugh\n/garply/plugh\n'
+		);
+
+		const before = readCheckoutState(checkout);
+		const entryBefore = await readEntry(join(checkout, entry));
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).toContain(message);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(readEntry(join(checkout, entry))).resolves.toStrictEqual(
+			entryBefore
+		);
+		await expect(readdir(outside)).resolves.toStrictEqual([]);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.runIf(FOLDS_CASE).each(CASE_RENAMES)(
+	'refuses to rename `$from` to `$to` on a case-insensitive filesystem',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ added, from, spelled, to }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await pushUpstreamChange(directory.path, async (update) => {
+			await Promise.resolve();
+			runGit(update, ['mv', from, 'thud']);
+			runGit(update, ['mv', 'thud', to]);
+		});
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).toContain(
+			`Sync cannot add \`${added}\` because \`${spelled}\` has a different spelling on disk. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git`
+		);
+		expect(result.stdout).not.toContain('local file');
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.skipIf(FOLDS_CASE).each(CASE_RENAMES)(
+	'renames `$from` to `$to` on a case-sensitive filesystem',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ added, from, to }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await pushUpstreamChange(directory.path, async (update) => {
+			await Promise.resolve();
+			runGit(update, ['mv', from, 'thud']);
+			runGit(update, ['mv', 'thud', to]);
+		});
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([]);
+		expect(runGit(checkout, ['ls-files', '--', from, to])).toBe(
+			`${added}\n`
+		);
+		expect(runGit(checkout, ['log', '--format=%s'])).toBe(
+			'baz\nqux\nbar\nfoo\n'
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'keeps the completed update if `KILL` interrupts the write to `ORIG_HEAD`',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		runGit(checkout, ['update-ref', 'ORIG_HEAD', 'HEAD^']);
+
+		const stale = runGit(checkout, ['rev-parse', 'ORIG_HEAD']);
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref ORIG_HEAD *',
+			{ signal: 'SIGKILL', target: 'group' }
+		);
+
+		await update.run.done;
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Completed update kept',
+		]);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'baz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: 'garply\n',
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		});
+		expect(runGit(checkout, ['rev-parse', 'ORIG_HEAD'])).toBe(stale);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+// Leaves the index spelling `Garply` while the disk keeps `garply`, as Git does
+// when it cannot rename a directory that holds an ignored file. The upstream
+// renamed the directory and adds `Garply/plugh` to it
+async function createRespelledFixture(directory: string) {
+	const checkout = await createRecoveryFixture(directory);
+
+	await pushUpstreamChange(directory, async (update) => {
+		runGit(update, ['mv', 'garply', 'thud']);
+		runGit(update, ['mv', 'thud', 'Garply']);
+		await writeFile(join(update, 'Garply/plugh'), 'plugh\n');
+	});
+
+	respellTrackedEntry(checkout, 'garply', 'Garply');
+
+	return checkout;
+}
+
+// Commits a rename of top-level entry `from` to `to` and renames its index
+// entries to match, while the disk keeps the spelling `from`
+function respellTrackedEntry(checkout: string, from: string, to: string) {
+	const listing = runGit(checkout, ['ls-tree', 'HEAD']);
+	const tree = runGit(
+		checkout,
+		['mktree'],
+		listing.replace(`\t${from}\n`, `\t${to}\n`)
+	).trim();
+	const commit = runGit(checkout, [
+		'commit-tree',
+		tree,
+		'-p',
+		'HEAD',
+		'-m',
+		'thud',
+	]).trim();
+	const entries = runGit(checkout, ['ls-files', '--stage', '--', from])
+		.split('\n')
+		.filter(Boolean);
+
+	runGit(checkout, ['update-ref', 'refs/heads/master', commit]);
+
+	for (const entry of entries) {
+		const [info = '', path = ''] = entry.split('\t');
+		const [mode = '', blob = ''] = info.split(' ');
+
+		runGit(checkout, ['rm', '--cached', '--quiet', '--', path]);
+		runGit(checkout, [
+			'update-index',
+			'--add',
+			'--cacheinfo',
+			`${mode},${blob},${to}${path.slice(from.length)}`,
+		]);
+	}
+}
+
+async function readGarplySpellings(checkout: string) {
+	const entries = await readdir(checkout);
+
+	return entries.filter((entry) => entry.toLowerCase() === 'garply');
+}
+
+test.runIf(FOLDS_CASE)(
+	'keeps the parent directory’s spelling on disk when adding a file',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRespelledFixture(directory.path);
+		const stashes = runGit(checkout, ['stash', 'list', '--format=%H']);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		expect(runGit(checkout, ['ls-files', '--', 'Garply'])).toBe(
+			'Garply/plugh\nGarply/waldo\n'
+		);
+		await expect(readGarplySpellings(checkout)).resolves.toStrictEqual([
+			'garply',
+		]);
+		await expect(
+			readFile(join(checkout, 'garply/plugh'), 'utf8')
+		).resolves.toBe('plugh\n');
+		expect(runGit(checkout, ['log', '--format=%s'])).toBe(
+			'baz\nqux\nbar\nfoo\n'
+		);
+		expect(runGit(checkout, ['status', '--porcelain'])).toBe(
+			' M bar\nMM baz\nM  foo\n?? fred\n'
+		);
+		expect(runGit(checkout, ['stash', 'list', '--format=%H'])).toBe(
+			stashes
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.runIf(FOLDS_CASE)(
+	'removes the added file and keeps its parent directory’s spelling on rollback after `KILL`',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRespelledFixture(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', target: 'group' }
+		);
+
+		await update.run.done;
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(readGarplySpellings(checkout)).resolves.toStrictEqual([
+			'garply',
+		]);
+		await expect(
+			lstat(join(checkout, 'garply/plugh'))
+		).rejects.toMatchObject({ code: 'ENOENT' });
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.runIf(FOLDS_CASE).each([
+	{
+		added: 'garply/waldo',
+		prepare: async (directory: string) => {
+			const checkout = await createRecoveryFixture(directory);
+
+			await pushUpstreamChange(directory, async (update) => {
+				await Promise.resolve();
+				runGit(update, ['mv', 'garply', 'thud']);
+				runGit(update, ['mv', 'thud', 'Garply']);
+			});
+			await pushUpstreamChange(directory, async (update) => {
+				await Promise.resolve();
+				runGit(update, ['mv', 'Garply', 'thud']);
+				runGit(update, ['mv', 'thud', 'garply']);
+			});
+			respellTrackedEntry(checkout, 'garply', 'Garply');
+
+			return checkout;
+		},
+		tracked: 'garply/waldo',
+		where: 'at the added path',
+	},
+	{
+		added: 'grault/xyzzy',
+		prepare: async (directory: string) => {
+			const checkout = await createRecoveryFixture(directory);
+
+			await pushUpstreamChange(directory, async (update) => {
+				await Promise.resolve();
+				runGit(update, ['mv', 'grault', 'thud']);
+				runGit(update, ['mv', 'thud', 'Grault']);
+			});
+			await pushUpstreamChange(directory, async (update) => {
+				await rm(join(update, 'Grault'));
+				await mkdir(join(update, 'grault'));
+				await writeFile(join(update, 'grault/xyzzy'), 'xyzzy\n');
+			});
+			respellTrackedEntry(checkout, 'grault', 'Grault');
+
+			return checkout;
+		},
+		tracked: 'grault',
+		where: 'where the update needs a parent directory',
+	},
+])(
+	'reports a possible spelling difference for a tracked file $where',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async ({ added, prepare, tracked }) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await prepare(directory.path);
+		const before = readCheckoutState(checkout);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).toContain(
+			`Sync cannot add \`${added}\` because \`${tracked}\` is in the way. Git did not list it as untracked and may track it under another spelling. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git`
+		);
+		expect(result.stdout).not.toContain('local file');
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'skips the update without naming an obstruction if Git cannot list untracked paths',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await writeFile(join(checkout, 'qux'), 'plugh\n');
+		await writeExecutable(
+			join(directory.path, 'stubs/git'),
+			`#!/bin/sh
+PATH="\${PATH#*:}"
+
+for param do
+  if [ "$param" = --others ]; then
+    exit 128
+  fi
+done
+
+exec git "$@"
+`
+		);
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).not.toMatch(ANY_CAUSE);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(readFile(join(checkout, 'qux'), 'utf8')).resolves.toBe(
+			'plugh\n'
+		);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.runIf(FOLDS_CASE)(
+	'omits the cause when a line of an untracked filename matches a tracked path',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await pushUpstreamChange(directory.path, async (update) => {
+			await Promise.resolve();
+			runGit(update, ['mv', 'grault', 'thud']);
+			runGit(update, ['mv', 'thud', 'Grault']);
+		});
+		await pushUpstreamChange(directory.path, async (update) => {
+			await rm(join(update, 'Grault'));
+			await mkdir(join(update, 'grault'));
+			await writeFile(join(update, 'grault/xyzzy'), 'xyzzy\n');
+		});
+		respellTrackedEntry(checkout, 'grault', 'Grault');
+		await writeFile(join(checkout, 'plugh\ngrault'), 'plugh\n');
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).not.toMatch(ANY_CAUSE);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+	}
+);
+
+test(
+	'omits the cause when Git lists an untracked filename containing a newline',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await writeFile(join(checkout, 'qux'), 'plugh\n');
+		await writeFile(join(checkout, 'plugh\nqux'), 'plugh\n');
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).not.toMatch(ANY_CAUSE);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(readFile(join(checkout, 'qux'), 'utf8')).resolves.toBe(
+			'plugh\n'
+		);
+	}
+);
+
+test(
+	'omits the cause when a nested repository in a replaced directory contains a filename with a newline',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const nested = join(checkout, 'garply/plugh');
+
+		await pushUpstreamChange(directory.path, async (update) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		});
+		await mkdir(nested);
+		runGit(nested, ['init', '--quiet']);
+		await writeFile(join(nested, 'xyzzy\nthud'), 'xyzzy\n');
+
+		const before = readCheckoutState(checkout);
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(result.stdout).not.toMatch(ANY_CAUSE);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readFile(join(nested, 'xyzzy\nthud'), 'utf8')
+		).resolves.toBe('xyzzy\n');
+	}
+);
+
+test.each<FailureCase>([
+	{
+		failure: { git: ['temp-index write-tree'] },
+		reason: 'Git cannot write a tree from the index copy',
+	},
+	{
+		failure: { git: ['temp-index update-index -q --refresh'] },
+		reason: 'Git cannot refresh the comparison index',
+	},
+	{
+		failure: {
+			command: 'grep',
+			stub: createArgumentFailureStub('*/dirty.w0'),
+		},
+		reason: 'sync cannot look up a path in the recorded differences',
+	},
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		failure: {
+			command: 'grep',
+			stub: createArgumentFailureStub('*/switch.removed'),
+		},
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'plugh'), 'plugh\n');
+		},
+		reason: 'sync cannot look up a parent in the list of removals',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		failure: {
+			command: 'grep',
+			stub: createArgumentFailureStub('*/switch.names'),
+		},
+		reason: 'sync cannot look up a directory entry in the switch list',
+	},
+])(
+	'skips the switch without reporting a checkout change when $reason',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	skipsSwitchWithoutCause
+);
+
+test.skipIf(IS_ROOT).each<FailureCase>([
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'plugh'), 'xyzzy\n');
+		},
+		failure: { command: 'mv', stub: UNREADABLE_LISTING_STUB },
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'plugh'), 'plugh\n');
+		},
+		reason: 'sync cannot read its list of untracked paths',
+	},
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		local: async (checkout: string) => {
+			await mkdir(join(checkout, 'plugh'));
+			await writeFile(join(checkout, 'plugh/xyzzy'), 'plugh\n');
+		},
+		modes: [{ mode: 0o311, path: 'plugh' }],
+		reason: 'an added path’s parent is searchable but unreadable',
+	},
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		local: async (checkout: string) => {
+			await mkdir(join(checkout, 'plugh'));
+			await writeFile(join(checkout, 'plugh/xyzzy'), 'plugh\n');
+			await writeFile(join(checkout, 'plugh/*'), 'plugh\n');
+		},
+		modes: [{ mode: 0o311, path: 'plugh' }],
+		reason: 'an unreadable directory contains a file literally named `*`',
+	},
+	{
+		change: async (update: string) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		},
+		local: async (checkout: string) => {
+			await mkdir(join(checkout, 'plugh'));
+		},
+		modes: [{ mode: 0o600, path: 'plugh' }],
+		reason: 'an added path’s parent lacks search permission',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'garply/waldo'), 'xyzzy\n');
+		},
+		modes: [{ mode: 0o600, path: 'garply' }],
+		reason: 'a changed file’s parent lacks search permission',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'grault'), 'xyzzy\n');
+		},
+		modes: [{ mode: 0o000, path: 'grault' }],
+		reason: 'a changed file lacks read permission',
+	},
+])(
+	'skips the switch without reporting a checkout change when $reason',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	skipsSwitchWithoutCause
+);
+
+test.each([
+	{
+		failure: 'diff --quiet',
+		stagedBaz: 'garply\n',
+		status: ' M bar\nMM baz\nM  foo\n?? fred\n',
+		what: 'the working tree with the index',
+	},
+	{
+		failure: 'diff --cached --quiet',
+		prepare: (checkout: string) => {
+			runGit(checkout, ['add', '--update']);
+		},
+		stagedBaz: 'waldo\n',
+		status: 'M  bar\nM  baz\nM  foo\n?? fred\n',
+		what: 'the index with `HEAD`',
+	},
+])(
+	'saves local changes without a warning when Git cannot compare $what',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (row) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		row.prepare?.(checkout);
+
+		const injected = await injectFailure(directory.path, {
+			git: [row.failure],
+		});
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			injected.env
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '▴ ')).toStrictEqual([]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Repository updated',
+			'✓ Changes restored',
+			'✓ Up to date',
+		]);
+		await expect(injected.readFailures()).resolves.toHaveLength(1);
+		await expect(readUpdatedState(checkout)).resolves.toStrictEqual({
+			branch: 'refs/heads/master\n',
+			commits: 'baz\nbar\nfoo\n',
+			files: {
+				bar: 'grault\n',
+				baz: 'waldo\n',
+				foo: numberedLines('one', 'twenty'),
+				stagedBaz: row.stagedBaz,
+				stagedFoo: numberedLines('one', 'twenty'),
+			},
+			status: row.status,
+		});
+	}
+);
+
+test(
+	'rolls back without claiming that `master` moved when Git cannot verify its tip',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+		const injected = await injectFailure(directory.path, {
+			git: [
+				'update-ref -m * refs/heads/master *',
+				'rev-parse --quiet --verify refs/heads/master',
+			],
+		});
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			injected.env
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Failed to update the repository',
+		]);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Changes restored',
+		]);
+		expect(result.stages).toStrictEqual(['stage core']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(injected.readFailures()).resolves.toHaveLength(2);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test.each<FailureCase & { message: string }>([
+	{
+		failure: { git: ['symbolic-ref --quiet HEAD'] },
+		message: 'Sync could not identify the current branch',
+		reason: 'Git cannot identify the branch named by `HEAD`',
+	},
+	{
+		failure: { git: ['rev-parse --quiet --verify refs/heads/master'] },
+		message: 'Sync could not resolve `master` to a commit',
+		reason: 'Git cannot resolve the tip of `master`',
+	},
+	{
+		failure: {
+			git: [
+				'rev-parse --path-format=absolute --git-path CHERRY_PICK_HEAD *',
+			],
+		},
+		message:
+			'Sync could not determine whether a Git operation is in progress',
+		reason: 'Git cannot locate its operation markers',
+	},
+	{
+		failure: { git: ['ls-files -v *'] },
+		message: 'Sync could not check for files marked assume-unchanged',
+		reason: 'Git cannot check the index flags for skipped files',
+	},
+	{
+		failure: { git: ['temp-index write-tree'] },
+		message: 'Sync could not verify the checkout’s index',
+		reason: 'Git cannot write a tree from the index copy',
+	},
+	{
+		failure: { git: ['diff-tree *'] },
+		message:
+			'Sync could not compare the working tree with the versions saved by the update',
+		reason: 'Git cannot compare the recorded working trees',
+	},
+	{
+		failure: { git: ['cat-file --filters *', 'cat-file --filters *'] },
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'foo'), 'one\n2\n3\n4');
+		},
+		message: 'Sync could not check `foo`',
+		reason: 'Git cannot filter either saved version of a truncated file',
+	},
+	{
+		failure: {
+			command: 'grep',
+			stub: createArgumentFailureStub('*/dirty.w[01]'),
+		},
+		message: 'Sync could not check `foo`',
+		reason: 'sync cannot look up a path in the recorded differences',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		failure: {
+			command: 'grep',
+			stub: createArgumentFailureStub('*/switch.names'),
+		},
+		gate: 'temp-index read-tree -m -u *',
+		message: 'Sync could not check `garply`',
+		reason: 'sync cannot look up a directory entry in the switch list',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'garply/thud'), 'xyzzy\n');
+		},
+		failure: {
+			command: 'grep',
+			stub: createArgumentFailureStub('*/switch.names'),
+		},
+		local: async (checkout: string) => {
+			await rename(join(checkout, 'garply'), join(checkout, '../garply'));
+			await symlink('../garply', join(checkout, 'garply'));
+		},
+		message: 'Sync could not check `garply/thud`',
+		reason: 'sync cannot check whether the switch changed a parent symlink',
+	},
+])(
+	'stops before rollback and identifies the incomplete check when $reason',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	stopsRecoveryWithoutCause
+);
+
+test.skipIf(IS_ROOT).each<FailureCase & { message: string }>([
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'garply/thud'), 'xyzzy\n');
+		},
+		message: 'Sync could not check `garply/thud`',
+		modes: [{ mode: 0o600, path: 'garply' }],
+		reason: 'a switch path’s parent lacks search permission',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		gate: 'temp-index read-tree -m -u *',
+		local: async (checkout: string) => {
+			await mkdir(join(checkout, 'garply/plugh'));
+			await writeFile(join(checkout, 'garply/plugh/xyzzy'), 'xyzzy\n');
+		},
+		message: 'Sync could not check `garply`',
+		modes: [{ mode: 0o300, path: 'garply/plugh' }],
+		reason: 'a subdirectory of a switch path cannot be listed',
+	},
+	{
+		message: 'Sync could not check `foo`',
+		modes: [{ mode: 0o000, path: 'foo' }],
+		reason: 'a file at a switch path is unreadable',
+	},
+])(
+	'stops before rollback and identifies the incomplete check when $reason',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	stopsRecoveryWithoutCause
+);
+
+test.each([
+	{
+		local: async (checkout: string) => {
+			await Promise.resolve();
+			runGit(checkout, ['update-ref', '--no-deref', 'HEAD', 'HEAD']);
+		},
+		message: 'The checkout is no longer on `master`',
+		reason: '`HEAD` is detached',
+	},
+	{
+		local: async (checkout: string) => {
+			await Promise.resolve();
+			runGit(checkout, ['update-ref', 'refs/heads/master', 'HEAD^']);
+		},
+		message: '`master` points to a commit outside this update',
+		reason: 'the tip of `master` matches neither recorded commit',
+	},
+	{
+		local: async (checkout: string) => {
+			await writeFile(
+				join(checkout, '.git/MERGE_HEAD'),
+				runGit(checkout, ['rev-parse', 'HEAD'])
+			);
+		},
+		message: 'Git may still have an operation in progress in this checkout',
+		reason: 'Git’s merge marker is present',
+	},
+	{
+		local: async (checkout: string) => {
+			await Promise.resolve();
+			runGit(checkout, ['update-index', '--assume-unchanged', 'bar']);
+		},
+		message:
+			'The repository contains skipped files. Unskip them before restoring the original state',
+		reason: 'a tracked file is marked assume-unchanged',
+	},
+	{
+		local: async (checkout: string) => {
+			await Promise.resolve();
+			runGit(checkout, ['add', 'fred']);
+		},
+		message: 'The index differs from both versions recorded by the update',
+		reason: 'the index matches neither recorded tree',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		gate: 'temp-index read-tree -m -u *',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'garply/plugh'), 'plugh\n');
+		},
+		message:
+			'`garply` contains a change the interrupted update cannot account for',
+		reason: 'a directory the switch would replace contains an unexpected file',
+	},
+	{
+		change: async (update: string) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		},
+		gate: 'temp-index read-tree -m -u *',
+		local: async (checkout: string) => {
+			await writeFile(join(checkout, 'garply/waldo\nfoo'), 'plugh\n');
+		},
+		message:
+			'`garply` contains a change the interrupted update cannot account for',
+		reason: 'a directory the switch would replace contains a filename with a newline',
+	},
+	{
+		change: async (update: string) => {
+			await writeFile(join(update, 'garply/thud'), 'xyzzy\n');
+		},
+		local: async (checkout: string) => {
+			await rename(join(checkout, 'garply'), join(checkout, '../garply'));
+			await symlink('../garply', join(checkout, 'garply'));
+		},
+		message:
+			'Recovery expected a directory at `garply` and found a file or symlink there',
+		reason: 'an unexpected symlink occupies a parent directory',
+	},
+])(
+	'stops before rollback and reports why when $reason',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (row) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { checkout, interrupted } = await interruptSwitch(
+			directory.path,
+			row
+		);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(1);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Recovery stopped before changing the checkout. Nothing was discarded',
+		]);
+		expect(result.stdout).toContain(row.message);
+		expect(result.stages).toStrictEqual([]);
+		expect(readCheckoutState(checkout)).toStrictEqual(interrupted);
+	}
+);
+
+test.each(['xyzzy', 'waldo'])(
+	'keeps the symlink target’s unstaged edit when an interrupted update would add `plugh/%s`',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async (added) => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createSymlinkedParentFixture(
+			directory.path,
+			added
+		);
+		const before = readCheckoutState(checkout);
+
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'temp-index read-tree -m -u *',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readFile(join(checkout, 'thud/xyzzy'), 'utf8')
+		).resolves.toBe('xyzzy\n');
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toStrictEqual({ files: [], refs: '', worktrees: 1 });
+	}
+);
+
+test(
+	'restores the original directory and its file after the switch replaced them',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await pushUpstreamChange(directory.path, async (update) => {
+			await rm(join(update, 'garply'), { recursive: true });
+			await writeFile(join(update, 'garply'), 'xyzzy\n');
+		});
+
+		const before = readCheckoutState(checkout);
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'read-tree [0-9a-f]*',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const interrupted = await lstat(join(checkout, 'garply'));
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(interrupted.isFile()).toBe(true);
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+		await expect(
+			readFile(join(checkout, 'garply/waldo'), 'utf8')
+		).resolves.toBe('waldo\n');
+	}
+);
+
+test(
+	'recovers when the switch stopped before creating an added file’s parent directory',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+
+		await pushUpstreamChange(directory.path, async (update) => {
+			await mkdir(join(update, 'plugh'));
+			await writeFile(join(update, 'plugh/xyzzy'), 'xyzzy\n');
+		});
+
+		const before = readCheckoutState(checkout);
+		const update = await interruptSync(
+			directory.path,
+			['sync', '--core'],
+			'temp-index read-tree -m -u *',
+			{ signal: 'SIGKILL', status: null, target: 'group' }
+		);
+
+		await update.run.done;
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
+	}
+);
+
+test(
+	'stops an active rollback before restoring a file through a parent symlink',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const moved = join(directory.path, 'garply');
+		const { checkout } = await interruptSwitch(directory.path, {
+			change: async (update) => {
+				await rm(join(update, 'garply/waldo'));
+				await mkdir(join(update, 'garply/waldo'));
+				await writeFile(join(update, 'garply/waldo/xyzzy'), 'xyzzy\n');
+			},
+			local: async (root) => {
+				await rename(join(root, 'garply'), moved);
+				await symlink('../garply', join(root, 'garply'));
+				await rm(join(moved, 'waldo/xyzzy'));
+				await mkdir(join(moved, 'waldo/plugh'));
+			},
+		});
+
+		await writeExecutable(
+			join(directory.path, 'stubs/grep'),
+			FOREIGN_PARENT_GREP_STUB
+		);
+
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+		const parent = await lstat(join(checkout, 'garply'));
+
+		expect(result.status).toBe(1);
+		expect(lines(result.stderr, '× ')).toStrictEqual([
+			'× Recovery could not finish restoring the checkout. The saved state is intact',
+		]);
+		expect(parent.isSymbolicLink()).toBe(true);
+		await expect(readdir(join(moved, 'waldo'))).resolves.toStrictEqual([
+			'plugh',
+		]);
+		await expect(
+			readUpdateLeftovers(directory.path, checkout)
+		).resolves.toMatchObject({
+			files: expect.arrayContaining([
+				expect.stringMatching(/^update-\d+-\d+$/),
+			]),
+			worktrees: 2,
+		});
+	}
+);
+
+test(
+	'restores the interrupted switch before deciding whether to restart',
+	{ timeout: RECOVERY_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const checkout = await createRecoveryFixture(directory.path);
+		const before = readCheckoutState(checkout);
+		const original = runGit(checkout, ['rev-parse', 'refs/heads/master']);
+		const gated = await startGatedSync(
+			directory.path,
+			['sync', '--core'],
+			'update-ref -m * refs/heads/master *'
+		);
+		const owner = gated.run.pid ?? 0;
+		const waiter = startCommand(
+			directory.path,
+			'domfiles',
+			['sync', 'install'],
+			GIT_ENV
+		);
+
+		await waitForOutput(waiter, LOCK_WAITING_MESSAGE);
+
+		// Let Git move `master` while the owner can’t write the `switched`
+		// marker, then end the owner
+		process.kill(owner, 'SIGSTOP');
+		await gated.release();
+		await vi.waitFor(
+			() => {
+				expect(
+					runGit(checkout, ['rev-parse', 'refs/heads/master'])
+				).not.toBe(original);
+			},
+			{ interval: 50, timeout: RECOVERY_TEST_TIMEOUT }
+		);
+		process.kill(owner, 'SIGKILL');
+
+		const result = await waiter.done;
+
+		expect(result.status).toBe(0);
+		expect(lines(result.stdout, '✓ ')).toStrictEqual([
+			'✓ Checkout restored to its state before the update',
+		]);
+		expect(result.stdout).not.toContain(CHANGED_CHECKOUT_RESTART);
+		expect(result.stages).toStrictEqual(['stage install']);
+		expect(readCheckoutState(checkout)).toStrictEqual(before);
 	}
 );

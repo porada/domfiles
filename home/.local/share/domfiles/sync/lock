@@ -229,16 +229,22 @@ is_nested_sync() (
   '
 )
 
-# Locks file descriptor `$2` with the platform’s lock command. With `try`,
-# returns 75 when another process holds the lock. With `wait`, blocks until
-# the lock is free
+# Locks file descriptor `$2`. Mode `wait` waits indefinitely for a busy lock.
+# Mode `try` returns 75 immediately if the lock is busy. Mode `bounded` returns
+# 75 if the lock is still busy after one minute
 lock_sync_file() {
   case "$sync_lock_tool:$1" in
+    flock:bounded)
+      flock -w 60 -E 75 "$2"
+      ;;
     flock:try)
       flock -n -E 75 "$2"
       ;;
     flock:wait)
       flock "$2"
+      ;;
+    lockf:bounded)
+      lockf -s -t 60 "$2"
       ;;
     lockf:try)
       lockf -s -t 0 "$2"

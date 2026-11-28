@@ -83,6 +83,10 @@ The [global tooling guidance](../GLOBAL.md#system-available-tooling) covers Fish
 
 `git s` is a purpose-built view that combines root-relative, short `git status` output with tracked files marked `--assume-unchanged`. It is not an alias or drop-in replacement for `git status`. Status options and alternate output formats remain the responsibility of `git status` rather than `git s`.
 
+## POSIX Shell Trap Exit Status
+
+In dash, a subshell function called from a trap can return the status from before the trap when it executes a bare `return`. A bare `exit` in a subshell can do the same. Either can hide a failed check or make a successful one fail. This reaches shared helpers such as `__grep` through sync’s signal handler. In code reached from a trap, use an explicit status for success or failure and use `return "$?"` or `exit "$?"` to propagate the preceding command’s status.
+
 ## Suppressed Command Output
 
 `DOMFILES_SUPPRESSED` affects only the `$ …` command echo, not command output, confirmations, errors, or headings. Its prefix avoids collisions with unrelated environment variables.

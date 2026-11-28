@@ -19,7 +19,8 @@ case "$#:${1-}" in
       '' \
       'Both commands check for repository updates only when the checkout is on `master`.' \
       '' \
-      '`domfiles sync <stage>` runs one stage without updating the repository.'
+      '`domfiles sync <stage>` runs one stage without checking for new updates.' \
+      'Sync handles an interrupted repository update before running any stage.'
     exit
     ;;
   1:clean | 1:install | 1:macos | 1:migrate | 1:setup | 1:update)
@@ -43,6 +44,8 @@ fi
 . "$sync_bin_dir/../share/domlib"
 # shellcheck source=../share/domfiles/sync/lock
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/lock"
+# shellcheck source=../share/domfiles/sync/recovery
+. "$DOMFILES_BIN_DIR/../share/domfiles/sync/recovery"
 # shellcheck source=../share/domfiles/sync/repository
 . "$DOMFILES_BIN_DIR/../share/domfiles/sync/repository"
 
@@ -65,7 +68,10 @@ fi
 # repository update, any restart, and all stages
 acquire_sync_lock "$@"
 
-# Reload the launcher and its modules if another sync updated the checkout
+# Recover any interrupted update before starting a new update or a stage
+recover_repository_update
+
+# Finish recovery with the loaded modules before deciding whether to restart
 if ! current_revision="$(__domfiles_revision)"; then
   __print_error_and_exit 'Failed to read `HEAD` in the domfiles checkout'
 fi
@@ -81,7 +87,13 @@ fi
 # Update first so upstream can repair a stage that fails to parse
 if [ -z "$stage" ] && can_update_repository; then
   revision="$(__domfiles_revision)"
+
+  # Try to recover the update before exiting on HUP, INT, or TERM
+  trap 'stop_repository_update 1' HUP
+  trap 'stop_repository_update 2' INT
+  trap 'stop_repository_update 15' TERM
   update_repository
+  trap - HUP INT TERM
 
   # Restart with the original arguments and lock holder to load the update
   if [ "$(__domfiles_revision)" != "$revision" ]; then

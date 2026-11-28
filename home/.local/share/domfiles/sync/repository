@@ -131,128 +131,66 @@ stop_descendant_processes() (
   kill -s KILL "$@" 2> /dev/null || :
 )
 
-# Rebases the domfiles checkout onto its upstream, preserving tracked changes.
-# With an SSH key pair, switches `origin` to SSH only after verifying access.
-# Can skip an update or recover from a failed rebase and still return success.
-# Returns failure if preparing the remote, reading the current revision,
-# checking skipped files, or restoring the checkout fails
-update_repository() (
-  stash_failed=false
-  stashed_changes=false
-
+# Verifies SSH access before changing `origin` and fetches the upstream before
+# updating the checkout. Runs in the sync process so its signal traps can
+# recover an interrupted switch
+update_repository() {
   # Ensure the remote uses SSH
   if __is_ssh_configured; then
-    current="$(git -C "$DOMFILES" remote get-url origin)" || return
-    updated="$(__string_replace "$current" 'https://github.com/' 'git@github.com:')" || return
-    updated="$(__string_replace "$updated" 'porada/dotfiles' 'porada/domfiles')" || return
+    update_current_url="$(git -C "$DOMFILES" remote get-url origin)" || return
+    update_url="$(__string_replace "$update_current_url" 'https://github.com/' 'git@github.com:')" \
+      || return
+    update_url="$(__string_replace "$update_url" 'porada/dotfiles' 'porada/domfiles')" || return
 
-    if [ "$current" = "$updated" ]; then
-      __print_confirmation "$current"
+    if [ "$update_current_url" = "$update_url" ]; then
+      __print_confirmation "$update_current_url"
     else
-      verify_status=0
-      run_git_with_limit ls-remote "$updated" HEAD > /dev/null || verify_status="$?"
+      update_verify_status=0
+      run_git_with_limit ls-remote "$update_url" HEAD > /dev/null || update_verify_status="$?"
 
-      if [ "$verify_status" -eq 0 ]; then
-        __ git -C "$DOMFILES" remote set-url origin "$updated" || return
-      elif [ "$verify_status" -eq 124 ]; then
-        __print_error "Failed to verify SSH access to \`$updated\` within 1 minute. Leaving \`origin\` as \`$current\`"
+      if [ "$update_verify_status" -eq 0 ]; then
+        __ git -C "$DOMFILES" remote set-url origin "$update_url" || return
+      elif [ "$update_verify_status" -eq 124 ]; then
+        __print_error "Failed to verify SSH access to \`$update_url\` within 1 minute. Leaving \`origin\` as \`$update_current_url\`"
       else
-        __print_error "Failed to verify SSH access to \`$updated\`. Leaving \`origin\` as \`$current\`"
+        __print_error "Failed to verify SSH access to \`$update_url\`. Leaving \`origin\` as \`$update_current_url\`"
       fi
     fi
   fi
 
   __print_heading_dimmed 'Fetching the latest changes'
-  current_revision="$(__domfiles_revision)" || return
-  fetch_status=0
-  run_git_with_limit fetch --quiet || fetch_status="$?"
+  update_fetch_status=0
+  run_git_with_limit fetch --quiet || update_fetch_status="$?"
 
-  if [ "$fetch_status" -eq 124 ]; then
+  if [ "$update_fetch_status" -eq 124 ]; then
     __print_error 'Failed to fetch the latest changes within 1 minute. Continuing with the local checkout'
-  elif [ "$fetch_status" -ne 0 ]; then
+    return
+  elif [ "$update_fetch_status" -ne 0 ]; then
     __print_error 'Failed to fetch the latest changes. Continuing with the local checkout'
-  elif __ git -C "$DOMFILES" merge-base --is-ancestor '@{u}' HEAD; then
+    return
+  fi
+
+  update_merge_base_status=0
+  __ git -C "$DOMFILES" merge-base --is-ancestor '@{u}' HEAD || update_merge_base_status="$?"
+
+  if [ "$update_merge_base_status" -eq 0 ]; then
     __print_confirmation 'Up to date'
-  else
-    merge_base_status="$?"
-
-    if [ "$merge_base_status" -ne 1 ]; then
-      __print_error 'Failed to compare the local and upstream revisions'
-    else
-      skipped_files="$(__git_skipped_files "$DOMFILES")" || return
-
-      if [ -n "$skipped_files" ]; then
-        __print_warning 'The repository contains skipped files. Unskip them before updating'
-      else
-        __print_heading 'Updating the repository'
-
-        if ! __domfiles_is_clean; then
-          __print_warning 'The repository contains uncommitted changes'
-
-          if ! stash_list="$(git -C "$DOMFILES" stash list --format='%H')"; then
-            __print_error 'Failed to stash uncommitted changes'
-            stash_failed=true
-          elif ! __ git -C "$DOMFILES" stash; then
-            __print_error 'Failed to stash uncommitted changes'
-            stash_failed=true
-          elif ! updated_stash_list="$(git -C "$DOMFILES" stash list --format='%H')"; then
-            __print_error 'Failed to verify stashed changes'
-            stash_failed=true
-            stashed_changes=true
-          elif [ "$updated_stash_list" != "$stash_list" ]; then
-            stashed_changes=true
-          fi
-        fi
-
-        if [ "$stash_failed" = false ]; then
-          if __ git -C "$DOMFILES" rebase; then
-            __print_confirmation 'Repository updated'
-          else
-            echo
-            __print_error 'Failed to update the repository'
-
-            git_dir="$(git -C "$DOMFILES" rev-parse --absolute-git-dir)" || return
-
-            if [ -d "$git_dir/rebase-apply" ] || [ -d "$git_dir/rebase-merge" ]; then
-              __ git -C "$DOMFILES" rebase --abort || return
-            fi
-          fi
-        fi
-      fi
-    fi
+    return
+  elif [ "$update_merge_base_status" -ne 1 ]; then
+    __print_error 'Failed to compare the local and upstream revisions'
+    return
   fi
 
-  if [ "$stashed_changes" = true ]; then
-    if __ git -C "$DOMFILES" stash pop --index --quiet; then
-      __print_confirmation 'Changes restored'
-    else
-      __print_error 'Failed to restore uncommitted changes'
+  update_skipped_files="$(__git_skipped_files "$DOMFILES")" || return
 
-      __print_heading_dimmed 'Restoring the original state'
-      skipped_files="$(__git_skipped_files "$DOMFILES")" || return
-
-      if [ -n "$skipped_files" ]; then
-        __print_error \
-          'The repository contains skipped files. Unskip them before restoring the original state'
-        return 1
-      fi
-
-      __ git -C "$DOMFILES" reset --hard "$current_revision" || {
-        status="$?"
-        __print_error 'Failed to restore the original state'
-        return "$status"
-      }
-
-      if __ git -C "$DOMFILES" stash pop --index --quiet; then
-        __print_confirmation 'Original state restored'
-      else
-        status="$?"
-        __print_error 'Failed to restore the original state'
-        return "$status"
-      fi
-    fi
+  if [ -n "$update_skipped_files" ]; then
+    __print_warning 'The repository contains skipped files. Unskip them before updating'
+    return
   fi
-)
+
+  __print_heading 'Updating the repository'
+  apply_repository_update
+}
 
 # Waits `$2` seconds before stopping the other descendants of `$1`. The watchdog
 # stays a direct child so it can verify its parent. `TERM` cancels the wait.

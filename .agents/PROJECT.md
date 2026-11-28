@@ -146,9 +146,19 @@ This design prioritizes reducing the context and retrieval cost of a complete wr
 
 ### Synchronization Checkout State
 
-`__domfiles_is_clean` intentionally compares the tracked working tree with the index and the index with `HEAD`. This keeps index stat metadata alone from making the checkout appear dirty. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs dependency reconciliation, synchronization warnings, and whether synchronization preserves tracked changes in a stash for later restoration. Repository update safety handles assume-unchanged entries separately.
+`__domfiles_is_clean` intentionally compares the tracked working tree with the index and the index with `HEAD`. This keeps index stat metadata alone from making the checkout appear dirty. Untracked files do not affect the result, and paths marked with `git update-index --assume-unchanged` remain excluded so intentional local overrides are respected. This predicate governs dependency reconciliation, synchronization warnings, and whether the repository update saves tracked changes. When Git finds tracked changes or cannot complete the comparison, sync runs `git stash create` on a copy of the index. Only a confirmed difference triggers the update’s uncommitted-changes warning. A private Git ref holds the resulting working tree and index snapshots outside the stash list.
 
-Repository updates are skipped when the checkout contains entries marked by `git update-index --assume-unchanged`. While those entries are present, synchronization avoids rebases and hard resets because Git may overwrite their working tree contents.
+Sync skips repository updates and refuses to roll back an interrupted switch while the checkout contains assume-unchanged entries. Git can overlook edits to those working tree files.
+
+Before switching, sync checks added paths against the checkout. A file or symlink can be in the way at the added path itself, where the update needs a parent directory, or inside a directory the update replaces with a file. If the entry is outside the tracked paths the switch changes, sync skips the update. Git does not track empty directories, so rollback does not recreate one the switch replaced and can remove a pre-existing parent directory when deleting an added file leaves it empty.
+
+If the added path or an obstructing parent entry already exists under a different spelling, sync reports the spelling difference. A difference in a parent directory’s spelling alone is allowed. If the check finds an obstruction below that directory, it reports the first spelling difference along the path.
+
+For other obstructions, sync asks Git which paths are untracked, including paths Git ignores. It recommends moving an entry only if Git lists it or a containing directory as untracked. Inside a directory the update would replace, sync names each directory Git lists as untracked just once, including nested repositories. If no listed path covers the obstruction, sync says Git may track it under another spelling. In either spelling case, sync advises backing up ignored files before updating the checkout directly with Git.
+
+If sync cannot finish checking whether it is safe to switch, it reports “Failed to update the repository” and leaves the checkout unchanged. It gives no specific cause for the incomplete check. This can happen when a required listing is unreadable or a filename containing a newline makes a listing ambiguous.
+
+Before rollback, recovery identifies any check it cannot finish and stops with the checkout and saved state intact. Recovery checks each parent directory before inspecting or restoring a path. A symlink at a parent is a separate checkout entry. Reading or removing a child through it could affect a file outside the switch.
 
 ### Synchronization Workflow
 
@@ -160,9 +170,23 @@ All checkouts for the same user share the sync state directory, `~/.local/state/
 
 The `run` file identifies the sync process and its lock holder. The `status` file records the result of the last run that reported one. A waiting sync can reuse that result only if it was recorded during the wait and the checkout and arguments match.
 
-Sync reads `HEAD` before loading its modules and again after taking the lock. If the commit changed, sync restarts under the same lock to load the current launcher and modules. The shell opens the launcher before the first read, so an update in that interval can pair the old launcher with new modules. Uncommitted edits do not change `HEAD`.
+Sync reads `HEAD` before loading its modules and again after taking the lock and recovering any interrupted update. If the commit changed, sync restarts under the same lock to load the current launcher and modules. The shell opens the launcher before the first read, so an update in that interval can pair the old launcher with new modules. Uncommitted edits and a switch that overlaps module loading and then rolls back can both leave the two reads equal.
+
+The state directory also holds each checkout’s update marker (`update-<id>`), lock file (`update-<id>.lock`), private Git worktree (`update-<id>.worktree`), and scratch directory (`update-<id>.tmp`). Updates and recovery hold the checkout lock on file descriptor 4. Child processes inherit it, so a later sync must wait for them to release it before recovering the checkout.
+
+Holding the checkout lock lets sync clear stale locks on its scratch indexes and private refs. Before switching the working tree, sync waits for an existing Git index lock to clear, then rechecks the checkout for changes the lock holder made. Sync also waits for Git’s locks before writing the checkout’s index or moving `master` and reports any lock that persists.
 
 `domfiles sync` is a best-effort workflow that prioritizes completing as much independent work as possible with minimal interruption. It can finish despite visible failures only when the main workflow or a sync stage explicitly handles them and later work does not depend on the failed operation. The final dependency status is advisory.
+
+#### Interrupted Sync Recovery
+
+Sync rebases and reapplies saved changes in the private worktree. The marker records when sync starts switching the working tree, index, and `master` to the result. After an interruption, sync rolls back an unfinished switch before running a stage. A prepared update, a completed switch, and a completed rollback need only cleanup.
+
+An interrupted write can leave a regular file empty or truncated. Recovery accepts the file if its bytes match the start of an applicable saved version, up to and including a complete copy. A symlink must match exactly.
+
+If another Git operation moves `master` during the switch, sync can preserve the new tip and roll back the checkout when the new commit has the same tree as the original commit or the saved index. For any other tree, sync stops before rollback and keeps the marker and private refs. Even committing only part of the staged changes can require manual recovery.
+
+The [manual restore procedure](project/interrupted-sync-recovery.md) explains how to reconcile a moved branch or recover when an interrupted write leaves the launcher or a module unable to start. It uses Git, the marker, and the private refs under `refs/domfiles-sync/`. The steps are separate so routine sync tasks can skip them.
 
 ## Shell Integration
 

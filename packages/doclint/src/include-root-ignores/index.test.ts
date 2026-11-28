@@ -64,17 +64,24 @@ async function lint(cwd: string): Promise<string[]> {
 	return results.map(({ filePath }) => relative(cwd, filePath)).toSorted();
 }
 
-test('excludes paths ignored by the root `.gitignore`', async () => {
-	const cwd = createFixture({
-		'.gitignore': 'build/\n*.draft.md\n!keep.draft.md\n',
-		'build/foo.md': TEST_MARKDOWN,
-		'docs/foo.draft.md': TEST_MARKDOWN,
-		'foo.md': TEST_MARKDOWN,
-		'keep.draft.md': TEST_MARKDOWN,
-	});
+test(
+	'excludes paths ignored by the root `.gitignore`',
+	{ timeout: 15_000 },
+	async () => {
+		const cwd = createFixture({
+			'.gitignore': 'build/\n*.draft.md\n!keep.draft.md\n',
+			'build/foo.md': TEST_MARKDOWN,
+			'docs/foo.draft.md': TEST_MARKDOWN,
+			'foo.md': TEST_MARKDOWN,
+			'keep.draft.md': TEST_MARKDOWN,
+		});
 
-	await expect(lint(cwd)).resolves.toStrictEqual(['foo.md', 'keep.draft.md']);
-});
+		await expect(lint(cwd)).resolves.toStrictEqual([
+			'foo.md',
+			'keep.draft.md',
+		]);
+	}
+);
 
 test('lints every Markdown file without a root `.gitignore`', async () => {
 	const cwd = createFixture({

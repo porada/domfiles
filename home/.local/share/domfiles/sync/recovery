@@ -1,0 +1,1499 @@
+#!/bin/sh
+
+# Key the update’s state files and private Git refs by checkout path
+repository_update_id="$(printf '%s' "$DOMFILES" | cksum | awk '{ print $1 "-" $2 }')"
+repository_update_lock="$DOMFILES_STATE_DIR/update-$repository_update_id.lock"
+repository_update_locked=false
+repository_update_marker="$DOMFILES_STATE_DIR/update-$repository_update_id"
+repository_update_refs="refs/domfiles-sync/$repository_update_id"
+repository_update_scratch="$DOMFILES_STATE_DIR/update-$repository_update_id.tmp"
+repository_update_worktree="$DOMFILES_STATE_DIR/update-$repository_update_id.worktree"
+
+# Runs the update in the sync process so its signal traps can start recovery.
+# Skips the update if the checkout lock is unavailable
+apply_repository_update() {
+  lock_repository_update || return 0
+  repository_update_locked=true
+  repository_update_status=0
+  rebase_repository_update || repository_update_status="$?"
+  repository_update_locked=false
+  exec 4>&-
+  return "$repository_update_status"
+}
+
+# Checks whether the switch can add `$1` without overwriting unrelated files.
+# Returns 1 for a reported conflict or 2 for an incomplete check
+check_added_switch_path() (
+  dir="$DOMFILES"
+  prefix=''
+  respelled=''
+  rest="$1"
+
+  while :; do
+    case "$rest" in
+      */*)
+        component="${rest%%/*}"
+        rest="${rest#*/}"
+        ;;
+      *)
+        component="$rest"
+        rest=''
+        ;;
+    esac
+
+    prefix="${prefix:+$prefix/}$component"
+    node="$dir/$component"
+
+    # Check search permission before treating a failed lookup as a missing entry
+    if [ ! -x "$dir" ]; then
+      return 2
+    fi
+
+    if [ ! -e "$node" ] && [ ! -L "$node" ]; then
+      return 0
+    fi
+
+    # Case folding or Unicode normalization can make two names resolve to one
+    # entry. Git may leave a parent directory under its old spelling when it
+    # holds an ignored file, so keep checking beneath it
+    exact_status=0
+    is_exact_checkout_entry "$dir" "$component" || exact_status="$?"
+
+    if [ "$exact_status" -ge 2 ]; then
+      return 2
+    fi
+
+    if [ "$exact_status" -eq 1 ]; then
+      if [ -z "$rest" ] || [ -L "$node" ] || [ ! -d "$node" ]; then
+        __print_info "Sync cannot add \`$1\` because \`${respelled:-$prefix}\` has a different spelling on disk. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+        return 1
+      fi
+
+      respelled="${respelled:-$prefix}"
+      dir="$node"
+      continue
+    fi
+
+    if [ -z "$rest" ]; then
+      break
+    fi
+
+    # Check the symlink itself even when its target is a directory
+    if [ -L "$node" ] || [ ! -d "$node" ]; then
+      removed_status=0
+      grep -Fqx -- "$prefix" "$repository_update_scratch/switch.removed" || removed_status="$?"
+
+      case "$removed_status" in
+        0)
+          return 0
+          ;;
+        1) ;;
+        *)
+          return 2
+          ;;
+      esac
+
+      if [ -n "$respelled" ]; then
+        __print_info "Sync cannot add \`$1\` because \`$respelled\` has a different spelling on disk. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+        return 1
+      fi
+
+      # Confirm that Git lists the entry as untracked before advising a move
+      list_repository_untracked_paths || return 2
+      untracked_status=0
+      find_repository_untracked_path "$prefix" > /dev/null || untracked_status="$?"
+
+      case "$untracked_status" in
+        0)
+          __print_info "Creating a directory for \`$1\` would overwrite the local file or symlink at \`$prefix\`. Even if Git ignores it, move it outside the checkout and rerun your sync command"
+          ;;
+        1)
+          __print_info "Sync cannot add \`$1\` because \`$prefix\` is in the way. Git did not list it as untracked and may track it under another spelling. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+          ;;
+        *)
+          return 2
+          ;;
+      esac
+
+      return 1
+    fi
+
+    dir="$node"
+  done
+
+  if [ -n "$respelled" ]; then
+    __print_info "Sync cannot add \`$1\` because \`$respelled\` has a different spelling on disk. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+    return 1
+  fi
+
+  if [ -L "$node" ] || [ ! -d "$node" ]; then
+    list_repository_untracked_paths || return 2
+    untracked_status=0
+    find_repository_untracked_path "$1" > /dev/null || untracked_status="$?"
+
+    case "$untracked_status" in
+      0)
+        __print_info "The update would overwrite a local file or symlink at \`$1\`. Even if Git ignores it, move it outside the checkout and rerun your sync command"
+        ;;
+      1)
+        __print_info "Sync cannot add \`$1\` because \`$1\` is in the way. Git did not list it as untracked and may track it under another spelling. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+        ;;
+      *)
+        return 2
+        ;;
+    esac
+
+    return 1
+  fi
+
+  # Reject names containing newlines before reading one path per line
+  nl='
+'
+  newline_names="$(find "$node" -name "*$nl*" -print)" || return 2
+
+  if [ -n "$newline_names" ]; then
+    return 2
+  fi
+
+  # Check that `find` produced a complete directory listing
+  find "$node" ! -type d -print > "$repository_update_scratch/replaced.entries" || return 2
+
+  # Keep these loop results in scratch files. Bash 3.2 can misparse a multiline
+  # command substitution that contains a `case` statement
+  while IFS= read -r entry; do
+    entry="${entry#"$DOMFILES/"}"
+    name_status=0
+    grep -Fqx -- "$entry" "$repository_update_scratch/switch.names" || name_status="$?"
+
+    case "$name_status" in
+      0) ;;
+      1)
+        printf '%s\n' "$entry" || return 2
+        ;;
+      *)
+        return 2
+        ;;
+    esac
+  done < "$repository_update_scratch/replaced.entries" \
+    > "$repository_update_scratch/replaced.unknown" || return 2
+
+  if [ ! -s "$repository_update_scratch/replaced.unknown" ]; then
+    return 0
+  fi
+
+  # Get the untracked paths before reporting any of this directory’s contents.
+  # Git can list a whole directory once for all the files beneath it
+  list_repository_untracked_paths || return 2
+
+  # Keep each path intact after its one-character type prefix. Finish all
+  # lookups before printing so a failed lookup yields no partial report
+  while IFS= read -r entry; do
+    cover_status=0
+    cover="$(find_repository_untracked_path "$entry")" || cover_status="$?"
+
+    case "$cover_status" in
+      0)
+        case "$cover" in
+          */)
+            printf 'd%s\n' "$cover" || return 2
+            ;;
+          *)
+            printf 'f%s\n' "$entry" || return 2
+            ;;
+        esac
+        ;;
+      1)
+        printf 't%s\n' "$entry" || return 2
+        ;;
+      *)
+        return 2
+        ;;
+    esac
+  done < "$repository_update_scratch/replaced.unknown" \
+    > "$repository_update_scratch/replaced.records" || return 2
+
+  awk '!seen[$0]++' "$repository_update_scratch/replaced.records" | while IFS= read -r record; do
+    entry="${record#?}"
+
+    case "$record" in
+      d*)
+        __print_info "Replacing the directory \`$1\` with a file would delete the untracked directory \`$entry\` and its contents. Even if Git ignores it, move it outside the checkout and rerun your sync command"
+        ;;
+      f*)
+        __print_info "Replacing the directory \`$1\` with a file would delete the local file or symlink at \`$entry\`. Even if Git ignores it, move it outside the checkout and rerun your sync command"
+        ;;
+      *)
+        __print_info "Sync cannot add \`$1\` because \`$entry\` is in the way. Git did not list it as untracked and may track it under another spelling. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+        ;;
+    esac
+  done
+
+  return 1
+)
+
+# Checks the parents of `$1` from the checkout root. Returns 0 if all are
+# searchable directories or 2 if a directory cannot be searched. At the first
+# missing parent, file, or symlink, prints `missing <parent>` or
+# `entry <parent>` and returns 1
+check_checkout_path_parents() (
+  dir="$DOMFILES"
+  parent=''
+  rest="$1"
+
+  while :; do
+    if [ ! -x "$dir" ]; then
+      return 2
+    fi
+
+    case "$rest" in
+      */*)
+        parent="${parent:+$parent/}${rest%%/*}"
+        rest="${rest#*/}"
+        ;;
+      *)
+        return 0
+        ;;
+    esac
+
+    # Each earlier parent is a real directory. Test this entry for a symlink
+    # before descending into it
+    dir="$DOMFILES/$parent"
+
+    if [ -L "$dir" ] || { [ -e "$dir" ] && [ ! -d "$dir" ]; }; then
+      printf 'entry %s\n' "$parent"
+      return 1
+    fi
+
+    if [ ! -e "$dir" ]; then
+      printf 'missing %s\n' "$parent"
+      return 1
+    fi
+  done
+)
+
+# Checks the branch, index, and working tree before rollback. Returns 1 for
+# unexpected state or 2 when recovery cannot complete a check
+check_repository_switch() (
+  head_status=0
+  head="$(git -C "$DOMFILES" symbolic-ref --quiet HEAD)" || head_status="$?"
+
+  if [ "$head_status" -ge 2 ]; then
+    __print_info 'Sync could not identify the current branch'
+    return 2
+  fi
+
+  if [ "$head_status" -eq 1 ] || [ "$head" != refs/heads/master ]; then
+    __print_info 'The checkout is no longer on `master`'
+    return 1
+  fi
+
+  if [ "$1" != branch-moved ]; then
+    if ! master="$(git -C "$DOMFILES" rev-parse --quiet --verify refs/heads/master)"; then
+      __print_info 'Sync could not resolve `master` to a commit'
+      return 2
+    fi
+
+    if [ "$master" != "$repository_update_r0" ] && [ "$master" != "$repository_update_r1" ]; then
+      __print_info '`master` points to a commit outside this update'
+      return 1
+    fi
+  else
+    # Keep the new tip if restoring the index preserves the original staged
+    # changes or if the new tip already contains exactly what was staged
+    if ! master_tree="$(git -C "$DOMFILES" rev-parse --quiet --verify 'refs/heads/master^{tree}')" \
+      || ! original_tree="$(git -C "$DOMFILES" rev-parse --quiet --verify "$repository_update_r0^{tree}")"; then
+      __print_info 'Sync could not compare the trees of `master` and the original commit'
+      return 2
+    fi
+
+    if [ "$master_tree" != "$original_tree" ] && [ "$master_tree" != "$repository_update_i0" ]; then
+      __print_info 'The tree at the new tip of `master` differs from both the original tree and the saved index'
+      return 1
+    fi
+  fi
+
+  operation_status=0
+  is_repository_operation_in_progress || operation_status="$?"
+
+  case "$operation_status" in
+    0)
+      __print_info 'Git may still have an operation in progress in this checkout'
+      return 1
+      ;;
+    1) ;;
+    *)
+      __print_info 'Sync could not determine whether a Git operation is in progress'
+      return 2
+      ;;
+  esac
+
+  if ! skipped_files="$(__git_skipped_files "$DOMFILES")"; then
+    __print_info 'Sync could not check for files marked assume-unchanged'
+    return 2
+  fi
+
+  if [ -n "$skipped_files" ]; then
+    __print_info 'The repository contains skipped files. Unskip them before restoring the original state'
+    return 1
+  fi
+
+  if ! index_tree="$(read_repository_index_tree)"; then
+    __print_info 'Sync could not verify the checkout’s index'
+    return 2
+  fi
+
+  if [ "$index_tree" != "$repository_update_i0" ] && [ "$index_tree" != "$repository_update_i1" ]; then
+    __print_info 'The index differs from both versions recorded by the update'
+    return 1
+  fi
+
+  if ! list_repository_switch_paths || [ ! -r "$repository_update_scratch/switch.paths" ]; then
+    __print_info 'Sync could not compare the working tree with the versions saved by the update'
+    return 2
+  fi
+
+  nl='
+'
+  tab="$(printf '\t')"
+
+  while IFS="$tab" read -r status path; do
+    file="$DOMFILES/$path"
+
+    case "$path" in
+      '"'*)
+        __print_info "\`$path\` has a Git-quoted name that sync cannot restore"
+        return 1
+        ;;
+    esac
+
+    # Check the parents before inspecting the path. A switched file or symlink
+    # in place of a parent has its own entry in this loop
+    parent_status=0
+    parent="$(check_checkout_path_parents "$path")" || parent_status="$?"
+
+    case "$parent_status:$parent" in
+      0:) ;;
+      1:missing\ *)
+        continue
+        ;;
+      1:entry\ *)
+        name_status=0
+        grep -Fqx -- "${parent#entry }" "$repository_update_scratch/switch.names" \
+          || name_status="$?"
+
+        case "$name_status" in
+          0)
+            continue
+            ;;
+          1)
+            __print_info "Recovery expected a directory at \`${parent#entry }\` and found a file or symlink there"
+            return 1
+            ;;
+          *)
+            __print_info "Sync could not check \`$path\`"
+            return 2
+            ;;
+        esac
+        ;;
+      *)
+        __print_info "Sync could not check \`$path\`"
+        return 2
+        ;;
+    esac
+
+    if [ -L "$file" ]; then
+      exact_status=0
+      is_repository_switch_path_exact "$status" "$path" || exact_status="$?"
+
+      case "$exact_status" in
+        0)
+          continue
+          ;;
+        1) ;;
+        *)
+          __print_info "Sync could not check \`$path\`"
+          return 2
+          ;;
+      esac
+    elif [ -d "$file" ]; then
+      # Check every non-directory entry against the switch list. Capture the
+      # status of `find` so a partial listing stops recovery
+      if ! newline_names="$(find "$file" -name "*$nl*" -print)" \
+        || ! find "$file" ! -type d -print > "$repository_update_scratch/check.entries"; then
+        __print_info "Sync could not check \`$path\`"
+        return 2
+      fi
+
+      # A filename containing a newline cannot be a recorded switch path, even
+      # if its separate lines happen to match recorded names
+      unknown=false
+
+      if [ -n "$newline_names" ]; then
+        unknown=true
+      else
+        while IFS= read -r entry; do
+          name_status=0
+          grep -Fqx -- "${entry#"$DOMFILES/"}" "$repository_update_scratch/switch.names" \
+            || name_status="$?"
+
+          case "$name_status" in
+            0) ;;
+            1)
+              unknown=true
+              ;;
+            *)
+              __print_info "Sync could not check \`$path\`"
+              return 2
+              ;;
+          esac
+        done < "$repository_update_scratch/check.entries"
+      fi
+
+      if [ "$unknown" = false ]; then
+        continue
+      fi
+    elif [ -f "$file" ]; then
+      exact_status=0
+      is_repository_switch_path_exact "$status" "$path" || exact_status="$?"
+
+      case "$exact_status" in
+        0)
+          continue
+          ;;
+        1) ;;
+        *)
+          __print_info "Sync could not check \`$path\`"
+          return 2
+          ;;
+      esac
+
+      case "$status" in
+        A)
+          trees="$repository_update_w1"
+          ;;
+        D)
+          trees="$repository_update_w0"
+          ;;
+        *)
+          trees="$repository_update_w0 $repository_update_w1"
+          ;;
+      esac
+
+      # Accept the file as soon as one prefix matches. Otherwise distinguish
+      # comparison errors from confirmed differences
+      unchecked=false
+
+      for tree in $trees; do
+        prefix_status=0
+        is_content_prefix "$file" "$tree:$path" || prefix_status="$?"
+
+        case "$prefix_status" in
+          0)
+            continue 2
+            ;;
+          1) ;;
+          *)
+            unchecked=true
+            ;;
+        esac
+      done
+
+      if [ "$unchecked" = true ]; then
+        __print_info "Sync could not check \`$path\`"
+        return 2
+      fi
+    elif [ ! -e "$file" ]; then
+      continue
+    fi
+
+    __print_info "\`$path\` contains a change the interrupted update cannot account for"
+    return 1
+  done < "$repository_update_scratch/switch.paths"
+
+  return 0
+)
+
+# Removes the private worktree and scratch directory, then tries to delete the
+# private refs. The caller removes the marker
+clear_repository_update_files() (
+  status=0
+
+  if [ -e "$repository_update_worktree" ] || [ -L "$repository_update_worktree" ]; then
+    rm -rf -- "$repository_update_worktree" || status=1
+  fi
+
+  # Git records the worktree by its physical path
+  state_dir="$(cd -P -- "$DOMFILES_STATE_DIR" && pwd -P)" || return "$?"
+  worktree="$state_dir/${repository_update_worktree##*/}"
+  common_dir="$(git -C "$DOMFILES" rev-parse --path-format=absolute --git-common-dir)" || return "$?"
+
+  for gitdir in "$common_dir"/worktrees/*/gitdir; do
+    if [ -f "$gitdir" ] && IFS= read -r target < "$gitdir" \
+      && [ "$target" = "$worktree/.git" ]; then
+      rm -rf -- "${gitdir%/gitdir}" || status=1
+    fi
+  done
+
+  if [ -e "$repository_update_scratch" ]; then
+    rm -rf -- "$repository_update_scratch" || status=1
+  fi
+
+  for name in original saved updated; do
+    clear_repository_update_ref_lock "$name" || :
+
+    if git -C "$DOMFILES" rev-parse --quiet --verify "$repository_update_refs/$name" > /dev/null; then
+      run_update_git -C "$DOMFILES" update-ref -d "$repository_update_refs/$name" || :
+    fi
+  done
+
+  return "$status"
+)
+
+# Removes scratch index `$1` and its lock before rebuilding the index. The
+# caller holds the checkout lock, so an earlier update cannot be using them
+clear_repository_update_index() {
+  rm -f -- "$repository_update_scratch/$1" "$repository_update_scratch/$1.lock"
+}
+
+# Waits up to five seconds for the lock on sync’s private ref `$1` to clear,
+# then tries to remove it. The caller holds the checkout lock
+clear_repository_update_ref_lock() (
+  lock_file="$(git -C "$DOMFILES" rev-parse --path-format=absolute \
+    --git-path "$repository_update_refs/$1.lock")" || return "$?"
+  attempts=0
+
+  while [ -e "$lock_file" ]; do
+    if [ "$attempts" -ge 5 ]; then
+      rm -f -- "$lock_file"
+      return 0
+    fi
+
+    attempts="$((attempts + 1))"
+    command -p sleep 1
+  done
+)
+
+# Finds `$1` or its containing directory in `switch.untracked` and prints the
+# matching entry. Returns 1 for no match or 2 if the listing is unreadable
+find_repository_untracked_path() (
+  if [ ! -r "$repository_update_scratch/switch.untracked" ]; then
+    return 2
+  fi
+
+  while IFS= read -r line; do
+    case "$line" in
+      "$1")
+        printf '%s\n' "$line"
+        return 0
+        ;;
+      */)
+        case "$1" in
+          "$line"*)
+            printf '%s\n' "$line"
+            return 0
+            ;;
+        esac
+        ;;
+    esac
+  done < "$repository_update_scratch/switch.untracked"
+
+  return 1
+)
+
+# Checks whether file `$1` is a byte prefix of blob `$2` after Git applies its
+# working tree filters. Both an empty file and a full copy match. Returns 1 for
+# a mismatch or 2 if the comparison fails
+is_content_prefix() (
+  size="$(wc -c < "$1")" || return 2
+  size="$((size))"
+
+  if [ "$size" -eq 0 ]; then
+    return 0
+  fi
+
+  git -C "$DOMFILES" cat-file --filters "$2" > "$repository_update_scratch/blob" 2> /dev/null \
+    || return 2
+  dd if="$repository_update_scratch/blob" of="$repository_update_scratch/blob.prefix" \
+    bs="$size" count=1 2> /dev/null || return 2
+  compare_status=0
+  cmp -s -- "$repository_update_scratch/blob.prefix" "$1" || compare_status="$?"
+
+  case "$compare_status" in
+    0 | 1)
+      return "$compare_status"
+      ;;
+  esac
+
+  return 2
+)
+
+# Checks the spelling of a name that already resolved in directory `$1`. Returns
+# 0 if the listing includes the exact name `$2`, even for a dangling symlink.
+# Returns 1 if other entries were listed but the name was absent, or 2 if the
+# directory is unreadable or the listing yields no entries
+is_exact_checkout_entry() (
+  # Without read permission a glob can remain literal, and a file may actually
+  # have that literal name
+  if [ ! -r "$1" ]; then
+    return 2
+  fi
+
+  listed=false
+
+  for entry in "$1"/* "$1"/.[!.]* "$1"/..?*; do
+    if [ -e "$entry" ] || [ -L "$entry" ]; then
+      listed=true
+
+      if [ "${entry##*/}" = "$2" ]; then
+        return 0
+      fi
+    fi
+  done
+
+  if [ "$listed" = true ]; then
+    return 1
+  fi
+
+  return 2
+)
+
+# Checks for a merge, rebase, cherry-pick, revert, or sequencer operation in
+# this checkout. Returns 1 if none is in progress or 2 if the check fails
+is_repository_operation_in_progress() (
+  paths="$(git -C "$DOMFILES" rev-parse --path-format=absolute \
+    --git-path CHERRY_PICK_HEAD --git-path MERGE_HEAD --git-path REVERT_HEAD \
+    --git-path rebase-apply --git-path rebase-merge --git-path sequencer)" || return 2
+  found_status=0
+
+  printf '%s\n' "$paths" | while IFS= read -r path; do
+    if [ -e "$path" ] || [ -L "$path" ]; then
+      exit 3
+    fi
+  done || found_status="$?"
+
+  case "$found_status" in
+    0)
+      return 1
+      ;;
+    3)
+      return 0
+      ;;
+  esac
+
+  return 2
+)
+
+# Checks the switch paths for edits and obstructions, including ignored files.
+# Returns 1 after finding conflicts or 2 if a check cannot finish
+is_repository_switch_clean() (
+  clean=true
+  tab="$(printf '\t')"
+
+  # Untracked paths may have changed since the previous check
+  rm -f -- "$repository_update_scratch/switch.untracked" || return 2
+
+  # A tracked file the switch removes can make way for a parent directory
+  awk -F '\t' '$1 == "D" { print substr($0, 3) }' "$repository_update_scratch/switch.paths" \
+    > "$repository_update_scratch/switch.removed" || return 2
+
+  if [ ! -r "$repository_update_scratch/switch.paths" ]; then
+    return 2
+  fi
+
+  while IFS="$tab" read -r status path; do
+    case "$path" in
+      '"'*)
+        __print_info "Sync cannot update paths that Git lists in quotes, including $path. Back up any ignored files you need because Git can overwrite them. Update this checkout directly with Git"
+        clean=false
+        continue
+        ;;
+    esac
+
+    case "$status" in
+      A)
+        added_status=0
+        check_added_switch_path "$path" || added_status="$?"
+
+        case "$added_status" in
+          0) ;;
+          1)
+            clean=false
+            ;;
+          *)
+            return 2
+            ;;
+        esac
+        ;;
+      *)
+        # Git can omit a difference under an unsearchable parent or report one
+        # for an unreadable file. Check access before using its comparison. Git
+        # treats a path beneath a file or symlink as deleted
+        parent_status=0
+        check_checkout_path_parents "$path" > /dev/null || parent_status="$?"
+
+        case "$parent_status" in
+          0)
+            file="$DOMFILES/$path"
+
+            if [ -f "$file" ] && [ ! -L "$file" ] && [ ! -r "$file" ]; then
+              return 2
+            fi
+            ;;
+          1) ;;
+          *)
+            return 2
+            ;;
+        esac
+
+        dirty_status=0
+        grep -Fqx -- "$path" "$repository_update_scratch/dirty.w0" || dirty_status="$?"
+
+        case "$dirty_status" in
+          0)
+            __print_info "Sync prepared the update using an earlier version of \`$path\`. Rerun your sync command to use your current changes"
+            clean=false
+            ;;
+          1) ;;
+          *)
+            return 2
+            ;;
+        esac
+        ;;
+    esac
+  done < "$repository_update_scratch/switch.paths"
+
+  if [ "$clean" = true ]; then
+    return 0
+  fi
+
+  return 1
+)
+
+# Checks path `$2` against the trees for diff status `$1`. Additions use the
+# updated tree, deletions the original, and replacements either. Returns 1 for
+# differing content or 2 if a lookup fails
+is_repository_switch_path_exact() (
+  case "$1" in
+    A)
+      sides=w1
+      ;;
+    D)
+      sides=w0
+      ;;
+    *)
+      sides='w0 w1'
+      ;;
+  esac
+
+  for side in $sides; do
+    dirty_status=0
+    grep -Fqx -- "$2" "$repository_update_scratch/dirty.$side" || dirty_status="$?"
+
+    case "$dirty_status" in
+      0) ;;
+      1)
+        return 0
+        ;;
+      *)
+        return 2
+        ;;
+    esac
+  done
+
+  return 1
+)
+
+# Checks that the checkout is still on `master` at its original commit, the
+# index matches the original index tree, and Git has no operation in progress.
+# Returns 0 if all checks pass, 1 for an observed change or Git operation, and 2
+# if sync cannot complete a check
+is_repository_unchanged() (
+  head_status=0
+  head="$(git -C "$DOMFILES" symbolic-ref --quiet HEAD)" || head_status="$?"
+
+  case "$head_status" in
+    0) ;;
+    1)
+      return 1
+      ;;
+    *)
+      return 2
+      ;;
+  esac
+
+  if [ "$head" != refs/heads/master ]; then
+    return 1
+  fi
+
+  master_status=0
+  master="$(git -C "$DOMFILES" rev-parse --quiet --verify refs/heads/master)" \
+    || master_status="$?"
+
+  case "$master_status" in
+    0) ;;
+    1)
+      return 1
+      ;;
+    *)
+      return 2
+      ;;
+  esac
+
+  if [ "$master" != "$repository_update_r0" ]; then
+    return 1
+  fi
+
+  operation_status=0
+  is_repository_operation_in_progress || operation_status="$?"
+
+  case "$operation_status" in
+    0)
+      return 1
+      ;;
+    1) ;;
+    *)
+      return 2
+      ;;
+  esac
+
+  index_tree="$(read_repository_index_tree)" || return 2
+
+  if [ "$index_tree" = "$repository_update_i0" ]; then
+    return 0
+  fi
+
+  return 1
+)
+
+# Records which paths the switch changes and how the checkout differs from each
+# saved working tree. Returns 2 if the lists cannot be prepared
+list_repository_switch_paths() (
+  scratch="$repository_update_scratch"
+  [ -d "$scratch" ] || mkdir -m 700 "$scratch" || return 2
+
+  git -C "$DOMFILES" -c core.quotePath=false diff-tree -r --no-renames --name-status \
+    "$repository_update_w0" "$repository_update_w1" > "$scratch/switch.paths" || return 2
+  cut -f 2- < "$scratch/switch.paths" > "$scratch/switch.names" || return 2
+
+  for side in w0 w1; do
+    if [ "$side" = w0 ]; then
+      tree="$repository_update_w0"
+    else
+      tree="$repository_update_w1"
+    fi
+
+    clear_repository_update_index "index.$side" || return 2
+    run_update_git_with_index "$scratch/index.$side" -C "$DOMFILES" read-tree "$tree" || return 2
+
+    # With `-q`, ordinary content changes pass the refresh. Stop on errors
+    # before comparing against stale index data
+    run_update_git_with_index "$scratch/index.$side" -C "$DOMFILES" update-index -q --refresh \
+      > /dev/null 2>&1 || return 2
+    run_update_git_with_index "$scratch/index.$side" -C "$DOMFILES" -c core.quotePath=false \
+      diff-files --name-only > "$scratch/dirty.$side" || return 2
+  done
+)
+
+# Caches untracked and ignored paths relative to the original working tree.
+# Saves the list only when every path fits on one line
+list_repository_untracked_paths() (
+  untracked="$repository_update_scratch/switch.untracked"
+
+  if [ -f "$untracked" ]; then
+    return 0
+  fi
+
+  run_update_git_with_index "$repository_update_scratch/index.w0" -C "$DOMFILES" \
+    -c core.quotePath=false ls-files --others --directory -z > "$untracked.z" || return 1
+  tr '\0' '\n' < "$untracked.z" > "$untracked.tmp" || return 1
+
+  # Each NUL ends one Git path. An extra line after conversion means a name
+  # contains a newline and one of its fragments could match another path
+  names="$(tr -cd '\0' < "$untracked.z" | wc -c)" || return 1
+  lines="$(wc -l < "$untracked.tmp")" || return 1
+
+  if [ "$((names))" -ne "$((lines))" ]; then
+    rm -f -- "$untracked.tmp" "$untracked.z"
+    return 1
+  fi
+
+  mv -f -- "$untracked.tmp" "$untracked" || return 1
+  rm -f -- "$untracked.z"
+  return 0
+)
+
+# Takes the checkout lock on file descriptor 4 in the calling shell. Waits up to
+# one minute if the lock is busy. On failure, reports the error and closes any
+# descriptor it opened
+lock_repository_update() {
+  # A failed `exec` redirection would end the shell, and bash 3.2 crashes after
+  # `command exec` opens a descriptor inside a function
+  if ! : >> "$repository_update_lock"; then
+    __print_error 'Failed to acquire the repository update lock for this checkout'
+    return 1
+  fi
+
+  exec 4>> "$repository_update_lock"
+
+  repository_update_lock_status=0
+  lock_sync_file try 4 || repository_update_lock_status="$?"
+
+  if [ "$repository_update_lock_status" -eq 75 ]; then
+    __print_info 'Waiting for the previous repository update to release the checkout lock'
+    repository_update_lock_status=0
+    lock_sync_file bounded 4 || repository_update_lock_status="$?"
+  fi
+
+  if [ "$repository_update_lock_status" -eq 0 ]; then
+    return 0
+  fi
+
+  exec 4>&-
+
+  if [ "$repository_update_lock_status" -eq 75 ]; then
+    __print_error 'The checkout lock is still held after 1 minute. Sync left the checkout unchanged'
+  else
+    __print_error 'Failed to acquire the repository update lock for this checkout'
+  fi
+
+  return 1
+}
+
+# Identifies the saved Git refs and explains how to retry recovery or accept the
+# checkout’s current state
+print_repository_update_state() {
+  __print_info "The original commit is at \`$repository_update_refs/original\` and the updated working tree is at \`$repository_update_refs/updated\`"
+
+  if [ -n "$repository_update_saved" ]; then
+    __print_info "In \`$DOMFILES\`, inspect the saved changes with
+git stash show -p $repository_update_refs/saved
+To reapply them on a clean checkout of the original commit, run
+git stash apply --index $repository_update_refs/saved"
+  fi
+
+  __print_info "To finish recovery, move unexpected files aside or resolve the reported issue, then rerun your sync command
+To keep the checkout as it is, remove \`$repository_update_marker\` once you have verified your changes"
+}
+
+# Prints the Git tree ID for a copy of the checkout’s index
+read_repository_index_tree() (
+  [ -d "$repository_update_scratch" ] || mkdir -m 700 "$repository_update_scratch" || return "$?"
+  clear_repository_update_index index.check || return "$?"
+  index="$(git -C "$DOMFILES" rev-parse --path-format=absolute --git-path index)" || return "$?"
+  cp -- "$index" "$repository_update_scratch/index.check" || return "$?"
+  run_update_git_with_index "$repository_update_scratch/index.check" -C "$DOMFILES" write-tree
+)
+
+# Reads the recovery marker for this checkout. Returns 1 if absent or 2 if its
+# contents cannot be read or validated
+read_repository_update_marker() {
+  if [ ! -e "$repository_update_marker" ] && [ ! -L "$repository_update_marker" ]; then
+    return 1
+  fi
+
+  {
+    IFS= read -r repository_update_format \
+      && IFS= read -r repository_update_checkout \
+      && IFS= read -r repository_update_phase \
+      && IFS= read -r repository_update_r0 \
+      && IFS= read -r repository_update_saved \
+      && IFS= read -r repository_update_w0 \
+      && IFS= read -r repository_update_i0 \
+      && IFS= read -r repository_update_r1 \
+      && IFS= read -r repository_update_w1 \
+      && IFS= read -r repository_update_i1
+  } < "$repository_update_marker" || return 2
+
+  if [ "$repository_update_format" != 1 ] || [ "$repository_update_checkout" != "$DOMFILES" ]; then
+    return 2
+  fi
+
+  case "$repository_update_phase" in
+    prepared | restored | switched) ;;
+    switching)
+      [ -n "$repository_update_w1" ] && [ -n "$repository_update_i1" ] || return 2
+      ;;
+    *)
+      return 2
+      ;;
+  esac
+}
+
+# Rebases and reapplies tracked changes in a private worktree, then records the
+# switch in phases so recovery can roll it back
+rebase_repository_update() {
+  if [ -e "$repository_update_marker" ] || [ -L "$repository_update_marker" ]; then
+    __print_error 'The previous repository update still needs recovery. Rerun your sync command'
+    return 1
+  fi
+
+  # Clear what an earlier update left behind after its marker was removed
+  if ! clear_repository_update_files || ! mkdir -m 700 "$repository_update_scratch"; then
+    __print_error 'Failed to prepare the private worktree or scratch directory. The checkout is unchanged'
+    return 0
+  fi
+
+  if ! repository_update_r0="$(git -C "$DOMFILES" rev-parse --verify HEAD)" \
+    || ! repository_update_upstream="$(git -C "$DOMFILES" rev-parse --symbolic-full-name '@{u}')" \
+    || ! repository_update_w0="$(git -C "$DOMFILES" rev-parse --verify "$repository_update_r0^{tree}")"; then
+    clear_repository_update_files || :
+    return 1
+  fi
+
+  # Match the fork point handling of `git rebase` without an upstream argument
+  repository_update_fork_point=--fork-point
+
+  if [ "$(git -C "$DOMFILES" config --type=bool rebase.forkPoint || :)" = false ]; then
+    repository_update_fork_point=--no-fork-point
+  fi
+
+  repository_update_i0="$repository_update_w0"
+  repository_update_i1=''
+  repository_update_r1=''
+  repository_update_saved=''
+  repository_update_w1=''
+
+  # Try to save tracked changes if the comparison fails. Warn about changes only
+  # when Git reported a difference
+  repository_update_change_status=0
+  __domfiles_is_clean || repository_update_change_status="$?"
+
+  if [ "$repository_update_change_status" -ne 0 ]; then
+    if [ "$repository_update_change_status" -eq 1 ]; then
+      __print_warning 'The repository contains uncommitted changes'
+    fi
+
+    if ! repository_update_saved="$(save_repository_changes)" \
+      || { [ -n "$repository_update_saved" ] \
+        && { ! repository_update_w0="$(git -C "$DOMFILES" rev-parse --verify "$repository_update_saved^{tree}")" \
+          || ! repository_update_i0="$(git -C "$DOMFILES" rev-parse --verify "$repository_update_saved^2^{tree}")"; }; }; then
+      __print_error 'Failed to save uncommitted changes'
+      clear_repository_update_files || :
+      return 0
+    fi
+  fi
+
+  if ! write_repository_update_marker prepared; then
+    __print_error 'Failed to write the update marker. The checkout is unchanged'
+    clear_repository_update_files || :
+    return 0
+  fi
+
+  # Rebase and reapply the changes in the private worktree
+  if write_repository_update_ref original "$repository_update_r0" \
+    && { [ -z "$repository_update_saved" ] \
+      || write_repository_update_ref saved "$repository_update_saved"; } \
+    && run_update_git -C "$DOMFILES" -c worktree.useRelativePaths=false worktree add --quiet --detach \
+      "$repository_update_worktree" "$repository_update_r0" \
+    && __print_command git -C "$repository_update_worktree" rebase "$repository_update_fork_point" \
+      "$repository_update_upstream" \
+    && run_update_git -C "$repository_update_worktree" rebase "$repository_update_fork_point" \
+      "$repository_update_upstream"; then
+    :
+  else
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  if [ -n "$repository_update_saved" ]; then
+    __print_command git -C "$repository_update_worktree" stash apply --index --quiet "$repository_update_saved"
+
+    if ! run_update_git -C "$repository_update_worktree" stash apply --index --quiet \
+      "$repository_update_saved"; then
+      __print_error 'Failed to reapply the saved changes in the private worktree'
+      __print_heading_dimmed 'Discarding the unsuccessful update'
+      restore_repository_update quiet || return "$?"
+      __print_confirmation 'Checkout unchanged'
+      return 0
+    fi
+  fi
+
+  # Record the result, which is the updated tree with an index commit as its
+  # second parent when changes were reapplied
+  if ! repository_update_r1="$(git -C "$repository_update_worktree" rev-parse --verify HEAD)" \
+    || ! repository_update_i1="$(run_update_git -C "$repository_update_worktree" write-tree)" \
+    || ! repository_update_result="$(run_update_git -C "$repository_update_worktree" stash create)" \
+    || ! repository_update_w1="$(git -C "$DOMFILES" rev-parse --verify \
+      "${repository_update_result:-$repository_update_r1}^{tree}")"; then
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  # Let the current index writer finish before checking whether the checkout
+  # changed. A later writer can still take the lock before the index write
+  if ! repository_update_index_lock="$(git -C "$DOMFILES" rev-parse --path-format=absolute \
+    --git-path index.lock)" \
+    || ! wait_for_git_lock_file "$repository_update_index_lock"; then
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  # Verify the original checkout before switching. An incomplete check skips the
+  # update without claiming the checkout changed
+  repository_update_unchanged_status=0
+  is_repository_unchanged || repository_update_unchanged_status="$?"
+
+  if [ "$repository_update_unchanged_status" -eq 1 ]; then
+    __print_error 'The checkout changed while sync prepared the update. Sync skipped the switch'
+    restore_repository_update quiet || return "$?"
+    return 0
+  elif [ "$repository_update_unchanged_status" -ne 0 ]; then
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  if ! list_repository_switch_paths; then
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  # Report each path that keeps the switch from running
+  if ! is_repository_switch_clean; then
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  if ! write_repository_update_ref updated "${repository_update_result:-$repository_update_r1}" \
+    || ! write_repository_update_marker switching; then
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Local changes kept'
+    return 0
+  fi
+
+  # Write the working tree through the original tree’s index, then the index,
+  # then move `master` only if nothing else moved it
+  if ! run_update_git_with_index "$repository_update_scratch/index.w0" -C "$DOMFILES" \
+    read-tree -m -u "$repository_update_w0" "$repository_update_w1" \
+    || ! repository_update_index_lock="$(git -C "$DOMFILES" rev-parse --path-format=absolute \
+      --git-path index.lock)" \
+    || ! wait_for_git_lock_file "$repository_update_index_lock" \
+    || ! run_update_git -C "$DOMFILES" read-tree "$repository_update_i1"; then
+    echo
+    __print_error 'Failed to update the repository'
+    restore_repository_update quiet || return "$?"
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Changes restored'
+    return 0
+  fi
+
+  if ! wait_for_git_ref_lock refs/heads/master \
+    || ! run_update_git -C "$DOMFILES" update-ref -m "domfiles sync: rebase master onto $repository_update_upstream" \
+      refs/heads/master "$repository_update_r1" "$repository_update_r0"; then
+    # Report a moved branch only if Git resolves a different tip or reports that
+    # the original ref is gone
+    repository_update_master_status=0
+    repository_update_master="$(git -C "$DOMFILES" rev-parse --quiet --verify refs/heads/master)" \
+      || repository_update_master_status="$?"
+
+    if [ "$repository_update_master_status" -le 1 ] \
+      && [ "$repository_update_master" != "$repository_update_r0" ]; then
+      __print_error '`master` moved before sync could update it'
+      restore_repository_update branch-moved || return "$?"
+    else
+      echo
+      __print_error 'Failed to update the repository'
+      restore_repository_update quiet || return "$?"
+    fi
+
+    [ -z "$repository_update_saved" ] || __print_confirmation 'Changes restored'
+    return 0
+  fi
+
+  if ! write_repository_update_marker switched; then
+    __print_error 'The checkout was updated, but sync could not mark the update complete'
+    return 1
+  fi
+
+  # Record the old tip in `ORIG_HEAD` as Git rebase does. Waiting for the
+  # `switched` marker keeps the previous `ORIG_HEAD` intact on rollback
+  run_update_git -C "$DOMFILES" update-ref ORIG_HEAD "$repository_update_r0" || :
+
+  restore_repository_update quiet || :
+  __print_confirmation 'Repository updated'
+  [ -z "$repository_update_saved" ] || __print_confirmation 'Changes restored'
+}
+
+# Runs recovery under the checkout lock if a marker exists
+recover_repository_update() (
+  if [ ! -e "$repository_update_marker" ] && [ ! -L "$repository_update_marker" ]; then
+    return 0
+  fi
+
+  __print_heading_dimmed 'Recovering from an interrupted repository update'
+  lock_repository_update || return "$?"
+  restore_repository_update recover
+)
+
+# Rolls back a `switching` update or finishes cleanup for any other recorded
+# phase. Keeps the marker if recovery fails. `branch-moved` preserves the
+# current tip of `master`
+restore_repository_update() (
+  marker_status=0
+  read_repository_update_marker || marker_status="$?"
+
+  if [ "$marker_status" -eq 1 ]; then
+    return 0
+  elif [ "$marker_status" -ne 0 ]; then
+    __print_error "Cannot read the update marker \`$repository_update_marker\` for this checkout. Check the recorded checkout and saved state before removing it"
+    return 1
+  fi
+
+  if [ "$repository_update_phase" = switching ]; then
+    if ! check_repository_switch "$1"; then
+      __print_error 'Recovery stopped before changing the checkout. Nothing was discarded'
+      print_repository_update_state
+      return 1
+    fi
+
+    if ! roll_back_repository_switch "$1"; then
+      __print_error 'Recovery could not finish restoring the checkout. The saved state is intact'
+      print_repository_update_state
+      return 1
+    fi
+
+    # Mark the rollback complete before deleting the refs it relied on
+    if ! write_repository_update_marker restored; then
+      __print_error 'Sync could not update the marker after restoring the checkout. Rerun your sync command to retry recovery'
+      return 1
+    fi
+  fi
+
+  if ! clear_repository_update_files || ! rm -f -- "$repository_update_marker"; then
+    __print_error 'Failed to clean up the repository update files. Rerun your sync command to retry cleanup'
+    return 1
+  fi
+
+  case "$1:$repository_update_phase" in
+    recover:prepared | interrupted:prepared)
+      __print_confirmation 'Update stopped before the checkout switch'
+      ;;
+    recover:switching | interrupted:switching | recover:restored | interrupted:restored)
+      __print_confirmation 'Checkout restored to its state before the update'
+      ;;
+    recover:switched | interrupted:switched)
+      __print_confirmation 'Completed update kept'
+      ;;
+  esac
+)
+
+# Restores the checked paths, index, and original tip of `master`. Keeps the new
+# tip in `branch-moved` mode and can resume an interrupted rollback
+roll_back_repository_switch() (
+  scratch="$repository_update_scratch"
+  tab="$(printf '\t')"
+
+  # Remove added files and then their empty parent directories. Check each
+  # parent first because `rm` follows symlinks in a path. A missing parent,
+  # file, or symlink leaves nothing to remove through that parent
+  while IFS="$tab" read -r status path; do
+    if [ "$status" != A ]; then
+      continue
+    fi
+
+    parent_status=0
+    check_checkout_path_parents "$path" > /dev/null || parent_status="$?"
+
+    case "$parent_status" in
+      0) ;;
+      1)
+        continue
+        ;;
+      *)
+        return 2
+        ;;
+    esac
+
+    file="$DOMFILES/$path"
+
+    if [ -L "$file" ] || [ -f "$file" ]; then
+      rm -f -- "$file" || return "$?"
+      parent="$path"
+
+      while :; do
+        case "$parent" in
+          */*)
+            parent="${parent%/*}"
+            ;;
+          *)
+            break
+            ;;
+        esac
+
+        rmdir -- "$DOMFILES/$parent" 2> /dev/null || break
+      done
+    fi
+  done < "$scratch/switch.paths"
+
+  # Restore the original files after clearing directories the switch left in
+  # their place. Git can recreate missing parents. Stop at any parent file or
+  # symlink still present so Git cannot overwrite it
+  : > "$scratch/restore.names" || return "$?"
+
+  while IFS="$tab" read -r status path; do
+    if [ "$status" = A ]; then
+      continue
+    fi
+
+    parent_status=0
+    parent="$(check_checkout_path_parents "$path")" || parent_status="$?"
+
+    case "$parent_status:$parent" in
+      0:)
+        file="$DOMFILES/$path"
+
+        if [ -d "$file" ] && [ ! -L "$file" ]; then
+          find "$file" -depth -type d -exec rmdir -- {} + || return "$?"
+        fi
+        ;;
+      1:missing\ *) ;;
+      1:entry\ *)
+        return 1
+        ;;
+      *)
+        return 2
+        ;;
+    esac
+
+    # Queue the original file only on a confirmed difference. A lookup error
+    # must stop the rollback
+    dirty_status=0
+    grep -Fqx -- "$path" "$scratch/dirty.w0" || dirty_status="$?"
+
+    case "$dirty_status" in
+      0)
+        printf '%s\n' "$path" >> "$scratch/restore.names" || return "$?"
+        ;;
+      1) ;;
+      *)
+        return 2
+        ;;
+    esac
+  done < "$scratch/switch.paths"
+
+  if [ -s "$scratch/restore.names" ]; then
+    run_update_git_with_index "$scratch/index.w0" -C "$DOMFILES" checkout-index --force --stdin \
+      < "$scratch/restore.names" || return "$?"
+  fi
+
+  index_tree="$(read_repository_index_tree)" || return "$?"
+
+  if [ "$index_tree" != "$repository_update_i0" ]; then
+    index_lock="$(git -C "$DOMFILES" rev-parse --path-format=absolute --git-path index.lock)" \
+      || return "$?"
+    wait_for_git_lock_file "$index_lock" || return "$?"
+    run_update_git -C "$DOMFILES" read-tree "$repository_update_i0" || return "$?"
+  fi
+
+  if [ "$1" = branch-moved ]; then
+    return 0
+  fi
+
+  master="$(git -C "$DOMFILES" rev-parse --quiet --verify refs/heads/master)" || return "$?"
+
+  if [ "$master" != "$repository_update_r0" ]; then
+    wait_for_git_ref_lock refs/heads/master || return "$?"
+    run_update_git -C "$DOMFILES" update-ref -m 'domfiles sync: restore master to its commit before the update' \
+      refs/heads/master "$repository_update_r0" "$master"
+  fi
+)
+
+# Runs Git with `$@`, disabling automatic maintenance, automatic garbage
+# collection, and the filesystem monitor so they do not inherit the lock
+run_update_git() {
+  git -c core.fsmonitor=false -c gc.auto=0 -c maintenance.auto=false "$@"
+}
+
+# Runs Git with index file `$1` and the remaining arguments, using the same
+# settings as `run_update_git`
+run_update_git_with_index() (
+  index="$1"
+  shift
+  GIT_INDEX_FILE="$index" git -c core.fsmonitor=false -c gc.auto=0 -c maintenance.auto=false "$@"
+)
+
+# Uses a copy of the index to capture staged and unstaged tracked changes.
+# Prints the commit ID for `git stash apply --index`, or nothing for a clean
+# checkout. Leaves the working tree, real index, and stash list untouched
+save_repository_changes() (
+  clear_repository_update_index index.saved || return "$?"
+  index="$(git -C "$DOMFILES" rev-parse --path-format=absolute --git-path index)" || return "$?"
+  cp -- "$index" "$repository_update_scratch/index.saved" || return "$?"
+  __print_command git -C "$DOMFILES" stash create
+  run_update_git_with_index "$repository_update_scratch/index.saved" -C "$DOMFILES" stash create
+)
+
+# If the update holds the checkout lock, attempts recovery before exiting with
+# 128 plus signal number `$1`. Recovery helpers need explicit exit statuses
+# because dash can reuse the status from before the trap
+stop_repository_update() {
+  trap : HUP INT TERM
+
+  if [ "$repository_update_locked" = true ]; then
+    __print_error 'A signal interrupted the repository update' || :
+    restore_repository_update interrupted || :
+  fi
+
+  exit "$((128 + $1))"
+}
+
+# Waits up to five seconds for Git lock file `$1` to disappear. Reports the path
+# and returns failure if it remains
+wait_for_git_lock_file() {
+  repository_update_lock_attempts=0
+
+  while [ -e "$1" ]; do
+    if [ "$repository_update_lock_attempts" -ge 5 ]; then
+      __print_error "Git lock file \`$1\` still exists after 5 seconds. Remove it only after confirming that no Git process is using it"
+      return 1
+    fi
+
+    repository_update_lock_attempts="$((repository_update_lock_attempts + 1))"
+    command -p sleep 1
+  done
+}
+
+# Waits for each lock file Git can use to update ref `$1`, including the shared
+# packed-refs and reftable locks
+wait_for_git_ref_lock() (
+  lock_files="$(git -C "$DOMFILES" rev-parse --path-format=absolute \
+    --git-path "$1.lock" --git-path packed-refs.lock --git-path reftable/tables.list.lock)" \
+    || return "$?"
+
+  printf '%s\n' "$lock_files" | while IFS= read -r lock_file; do
+    wait_for_git_lock_file "$lock_file" || exit "$?"
+  done
+)
+
+# Records phase `$1` and the saved object IDs by atomically moving a complete
+# marker from the scratch directory into place
+write_repository_update_marker() (
+  printf '%s\n' 1 "$DOMFILES" "$1" "$repository_update_r0" "$repository_update_saved" \
+    "$repository_update_w0" "$repository_update_i0" "$repository_update_r1" \
+    "$repository_update_w1" "$repository_update_i1" > "$repository_update_scratch/marker" \
+    && mv -f -- "$repository_update_scratch/marker" "$repository_update_marker"
+)
+
+# Sets private ref `$1` to Git object `$2` after checking for a stale lock.
+# Returns the status from the lock check or the Git update that follows
+write_repository_update_ref() {
+  clear_repository_update_ref_lock "$1" || return "$?"
+  run_update_git -C "$DOMFILES" update-ref "$repository_update_refs/$1" "$2"
+}
