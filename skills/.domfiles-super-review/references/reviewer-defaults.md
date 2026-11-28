@@ -12,7 +12,7 @@ For each new assessment, resolve the reviewer’s model against the current cata
 
 ## Titles
 
-Use the caller’s supplied task title throughout the review. When none was supplied, apply global **Thread titles** to select one from the initiating thread. Use the following titles in stage order for reviewer sessions. When the interface has no session title field, retain the title with the session reference in the user-visible review record.
+Apply global **Thread titles** when naming reviewer sessions. Use the caller’s task title wording throughout the review. When none was supplied, select a task title from the initiating thread. Use the following titles in stage order for reviewer sessions. When the interface has no session title field, retain the title with the session reference in the user-visible review record.
 
 - **Peer reviewers:** `⤷ Peer Review: <title>`
 - **First cold review:** `⤷ Cold Review: <title>`
