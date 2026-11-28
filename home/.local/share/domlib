@@ -924,7 +924,8 @@ __suppress() {
   )
 }
 
-# Replaces `$2` with a symlink to `$1`, creating any missing parents as needed
+# Replaces `$2` with a symlink to `$1`, creating missing parent directories.
+# Keeps an existing symlink when its target is exactly `$1`
 __symlink() (
   parent="$(dirname "$2")"
 
@@ -937,6 +938,14 @@ __symlink() (
         __print_error_and_exit "Symlink destination \`$destination_path\` contains source \`$source_path\`"
         ;;
     esac
+
+    # Keep a link that already points at the source so it never goes missing.
+    # The sentinel preserves trailing newlines in the stored target
+    if [ -L "$2" ] && target="$(readlink -n -- "$2" && printf x)"; then
+      if [ "${target%x}" = "$1" ]; then
+        return
+      fi
+    fi
 
     __suppress __ rm -rf "$2"
   else

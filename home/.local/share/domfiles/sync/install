@@ -42,11 +42,9 @@ install_homebrew_package() (
   fi
 )
 
-# Installs every declared Homebrew package in mode `$1`, either `full` or
-# `core`, and runs each package’s `provision_<package>` hook after ensuring
-# it. A full sync ensures every package. A core sync skips packages in its
-# typed inventory and updates Homebrew once before installing the first
-# missing one
+# Installs declared Homebrew packages and passes the sync mode to their hooks.
+# Full syncs run hooks even for installed packages. Core syncs skip installed
+# packages and update Homebrew once before installing the first missing package
 install_packages() (
   package_mode="$1"
   package_newline='
@@ -59,8 +57,8 @@ install_packages() (
     cask_inventory="$(brew list --cask)" || return
   fi
 
-  # Install declared package `$1` with its options, then run its hook. Scoped
-  # to this subshell so it doesn’t shadow `install(1)` elsewhere
+  # Install declared package `$1` with its options, then run its hook. Scoped to
+  # this subshell so it doesn’t shadow `install(1)` elsewhere
   install() {
     if [ "$package_mode" = core ]; then
       if [ "$(package_type "$@")" = --cask ]; then
@@ -84,9 +82,12 @@ install_packages() (
 
     install_homebrew_package "$@"
 
-    # Look up only shell functions so an executable can’t act as a hook
+    # Define post-install hooks in alphabetical order as `provision_<package>`
+    # functions. Keep letters, digits, and underscores from the full package
+    # name and replace other characters with `_`
     package_hook="provision_$(printf '%s' "$1" | tr -c '[:alnum:]_' '_')"
 
+    # Look up only shell functions so an executable can’t act as a hook
     if PATH=/dev/null command -v "$package_hook" > /dev/null; then
       (
         # Let hooks use the system install utility
@@ -162,14 +163,6 @@ package_type() (
 
   printf '%s\n' --formula
 )
-
-# Each `provision_<package>` hook performs post-install work for one declared
-# package and never installs it. `install` runs it with the sync mode, `full`
-# or `core`, after ensuring the package: on every full sync, and during a core
-# sync only after installing the package. Name a hook after its package,
-# replacing characters other than letters, digits, and `_` with `_`. Define
-# one only for a package with post-install work, let it decide which modes and
-# platforms apply, and keep definitions in alphabetical order
 
 # Links Git’s `diff-highlight` script into `~/.local/bin`
 provision_git() (

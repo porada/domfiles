@@ -809,6 +809,49 @@ test(
 );
 
 test(
+	'keeps links that already point at their source and replaces other links',
+	{ timeout: PACKAGE_TEST_TIMEOUT },
+	async () => {
+		await using directory = await mkdtempDisposable(
+			join(tmpdir(), 'domfiles-sync-')
+		);
+		const { checkout, env } = await createPackageFixture(directory.path);
+		const current = join(directory.path, 'home/.config');
+		const newline = join(directory.path, 'home/.curlrc');
+		const stale = join(directory.path, 'home/.vimrc');
+
+		await symlink(join(checkout, 'home/.config'), current);
+		await symlink(`${join(checkout, 'home/.curlrc')}\n`, newline);
+		await symlink(join(directory.path, 'foo'), stale);
+
+		const before = await lstat(current, { bigint: true });
+		const result = await runCommand(
+			directory.path,
+			'domfiles',
+			['sync', '--core'],
+			{
+				...env,
+				BREW_CASKS: CASKS.join(' '),
+				BREW_FORMULAS: FORMULAS.join(' '),
+			}
+		);
+		const after = await lstat(current, { bigint: true });
+
+		expect(result.status).toBe(0);
+		expect({ ctimeNs: after.ctimeNs, ino: after.ino }).toStrictEqual({
+			ctimeNs: before.ctimeNs,
+			ino: before.ino,
+		});
+		await expect(readlink(newline)).resolves.toBe(
+			join(checkout, 'home/.curlrc')
+		);
+		await expect(readlink(stale)).resolves.toBe(
+			join(checkout, 'home/.vimrc')
+		);
+	}
+);
+
+test(
 	'installs missing packages and runs only their core hooks',
 	{ timeout: PACKAGE_TEST_TIMEOUT },
 	async () => {
