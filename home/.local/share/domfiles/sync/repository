@@ -1,22 +1,20 @@
 #!/bin/sh
 
-# Returns success when Git is available and the domfiles checkout is on `main`
-# or `master`. Prints the reason when another branch, a detached `HEAD`, or a
-# failed branch lookup prevents the update
+# Returns success when Git reports that the domfiles checkout is on `master`.
+# Explains why the update was skipped unless Git is unavailable
 can_update_repository() (
   if ! __is_callable git; then
     return 1
   fi
 
-  if branch="$(git -C "$DOMFILES" symbolic-ref --quiet --short HEAD)"; then
-    case "$branch" in
-      main | master)
-        return
-        ;;
-      *)
-        __print_info "Skipping repository update on branch \`$branch\`"
-        ;;
-    esac
+  # Compare the full ref because a tag named `master` can make Git report
+  # `heads/master` for the branch
+  if ref="$(git -C "$DOMFILES" symbolic-ref --quiet HEAD)"; then
+    if [ "$ref" = refs/heads/master ]; then
+      return
+    fi
+
+    __print_info "Skipping repository update on branch \`${ref#refs/heads/}\`"
   else
     status="$?"
 

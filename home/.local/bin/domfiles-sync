@@ -18,9 +18,11 @@ case "$#:${1-}" in
     ;;
   1:--help)
     printf '%s\n' "$usage" '' \
-      '`domfiles sync` checks for repository updates and runs all stages.' \
+      '`domfiles sync` runs all stages.' \
       '' \
-      '`domfiles sync --core` checks for repository updates, refreshes links, and installs missing packages.' \
+      '`domfiles sync --core` refreshes links and installs missing packages.' \
+      '' \
+      'Both commands check for repository updates only when the checkout is on `master`.' \
       '' \
       '`domfiles sync <stage>` runs one stage without updating the repository.'
     exit
