@@ -19,7 +19,7 @@ if [ $# -eq 1 ] && __git_is_commit_reference "$1"; then
 
   if [ "$has_lockfile_changes" = true ]; then
     if __git_is_commit_reference "$1^2"; then
-      # Preserve Git’s parent-qualified merge sections instead of splitting lockfile output
+      # Preserve Git’s separate section for each parent of a merge
       git show --show-signature -m "$1"
       exit
     fi

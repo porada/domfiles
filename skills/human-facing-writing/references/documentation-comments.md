@@ -1,8 +1,10 @@
 # Documentation Comments
 
-Use the full workflow for documentation comments and docstrings. For prose in ordinary source comments, follow [Punctuation Defaults](#punctuation-defaults), [Related Comments](#related-comments), [Line Breaks](#line-breaks), and [Validation](#validation). Runtime descriptions use the punctuation defaults.
+Use the full workflow for documentation comments and docstrings. For prose in ordinary source comments, follow [Scope](#scope), [Punctuation Defaults](#punctuation-defaults), [Related Comments](#related-comments), [Placement](#placement), [Line Breaks](#line-breaks), and [Validation](#validation). Runtime descriptions use the punctuation defaults.
 
 ## Scope
+
+Review comments in the requested scope even when their line breaks already read well. A pass over recent changes includes every comment those changes add or revise.
 
 Let project policy and the established language-specific convention determine which declarations require documentation, which syntax, tags, or sections they use, and which wrapping and formatting constraints apply. Don’t generalize family-wide coverage or JSDoc syntax from one language or project.
 
@@ -50,11 +52,17 @@ If shortening the comment requires a material choice that project policy, eviden
 
 ## Related Comments
 
-Compare related comments within each project and across closely related projects in scope, including comments whose line breaks need no change. For newer, unreleased code, reuse wording that already describes the same behavior well in released code. If the released comments you’re comparing differ, prefer wording known to have come from earlier consistency work.
+Compare related comments within each project and across closely related projects in scope. For newer, unreleased code, reuse wording that already describes the same behavior well in released code. If the released comments you’re comparing differ, prefer wording known to have come from earlier consistency work.
 
 For a requested family edit, choose one accurate comment for equivalent behavior. Ask before propagating wording only when project policy, evidence, and the user’s decisions leave a material choice open.
 
 Use parallel grammar and the same level of detail for helpers with equivalent roles, adapting domain-specific terms as needed. Where helpers play different roles in the larger control flow, describe what each contributes. Keep comments that already read well and fit the family.
+
+## Placement
+
+Combine consecutive comment blocks when they explain the same decision. Keep a paragraph break within the block when it helps the reader distinguish a rule from the reason for it. When the blocks explain different steps, put each beside the step it explains.
+
+Keep local constraints where someone editing the code will see them. When a comment is the only record of a maintenance rule, preserve the rule as you shorten or move the explanation. If several modules depend on the same decision, consider explaining its rationale once in the project’s maintenance documentation. Suggest the move when that documentation falls outside the requested edit.
 
 ## Presentation
 
@@ -86,5 +94,13 @@ When a formatter wraps this comment at 63 columns, a check for one-word lines mi
 After editing, rerun the formatter if configured and read the complete comment again.
 
 ## Validation
+
+After formatting, read each new or revised comment on its own. For a new comment or an edit that could change a technical claim, verify what it says against the relevant code and its callers. When revising, compare what each version says happens by default, when an exception applies, and what each operation affects.
+
+```sh
+# Creates `$1` and any missing parents, setting standard permissions on `$1`
+```
+
+Shortening this to “Creates missing directories with standard permissions” would imply that the permission change also applies to the parents.
 
 After propagating wording, check the [line breaks](#line-breaks) at each destination. Where a local wording change is needed, make the smallest edit that reads naturally and preserves the shared meaning and terminology. Review the complete family together after formatting.

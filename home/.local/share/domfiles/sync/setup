@@ -60,8 +60,7 @@ link_domfiles() (
   done
 )
 
-# Links domfiles into the home directory, provisions local files, and
-# verifies the SSH setup
+# Links domfiles, provisions local files, and checks the SSH setup
 sync_setup() (
   link_domfiles
 

@@ -19,8 +19,7 @@ install_homebrew_package() (
 
   formula_info="$(brew info "$1" --json=v2)" || return
 
-  # Treat only an explicit `false` receipt flag as needing protection
-  # from `brew autoremove`
+  # Protect a formula from `brew autoremove` only if its receipt says `false`
   formula_is_requested="$(printf '%s\n' "$formula_info" \
     | jq 'all(.formulae[0].installed[]?; .installed_on_request != false)')" || return
 
@@ -174,8 +173,8 @@ provision_git() (
   fi
 )
 
-# Installs pnpm’s Fish completions and its Time Machine exclusions on macOS
-# during a full sync
+# During a full sync, installs pnpm’s Fish completions and excludes pnpm
+# directories from Time Machine on macOS
 provision_pnpm() (
   if [ "$1" = core ]; then
     return

@@ -3,8 +3,7 @@
 # shellcheck source=../share/domlib
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
-# Lint JSON files that come with domfiles
-# (lints all files when no paths are provided)
+# Lint selected JSON files or all project JSON files by default
 __domfiles_cd_root
 
 lint_default_files() {

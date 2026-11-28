@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# Applies macOS preferences and restarts affected apps. Skips the stage
-# outside macOS
+# Applies macOS preferences and restarts affected apps only on macOS
 sync_macos() (
   __print_heading 'Configuring macOS'
   __continue_on_macos 'domfiles sync macos'

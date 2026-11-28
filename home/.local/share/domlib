@@ -70,8 +70,8 @@ __confirm() {
       response=''
       IFS= read -r response || read_status=$?
 
-      # Accept an explicit unterminated answer, matching Fish. Status 1
-      # cannot distinguish EOF from an input error
+      # Accept an explicit unterminated answer, matching Fish. Status 1 cannot
+      # distinguish EOF from an input error
       if [ "$read_status" -gt 1 ] || { [ "$read_status" -eq 1 ] && [ -z "$response" ]; }; then
         return 1
       fi
@@ -91,8 +91,7 @@ __confirm() {
   )
 }
 
-# Exits successfully outside macOS after printing a macOS-only notice for
-# command `$1`
+# Outside macOS, prints a notice for command `$1` and exits successfully
 __continue_on_macos() {
   if [ $# -ne 1 ] || [ -z "$1" ]; then
     __print_error_and_exit '`__continue_on_macos` requires one command name'
@@ -140,9 +139,8 @@ __domfiles_cd_root() {
     || __print_error_and_exit "Failed to change directory to \`$DOMFILES\`"
 }
 
-# Calls `lint_file` per file or `lint_files` on all files, requiring exactly
-# one callback. Falls back to `lint_default_files` when no files are given.
-# Uses `$1` as the label
+# Lints the given paths or those from `lint_default_files` under label `$1`.
+# Requires either `lint_file` for individual files or `lint_files` for batches
 __domfiles_dev_lint() (
   if [ $# -eq 0 ]; then
     __print_error_and_exit '`__domfiles_dev_lint` requires a label'
@@ -208,8 +206,7 @@ EOF
   fi
 )
 
-# Executes the given `domfiles` command in place. Optionally prints it with
-# `--print`
+# Replaces the process with a domfiles command. `--print` shows the invocation
 __domfiles_exec() {
   __domfiles_exec_print_command=false
 
@@ -299,8 +296,7 @@ __git_cd_root() {
   unset __domfiles_git_root
 }
 
-# Prints the default commit count. Excludes the initial commit with
-# `--no-initial`
+# Prints the default commit count. `--no-initial` omits the first commit
 __git_default_commit_count() (
   default=10
   count=0
@@ -316,8 +312,7 @@ __git_default_commit_count() (
   printf '%s\n' "$((count < default ? count : default))"
 )
 
-# Pages two sections for Git command `$1`. Adds a leading newline with
-# `--leading-newline`
+# Pages two sections for a Git command. `--leading-newline` adds a blank line
 __git_diff_page() (
   leading_newline=false
 
@@ -350,9 +345,8 @@ __git_diff_page() (
   } | __page_input "$git_command"
 )
 
-# Runs the given command with pathspecs for excluded lockfiles. Includes
-# related manifests with `--related` or selects every other path with
-# `--others`
+# Runs the given command with pathspecs for excluded lockfiles. Includes related
+# manifests with `--related` or selects every other path with `--others`
 __git_diff_with_excluded_paths() (
   mode=lockfiles
 
@@ -550,8 +544,7 @@ __login_shell() (
   printf '%s\n' "${entry##*:}"
 )
 
-# Creates directory `$1` with standard permissions, creating any missing
-# parents as needed
+# Creates `$1` and any missing parents, setting standard permissions on `$1`
 __mkdir() {
   __ mkdir -p "$1"
   __chmod "$1"
@@ -577,8 +570,8 @@ __normalize_boolean() {
   esac
 }
 
-# Pages standard input for terminal output or passes it through unchanged.
-# Uses Git pager configuration for command `$1`
+# Pages standard input for terminal output or passes it through unchanged. Uses
+# Git pager configuration for command `$1`
 __page_input() (
   if [ $# -ne 1 ]; then
     __print_error_and_exit '`__page_input` requires one Git command'
@@ -685,9 +678,8 @@ __print_info_and_exit() {
   exit
 }
 
-# Prints text with format `$2`. Applies style `$1` only to terminal
-# output. Replaces `$HOME` with `~`. `--inline` uses a trailing space
-# instead of a newline
+# Prints the remaining text with format `$2` and shortens `$HOME` to `~`.
+# Applies style `$1` on terminals. With `--inline`, ends the output with a space
 __print_styled() (
   if [ $# -eq 0 ]; then
     return
@@ -820,8 +812,7 @@ __quote_params() (
   done
 )
 
-# Prints a normalized boolean from environment variable `$1`. Uses `$2` when
-# unset or empty
+# Reads a normalized boolean from variable `$1`, using `$2` as the default
 __read_boolean_from_env() (
   if [ $# -ne 2 ]; then
     __print_error_and_exit '`__read_boolean_from_env` requires an environment variable name and boolean default'
@@ -831,7 +822,7 @@ __read_boolean_from_env() (
     __print_error_and_exit '`__read_boolean_from_env` requires a `true` or `false` default'
   fi
 
-  # Preserve input whitespace with a marker before removing the `printenv` line ending
+  # Protect trailing whitespace while stripping the newline added by `printenv`
   value="$(
     printenv "$1" || true
     printf .
@@ -889,8 +880,7 @@ __string_contains() {
   esac
 }
 
-# Prints `$1` with every literal occurrence of `$2` replaced by `$3`, without
-# adding a newline
+# Prints `$1` without a final newline, replacing every literal `$2` with `$3`
 __string_replace() {
   if [ $# -ne 3 ]; then
     __print_error_and_exit '`__string_replace` requires three arguments'
@@ -959,8 +949,7 @@ __symlink() (
   __ ln -s "$1" "$2"
 )
 
-# Prints how many leading lines from `$3` fit within `$2` rows at terminal
-# width `$1`
+# Counts the leading lines of `$3` that fit in `$2` rows at width `$1`
 __terminal_count_fitting_lines() (
   if [ $# -ne 3 ]; then
     __print_error_and_exit '`__terminal_count_fitting_lines` requires columns, available rows, and text'
@@ -1052,8 +1041,7 @@ __terminal_get_available_size() (
   printf '%s %s\n' "$available_rows" "$columns"
 )
 
-# Ensures file `$1` exists with standard permissions, creating any missing
-# parents as needed
+# Creates missing parents and ensures file `$1` exists with standard permissions
 __touch() (
   parent="$(dirname "$1")"
   [ -d "$parent" ] || __mkdir "$parent"
@@ -1062,8 +1050,8 @@ __touch() (
   __chmod "$1"
 )
 
-# Runs `brew` with domfiles’ defaults and disables automatic cleanup so
-# service setup can release old kegs owned by root before explicit cleanup
+# Runs `brew` with domfiles’ defaults and disables automatic cleanup so service
+# setup can release old kegs owned by root before explicit cleanup
 brew() (
   command='brew'
 

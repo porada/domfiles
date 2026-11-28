@@ -3,8 +3,7 @@
 # shellcheck source=../share/domlib
 . "$(dirname "$(realpath "$0")")/../share/domlib"
 
-# Lint Fish shell scripts that come with domfiles
-# (lints all files when no paths are provided)
+# Lint selected Fish scripts or all project Fish scripts by default
 __domfiles_cd_root
 
 lint_default_files() {
